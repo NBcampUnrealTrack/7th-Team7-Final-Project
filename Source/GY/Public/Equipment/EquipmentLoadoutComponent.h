@@ -49,6 +49,6 @@ protected:
 	UFUNCTION()
 	void OnRep_LoadoutEntries(const TArray<FEquipmentLoadoutEntry>& OldEntries);
 
-	UPROPERTY(ReplicatedUsing = OnRep_LoadoutEntries)
+	UPROPERTY(ReplicatedUsing = OnRep_LoadoutEntries, VisibleInstanceOnly, Category = "Equipment")
 	TArray<FEquipmentLoadoutEntry> LoadoutEntries;
 };

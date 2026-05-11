@@ -34,6 +34,6 @@ protected:
 	void ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const struct FInventoryEntry& Entry);
 	void RevokeAbilitySets(UEquipmentInstance* Instance);
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Equipment")
 	FEquipmentList EquippedItems;
 };
