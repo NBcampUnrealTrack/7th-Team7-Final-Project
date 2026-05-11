@@ -14,6 +14,8 @@ class GY_API AGYCharacter : public ACharacter
 public:
 	AGYCharacter();
 
+	virtual void PossessedBy(AController* NewController) override;
+
 	UFUNCTION(BlueprintPure)
 	UActiveEquipmentComponent* GetActiveEquipmentComponent() const { return ActiveEquipmentComponent; }
 
