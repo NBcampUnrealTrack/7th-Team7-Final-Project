@@ -10,10 +10,10 @@ struct GY_API FEquipmentLoadoutEntry
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FGameplayTag SlotTag;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FGuid InstanceId;
 };
 

@@ -13,31 +13,31 @@ struct GY_API FInventoryEntry : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FGuid InstanceId;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TSoftObjectPtr<UItemDefinition> Definition;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	int32 StackCount = 1;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	int32 EnhancementLevel = 0;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FGameplayTag GradeTag;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<FName> OptionIds;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<FGuid> SocketedGemInstanceIds;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	float StatDeviation = 0.f;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	int32 RandomSeed = 0;
 
 	void PreReplicatedRemove(const struct FInventoryList& Serializer);
@@ -50,7 +50,7 @@ struct GY_API FInventoryList : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<FInventoryEntry> Entries;
 
 	UPROPERTY(NotReplicated)
