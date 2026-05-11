@@ -8,8 +8,6 @@
 
 class UEquipmentInstance;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, FGameplayTag /*SlotTag*/, UEquipmentInstance* /*NewInstance*/);
-
 UCLASS(ClassGroup = (Equipment), meta = (BlueprintSpawnableComponent))
 class GY_API UActiveEquipmentComponent : public UActorComponent
 {
@@ -27,8 +25,6 @@ public:
 	UEquipmentInstance* GetEquippedInstance(FGameplayTag SlotTag) const;
 
 	void RefreshEquipment(const struct FInventoryEntry& Entry);
-
-	FOnEquipmentChanged OnEquipmentChanged;
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

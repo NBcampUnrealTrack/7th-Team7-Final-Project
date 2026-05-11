@@ -61,8 +61,6 @@ UEquipmentInstance* UActiveEquipmentComponent::EquipItem(const FInventoryEntry& 
 
 	AddReplicatedSubObject(NewInstance);
 
-	OnEquipmentChanged.Broadcast(SlotTag, NewInstance);
-
 	return NewInstance;
 }
 
@@ -91,8 +89,6 @@ bool UActiveEquipmentComponent::UnequipItem(FGameplayTag SlotTag)
 	EquippedItems.Entries.RemoveAt(Index);
 	EquippedItems.MarkArrayDirty();
 	MARK_PROPERTY_DIRTY_FROM_NAME(UActiveEquipmentComponent, EquippedItems, this);
-
-	OnEquipmentChanged.Broadcast(SlotTag, nullptr);
 
 	return true;
 }
@@ -126,8 +122,6 @@ void UActiveEquipmentComponent::RefreshEquipment(const FInventoryEntry& Entry)
 
 	EquippedItems.MarkItemDirty(*Found);
 	MARK_PROPERTY_DIRTY_FROM_NAME(UActiveEquipmentComponent, EquippedItems, this);
-
-	OnEquipmentChanged.Broadcast(Found->SlotTag, Instance);
 }
 
 void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const FInventoryEntry& Entry)
