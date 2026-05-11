@@ -26,10 +26,15 @@ public:
 	UFUNCTION(BlueprintPure)
 	UEquipmentInstance* GetEquippedInstance(FGameplayTag SlotTag) const;
 
+	void RefreshEquipment(const struct FInventoryEntry& Entry);
+
 	FOnEquipmentChanged OnEquipmentChanged;
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	void ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const struct FInventoryEntry& Entry);
+	void RevokeAbilitySets(UEquipmentInstance* Instance);
 
 	UPROPERTY(Replicated)
 	FEquipmentList EquippedItems;
