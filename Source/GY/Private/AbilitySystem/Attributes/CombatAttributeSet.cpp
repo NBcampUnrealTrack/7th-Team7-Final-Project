@@ -1,4 +1,4 @@
-#include "Combat/CombatAttributeSet.h"
+#include "AbilitySystem/Attributes/CombatAttributeSet.h"
 
 #include "Net/UnrealNetwork.h"
 

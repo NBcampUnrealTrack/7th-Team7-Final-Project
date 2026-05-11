@@ -1,7 +1,7 @@
 #include "Player/GYPlayerState.h"
 
+#include "AbilitySystem/Attributes/CombatAttributeSet.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
-#include "Combat/CombatAttributeSet.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Inventory/InventoryComponent.h"
 
