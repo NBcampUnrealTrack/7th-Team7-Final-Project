@@ -6,7 +6,9 @@
 #include "GameplayTagContainer.h"
 #include "ActiveEquipmentComponent.generated.h"
 
+class UAbilitySystemComponent;
 class UEquipmentInstance;
+class UItemDefinition;
 
 UCLASS(ClassGroup = (Equipment), meta = (BlueprintSpawnableComponent))
 class GY_API UActiveEquipmentComponent : public UActorComponent
@@ -33,6 +35,8 @@ protected:
 
 	void ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const struct FInventoryEntry& Entry);
 	void RevokeAbilitySets(UEquipmentInstance* Instance);
+
+	void ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC);
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Equipment")
 	FEquipmentList EquippedItems;

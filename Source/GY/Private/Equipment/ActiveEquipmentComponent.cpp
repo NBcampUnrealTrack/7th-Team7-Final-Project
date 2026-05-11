@@ -3,13 +3,19 @@
 #include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "Core/GameplayTags/OptionTags.h"
+#include "Engine/DataTable.h"
 #include "Equipment/EquipmentInstance.h"
+#include "Equipment/GYEquipmentSettings.h"
 #include "GameFramework/Pawn.h"
+#include "GameplayEffect.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
 #include "Items/Fragments/ItemFragment_Equippable.h"
 #include "Items/Fragments/ItemFragment_GrantedAbilitySet.h"
+#include "Items/Fragments/ItemFragment_Weapon.h"
 #include "Items/ItemDefinition.h"
+#include "Items/WeaponBaseStatsRow.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
@@ -146,11 +152,38 @@ void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* In
 			Instance);
 	}
 
+	ApplyWeaponBaseStats(Instance, Def, ASC);
+
 	// TODO: SetByCaller(Stat.Modifier.Deviation = 1 + Entry.StatDeviation) 주입 — Template GE 인프라 후
 	// TODO: Entry.SocketedGemInstanceIds 순회 → 각 Gem의 AbilitySet 부여 — GemSocketService 후
 	// TODO: Entry.EnchantOptionIds 순회 → 인챈트 옵션 DataTable → Template GE 적용 — 카탈로그 fetch 후
 	// TODO: Entry.EnhancementLevel > 0 → 강화 GE 적용 — EnhancementService + Curve 후
 	// TODO: ApplyMasteryPenaltyIfNeeded — MasteryComponent (character 도메인) 후
+}
+
+void UActiveEquipmentComponent::ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC)
+{
+	const UItemFragment_Weapon* WeaponFragment = Def->FindFragment<UItemFragment_Weapon>();
+	if (WeaponFragment == nullptr) return;
+
+	const UGYEquipmentSettings* Settings = GetDefault<UGYEquipmentSettings>();
+	if (!IsValid(Settings->BaseATKEffectClass)) return;
+	if (Settings->WeaponBaseStatsTable.IsNull()) return;
+
+	UDataTable* Table = Settings->WeaponBaseStatsTable.LoadSynchronous();
+	if (!IsValid(Table)) return;
+
+	const FWeaponBaseStatsRow* Row = Table->FindRow<FWeaponBaseStatsRow>(Def->ItemId, TEXT("ApplyWeaponBaseStats"));
+	if (Row == nullptr) return;
+
+	FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+	FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(Settings->BaseATKEffectClass, 1.f, Context);
+	if (!Spec.IsValid()) return;
+
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude1, Row->BaseATK);
+
+	const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
+	Instance->GetMutableGrantedHandles().GameplayEffectHandles.Add(Handle);
 }
 
 void UActiveEquipmentComponent::RevokeAbilitySets(UEquipmentInstance* Instance)
