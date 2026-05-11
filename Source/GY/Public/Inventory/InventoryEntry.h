@@ -29,7 +29,7 @@ struct GY_API FInventoryEntry : public FFastArraySerializerItem
 	FGameplayTag GradeTag;
 
 	UPROPERTY(VisibleAnywhere)
-	TArray<FName> OptionIds;
+	TArray<FName> EnchantOptionIds;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<FGuid> SocketedGemInstanceIds;

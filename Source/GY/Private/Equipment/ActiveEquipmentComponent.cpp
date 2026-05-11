@@ -148,7 +148,7 @@ void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* In
 
 	// TODO: SetByCaller(Stat.Modifier.Deviation = 1 + Entry.StatDeviation) 주입 — Template GE 인프라 후
 	// TODO: Entry.SocketedGemInstanceIds 순회 → 각 Gem의 AbilitySet 부여 — GemSocketService 후
-	// TODO: Entry.OptionIds 순회 → DT_OptionCatalog → Template GE 적용 — Option 카탈로그 후
+	// TODO: Entry.EnchantOptionIds 순회 → 인챈트 옵션 DataTable → Template GE 적용 — 카탈로그 fetch 후
 	// TODO: Entry.EnhancementLevel > 0 → 강화 GE 적용 — EnhancementService + Curve 후
 	// TODO: ApplyMasteryPenaltyIfNeeded — MasteryComponent (character 도메인) 후
 }
