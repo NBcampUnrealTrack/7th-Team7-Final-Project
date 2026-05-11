@@ -1,5 +1,6 @@
 #include "Character/GYCharacter.h"
 
+#include "AbilitySystemComponent.h"
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Player/GYPlayerState.h"
@@ -14,10 +15,16 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	if (!HasAuthority()) return;
-	if (!IsValid(ActiveEquipmentComponent)) return;
 
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!IsValid(PS)) return;
+
+	if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+	{
+		ASC->InitAbilityActorInfo(PS, this);
+	}
+
+	if (!IsValid(ActiveEquipmentComponent)) return;
 
 	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
 	if (!IsValid(Loadout)) return;
@@ -30,4 +37,26 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	{
 		ActiveEquipmentComponent->OnLoadoutSlotChanged(Entry.SlotTag, Entry.InstanceId);
 	}
+}
+
+void AGYCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
+	if (!IsValid(PS)) return;
+
+	if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+	{
+		ASC->InitAbilityActorInfo(PS, this);
+	}
+}
+
+UAbilitySystemComponent* AGYCharacter::GetAbilitySystemComponent() const
+{
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
+	{
+		return PS->GetAbilitySystemComponent();
+	}
+	return nullptr;
 }
