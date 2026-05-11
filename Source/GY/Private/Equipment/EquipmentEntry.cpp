@@ -6,8 +6,8 @@
 
 void FEquipmentEntry::PreReplicatedRemove(const FEquipmentList& Serializer)
 {
-	if (!::IsValid(Serializer.OwnerComponent)) return;
-	if (!::IsValid(Instance)) return;
+	if (!IsValid(Serializer.OwnerComponent)) return;
+	if (!IsValid(Instance)) return;
 
 	APawn* Pawn = Cast<APawn>(Serializer.OwnerComponent->GetOwner());
 	Instance->OnUnequipped(Pawn);
@@ -15,8 +15,8 @@ void FEquipmentEntry::PreReplicatedRemove(const FEquipmentList& Serializer)
 
 void FEquipmentEntry::PostReplicatedAdd(const FEquipmentList& Serializer)
 {
-	if (!::IsValid(Serializer.OwnerComponent)) return;
-	if (!::IsValid(Instance)) return;
+	if (!IsValid(Serializer.OwnerComponent)) return;
+	if (!IsValid(Instance)) return;
 
 	APawn* Pawn = Cast<APawn>(Serializer.OwnerComponent->GetOwner());
 	Instance->OnEquipped(Pawn);

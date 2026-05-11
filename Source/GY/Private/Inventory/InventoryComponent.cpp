@@ -114,7 +114,7 @@ TArray<FInventoryEntry> UInventoryComponent::GetAllEntriesByCategory(FGameplayTa
 	for (const FInventoryEntry& Entry : Inventory.Entries)
 	{
 		const UItemDefinition* Def = Entry.Definition.LoadSynchronous();
-		if (::IsValid(Def) && Def->CategoryTags.HasTag(CategoryTag))
+		if (IsValid(Def) && Def->CategoryTags.HasTag(CategoryTag))
 		{
 			Result.Add(Entry);
 		}

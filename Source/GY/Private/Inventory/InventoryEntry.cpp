@@ -4,7 +4,7 @@
 
 void FInventoryEntry::PreReplicatedRemove(const FInventoryList& Serializer)
 {
-	if (::IsValid(Serializer.OwnerComponent))
+	if (IsValid(Serializer.OwnerComponent))
 	{
 		Serializer.OwnerComponent->OnInventoryChanged.Broadcast(InstanceId, EInventoryEventType::Removed);
 	}
@@ -12,7 +12,7 @@ void FInventoryEntry::PreReplicatedRemove(const FInventoryList& Serializer)
 
 void FInventoryEntry::PostReplicatedAdd(const FInventoryList& Serializer)
 {
-	if (::IsValid(Serializer.OwnerComponent))
+	if (IsValid(Serializer.OwnerComponent))
 	{
 		Serializer.OwnerComponent->OnInventoryChanged.Broadcast(InstanceId, EInventoryEventType::Added);
 	}
@@ -20,7 +20,7 @@ void FInventoryEntry::PostReplicatedAdd(const FInventoryList& Serializer)
 
 void FInventoryEntry::PostReplicatedChange(const FInventoryList& Serializer)
 {
-	if (::IsValid(Serializer.OwnerComponent))
+	if (IsValid(Serializer.OwnerComponent))
 	{
 		Serializer.OwnerComponent->OnInventoryChanged.Broadcast(InstanceId, EInventoryEventType::Mutated);
 	}
