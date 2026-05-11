@@ -1,4 +1,4 @@
-#include "AbilitySets/AbilitySet.h"
+#include "AbilitySystem/AbilitySet.h"
 
 #include "AbilitySystemComponent.h"
 #include "AttributeSet.h"

@@ -1,6 +1,6 @@
 #include "Equipment/ActiveEquipmentComponent.h"
 
-#include "AbilitySets/AbilitySet.h"
+#include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Equipment/EquipmentInstance.h"
