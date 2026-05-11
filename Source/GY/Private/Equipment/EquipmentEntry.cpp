@@ -1,6 +1,6 @@
 #include "Equipment/EquipmentEntry.h"
 
-#include "Equipment/EquipmentComponent.h"
+#include "Equipment/ActiveEquipmentComponent.h"
 #include "Equipment/EquipmentInstance.h"
 #include "GameFramework/Pawn.h"
 

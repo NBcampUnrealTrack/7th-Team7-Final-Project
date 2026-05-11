@@ -5,7 +5,7 @@
 #include "Net/Serialization/FastArraySerializer.h"
 #include "EquipmentEntry.generated.h"
 
-class UEquipmentComponent;
+class UActiveEquipmentComponent;
 class UEquipmentInstance;
 
 USTRUCT(BlueprintType)
@@ -33,7 +33,7 @@ struct GY_API FEquipmentList : public FFastArraySerializer
 	TArray<FEquipmentEntry> Entries;
 
 	UPROPERTY(NotReplicated)
-	TObjectPtr<UEquipmentComponent> OwnerComponent;
+	TObjectPtr<UActiveEquipmentComponent> OwnerComponent;
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{

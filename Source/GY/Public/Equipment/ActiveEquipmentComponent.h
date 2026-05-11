@@ -4,19 +4,19 @@
 #include "Components/ActorComponent.h"
 #include "Equipment/EquipmentEntry.h"
 #include "GameplayTagContainer.h"
-#include "EquipmentComponent.generated.h"
+#include "ActiveEquipmentComponent.generated.h"
 
 class UEquipmentInstance;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, FGameplayTag /*SlotTag*/, UEquipmentInstance* /*NewInstance*/);
 
 UCLASS(ClassGroup = (Equipment), meta = (BlueprintSpawnableComponent))
-class GY_API UEquipmentComponent : public UActorComponent
+class GY_API UActiveEquipmentComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	UEquipmentComponent();
+	UActiveEquipmentComponent();
 
 	UEquipmentInstance* EquipItem(const struct FInventoryEntry& Entry);
 

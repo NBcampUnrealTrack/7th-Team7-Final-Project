@@ -1,4 +1,4 @@
-#include "Equipment/EquipmentComponent.h"
+#include "Equipment/ActiveEquipmentComponent.h"
 
 #include "AbilitySets/AbilitySet.h"
 #include "AbilitySystemBlueprintLibrary.h"
@@ -12,24 +12,24 @@
 #include "Net/Core/PushModel/PushModel.h"
 #include "Net/UnrealNetwork.h"
 
-UEquipmentComponent::UEquipmentComponent()
+UActiveEquipmentComponent::UActiveEquipmentComponent()
 {
 	SetIsReplicatedByDefault(true);
 	bReplicateUsingRegisteredSubObjectList = true;
 	EquippedItems.OwnerComponent = this;
 }
 
-void UEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void UActiveEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	FDoRepLifetimeParams Params;
 	Params.bIsPushBased = true;
 	Params.Condition = COND_None;
-	DOREPLIFETIME_WITH_PARAMS_FAST(UEquipmentComponent, EquippedItems, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(UActiveEquipmentComponent, EquippedItems, Params);
 }
 
-UEquipmentInstance* UEquipmentComponent::EquipItem(const FInventoryEntry& Entry)
+UEquipmentInstance* UActiveEquipmentComponent::EquipItem(const FInventoryEntry& Entry)
 {
 	if (!GetOwner()->HasAuthority()) return nullptr;
 
@@ -57,7 +57,7 @@ UEquipmentInstance* UEquipmentComponent::EquipItem(const FInventoryEntry& Entry)
 
 	FEquipmentEntry& AddedEntry = EquippedItems.Entries.Add_GetRef(NewEntry);
 	EquippedItems.MarkItemDirty(AddedEntry);
-	MARK_PROPERTY_DIRTY_FROM_NAME(UEquipmentComponent, EquippedItems, this);
+	MARK_PROPERTY_DIRTY_FROM_NAME(UActiveEquipmentComponent, EquippedItems, this);
 
 	AddReplicatedSubObject(NewInstance);
 
@@ -66,7 +66,7 @@ UEquipmentInstance* UEquipmentComponent::EquipItem(const FInventoryEntry& Entry)
 	return NewInstance;
 }
 
-bool UEquipmentComponent::UnequipItem(FGameplayTag SlotTag)
+bool UActiveEquipmentComponent::UnequipItem(FGameplayTag SlotTag)
 {
 	if (!GetOwner()->HasAuthority()) return false;
 	if (!SlotTag.IsValid()) return false;
@@ -90,14 +90,14 @@ bool UEquipmentComponent::UnequipItem(FGameplayTag SlotTag)
 
 	EquippedItems.Entries.RemoveAt(Index);
 	EquippedItems.MarkArrayDirty();
-	MARK_PROPERTY_DIRTY_FROM_NAME(UEquipmentComponent, EquippedItems, this);
+	MARK_PROPERTY_DIRTY_FROM_NAME(UActiveEquipmentComponent, EquippedItems, this);
 
 	OnEquipmentChanged.Broadcast(SlotTag, nullptr);
 
 	return true;
 }
 
-UEquipmentInstance* UEquipmentComponent::GetEquippedInstance(FGameplayTag SlotTag) const
+UEquipmentInstance* UActiveEquipmentComponent::GetEquippedInstance(FGameplayTag SlotTag) const
 {
 	const FEquipmentEntry* Found = EquippedItems.Entries.FindByPredicate([&SlotTag](const FEquipmentEntry& Entry)
 	{
@@ -107,7 +107,7 @@ UEquipmentInstance* UEquipmentComponent::GetEquippedInstance(FGameplayTag SlotTa
 	return Found != nullptr ? Found->Instance : nullptr;
 }
 
-void UEquipmentComponent::RefreshEquipment(const FInventoryEntry& Entry)
+void UActiveEquipmentComponent::RefreshEquipment(const FInventoryEntry& Entry)
 {
 	if (!GetOwner()->HasAuthority()) return;
 
@@ -125,12 +125,12 @@ void UEquipmentComponent::RefreshEquipment(const FInventoryEntry& Entry)
 	ApplyAbilitySetsFromEntry(Instance, Entry);
 
 	EquippedItems.MarkItemDirty(*Found);
-	MARK_PROPERTY_DIRTY_FROM_NAME(UEquipmentComponent, EquippedItems, this);
+	MARK_PROPERTY_DIRTY_FROM_NAME(UActiveEquipmentComponent, EquippedItems, this);
 
 	OnEquipmentChanged.Broadcast(Found->SlotTag, Instance);
 }
 
-void UEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const FInventoryEntry& Entry)
+void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const FInventoryEntry& Entry)
 {
 	if (!::IsValid(Instance)) return;
 
@@ -157,7 +157,7 @@ void UEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance
 	// TODO: ApplyMasteryPenaltyIfNeeded — MasteryComponent (character 도메인) 후
 }
 
-void UEquipmentComponent::RevokeAbilitySets(UEquipmentInstance* Instance)
+void UActiveEquipmentComponent::RevokeAbilitySets(UEquipmentInstance* Instance)
 {
 	if (!::IsValid(Instance)) return;
 

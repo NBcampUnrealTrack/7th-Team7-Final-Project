@@ -4,7 +4,7 @@
 #include "GameFramework/Character.h"
 #include "GYCharacter.generated.h"
 
-class UEquipmentComponent;
+class UActiveEquipmentComponent;
 
 UCLASS()
 class GY_API AGYCharacter : public ACharacter
@@ -15,9 +15,9 @@ public:
 	AGYCharacter();
 
 	UFUNCTION(BlueprintPure)
-	UEquipmentComponent* GetEquipmentComponent() const { return EquipmentComponent; }
+	UActiveEquipmentComponent* GetActiveEquipmentComponent() const { return ActiveEquipmentComponent; }
 
 protected:
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UEquipmentComponent> EquipmentComponent;
+	TObjectPtr<UActiveEquipmentComponent> ActiveEquipmentComponent;
 };

@@ -1,8 +1,8 @@
 #include "Character/GYCharacter.h"
 
-#include "Equipment/EquipmentComponent.h"
+#include "Equipment/ActiveEquipmentComponent.h"
 
 AGYCharacter::AGYCharacter()
 {
-	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
+	ActiveEquipmentComponent = CreateDefaultSubobject<UActiveEquipmentComponent>(TEXT("ActiveEquipmentComponent"));
 }
