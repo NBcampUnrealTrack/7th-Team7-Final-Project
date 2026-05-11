@@ -1,7 +1,12 @@
 #include "Equipment/EquipmentLoadoutComponent.h"
 
+#include "Inventory/InventoryComponent.h"
+#include "Inventory/InventoryEntry.h"
+#include "Items/Fragments/ItemFragment_Equippable.h"
+#include "Items/ItemDefinition.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "Net/UnrealNetwork.h"
+#include "Player/GYPlayerState.h"
 
 UEquipmentLoadoutComponent::UEquipmentLoadoutComponent()
 {
@@ -16,6 +21,31 @@ void UEquipmentLoadoutComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	Params.bIsPushBased = true;
 	Params.Condition = COND_OwnerOnly;
 	DOREPLIFETIME_WITH_PARAMS_FAST(UEquipmentLoadoutComponent, LoadoutEntries, Params);
+}
+
+void UEquipmentLoadoutComponent::Server_RequestEquip_Implementation(const FGuid& InstanceId)
+{
+	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwner());
+	if (!IsValid(PS)) return;
+
+	UInventoryComponent* Inv = PS->GetInventoryComponent();
+	if (!IsValid(Inv)) return;
+
+	const FInventoryEntry* Entry = Inv->FindEntry(InstanceId);
+	if (Entry == nullptr) return;
+
+	UItemDefinition* Def = Entry->Definition.LoadSynchronous();
+	if (!IsValid(Def)) return;
+
+	const UItemFragment_Equippable* EquippableFragment = Def->FindFragment<UItemFragment_Equippable>();
+	if (EquippableFragment == nullptr) return;
+
+	SetSlot(EquippableFragment->SlotTag, InstanceId);
+}
+
+void UEquipmentLoadoutComponent::Server_RequestUnequip_Implementation(FGameplayTag SlotTag)
+{
+	ClearSlot(SlotTag);
 }
 
 bool UEquipmentLoadoutComponent::SetSlot(FGameplayTag SlotTag, const FGuid& InstanceId)

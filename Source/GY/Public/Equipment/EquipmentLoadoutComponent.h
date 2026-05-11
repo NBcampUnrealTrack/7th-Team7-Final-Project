@@ -27,6 +27,12 @@ class GY_API UEquipmentLoadoutComponent : public UActorComponent
 public:
 	UEquipmentLoadoutComponent();
 
+	UFUNCTION(Server, Reliable)
+	void Server_RequestEquip(const FGuid& InstanceId);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RequestUnequip(FGameplayTag SlotTag);
+
 	bool SetSlot(FGameplayTag SlotTag, const FGuid& InstanceId);
 	bool ClearSlot(FGameplayTag SlotTag);
 

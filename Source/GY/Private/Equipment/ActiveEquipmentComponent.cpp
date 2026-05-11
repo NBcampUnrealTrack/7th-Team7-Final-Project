@@ -5,12 +5,14 @@
 #include "AbilitySystemComponent.h"
 #include "Equipment/EquipmentInstance.h"
 #include "GameFramework/Pawn.h"
+#include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
 #include "Items/Fragments/ItemFragment_Equippable.h"
 #include "Items/Fragments/ItemFragment_GrantedAbilitySet.h"
 #include "Items/ItemDefinition.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "Net/UnrealNetwork.h"
+#include "Player/GYPlayerState.h"
 
 UActiveEquipmentComponent::UActiveEquipmentComponent()
 {
@@ -34,7 +36,7 @@ UEquipmentInstance* UActiveEquipmentComponent::EquipItem(const FInventoryEntry& 
 	if (!GetOwner()->HasAuthority()) return nullptr;
 
 	UItemDefinition* Def = Entry.Definition.LoadSynchronous();
-	if (!::IsValid(Def)) return nullptr;
+	if (!IsValid(Def)) return nullptr;
 
 	const UItemFragment_Equippable* EquippableFragment = Def->FindFragment<UItemFragment_Equippable>();
 	if (EquippableFragment == nullptr) return nullptr;
@@ -79,7 +81,7 @@ bool UActiveEquipmentComponent::UnequipItem(FGameplayTag SlotTag)
 	UEquipmentInstance* Instance = EquippedItems.Entries[Index].Instance;
 	APawn* Pawn = Cast<APawn>(GetOwner());
 
-	if (::IsValid(Instance))
+	if (IsValid(Instance))
 	{
 		RevokeAbilitySets(Instance);
 		Instance->OnUnequipped(Pawn);
@@ -109,13 +111,13 @@ void UActiveEquipmentComponent::RefreshEquipment(const FInventoryEntry& Entry)
 
 	FEquipmentEntry* Found = EquippedItems.Entries.FindByPredicate([&Entry](const FEquipmentEntry& E)
 	{
-		return ::IsValid(E.Instance) && E.Instance->GetInstanceId() == Entry.InstanceId;
+		return IsValid(E.Instance) && E.Instance->GetInstanceId() == Entry.InstanceId;
 	});
 
 	if (Found == nullptr) return;
 
 	UEquipmentInstance* Instance = Found->Instance;
-	if (!::IsValid(Instance)) return;
+	if (!IsValid(Instance)) return;
 
 	RevokeAbilitySets(Instance);
 	ApplyAbilitySetsFromEntry(Instance, Entry);
@@ -126,17 +128,17 @@ void UActiveEquipmentComponent::RefreshEquipment(const FInventoryEntry& Entry)
 
 void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const FInventoryEntry& Entry)
 {
-	if (!::IsValid(Instance)) return;
+	if (!IsValid(Instance)) return;
 
 	UItemDefinition* Def = Entry.Definition.LoadSynchronous();
-	if (!::IsValid(Def)) return;
+	if (!IsValid(Def)) return;
 
 	APawn* Pawn = Cast<APawn>(GetOwner());
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);
-	if (!::IsValid(ASC)) return;
+	if (!IsValid(ASC)) return;
 
 	const UItemFragment_GrantedAbilitySet* GrantFragment = Def->FindFragment<UItemFragment_GrantedAbilitySet>();
-	if (GrantFragment != nullptr && ::IsValid(GrantFragment->AbilitySet))
+	if (GrantFragment != nullptr && IsValid(GrantFragment->AbilitySet))
 	{
 		GrantFragment->AbilitySet->GiveToAbilitySystem(
 			ASC,
@@ -153,11 +155,36 @@ void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* In
 
 void UActiveEquipmentComponent::RevokeAbilitySets(UEquipmentInstance* Instance)
 {
-	if (!::IsValid(Instance)) return;
+	if (!IsValid(Instance)) return;
 
 	APawn* Pawn = Cast<APawn>(GetOwner());
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);
-	if (!::IsValid(ASC)) return;
+	if (!IsValid(ASC)) return;
 
 	Instance->GetMutableGrantedHandles().TakeFromAbilitySystem(ASC);
+}
+
+void UActiveEquipmentComponent::OnLoadoutSlotChanged(FGameplayTag SlotTag, FGuid NewInstanceId)
+{
+	if (!GetOwner()->HasAuthority()) return;
+
+	if (!NewInstanceId.IsValid())
+	{
+		UnequipItem(SlotTag);
+		return;
+	}
+
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (!IsValid(Pawn)) return;
+
+	AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>();
+	if (!IsValid(PS)) return;
+
+	UInventoryComponent* Inv = PS->GetInventoryComponent();
+	if (!IsValid(Inv)) return;
+
+	const FInventoryEntry* Entry = Inv->FindEntry(NewInstanceId);
+	if (Entry == nullptr) return;
+
+	EquipItem(*Entry);
 }

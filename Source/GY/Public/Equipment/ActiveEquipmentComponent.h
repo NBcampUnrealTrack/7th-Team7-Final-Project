@@ -26,6 +26,8 @@ public:
 
 	void RefreshEquipment(const struct FInventoryEntry& Entry);
 
+	void OnLoadoutSlotChanged(FGameplayTag SlotTag, FGuid NewInstanceId);
+
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
