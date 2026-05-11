@@ -18,6 +18,14 @@ class GY_API UEquipmentComponent : public UActorComponent
 public:
 	UEquipmentComponent();
 
+	UEquipmentInstance* EquipItem(const struct FInventoryEntry& Entry);
+
+	UFUNCTION(BlueprintCallable)
+	bool UnequipItem(FGameplayTag SlotTag);
+
+	UFUNCTION(BlueprintPure)
+	UEquipmentInstance* GetEquippedInstance(FGameplayTag SlotTag) const;
+
 	FOnEquipmentChanged OnEquipmentChanged;
 
 protected:
