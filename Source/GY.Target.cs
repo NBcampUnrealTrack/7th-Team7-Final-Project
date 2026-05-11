@@ -10,6 +10,6 @@ public class GYTarget : TargetRules
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 
-		ExtraModuleNames.AddRange( new string[] { "GY" } );
+		ExtraModuleNames.AddRange( new string[] { "GY", "GYUI" } );
 	}
 }

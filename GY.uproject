@@ -11,6 +11,16 @@
 			"AdditionalDependencies": [
 				"CoreUObject"
 			]
+		},
+		{
+			"Name": "GYUI",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"TargetAllowList": [
+				"Editor",
+				"Client",
+				"Game"
+			]
 		}
 	],
 	"Plugins": [

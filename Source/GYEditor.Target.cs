@@ -10,6 +10,6 @@ public class GYEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 
-		ExtraModuleNames.AddRange( new string[] { "GY" } );
+		ExtraModuleNames.AddRange( new string[] { "GY", "GYUI" } );
 	}
 }
