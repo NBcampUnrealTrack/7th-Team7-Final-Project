@@ -7,6 +7,7 @@
 #include "LootBoxActor.generated.h"
 
 class UDataTable;
+class UStaticMeshComponent;
 
 UCLASS()
 class GY_API ALootBoxActor : public AActor, public IInteractable
@@ -18,6 +19,9 @@ public:
 
 	virtual void GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const override;
 	virtual void OnInteract(FGameplayTag OptionTag, APawn* Interactor) override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Loot")
+	TObjectPtr<UStaticMeshComponent> Mesh;
 
 	UPROPERTY(EditAnywhere, Category = "Loot")
 	FName LootSourceId;

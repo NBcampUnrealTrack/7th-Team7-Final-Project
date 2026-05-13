@@ -1,5 +1,6 @@
 #include "Loot/LootBoxActor.h"
 
+#include "Components/StaticMeshComponent.h"
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Engine/DataTable.h"
 #include "Engine/GameInstance.h"
@@ -13,6 +14,9 @@ ALootBoxActor::ALootBoxActor()
 {
 	bReplicates = true;
 	PrimaryActorTick.bCanEverTick = false;
+
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	SetRootComponent(Mesh);
 }
 
 void ALootBoxActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
