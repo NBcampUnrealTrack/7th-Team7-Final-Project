@@ -17,7 +17,7 @@ class GY_API IInteractable
 	GENERATED_BODY()
 
 public:
-	virtual void GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& Out) const = 0;
+	virtual void GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const = 0;
 
 	virtual void OnInteract(FGameplayTag OptionTag, APawn* Interactor) = 0;
 };
