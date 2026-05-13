@@ -35,16 +35,18 @@ void ALootBoxActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteract
 
 void ALootBoxActor::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 {
+	if (!HasAuthority()) return;
 	if (OptionTag != GYGameplayTags::Interaction_Open_LootBox) return;
 
 	if (!bOpened)
 	{
-		Server_OpenBox(Interactor);
+		OpenBox(Interactor);
 	}
 }
 
-void ALootBoxActor::Server_OpenBox_Implementation(APawn* Opener)
+void ALootBoxActor::OpenBox(APawn* Opener)
 {
+	if (!HasAuthority()) return;
 	if (bOpened) return;
 
 	UGameInstance* GI = GetGameInstance();
@@ -66,8 +68,9 @@ void ALootBoxActor::Server_OpenBox_Implementation(APawn* Opener)
 	bOpened = true;
 }
 
-void ALootBoxActor::Server_TakeItem_Implementation(int32 DropIndex, APawn* Taker)
+void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 {
+	if (!HasAuthority()) return;
 	if (!PendingDrops.IsValidIndex(DropIndex)) return;
 	if (!IsValid(Taker)) return;
 
@@ -99,11 +102,13 @@ void ALootBoxActor::Server_TakeItem_Implementation(int32 DropIndex, APawn* Taker
 	}
 }
 
-void ALootBoxActor::Server_TakeAll_Implementation(APawn* Taker)
+void ALootBoxActor::TakeAll(APawn* Taker)
 {
+	if (!HasAuthority()) return;
+
 	for (int32 i = PendingDrops.Num() - 1; i >= 0; --i)
 	{
-		Server_TakeItem(i, Taker);
+		TakeItem(i, Taker);
 	}
 }
 

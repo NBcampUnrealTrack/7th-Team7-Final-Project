@@ -25,14 +25,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Loot")
 	TSoftObjectPtr<UDataTable> LootTable;
 
-	UFUNCTION(Server, Reliable)
-	void Server_OpenBox(APawn* Opener);
+	void OpenBox(APawn* Opener);
 
-	UFUNCTION(Server, Reliable)
-	void Server_TakeItem(int32 DropIndex, APawn* Taker);
+	void TakeItem(int32 DropIndex, APawn* Taker);
 
-	UFUNCTION(Server, Reliable)
-	void Server_TakeAll(APawn* Taker);
+	void TakeAll(APawn* Taker);
 
 	const TArray<FLootDrop>& GetPendingDrops() const { return PendingDrops; }
 	bool IsOpened() const { return bOpened; }
