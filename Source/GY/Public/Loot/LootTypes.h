@@ -18,6 +18,9 @@ struct GY_API FLootDrop
 	int32 Count = 1;
 
 	UPROPERTY(BlueprintReadOnly)
+	int32 Level = 1;
+
+	UPROPERTY(BlueprintReadOnly)
 	int32 EnhancementLevel = 0;
 
 	UPROPERTY(BlueprintReadOnly)

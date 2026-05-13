@@ -264,8 +264,8 @@ void UGYCheatManager::GY_PrintLootBoxContents()
 	{
 		UItemDefinition* Def = Drop.Definition.LoadSynchronous();
 		const FName ItemId = IsValid(Def) ? Def->ItemId : NAME_None;
-		UE_LOG(LogTemp, Log, TEXT("  [%d] %s x%d (Grade=%s, Dev=%.3f)"),
-			Index, *ItemId.ToString(), Drop.Count,
+		UE_LOG(LogTemp, Log, TEXT("  [%d] %s x%d Lv%d (Grade=%s, Dev=%.3f)"),
+			Index, *ItemId.ToString(), Drop.Count, Drop.Level,
 			*Drop.GradeTag.ToString(), Drop.StatDeviation);
 		++Index;
 	}

@@ -40,21 +40,6 @@ namespace
 		return Candidates.Last();
 	}
 
-	FGameplayTag PickGrade(const FGameplayTagContainer& AllowedGrades, FRandomStream& Stream)
-	{
-		const int32 Num = AllowedGrades.Num();
-		if (Num == 0) return FGameplayTag();
-		const int32 Index = Stream.RandRange(0, Num - 1);
-
-		int32 Cursor = 0;
-		for (const FGameplayTag& Tag : AllowedGrades)
-		{
-			if (Cursor == Index) return Tag;
-			++Cursor;
-		}
-		return FGameplayTag();
-	}
-
 	float RollStatDeviation(FRandomStream& Stream)
 	{
 		return Stream.FRandRange(-0.05f, 0.05f);
@@ -76,11 +61,10 @@ FLootResult ULootService::RollLoot(const FLootContext& Context, UDataTable* Loot
 	FLootDrop Drop;
 	Drop.Definition = Picked->Definition;
 	Drop.Count = Stream.RandRange(Picked->MinCount, Picked->MaxCount);
-	Drop.GradeTag = PickGrade(Picked->AllowedGrades, Stream);
 	Drop.StatDeviation = RollStatDeviation(Stream);
 	Drop.UsedSeed = Seed.GetInitialSeed();
 
-	// TODO: RegionLevel에 따른 등급 분포 (CT_RegionScaling)
+	// TODO: CT_RegionScaling으로 Grade/Level 결정
 	// TODO: EnchantOption 풀 롤 → RolledOptionIds 채움
 	// TODO: Grade == Legendary 시 Penalty 자동 부여
 	// TODO: PartySize 보정
