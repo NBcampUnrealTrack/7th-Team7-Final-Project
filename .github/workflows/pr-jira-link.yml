@@ -1,0 +1,50 @@
+name: PR Jira Link
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  jira-link:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const JIRA_BASE = 'https://dooyeonk.atlassian.net/browse';
+            const KEY_RE = /(KAN-\d+)/;
+
+            const pr = context.payload.pull_request;
+            const match = pr.title.match(KEY_RE);
+            if (!match) {
+              core.info(`No Jira key in title '${pr.title}', skipping.`);
+              return;
+            }
+
+            const key = match[1];
+            const url = `${JIRA_BASE}/${key}`;
+            const link = `- [${key}](${url})`;
+            const body = pr.body || '';
+
+            if (body.includes(url)) {
+              core.info(`Link for ${key} already present.`);
+              return;
+            }
+
+            const sectionRe = /(## Jira[^\n]*\n(?:<!--[\s\S]*?-->\n)?)/;
+            let newBody;
+            if (sectionRe.test(body)) {
+              newBody = body.replace(sectionRe, `$1${link}\n`);
+            } else {
+              newBody = `${body}\n\n## Jira\n\n${link}\n`;
+            }
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              body: newBody,
+            });
