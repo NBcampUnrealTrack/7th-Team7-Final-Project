@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "AbilitySets/AbilitySetGrantedHandles.h"
+#include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "EquipmentInstance.generated.h"
 
 class AActor;

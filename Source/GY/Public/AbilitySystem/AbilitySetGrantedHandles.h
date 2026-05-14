@@ -23,5 +23,5 @@ struct GY_API FAbilitySetGrantedHandles
 	TArray<TObjectPtr<UAttributeSet>> GrantedAttributeSets;
 
 	void TakeFromAbilitySystem(UAbilitySystemComponent* ASC);
-	bool IsValid() const;
+	bool HasAnyHandles() const;
 };

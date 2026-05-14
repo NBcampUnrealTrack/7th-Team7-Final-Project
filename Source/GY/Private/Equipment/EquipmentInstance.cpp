@@ -28,7 +28,7 @@ void UEquipmentInstance::OnUnequipped(APawn* OwningPawn)
 UAbilitySystemComponent* UEquipmentInstance::FindAbilitySystemComponent() const
 {
 	APawn* Pawn = OwnerPawn.Get();
-	if (!::IsValid(Pawn)) return nullptr;
+	if (!IsValid(Pawn)) return nullptr;
 
 	return UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);
 }

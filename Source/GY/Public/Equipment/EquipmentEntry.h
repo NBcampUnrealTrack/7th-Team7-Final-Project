@@ -5,7 +5,7 @@
 #include "Net/Serialization/FastArraySerializer.h"
 #include "EquipmentEntry.generated.h"
 
-class UEquipmentComponent;
+class UActiveEquipmentComponent;
 class UEquipmentInstance;
 
 USTRUCT(BlueprintType)
@@ -13,10 +13,10 @@ struct GY_API FEquipmentEntry : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FGameplayTag SlotTag;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UEquipmentInstance> Instance;
 
 	void PreReplicatedRemove(const struct FEquipmentList& Serializer);
@@ -29,11 +29,11 @@ struct GY_API FEquipmentList : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<FEquipmentEntry> Entries;
 
 	UPROPERTY(NotReplicated)
-	TObjectPtr<UEquipmentComponent> OwnerComponent;
+	TObjectPtr<UActiveEquipmentComponent> OwnerComponent;
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{

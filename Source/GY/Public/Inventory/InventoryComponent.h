@@ -27,11 +27,13 @@ public:
 	const FInventoryEntry* FindEntry(const FGuid& InstanceId) const;
 	TArray<FInventoryEntry> GetAllEntriesByCategory(FGameplayTag CategoryTag) const;
 
+	const TArray<FInventoryEntry>& GetEntries() const { return Inventory.Entries; }
+
 	FOnInventoryChanged OnInventoryChanged;
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Inventory")
 	FInventoryList Inventory;
 };

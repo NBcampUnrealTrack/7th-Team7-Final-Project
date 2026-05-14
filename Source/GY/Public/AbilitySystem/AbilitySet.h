@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "GameplayTagContainer.h"
-#include "AbilitySets/AbilitySetGrantedHandles.h"
+#include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "AbilitySet.generated.h"
 
 class UAbilitySystemComponent;

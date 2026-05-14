@@ -16,7 +16,9 @@ public class GY : ModuleRules
 			"GameplayTags",
 			"GameplayTasks",
 			"EnhancedInput",
-			"NetCore"
+			"NetCore",
+			"DeveloperSettings",
+			"DataBridge"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

@@ -4,19 +4,19 @@
 #include "Components/ActorComponent.h"
 #include "Equipment/EquipmentEntry.h"
 #include "GameplayTagContainer.h"
-#include "EquipmentComponent.generated.h"
+#include "ActiveEquipmentComponent.generated.h"
 
+class UAbilitySystemComponent;
 class UEquipmentInstance;
-
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, FGameplayTag /*SlotTag*/, UEquipmentInstance* /*NewInstance*/);
+class UItemDefinition;
 
 UCLASS(ClassGroup = (Equipment), meta = (BlueprintSpawnableComponent))
-class GY_API UEquipmentComponent : public UActorComponent
+class GY_API UActiveEquipmentComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	UEquipmentComponent();
+	UActiveEquipmentComponent();
 
 	UEquipmentInstance* EquipItem(const struct FInventoryEntry& Entry);
 
@@ -28,7 +28,7 @@ public:
 
 	void RefreshEquipment(const struct FInventoryEntry& Entry);
 
-	FOnEquipmentChanged OnEquipmentChanged;
+	void OnLoadoutSlotChanged(FGameplayTag SlotTag, FGuid NewInstanceId);
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -36,6 +36,8 @@ protected:
 	void ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const struct FInventoryEntry& Entry);
 	void RevokeAbilitySets(UEquipmentInstance* Instance);
 
-	UPROPERTY(Replicated)
+	void ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC);
+
+	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Equipment")
 	FEquipmentList EquippedItems;
 };

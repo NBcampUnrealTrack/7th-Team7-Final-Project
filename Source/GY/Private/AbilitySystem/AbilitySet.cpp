@@ -1,4 +1,4 @@
-#include "AbilitySets/AbilitySet.h"
+#include "AbilitySystem/AbilitySet.h"
 
 #include "AbilitySystemComponent.h"
 #include "AttributeSet.h"
@@ -10,12 +10,12 @@ void UAbilitySet::GiveToAbilitySystem(
 	FAbilitySetGrantedHandles* OutHandles,
 	UObject* SourceObject) const
 {
-	if (!::IsValid(ASC)) return;
+	if (!IsValid(ASC)) return;
 	if (!ASC->IsOwnerActorAuthoritative()) return;
 
 	for (const FAbilitySet_GameplayAbility& AbilityEntry : GrantedAbilities)
 	{
-		if (!::IsValid(AbilityEntry.Ability)) continue;
+		if (!IsValid(AbilityEntry.Ability)) continue;
 
 		UGameplayAbility* AbilityCDO = AbilityEntry.Ability->GetDefaultObject<UGameplayAbility>();
 
@@ -33,7 +33,7 @@ void UAbilitySet::GiveToAbilitySystem(
 
 	for (const FAbilitySet_GameplayEffect& EffectEntry : GrantedEffects)
 	{
-		if (!::IsValid(EffectEntry.GameplayEffect)) continue;
+		if (!IsValid(EffectEntry.GameplayEffect)) continue;
 
 		const UGameplayEffect* EffectCDO = EffectEntry.GameplayEffect->GetDefaultObject<UGameplayEffect>();
 		const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectToSelf(
@@ -49,7 +49,7 @@ void UAbilitySet::GiveToAbilitySystem(
 
 	for (const FAbilitySet_AttributeSet& AttrEntry : GrantedAttributes)
 	{
-		if (!::IsValid(AttrEntry.AttributeSet)) continue;
+		if (!IsValid(AttrEntry.AttributeSet)) continue;
 
 		UAttributeSet* NewSet = NewObject<UAttributeSet>(ASC->GetOwner(), AttrEntry.AttributeSet);
 		ASC->AddAttributeSetSubobject(NewSet);
@@ -63,7 +63,7 @@ void UAbilitySet::GiveToAbilitySystem(
 
 void FAbilitySetGrantedHandles::TakeFromAbilitySystem(UAbilitySystemComponent* ASC)
 {
-	if (!::IsValid(ASC)) return;
+	if (!IsValid(ASC)) return;
 	if (!ASC->IsOwnerActorAuthoritative()) return;
 
 	for (const FGameplayAbilitySpecHandle& Handle : AbilitySpecHandles)
@@ -84,7 +84,7 @@ void FAbilitySetGrantedHandles::TakeFromAbilitySystem(UAbilitySystemComponent* A
 
 	for (UAttributeSet* Set : GrantedAttributeSets)
 	{
-		if (::IsValid(Set))
+		if (IsValid(Set))
 		{
 			ASC->RemoveSpawnedAttribute(Set);
 		}
@@ -95,7 +95,7 @@ void FAbilitySetGrantedHandles::TakeFromAbilitySystem(UAbilitySystemComponent* A
 	GrantedAttributeSets.Reset();
 }
 
-bool FAbilitySetGrantedHandles::IsValid() const
+bool FAbilitySetGrantedHandles::HasAnyHandles() const
 {
 	return AbilitySpecHandles.Num() > 0
 		|| GameplayEffectHandles.Num() > 0
