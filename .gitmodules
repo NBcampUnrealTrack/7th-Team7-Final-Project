@@ -1,0 +1,3 @@
+[submodule "Plugins/DataBridge"]
+	path = Plugins/DataBridge
+	url = https://github.com/dooyeonk/UE-DataBridge.git
