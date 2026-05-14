@@ -1,3 +1,6 @@
 [submodule "Plugins/DataBridge"]
 	path = Plugins/DataBridge
 	url = https://github.com/dooyeonk/UE-DataBridge.git
+[submodule "Plugins/Monolith"]
+	path = Plugins/Monolith
+	url = https://github.com/tumourlove/monolith.git
