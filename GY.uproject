@@ -32,6 +32,13 @@
 			]
 		},
 		{
+			"Name": "Monolith",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
+		{
 			"Name": "GameplayStateTree",
 			"Enabled": true
 		},
