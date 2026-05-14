@@ -1,6 +1,3 @@
 [submodule "Plugins/DataBridge"]
 	path = Plugins/DataBridge
 	url = https://github.com/dooyeonk/UE-DataBridge.git
-[submodule "Plugins/PoorForce"]
-	path = Plugins/PoorForce
-	url = https://github.com/dooyeonk/PoorForce.git
