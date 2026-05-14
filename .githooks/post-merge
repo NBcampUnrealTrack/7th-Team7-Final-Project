@@ -1,0 +1,9 @@
+#!/bin/sh
+# git pull / merge 후 asset_manifest.json 변경 시 status_assets 자동 실행
+
+if git diff HEAD@{1} HEAD --name-only 2>/dev/null | grep -q "scripts/asset_manifest.json"; then
+    echo ""
+    echo "=== PaidAssets 매니페스트가 변경됐습니다 ==="
+    powershell -NoProfile -ExecutionPolicy Bypass -File "scripts/lib/status_assets.ps1" -NoPrompt
+    echo ""
+fi
