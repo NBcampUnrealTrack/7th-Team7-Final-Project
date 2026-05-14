@@ -42,6 +42,14 @@
 		{
 			"Name": "GameplayAbilities",
 			"Enabled": true
-		}
+		},
+		{
+			"Name": "GameplayMessageRouter",
+			"Enabled": true
+		},
+		{
+			"Name": "CommonUI",
+			"Enabled": true
+		},
 	]
 }
