@@ -1,0 +1,19 @@
+﻿#pragma once
+
+#include "NativeGameplayTags.h"
+
+namespace GYGameplayTags
+{
+	// TODO: 기획 확정되면 수정 예정, 일단 더미 데이터
+
+	/* 퀘스트 시작 조건 */
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Activate_AreaEnter) // 구역 진입
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Activate_NPCInteract) // NPC 상호작용
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Activate_ItemObtain) // 아이템 획득
+
+	/* 퀘스트 목표 */
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Objective_Kill) // 킬
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Objective_Collect) // 수집
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Objective_Deliver) // 배달
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Objective_Interact) // 상호작용
+}
