@@ -1,0 +1,106 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
+#include "Config/EnemyDataAsset.h"
+#include "GYEnemyCharacterBase.generated.h"
+
+class UGYEnemyAdditionalAttribute;
+class UGYEnemyBaseAttribute;
+class UEnemyAnimInstance;
+class UAbilitySystemComponent;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDead, AGYEnemyCharacterBase*, Enemy);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AGYEnemyCharacterBase*, Enemy, float, DamageAmount);
+
+UCLASS(Abstract, BlueprintType, Blueprintable)
+class GY_API AGYEnemyCharacterBase : public ACharacter, public IAbilitySystemInterface
+{
+	GENERATED_BODY()
+
+public:
+	AGYEnemyCharacterBase();
+
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UFUNCTION(BlueprintCallable, Category = "Enemy")
+	void InitWithID(const EEnemyType& InEnemyType);
+
+	void InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance);
+
+	UFUNCTION(BlueprintPure, Category = "Enemy")
+	UEnemyDataAsset* GetEnemyData() const { return LoadedDataAsset; }
+
+	UFUNCTION(BlueprintPure, Category = "Enemy")
+	EEnemyType GetEnemyType() const { return EnemyType; }
+
+	UFUNCTION(BlueprintPure, Category = "Enemy")
+	bool IsDead() const { return bIsDead; }
+
+	UFUNCTION(BlueprintCallable, Category = "Enemy|AI")
+	void SetCombatTarget(AActor* NewTarget);
+
+	UFUNCTION(BlueprintCallable, Category = "Enemy|AI")
+	void SetIsStunned(bool bNewStunned);
+
+protected:
+	virtual void BeginPlay() override;
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_Controller() override;
+
+	void LoadDataAssetAndApply();
+	void OnDataAssetLoaded();
+
+	void ApplyVisualConfig(const FEnemyVisualConfig& Config);
+	void ApplyAIConfig(const FEnemyAIConfig& Config);
+	void ApplyAnimConfig(const FEnemyAnimationConfig& Config);
+
+	void InitGAS();
+	void GrantDefaultAbilities();
+	void ApplyPassiveEffects();
+	void ApplyInitStatEffect();
+	void InitStatsFromDataTable();
+
+	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
+	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
+
+	UFUNCTION(BlueprintCallable, Category = "Enemy")
+	virtual void Die();
+
+public:
+	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
+	FOnEnemyDead OnEnemyDead;
+
+	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
+	FOnEnemyHit OnEnemyHit;
+
+protected:
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Enemy|Data")
+	EEnemyType EnemyType;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Enemy|Data")
+	TObjectPtr<UEnemyDataAsset> LoadedDataAsset;
+
+	/** TODO 은서 : 수정되어야함 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data")
+	TSoftObjectPtr<UDataTable> EnemyStatTable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data")
+	TSoftObjectPtr<UDataTable> EnemyTypeTable;
+
+	FName CachedStatRowName;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
+	TObjectPtr<UGYEnemyBaseAttribute> BaseAttribute;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
+	TObjectPtr<UGYEnemyAdditionalAttribute> AdditionalAttribute;
+
+	bool bIsDead = false;
+
+};
