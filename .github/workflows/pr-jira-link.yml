@@ -1,50 +1,168 @@
-name: PR Jira Link
+name: PR Jira Sync
 
 on:
   pull_request:
-    types: [opened, edited, synchronize]
+    types: [opened, edited, synchronize, closed, reopened]
 
 permissions:
   pull-requests: write
 
 jobs:
-  jira-link:
+  jira:
     runs-on: ubuntu-latest
+    env:
+      JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+      JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
     steps:
       - uses: actions/github-script@v7
         with:
           script: |
-            const JIRA_BASE = 'https://dooyeonk.atlassian.net/browse';
             const KEY_RE = /(KAN-\d+)/;
-
             const pr = context.payload.pull_request;
-            const match = pr.title.match(KEY_RE);
+            const action = context.payload.action;
+
+            const titleMatch = pr.title.match(KEY_RE);
+            const branchMatch = (pr.head && pr.head.ref || '').match(KEY_RE);
+            const match = titleMatch || branchMatch;
             if (!match) {
-              core.info(`No Jira key in title '${pr.title}', skipping.`);
+              core.info(`No Jira key in title or branch, skipping.`);
               return;
             }
-
             const key = match[1];
-            const url = `${JIRA_BASE}/${key}`;
-            const link = `- [${key}](${url})`;
-            const body = pr.body || '';
 
-            if (body.includes(url)) {
-              core.info(`Link for ${key} already present.`);
+            const base = (process.env.JIRA_BASE_URL || '').replace(/\/$/, '');
+            const email = process.env.JIRA_USER_EMAIL;
+            const token = process.env.JIRA_API_TOKEN;
+            if (!base || !email || !token) {
+              core.warning('Missing JIRA_BASE_URL / JIRA_USER_EMAIL / JIRA_API_TOKEN secrets.');
+              return;
+            }
+            const auth = Buffer.from(`${email}:${token}`).toString('base64');
+            const headers = {
+              Authorization: `Basic ${auth}`,
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            };
+
+            async function jira(method, path, body) {
+              const res = await fetch(`${base}/rest/api/3${path}`, {
+                method,
+                headers,
+                body: body ? JSON.stringify(body) : undefined,
+              });
+              if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`Jira ${method} ${path} → ${res.status} ${text}`);
+              }
+              if (res.status === 204) return null;
+              const ct = res.headers.get('content-type') || '';
+              return ct.includes('json') ? res.json() : null;
+            }
+
+            const fields = 'summary,status,assignee,issuetype,priority,parent';
+            let issue;
+            try {
+              issue = await jira('GET', `/issue/${key}?fields=${fields}`);
+            } catch (e) {
+              core.warning(`Cannot fetch Jira issue ${key}: ${e.message}`);
               return;
             }
 
-            const sectionRe = /(## Jira[^\n]*\n(?:<!--[\s\S]*?-->\n)?)/;
-            let newBody;
-            if (sectionRe.test(body)) {
-              newBody = body.replace(sectionRe, `$1${link}\n`);
-            } else {
-              newBody = `${body}\n\n## Jira\n\n${link}\n`;
+            // Tier 2: 상태 자동 전이
+            const targetStatus = (() => {
+              if (action === 'opened' || action === 'reopened') return '리뷰 중';
+              if (action === 'closed' && pr.merged) return '완료';
+              return null;
+            })();
+
+            if (targetStatus && issue.fields.status.name !== targetStatus) {
+              try {
+                const { transitions } = await jira('GET', `/issue/${key}/transitions`);
+                const tr = transitions.find(t =>
+                  (t.to && t.to.name === targetStatus) || t.name === targetStatus
+                );
+                if (tr) {
+                  await jira('POST', `/issue/${key}/transitions`, { transition: { id: tr.id } });
+                  core.info(`Transitioned ${key}: ${issue.fields.status.name} → ${targetStatus}`);
+                  issue = await jira('GET', `/issue/${key}?fields=${fields}`);
+                } else {
+                  const avail = transitions.map(t => t.to && t.to.name).filter(Boolean).join(', ');
+                  core.warning(`No transition to '${targetStatus}' for ${key}. Available: ${avail}`);
+                }
+              } catch (e) {
+                core.warning(`Transition failed: ${e.message}`);
+              }
             }
 
-            await github.rest.pulls.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-              body: newBody,
-            });
+            // Tier 1: Jira → GitHub PR Remote Link 등록 (idempotent via globalId)
+            try {
+              const prStateLabel = pr.merged ? 'Merged' : (pr.state === 'open' ? 'Open' : 'Closed');
+              await jira('POST', `/issue/${key}/remotelink`, {
+                globalId: `github-pr-${context.repo.owner}-${context.repo.repo}-${pr.number}`,
+                application: { type: 'com.github', name: 'GitHub' },
+                relationship: 'links to',
+                object: {
+                  url: pr.html_url,
+                  title: `PR #${pr.number}: ${pr.title}`,
+                  icon: {
+                    url16x16: 'https://github.githubassets.com/favicons/favicon.png',
+                    title: 'GitHub',
+                  },
+                  status: {
+                    resolved: !!pr.merged || pr.state === 'closed',
+                    icon: { title: prStateLabel },
+                  },
+                },
+              });
+              core.info(`Remote link upserted on ${key}`);
+            } catch (e) {
+              core.warning(`Remote link failed: ${e.message}`);
+            }
+
+            // Tier 1: PR body에 Jira 티켓 스냅샷 삽입
+            const f = issue.fields;
+            const status = f.status.name;
+            const assignee = (f.assignee && f.assignee.displayName) || '미지정';
+            const type = (f.issuetype && f.issuetype.name) || '-';
+            const priority = (f.priority && f.priority.name) || '-';
+            const parent = f.parent && f.parent.fields && f.parent.fields.summary;
+            const issueUrl = `${base}/browse/${key}`;
+
+            const lines = [
+              '<!-- jira-start -->',
+              '## Jira',
+              '',
+              `**[${key}](${issueUrl})** — ${f.summary}`,
+              '',
+              '| 상태 | 담당 | 타입 | 우선순위 |',
+              '|------|------|------|----------|',
+              `| ${status} | ${assignee} | ${type} | ${priority} |`,
+            ];
+            if (parent) {
+              lines.push('', `에픽: ${parent}`);
+            }
+            lines.push('<!-- jira-end -->');
+            const block = lines.join('\n');
+
+            const body = pr.body || '';
+            const markerRe = /<!-- jira-start -->[\s\S]*?<!-- jira-end -->/;
+            const legacyRe = /\n*## Jira\s*\n+(?:- \[KAN-\d+\]\([^)]+\)\s*\n?)+/g;
+
+            let newBody;
+            if (markerRe.test(body)) {
+              newBody = body.replace(markerRe, block);
+            } else {
+              const cleaned = body.replace(legacyRe, '').replace(/\s+$/, '');
+              newBody = cleaned ? `${cleaned}\n\n${block}\n` : `${block}\n`;
+            }
+
+            if (newBody !== body) {
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                body: newBody,
+              });
+              core.info(`PR body synced for ${key}`);
+            }
