@@ -14,7 +14,9 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          MESSAGE="📥 **develop에 PaidAssets 매니페스트 변경 머지됨**\n팀원들은 scripts/sync_assets.bat 로 받아주세요.\n${{ github.event.head_commit.url }}"
+          MESSAGE="📥 **develop에 PaidAssets 매니페스트 변경 머지됨**
+          팀원들은 scripts/sync_assets.bat 로 받아주세요.
+          ${{ github.event.head_commit.url }}"
 
           curl -X POST -H "Content-Type: application/json" \
                -d "$(jq -nc --arg content "$MESSAGE" '{content: $content}')" \
