@@ -18,7 +18,9 @@ public class GY : ModuleRules
 			"EnhancedInput",
 			"NetCore",
 			"DeveloperSettings",
-			"DataBridge"
+			"DataBridge",
+			"AIModule",
+			"NavigationSystem"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
