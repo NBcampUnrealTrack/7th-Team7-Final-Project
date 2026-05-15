@@ -24,6 +24,7 @@ void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UQuestSubsystem::BuildCache(UDataTable* DataTable)
 {
+	// 데이터 테이블 순회 및 캐싱
 	QuestCache.Empty();
 
 	for (const FName& RowName : DataTable->GetRowNames())
