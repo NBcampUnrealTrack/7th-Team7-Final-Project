@@ -6,6 +6,8 @@
 
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
+#include "AbilitySystem/Attributes/Enemy/GYEnemyAdditionalAttribute.h"
+#include "AbilitySystem/Attributes/Enemy/GYEnemyBaseAttribute.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -13,6 +15,7 @@
 #include "Engine/AssetManager.h"
 #include "Animation/BlendSpace.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Enemy/DataTables/EnemyStatRow.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
@@ -23,8 +26,8 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
-	/**TODO 은서 : 캐릭터 AttributeSet에 맞춰 작업 필요 */
-	AttributeSet = CreateDefaultSubobject<UAttributeSet>(TEXT("AttributeSet"));
+	BaseAttribute = CreateDefaultSubobject<UGYEnemyBaseAttribute>(TEXT("BaseAttribute"));
+	AdditionalAttribute = CreateDefaultSubobject<UGYEnemyAdditionalAttribute>(TEXT("AdditionalAttribute"));
 
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -180,13 +183,12 @@ void AGYEnemyCharacterBase::InitGAS()
 	if (!AbilitySystemComponent) return;
 
 	AbilitySystemComponent->InitAbilityActorInfo(this,this);
-	//TODO 은서 : AttributeSet 맞춰 세팅
-	// AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
-	// 	UAttributeSet::GetHealthAttribute())
-	// 	.AddUObject(this, &AEnemyCharacterBase::OnHealthChanged);
 
-	const FGameplayTag StunTag =
-		FGameplayTag::RequestGameplayTag(TEXT("Status.Debuff.Stun"));
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+		UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
+		.AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
+
+	const FGameplayTag StunTag = GYStateTags::State_Hit_Stun;
 	AbilitySystemComponent->RegisterGameplayTagEvent(
 		StunTag, EGameplayTagEventType::NewOrRemoved)
 		.AddUObject(this, &AGYEnemyCharacterBase::OnStunTagChanged);

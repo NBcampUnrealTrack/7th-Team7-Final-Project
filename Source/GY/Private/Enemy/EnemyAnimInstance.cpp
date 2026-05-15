@@ -43,7 +43,7 @@ void UEnemyAnimInstance::NativeInitializeAnimation()
 		BlackboardComponent = AIC->GetBlackboardComponent();
 	}
 
-	//TODO 은서 : DataAsset 비동기 로드 콜백 이후에 Init
+	OwnerEnemy->InitAnimInstanceAssets(this);
 }
 
 void UEnemyAnimInstance::NativeUpdateAnimation(float DeltaSeconds)

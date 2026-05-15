@@ -7,6 +7,8 @@
 #include "Config/EnemyDataAsset.h"
 #include "GYEnemyCharacterBase.generated.h"
 
+class UGYEnemyAdditionalAttribute;
+class UGYEnemyBaseAttribute;
 class UEnemyAnimInstance;
 class UAbilitySystemComponent;
 class UAttributeSet;
@@ -94,11 +96,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
-	/** TODO 은서 : 캐릭터쪽 AttributSet이 나오면 그 Class에 맞게 수정되어야함 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
-	TObjectPtr<UAttributeSet> AttributeSet;
+	TObjectPtr<UGYEnemyBaseAttribute> BaseAttribute;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
+	TObjectPtr<UGYEnemyAdditionalAttribute> AdditionalAttribute;
 
 	bool bIsDead = false;
-
 
 };
