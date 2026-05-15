@@ -72,10 +72,7 @@ void AGYEnemyCharacterBase::SetCombatTarget(AActor* NewTarget)
 {
 	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
 	{
-		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
-		{
-			BB->SetValueAsObject(TEXT("TargetActor"), NewTarget);
-		}
+		AIC->SetTargetActor(NewTarget);
 	}
 }
 
@@ -85,7 +82,7 @@ void AGYEnemyCharacterBase::SetIsStunned(bool bNewStunned)
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			BB->SetValueAsBool(TEXT("IsStunned"), bNewStunned);
+			BB->SetValueAsBool(EnemyBBKeys::IsStunned, bNewStunned);
 		}
 	}
 }
@@ -291,7 +288,7 @@ void AGYEnemyCharacterBase::Die()
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			BB->SetValueAsBool(TEXT("IsDead"), true);
+			BB->SetValueAsBool(EnemyBBKeys::IsDead, true);
 		}
 		AIC->StopBehaviorTree();
 	}
@@ -299,6 +296,7 @@ void AGYEnemyCharacterBase::Die()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetCharacterMovement()->DisableMovement();
 
+	//TODO 은서 : RewardConfig에서 데이터 값을 가져와 Drop Actor나 보상 처리 연결 필요
 	OnEnemyDead.Broadcast(this);
 	SetLifeSpan(5.f);
 }
@@ -313,7 +311,7 @@ void AGYEnemyCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (EnemyType != EEnemyType::None)
+	if (EnemyType != EEnemyType::None && !LoadedDataAsset)
 	{
 		LoadDataAssetAndApply();
 	}

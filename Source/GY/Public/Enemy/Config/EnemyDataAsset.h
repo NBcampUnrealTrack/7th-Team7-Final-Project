@@ -79,6 +79,7 @@ struct FEnemyGASConfig
 	TArray<TSoftClassPtr<UGameplayEffect>> PassiveEffects;
 
 	/** AttributeSet 초기화용 Effect */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
 	TSoftClassPtr<UGameplayEffect> InitStatEffect;
 
 	/** 공격 데미지 Effect */

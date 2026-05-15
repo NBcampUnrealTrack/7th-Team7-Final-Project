@@ -11,7 +11,6 @@ class UGYEnemyAdditionalAttribute;
 class UGYEnemyBaseAttribute;
 class UEnemyAnimInstance;
 class UAbilitySystemComponent;
-class UAttributeSet;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDead, AGYEnemyCharacterBase*, Enemy);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AGYEnemyCharacterBase*, Enemy, float, DamageAmount);
