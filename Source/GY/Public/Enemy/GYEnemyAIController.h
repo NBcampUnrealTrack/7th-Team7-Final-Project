@@ -8,19 +8,35 @@
 class UAIPerceptionComponent;
 class UAISenseConfig_Sight;
 class UAISenseConfig_Damage;
+class UAISenseConfig_Hearing;
+class UAISenseConfig_Touch;
 class AGYEnemyCharacterBase;
 
 namespace  EnemyBBKeys
 {
-	static const FName TargetActor		= TEXT("TargetActor");
-	static const FName TargetLocation	= TEXT("TargetLocation");
-	static const FName PatrolLocation	= TEXT("PatrolLocation");
-	static const FName StartLocation	= TEXT("StartLocation");
-	static const FName IsStunned		= TEXT("IsStunned");
-	static const FName IsDead			= TEXT("IsDead");
-	static const FName IsRunning		= TEXT("IsRunning");
-	static const FName AttackRadius		= TEXT("AttackRadius");
+	static const FName TargetActor			= TEXT("TargetActor");
+	static const FName TargetLocation		= TEXT("TargetLocation");
+	static const FName StartLocation		= TEXT("StartLocation");
+	static const FName IsStunned			= TEXT("IsStunned");
+	static const FName IsDead				= TEXT("IsDead");
+	static const FName IsRunning			= TEXT("IsRunning");
+	static const FName AttackRadius			= TEXT("AttackRadius");
+	static const FName InvestigateLocation	= TEXT("InvestigateLocation");
+	static const FName HasPatrol			= TEXT("HasPatrol");
 }
+
+USTRUCT()
+struct FPerceivedActorInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<AActor> Actor = nullptr;
+
+	FAIStimulus LastStimulus;
+	float LastPerceivedTime = 0.f;
+
+};
 
 UCLASS(BlueprintType, Blueprintable)
 class GY_API AGYEnemyAIController : public AAIController
@@ -36,25 +52,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	void StopBehaviorTree();
 
-	void ApplyAIRangeConfig(float DetectRadius, float InAttackRadius);
-
-	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
-	void SetTargetActor(AActor* NewTarget);
-
-	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
-	void SetIsRunning(bool bNewRunning);
+	void ApplyAIRangeConfig(float DetectRadius, float InAttackRadius, bool bInHasPatrol);
 
 	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
 	void SetTargetLocation(const FVector& Location);
 
-	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
-	void SetPatrolLocation(const FVector& Location);
-
 	UFUNCTION(BlueprintPure, Category = "AI|Blackboard")
 	AActor* GetTargetActor() const;
 
-	UFUNCTION(BlueprintPure, Category = "AI|Blackboard")
-	bool IsInCombat() const;
+	const TArray<FPerceivedActorInfo>& GetPerceivedActors() const { return PerceivedActors; }
+
+	void SetPatrolPoints(const TArray<FVector>& Offsets, const FVector& StartLocation);
+	FVector GetCurrentPatrolPoints() const;
+	void AdvancePatrolIndex();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
@@ -66,9 +77,15 @@ protected:
 	UFUNCTION()
 	void OnTargetPerceptionForgotten(AActor* Actor);
 
-	void UpdateCombatState(AActor* DetectedTarget);
-	void LostTarget();
 	void SetupBlackboardDefaults();
+private:
+	void AddPerceivedActor(AActor* Actor, const FAIStimulus& Stimulus);
+	void RemovePerceivedActor(AActor* Actor);
+public:
+	UPROPERTY()
+	TArray<FVector> PatrolPoints;
+	int32 PatrolIndex = 0;
+	int32 PatrolDirection = 1;
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
 	TObjectPtr<UAIPerceptionComponent> AIPerceptionComponent;
@@ -79,7 +96,16 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
 	TObjectPtr<UAISenseConfig_Damage> DamageConfig;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
+	TObjectPtr<UAISenseConfig_Hearing> HearingConfig;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
+	TObjectPtr<UAISenseConfig_Touch> TouchConfig;
+
 	UPROPERTY()
 	TObjectPtr<AGYEnemyCharacterBase> ControlledEnemy;
+
+	UPROPERTY()
+	TArray<FPerceivedActorInfo> PerceivedActors;
 
 };
