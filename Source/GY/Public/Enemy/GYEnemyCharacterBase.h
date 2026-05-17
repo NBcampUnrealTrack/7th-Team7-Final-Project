@@ -26,7 +26,7 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
-	void InitWithID(const EEnemyType& InEnemyType);
+	void InitWithType(const EEnemyType& InEnemyType);
 
 	void InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance);
 
@@ -38,12 +38,6 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
-
-	UFUNCTION(BlueprintCallable, Category = "Enemy|AI")
-	void SetCombatTarget(AActor* NewTarget);
-
-	UFUNCTION(BlueprintCallable, Category = "Enemy|AI")
-	void SetIsStunned(bool bNewStunned);
 
 protected:
 	virtual void BeginPlay() override;
@@ -61,6 +55,7 @@ protected:
 	void GrantDefaultAbilities();
 	void ApplyPassiveEffects();
 	void ApplyInitStatEffect();
+	//TODO 은서 : Enemy Attribute에 세팅 해야함.
 	void InitStatsFromDataTable();
 
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
