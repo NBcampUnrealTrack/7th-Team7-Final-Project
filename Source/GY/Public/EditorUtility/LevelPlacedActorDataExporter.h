@@ -20,7 +20,7 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RegionData")
-	FString OutputPath = TEXT("/Game/Data");
+	FString OutputPath = TEXT("/Game/GY/RegionData");
 
 private:
 	UFUNCTION(CallInEditor, Category = "RegionData")
