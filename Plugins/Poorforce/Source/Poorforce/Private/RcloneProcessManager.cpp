@@ -47,7 +47,8 @@ void FRcloneProcessManager::StartCopyTo(
 	const FString Source = (Direction == EDirection::Download) ? RemotePath : LocalPath;
 	const FString Dest   = (Direction == EDirection::Download) ? LocalPath : RemotePath;
 
-	const FString Args = FString::Printf(TEXT("copyto %s %s -v"),
+	// --checksum: source/dest 의 size+checksum 같으면 skip (다운로드/업로드 자체 안 함)
+	const FString Args = FString::Printf(TEXT("copyto --checksum %s %s -v"),
 		*QuoteIfNeeded(Source), *QuoteIfNeeded(Dest));
 
 	const TCHAR* DirText = (Direction == EDirection::Download) ? TEXT("download") : TEXT("upload");
@@ -122,7 +123,18 @@ void FRcloneProcessManager::FinalizeProcess(FActiveProcess& Proc, bool bSuccess,
 {
 	if (bSuccess)
 	{
-		UE_LOG(LogPoorforce, Log, TEXT("rclone: success [%s]"), *Proc.Description);
+		// rclone -v 출력에서 "0 B / 0 B" 면 실제 transfer 없이 skip (--checksum 비교 결과 동일).
+		const bool bNothingTransferred =
+			Proc.AccumulatedOutput.Contains(TEXT("0 B / 0 B"), ESearchCase::IgnoreCase);
+
+		if (bNothingTransferred)
+		{
+			UE_LOG(LogPoorforce, Log, TEXT("rclone: unchanged, skipped [%s]"), *Proc.Description);
+		}
+		else
+		{
+			UE_LOG(LogPoorforce, Log, TEXT("rclone: transferred [%s]"), *Proc.Description);
+		}
 	}
 	else
 	{

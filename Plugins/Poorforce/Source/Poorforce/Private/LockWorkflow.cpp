@@ -222,6 +222,8 @@ void FLockWorkflow::SyncPrefetch(UObject* Asset, const FResolvedAsset& Resolved)
 	const bool bIsLockAndSync = Resolved.Match->Mode == EPoorforcePathMode::LockAndSync;
 	const float TotalWork = bIsLockAndSync ? 2.f : 1.f;
 
+	const double TStart = FPlatformTime::Seconds();
+
 	FScopedSlowTask Task(TotalWork, FText::FromString(TEXT("Poorforce — 락 획득 중...")));
 	Task.MakeDialogDelayed(0.5f);
 
@@ -229,6 +231,7 @@ void FLockWorkflow::SyncPrefetch(UObject* Asset, const FResolvedAsset& Resolved)
 	bool bAcquireDone = false;
 	PoorforceLock::EAcquireResult AcquireResult = PoorforceLock::EAcquireResult::NetworkError;
 
+	const double TAcquireStart = FPlatformTime::Seconds();
 	Client->TryAcquire(Resolved.LockKey, MyUserId, Ttl,
 		[&bAcquireDone, &AcquireResult](PoorforceLock::EAcquireResult R)
 		{
@@ -237,6 +240,8 @@ void FLockWorkflow::SyncPrefetch(UObject* Asset, const FResolvedAsset& Resolved)
 		});
 
 	PumpUntil(bAcquireDone);
+	UE_LOG(LogPoorforce, Log, TEXT("[timing] TryAcquire took %.2fs"),
+		FPlatformTime::Seconds() - TAcquireStart);
 	Task.EnterProgressFrame(1.f);
 
 	if (AcquireResult == PoorforceLock::EAcquireResult::Acquired)
@@ -267,7 +272,10 @@ void FLockWorkflow::SyncPrefetch(UObject* Asset, const FResolvedAsset& Resolved)
 				}
 			}
 
+			const double TDownloadStart = FPlatformTime::Seconds();
 			const bool bDownloaded = DownloadSync(Resolved.LocalFilePath, Resolved.RemoteFilePath);
+			UE_LOG(LogPoorforce, Log, TEXT("[timing] DownloadSync took %.2fs"),
+				FPlatformTime::Seconds() - TDownloadStart);
 
 			if (bDownloaded)
 			{
@@ -294,6 +302,9 @@ void FLockWorkflow::SyncPrefetch(UObject* Asset, const FResolvedAsset& Resolved)
 
 			Task.EnterProgressFrame(1.f);
 		}
+
+		UE_LOG(LogPoorforce, Log, TEXT("[timing] SyncPrefetch total %.2fs for %s"),
+			FPlatformTime::Seconds() - TStart, *Resolved.RelativePath);
 
 		return;
 	}
@@ -443,12 +454,6 @@ bool FLockWorkflow::DownloadSync(const FString& LocalPath, const FString& Remote
 		});
 
 	PumpUntil(bDone);
-
-	if (bSuccess)
-	{
-		UE_LOG(LogPoorforce, Log, TEXT("Download complete: %s"), *RemotePath);
-	}
-
 	return bSuccess;
 }
 
@@ -612,6 +617,25 @@ void FLockWorkflow::HandleBlockedByOther(
 
 void FLockWorkflow::StartUploadAndRelease(const FResolvedAsset& Resolved)
 {
+	// 세션 중 저장 이력 없으면 업로드 시도 자체 안 함. 락만 즉시 해제.
+	if (!SavedPackageNamesThisSession.Contains(Resolved.PackageName))
+	{
+		UE_LOG(LogPoorforce, Log, TEXT("LockAndSync close — no changes this session, skipping upload: %s"), *Resolved.RelativePath);
+
+		Client->Release(Resolved.LockKey,
+			[this, Key = Resolved.LockKey, Path = Resolved.RelativePath](bool bReleased)
+			{
+				OwnedLockKeys.Remove(Key);
+				if (Watcher.IsValid()) Watcher->SignalWatcherExit(Key);
+
+				if (bReleased)
+				{
+					UE_LOG(LogPoorforce, Log, TEXT("Lock released (no changes): %s"), *Path);
+				}
+			});
+		return;
+	}
+
 	if (!Rclone.IsValid())
 	{
 		UE_LOG(LogPoorforce, Warning, TEXT("LockAndSync close but rclone manager missing — releasing lock without upload: %s"), *Resolved.RelativePath);

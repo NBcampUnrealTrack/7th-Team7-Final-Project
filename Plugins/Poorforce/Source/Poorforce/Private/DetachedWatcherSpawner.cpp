@@ -61,7 +61,7 @@ while ($true) {
     }
 
     if (Test-Path $LocalPath) {
-        & $RcloneExe copyto $LocalPath $RemotePath -v 2>&1 | Out-Null
+        & $RcloneExe copyto --checksum $LocalPath $RemotePath -v 2>&1 | Out-Null
         if ($LASTEXITCODE -ne 0) { exit 2 }
     }
 
