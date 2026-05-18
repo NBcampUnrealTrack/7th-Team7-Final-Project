@@ -20,12 +20,10 @@ public class GY : ModuleRules
 			"DeveloperSettings",
 			"DataBridge",
 			"AIModule",
-			"NavigationSystem"
+			"NavigationSystem",
+			"GameplayMessageRuntime",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
-
-
 	}
-
 }

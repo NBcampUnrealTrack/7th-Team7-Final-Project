@@ -16,9 +16,12 @@ public class GYUI : ModuleRules
 			"SlateCore",
 			"UMG",
 			"GY",
-			"GameplayMessageRuntime",  // GameplayMessageSystem
-			"CommonUI",                // Common UI
-			"CommonInput",             // CommonUI 필수 의존
+			"GameplayMessageRuntime",
+			"CommonUI",
+			"CommonInput",
+			"GameplayTags",
+			"GameplayAbilities",
+			"GameplayTasks",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
