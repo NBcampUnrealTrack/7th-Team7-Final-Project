@@ -1,0 +1,32 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "UObject/Interface.h"
+#include "WorldPartitionLevelPlacedActor.generated.h"
+
+// This class does not need to be modified.
+UINTERFACE(MinimalAPI)
+class UWorldPartitionLevelPlacedActor : public UInterface
+{
+	GENERATED_BODY()
+};
+
+/**
+ *	멀티플레이 고려해서 처리 해주세요
+ *	단순히
+ */
+class GY_API IWorldPartitionLevelPlacedActor
+{
+	GENERATED_BODY()
+public:
+	virtual void Deactivate()=0;
+	virtual void Activate()=0;
+	virtual FGuid GetPersistentGuid()=0;
+	virtual void SetPersistentGuid(FGuid Guid)=0;
+
+
+	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+public:
+};

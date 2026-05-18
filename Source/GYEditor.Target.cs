@@ -11,6 +11,7 @@ public class GYEditorTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V6;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_7;
 
-		ExtraModuleNames.AddRange( new string[] { "GY", "GYUI" } );
+		ExtraModuleNames.AddRange( new string[] { "GY", "GYUI","GYEditor" } );
 	}
+
 }

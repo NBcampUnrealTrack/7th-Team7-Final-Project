@@ -21,6 +21,11 @@
 				"Client",
 				"Game"
 			]
+		},
+		{
+			"Name": "GYEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
