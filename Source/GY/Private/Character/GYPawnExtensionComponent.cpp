@@ -4,33 +4,52 @@
 #include "Character/GYPawnExtensionComponent.h"
 
 
-// Sets default values for this component's properties
-UGYPawnExtensionComponent::UGYPawnExtensionComponent()
+UGYPawnExtensionComponent::UGYPawnExtensionComponent(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
+}
 
-	// ...
+bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
+	FGameplayTag DesiredState) const
+{
+	return IGameFrameworkInitStateInterface::CanChangeInitState(Manager, CurrentState, DesiredState);
+}
+
+void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentManager* Manager,
+	FGameplayTag CurrentState, FGameplayTag DesiredState)
+{
+	IGameFrameworkInitStateInterface::HandleChangeInitState(Manager, CurrentState, DesiredState);
+}
+
+void UGYPawnExtensionComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
+{
+	IGameFrameworkInitStateInterface::OnActorInitStateChanged(Params);
+}
+
+void UGYPawnExtensionComponent::CheckDefaultInitialization()
+{
+	IGameFrameworkInitStateInterface::CheckDefaultInitialization();
 }
 
 
-// Called when the game starts
+
+void UGYPawnExtensionComponent::OnRegister()
+{
+	Super::OnRegister();
+}
 void UGYPawnExtensionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
 	// ...
-	
+
 }
 
-
-// Called every frame
-void UGYPawnExtensionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                              FActorComponentTickFunction* ThisTickFunction)
+void UGYPawnExtensionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	Super::EndPlay(EndPlayReason);
 }
+
+
 
