@@ -22,6 +22,7 @@ public class GY : ModuleRules
 			"AIModule",
 			"NavigationSystem",
 			"GameplayMessageRuntime",
+			"ModularGameplay"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
