@@ -94,3 +94,6 @@ DerivedDataCache/*
 # Paid Assets
 Content/ThirdParty/PaidAssets/
 
+# Poorforce — 토큰 포함하므로 절대 커밋 금지
+PoorforceConfig.json
+

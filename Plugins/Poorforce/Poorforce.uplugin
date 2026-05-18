@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Poorforce",
+	"Description": "A poor man's perforce for students",
+	"Category": "Other",
+	"CreatedBy": "dooyeonk",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "Poorforce",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}

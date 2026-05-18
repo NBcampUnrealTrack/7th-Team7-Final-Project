@@ -1,0 +1,168 @@
+#include "RcloneProcessManager.h"
+
+#include "PoorforceLog.h"
+
+#include "HAL/PlatformProcess.h"
+#include "Misc/Paths.h"
+
+namespace
+{
+	constexpr float TickIntervalSeconds = 0.1f;
+
+	FString QuoteIfNeeded(const FString& In)
+	{
+		if (In.Contains(TEXT(" ")) && !In.StartsWith(TEXT("\"")))
+		{
+			return FString::Printf(TEXT("\"%s\""), *In);
+		}
+		return In;
+	}
+}
+
+FRcloneProcessManager::FRcloneProcessManager(FString InExecutable)
+	: Executable(MoveTemp(InExecutable))
+{
+	TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
+		FTickerDelegate::CreateRaw(this, &FRcloneProcessManager::Tick),
+		TickIntervalSeconds);
+}
+
+FRcloneProcessManager::~FRcloneProcessManager()
+{
+	if (TickerHandle.IsValid())
+	{
+		FTSTicker::GetCoreTicker().RemoveTicker(TickerHandle);
+		TickerHandle.Reset();
+	}
+
+	CancelAll();
+}
+
+void FRcloneProcessManager::StartCopyTo(
+	EDirection Direction,
+	const FString& LocalPath,
+	const FString& RemotePath,
+	FOnComplete OnComplete)
+{
+	const FString Source = (Direction == EDirection::Download) ? RemotePath : LocalPath;
+	const FString Dest   = (Direction == EDirection::Download) ? LocalPath : RemotePath;
+
+	const FString Args = FString::Printf(TEXT("copyto %s %s -v"),
+		*QuoteIfNeeded(Source), *QuoteIfNeeded(Dest));
+
+	const TCHAR* DirText = (Direction == EDirection::Download) ? TEXT("download") : TEXT("upload");
+	const FString Description = FString::Printf(TEXT("%s: %s -> %s"), DirText, *Source, *Dest);
+
+	TUniquePtr<FActiveProcess> Proc = MakeUnique<FActiveProcess>();
+	Proc->OnComplete = MoveTemp(OnComplete);
+	Proc->Description = Description;
+
+	if (!FPlatformProcess::CreatePipe(Proc->ReadPipe, Proc->WritePipe))
+	{
+		UE_LOG(LogPoorforce, Warning, TEXT("rclone: failed to create pipe (%s)"), *Description);
+		Proc->OnComplete(false, -1, FString{});
+		return;
+	}
+
+	Proc->Handle = FPlatformProcess::CreateProc(
+		*Executable,
+		*Args,
+		/*bLaunchDetached=*/ false,
+		/*bLaunchHidden=*/ true,
+		/*bLaunchReallyHidden=*/ true,
+		/*OutProcessID=*/ nullptr,
+		/*PriorityModifier=*/ 0,
+		/*OptionalWorkingDirectory=*/ *FPaths::ProjectDir(),
+		/*PipeWriteChild=*/ Proc->WritePipe,
+		/*PipeReadChild=*/ nullptr);
+
+	if (!Proc->Handle.IsValid())
+	{
+		UE_LOG(LogPoorforce, Warning, TEXT("rclone: failed to spawn process '%s %s'"), *Executable, *Args);
+		FPlatformProcess::ClosePipe(Proc->ReadPipe, Proc->WritePipe);
+		Proc->OnComplete(false, -1, FString{});
+		return;
+	}
+
+	UE_LOG(LogPoorforce, Log, TEXT("rclone: started [%s]"), *Description);
+
+	Active.Add(MoveTemp(Proc));
+}
+
+bool FRcloneProcessManager::Tick(float DeltaTime)
+{
+	for (int32 i = Active.Num() - 1; i >= 0; --i)
+	{
+		FActiveProcess& Proc = *Active[i];
+
+		Proc.AccumulatedOutput += FPlatformProcess::ReadPipe(Proc.ReadPipe);
+
+		if (FPlatformProcess::IsProcRunning(Proc.Handle))
+		{
+			continue;
+		}
+
+		Proc.AccumulatedOutput += FPlatformProcess::ReadPipe(Proc.ReadPipe);
+
+		int32 ExitCode = -1;
+		FPlatformProcess::GetProcReturnCode(Proc.Handle, &ExitCode);
+
+		const bool bSuccess = (ExitCode == 0);
+
+		TUniquePtr<FActiveProcess> Detached = MoveTemp(Active[i]);
+		Active.RemoveAt(i);
+
+		FinalizeProcess(*Detached, bSuccess, ExitCode);
+	}
+
+	return true;
+}
+
+void FRcloneProcessManager::FinalizeProcess(FActiveProcess& Proc, bool bSuccess, int32 ExitCode)
+{
+	if (bSuccess)
+	{
+		UE_LOG(LogPoorforce, Log, TEXT("rclone: success [%s]"), *Proc.Description);
+	}
+	else
+	{
+		UE_LOG(LogPoorforce, Warning, TEXT("rclone: failed (exit=%d) [%s]\nOutput: %s"),
+			ExitCode, *Proc.Description, *Proc.AccumulatedOutput);
+	}
+
+	FPlatformProcess::CloseProc(Proc.Handle);
+	FPlatformProcess::ClosePipe(Proc.ReadPipe, Proc.WritePipe);
+	Proc.ReadPipe = nullptr;
+	Proc.WritePipe = nullptr;
+
+	if (Proc.OnComplete)
+	{
+		Proc.OnComplete(bSuccess, ExitCode, Proc.AccumulatedOutput);
+	}
+}
+
+TArray<FString> FRcloneProcessManager::GetActiveDescriptions() const
+{
+	TArray<FString> Out;
+	Out.Reserve(Active.Num());
+	for (const TUniquePtr<FActiveProcess>& Proc : Active)
+	{
+		Out.Add(Proc->Description);
+	}
+	return Out;
+}
+
+void FRcloneProcessManager::CancelAll()
+{
+	for (TUniquePtr<FActiveProcess>& Proc : Active)
+	{
+		if (Proc->Handle.IsValid() && FPlatformProcess::IsProcRunning(Proc->Handle))
+		{
+			FPlatformProcess::TerminateProc(Proc->Handle, /*KillTree=*/ true);
+		}
+
+		FinalizeProcess(*Proc, false, -2);
+	}
+
+	Active.Empty();
+}
