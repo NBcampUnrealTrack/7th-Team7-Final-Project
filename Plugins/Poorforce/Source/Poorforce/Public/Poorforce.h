@@ -10,6 +10,7 @@ class FRcloneProcessManager;
 class FDetachedWatcherSpawner;
 class FLockWorkflow;
 class FAssetEditorInterceptor;
+class FPoorforceContentBrowserExtension;
 
 class FPoorforceModule : public IModuleInterface
 {
@@ -32,6 +33,7 @@ private:
 	TSharedPtr<FDetachedWatcherSpawner> Watcher;
 	TUniquePtr<FLockWorkflow> Workflow;
 	TUniquePtr<FAssetEditorInterceptor> Interceptor;
+	TUniquePtr<FPoorforceContentBrowserExtension> ContentBrowserExtension;
 
 	FDelegateHandle PreExitHandle;
 

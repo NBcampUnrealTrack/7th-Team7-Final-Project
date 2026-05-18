@@ -25,6 +25,7 @@ public class Poorforce : ModuleRules
 				"JsonUtilities",
 				"UnrealEd",
 				"AssetRegistry",
+				"ContentBrowser",
 			}
 		);
 	}

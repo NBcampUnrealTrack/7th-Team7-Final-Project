@@ -6,6 +6,7 @@
 #include "DetachedWatcherSpawner.h"
 #include "LockWorkflow.h"
 #include "AssetEditorInterceptor.h"
+#include "PoorforceContentBrowserExtension.h"
 #include "UserIdProvider.h"
 #include "UI/PoorforceDialogs.h"
 
@@ -38,6 +39,9 @@ void FPoorforceModule::StartupModule()
 
 	Interceptor = MakeUnique<FAssetEditorInterceptor>();
 	Interceptor->Register(Workflow.Get());
+
+	ContentBrowserExtension = MakeUnique<FPoorforceContentBrowserExtension>();
+	ContentBrowserExtension->Register(Workflow.Get(), &Config);
 
 	PreExitHandle = FEditorDelegates::OnEditorPreExit.AddLambda(
 		[this]()
@@ -118,6 +122,12 @@ void FPoorforceModule::ShutdownModule()
 	{
 		FEditorDelegates::OnEditorPreExit.Remove(PreExitHandle);
 		PreExitHandle.Reset();
+	}
+
+	if (ContentBrowserExtension.IsValid())
+	{
+		ContentBrowserExtension->Unregister();
+		ContentBrowserExtension.Reset();
 	}
 
 	if (Interceptor.IsValid())

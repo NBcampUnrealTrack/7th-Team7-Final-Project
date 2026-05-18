@@ -24,6 +24,13 @@ public:
 		const FString& RemotePath,
 		FOnComplete OnComplete);
 
+	// rclone check — 비교만, transfer 절대 안 함.
+	// bSuccess=true: 두 파일 일치 / bSuccess=false: 불일치 (또는 네트워크/셋업 오류)
+	void StartCheck(
+		const FString& LocalPath,
+		const FString& RemotePath,
+		FOnComplete OnComplete);
+
 	int32 NumActive() const { return Active.Num(); }
 	bool HasActive() const { return Active.Num() > 0; }
 

@@ -90,6 +90,62 @@ void FRcloneProcessManager::StartCopyTo(
 	Active.Add(MoveTemp(Proc));
 }
 
+void FRcloneProcessManager::StartCheck(
+	const FString& LocalPath,
+	const FString& RemotePath,
+	FOnComplete OnComplete)
+{
+	// rclone check 는 폴더 단위 비교라 단일 파일은 부모 폴더 + --include 로 우회.
+	// exit 0 = 같음, 1 = 다름.
+	const FString LocalDir = FPaths::GetPath(LocalPath);
+
+	int32 LastSlash = INDEX_NONE;
+	RemotePath.FindLastChar(TEXT('/'), LastSlash);
+	const FString RemoteDir = (LastSlash != INDEX_NONE) ? RemotePath.Left(LastSlash) : RemotePath;
+
+	const FString Filename = FPaths::GetCleanFilename(LocalPath);
+
+	const FString Args = FString::Printf(TEXT("check %s %s --include \"%s\" --max-depth 1 -v"),
+		*QuoteIfNeeded(LocalDir), *QuoteIfNeeded(RemoteDir), *Filename);
+
+	const FString Description = FString::Printf(TEXT("check: %s vs %s"), *LocalPath, *RemotePath);
+
+	TUniquePtr<FActiveProcess> Proc = MakeUnique<FActiveProcess>();
+	Proc->OnComplete = MoveTemp(OnComplete);
+	Proc->Description = Description;
+
+	if (!FPlatformProcess::CreatePipe(Proc->ReadPipe, Proc->WritePipe))
+	{
+		UE_LOG(LogPoorforce, Warning, TEXT("rclone: failed to create pipe (%s)"), *Description);
+		Proc->OnComplete(false, -1, FString{});
+		return;
+	}
+
+	Proc->Handle = FPlatformProcess::CreateProc(
+		*Executable,
+		*Args,
+		/*bLaunchDetached=*/ false,
+		/*bLaunchHidden=*/ true,
+		/*bLaunchReallyHidden=*/ true,
+		/*OutProcessID=*/ nullptr,
+		/*PriorityModifier=*/ 0,
+		/*OptionalWorkingDirectory=*/ *FPaths::ProjectDir(),
+		/*PipeWriteChild=*/ Proc->WritePipe,
+		/*PipeReadChild=*/ nullptr);
+
+	if (!Proc->Handle.IsValid())
+	{
+		UE_LOG(LogPoorforce, Warning, TEXT("rclone: failed to spawn process '%s %s'"), *Executable, *Args);
+		FPlatformProcess::ClosePipe(Proc->ReadPipe, Proc->WritePipe);
+		Proc->OnComplete(false, -1, FString{});
+		return;
+	}
+
+	UE_LOG(LogPoorforce, Log, TEXT("rclone: started [%s]"), *Description);
+
+	Active.Add(MoveTemp(Proc));
+}
+
 bool FRcloneProcessManager::Tick(float DeltaTime)
 {
 	for (int32 i = Active.Num() - 1; i >= 0; --i)

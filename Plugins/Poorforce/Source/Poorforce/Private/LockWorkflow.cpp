@@ -12,12 +12,16 @@
 #include "UI/PoorforceDialogs.h"
 
 #include "Editor.h"
+#include "PackageTools.h"
 #include "UObject/Linker.h"
+#include "UObject/UObjectGlobals.h"
+#include "Misc/PackageName.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Widgets/Notifications/SNotificationList.h"
 #include "Misc/ScopedSlowTask.h"
+#include "Misc/MessageDialog.h"
 #include "Containers/Ticker.h"
 #include "HAL/PlatformProcess.h"
 #include "Misc/Paths.h"
@@ -259,38 +263,28 @@ void FLockWorkflow::SyncPrefetch(UObject* Asset, const FResolvedAsset& Resolved)
 			}
 
 			Task.EnterProgressFrame(0.f, FText::FromString(FString::Printf(
-				TEXT("다운로드 중: %s"), *Resolved.RelativePath)));
+				TEXT("동기화 확인 중: %s"), *Resolved.RelativePath)));
 
-			// 메모리에 이미 로드된 패키지의 linker가 디스크 파일을 잠그고 있어
-			// rclone rename 단계에서 access denied. ResetLoaders 로 linker 만 풀고
-			// 메모리 객체는 그대로 유지 (UnloadPackages 는 ContentBrowser 더블클릭 컨텍스트에서 크래시).
-			if (Asset != nullptr)
-			{
-				if (UPackage* PackageToReset = Asset->GetPackage())
+			// 자동 다운로드 안 함 — rclone check 로 비교만.
+			// 같으면 그대로 열기. 다르면 락 풀고 사용자에게 우클릭 Sync 안내.
+			const double TCheckStart = FPlatformTime::Seconds();
+			bool bCheckDone = false;
+			bool bSame = false;
+			Rclone->StartCheck(Resolved.LocalFilePath, Resolved.RemoteFilePath,
+				[&bCheckDone, &bSame](bool ok, int32, const FString&)
 				{
-					ResetLoaders(PackageToReset);
-				}
-			}
+					bSame = ok;
+					bCheckDone = true;
+				});
+			PumpUntil(bCheckDone);
+			UE_LOG(LogPoorforce, Log, TEXT("[timing] Check took %.2fs (same=%s)"),
+				FPlatformTime::Seconds() - TCheckStart, bSame ? TEXT("yes") : TEXT("no"));
 
-			const double TDownloadStart = FPlatformTime::Seconds();
-			const bool bDownloaded = DownloadSync(Resolved.LocalFilePath, Resolved.RemoteFilePath);
-			UE_LOG(LogPoorforce, Log, TEXT("[timing] DownloadSync took %.2fs"),
-				FPlatformTime::Seconds() - TDownloadStart);
-
-			if (bDownloaded)
-			{
-				for (const TPair<FString, FString>& Pair : Resolved.SidecarPaths)
-				{
-					DownloadSync(Pair.Key, Pair.Value);
-				}
-			}
-			else
+			if (!bSame)
 			{
 				UE_LOG(LogPoorforce, Warning,
-					TEXT("Download failed for %s. Releasing lock so others aren't blocked."),
+					TEXT("Local out-of-sync with remote: %s. Releasing lock; user must Sync via right-click."),
 					*Resolved.RelativePath);
-
-				NotifyUserWarning(FString::Printf(TEXT("Download failed: %s"), *Resolved.RelativePath));
 
 				Client->Release(Resolved.LockKey,
 					[this, Key = Resolved.LockKey](bool)
@@ -298,6 +292,31 @@ void FLockWorkflow::SyncPrefetch(UObject* Asset, const FResolvedAsset& Resolved)
 						OwnedLockKeys.Remove(Key);
 						if (Watcher.IsValid()) Watcher->SignalWatcherExit(Key);
 					});
+
+				// 에디터가 핸들러 종료 후 열릴 거니까 next-tick deferred 로 close + 안내 다이얼로그
+				TWeakObjectPtr<UObject> WeakAssetCopy(Asset);
+				const FString RelativePathCopy = Resolved.RelativePath;
+				FTSTicker::GetCoreTicker().AddTicker(
+					FTickerDelegate::CreateLambda(
+						[WeakAssetCopy, RelativePathCopy](float) -> bool
+						{
+							if (GEditor != nullptr)
+							{
+								if (UObject* A = WeakAssetCopy.Get())
+								{
+									UAssetEditorSubsystem* S = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
+									if (IsValid(S)) S->CloseAllEditorsForAsset(A);
+								}
+							}
+
+							const FText Msg = FText::FromString(FString::Printf(
+								TEXT("다른 사용자가 이 에셋을 업데이트했습니다.\n\n%s\n\n우클릭 → Poorforce → Sync 로 최신 버전을 받은 후 다시 열어주세요."),
+								*RelativePathCopy));
+							FMessageDialog::Open(EAppMsgType::Ok, Msg,
+								FText::FromString(TEXT("Poorforce — Sync 필요")));
+							return false;
+						}),
+					0.0f);
 			}
 
 			Task.EnterProgressFrame(1.f);
@@ -551,6 +570,87 @@ void FLockWorkflow::HandleAssetRenamed(const FString& OldPackageName, UObject* N
 	{
 		HandleAssetOpened(NewAsset, /*bSkipInitialDownload=*/ true);
 	}
+}
+
+void FLockWorkflow::HandleManualSync(const FString& PackageName)
+{
+	if (!Rclone.IsValid())
+	{
+		UE_LOG(LogPoorforce, Warning, TEXT("Sync: rclone manager missing"));
+		return;
+	}
+
+	const FPoorforceManagedPath* Match = PoorforcePathResolver::ResolveLongestPrefix(PackageName, Config.ManagedPaths);
+	if (Match == nullptr || Match->Mode != EPoorforcePathMode::LockAndSync)
+	{
+		UE_LOG(LogPoorforce, Warning, TEXT("Sync: not a LockAndSync asset: %s"), *PackageName);
+		return;
+	}
+
+	const FString RelativePath = PoorforcePathResolver::MakeRelativePath(PackageName, *Match);
+
+	// 디스크 파일 경로/리모트 경로 계산 — UObject 가 없을 수도 있으니 PackageName 기반으로
+	FString LocalFilePath;
+	if (!FPackageName::TryConvertLongPackageNameToFilename(PackageName, LocalFilePath,
+		FPackageName::GetAssetPackageExtension()))
+	{
+		UE_LOG(LogPoorforce, Warning, TEXT("Sync: cannot resolve local path: %s"), *PackageName);
+		return;
+	}
+	const FString RemoteFilePath = PoorforcePathResolver::MakeRemoteFilePath(
+		Match->RcloneRemote, RelativePath, FPackageName::GetAssetPackageExtension());
+
+	UE_LOG(LogPoorforce, Log, TEXT("Sync starting: %s"), *RelativePath);
+
+	// 1. close all editors for that asset
+	UPackage* Package = FindPackage(nullptr, *PackageName);
+	if (IsValid(Package))
+	{
+		TArray<UObject*> Assets;
+		GetObjectsWithOuter(Package, Assets, /*bIncludeNestedObjects=*/ false);
+		if (GEditor != nullptr)
+		{
+			UAssetEditorSubsystem* S = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
+			if (IsValid(S))
+			{
+				for (UObject* A : Assets)
+				{
+					if (IsValid(A)) S->CloseAllEditorsForAsset(A);
+				}
+			}
+		}
+
+		// 2. 메모리 unload (UnloadPackages 는 우클릭 콜백 컨텍스트라 안전 가정)
+		TArray<UPackage*> ToUnload;
+		ToUnload.Add(Package);
+		FText OutErr;
+		if (!UPackageTools::UnloadPackages(ToUnload, OutErr))
+		{
+			UE_LOG(LogPoorforce, Warning, TEXT("Sync: unload failed for %s: %s"),
+				*RelativePath, *OutErr.ToString());
+		}
+	}
+
+	NotifyUser(FString::Printf(TEXT("Sync 중: %s"), *RelativePath));
+
+	// 3. rclone copyto (실제 다운로드)
+	Rclone->StartCopyTo(
+		FRcloneProcessManager::EDirection::Download,
+		LocalFilePath,
+		RemoteFilePath,
+		[this, RelativePath](bool bSuccess, int32 ExitCode, const FString& Output)
+		{
+			if (bSuccess)
+			{
+				UE_LOG(LogPoorforce, Log, TEXT("Sync complete: %s"), *RelativePath);
+				NotifyUser(FString::Printf(TEXT("Sync 완료: %s"), *RelativePath));
+			}
+			else
+			{
+				UE_LOG(LogPoorforce, Warning, TEXT("Sync failed (exit=%d): %s"), ExitCode, *RelativePath);
+				NotifyUserWarning(FString::Printf(TEXT("Sync 실패: %s"), *RelativePath));
+			}
+		});
 }
 
 void FLockWorkflow::HandleBlockedByOther(

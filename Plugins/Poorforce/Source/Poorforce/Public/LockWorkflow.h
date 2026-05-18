@@ -35,6 +35,10 @@ public:
 	void HandleAssetClosed(UObject* Asset);
 	void HandleAssetRenamed(const FString& OldPackageName, UObject* NewAsset);
 
+	// 우클릭 → Poorforce → Sync 핸들러. close + memory unload + rclone download.
+	// 락은 안 잡음. 사용자가 다음에 더블클릭 시 fresh 로드.
+	void HandleManualSync(const FString& PackageName);
+
 	TArray<FString> GetOwnedLockKeys() const;
 	void ManualReleaseLock(const FString& LockKey);
 
