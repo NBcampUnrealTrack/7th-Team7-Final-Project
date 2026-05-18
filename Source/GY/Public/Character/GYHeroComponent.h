@@ -5,19 +5,19 @@
 #include "CoreMinimal.h"
 #include "Components/GameFrameworkInitStateInterface.h"
 #include "Components/PawnComponent.h"
-#include "GYHeroComponet.generated.h"
+#include "GYHeroComponent.generated.h"
 
 
 struct FInputActionValue;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class GY_API UGYHeroComponet : public UPawnComponent, public IGameFrameworkInitStateInterface
+class GY_API UGYHeroComponent : public UPawnComponent, public IGameFrameworkInitStateInterface
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this component's properties
-	UGYHeroComponet(const FObjectInitializer& ObjectInitializer);
+	UGYHeroComponent(const FObjectInitializer& ObjectInitializer);
 
 	static const FName NAME_ActorFeatureName;
 

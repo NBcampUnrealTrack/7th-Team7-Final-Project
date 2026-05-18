@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/GYHeroComponet.h"
+#include "Character/GYHeroComponent.h"
 
 #include "EnhancedInputSubsystems.h"
 #include "Character/GYInputComponent.h"
@@ -15,16 +15,16 @@
 #include "Player/GYPlayerState.h"
 
 // 이 컴포넌트의 이름표는 "Hero"로 지정합니다.
-const FName UGYHeroComponet::NAME_ActorFeatureName("Hero");
+const FName UGYHeroComponent::NAME_ActorFeatureName("Hero");
 
 
-UGYHeroComponet::UGYHeroComponet(const FObjectInitializer& ObjectInitializer)
+UGYHeroComponent::UGYHeroComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-bool UGYHeroComponet::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
+bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
                                          FGameplayTag DesiredState) const
 {
 	// 여기서 다음 상태로 넘어갈 조건이 충족되었는지 검사합니다.
@@ -80,7 +80,7 @@ bool UGYHeroComponet::CanChangeInitState(UGameFrameworkComponentManager* Manager
 	return false;
 }
 
-void UGYHeroComponet::HandleChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
+void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
 	FGameplayTag DesiredState)
 {
 	GY_LOG(Player, KHB, "HandleChangeInitState: [%s] -> [%s]", *CurrentState.ToString(), *DesiredState.ToString());
@@ -102,12 +102,12 @@ void UGYHeroComponet::HandleChangeInitState(UGameFrameworkComponentManager* Mana
 	}
 }
 
-void UGYHeroComponet::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
+void UGYHeroComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
 {
 	CheckDefaultInitialization();
 }
 
-void UGYHeroComponet::CheckDefaultInitialization()
+void UGYHeroComponent::CheckDefaultInitialization()
 {
 	// 초기화 체인 굴리기 시작
 	static const TArray<FGameplayTag> StateChain = {
@@ -119,7 +119,7 @@ void UGYHeroComponet::CheckDefaultInitialization()
 	ContinueInitStateChain(StateChain);
 }
 
-void UGYHeroComponet::InitializePlayerInput(UInputComponent* PlayerInputComponent)
+void UGYHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputComponent)
 {
 	check(PlayerInputComponent);
 
@@ -130,7 +130,7 @@ void UGYHeroComponet::InitializePlayerInput(UInputComponent* PlayerInputComponen
 	check(ExtComp);
 
 	const UGYPawnData* PawnData = ExtComp->PawnData;
-	if (!ExtComp->PawnData)
+	if (!PawnData)
 	{
 		GY_WARN(Player, KHB, "PawnData가 할당되지 않았습니다.")
 		return;
@@ -164,7 +164,7 @@ void UGYHeroComponet::InitializePlayerInput(UInputComponent* PlayerInputComponen
 
 }
 
-void UGYHeroComponet::Input_Move(const FInputActionValue& InputActionValue)
+void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 {
 	GY_LOG(Player, KHB, "Input_Move 호출됨");
 	APawn* Pawn = GetPawn<APawn>();
@@ -189,7 +189,7 @@ void UGYHeroComponet::Input_Move(const FInputActionValue& InputActionValue)
 	}
 }
 
-void UGYHeroComponet::OnRegister()
+void UGYHeroComponent::OnRegister()
 {
 	RegisterInitStateFeature();
 	Super::OnRegister();
@@ -198,7 +198,7 @@ void UGYHeroComponet::OnRegister()
 
 
 // Called when the game starts
-void UGYHeroComponet::BeginPlay()
+void UGYHeroComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -208,7 +208,7 @@ void UGYHeroComponet::BeginPlay()
 
 }
 
-void UGYHeroComponet::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void UGYHeroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	UnregisterInitStateFeature();
 	Super::EndPlay(EndPlayReason);
