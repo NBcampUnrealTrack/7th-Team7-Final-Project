@@ -109,6 +109,7 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 {
 	ApplyVisualConfig(LoadedDataAsset->VisualConfig);
 	ApplyAnimConfig(LoadedDataAsset->AnimationConfig);
+	BuildMontageMap(LoadedDataAsset->AnimationConfig);
 	ApplyAIConfig(LoadedDataAsset->AIConfig);
 	InitStatsFromDataTable();
 
@@ -292,6 +293,27 @@ void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	InitGAS();
+}
+
+UAnimMontage* AGYEnemyCharacterBase::GetMontageByTag(const FGameplayTag& Tag) const
+{
+	const TObjectPtr<UAnimMontage>* Found = MontageMap.Find(Tag);
+	return Found ? Found->Get() : nullptr;
+}
+
+void AGYEnemyCharacterBase::BuildMontageMap(const FEnemyAnimationConfig& Config)
+{
+	MontageMap.Reset();
+	MontageMap.Reserve(Config.TaggedMontages.Num());
+
+	for (const TPair<FGameplayTag, TSoftObjectPtr<UAnimMontage>>& Pair : Config.TaggedMontages)
+	{
+		if (!Pair.Key.IsValid()) continue;
+		if (UAnimMontage* Loaded = Pair.Value.LoadSynchronous())
+		{
+			MontageMap.Add(Pair.Key, Loaded);
+		}
+	}
 }
 
 void AGYEnemyCharacterBase::BeginPlay()

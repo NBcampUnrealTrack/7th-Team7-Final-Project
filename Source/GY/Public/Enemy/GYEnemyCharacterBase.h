@@ -39,6 +39,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
 
+	UFUNCTION(BlueprintPure, Category = "Enemy|Anim")
+	UAnimMontage* GetMontageByTag(const FGameplayTag& Tag) const;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
@@ -64,6 +67,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	virtual void Die();
 
+	void BuildMontageMap(const FEnemyAnimationConfig& Config);
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyDead OnEnemyDead;
@@ -98,4 +102,6 @@ protected:
 
 	bool bIsDead = false;
 
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category ="Enemy|Anim")
+	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> MontageMap;
 };
