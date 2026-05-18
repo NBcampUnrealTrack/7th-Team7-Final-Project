@@ -1,0 +1,25 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Engine/DataAsset.h"
+#include "GYPawnData.generated.h"
+
+class UGYInputConfig;
+class UInputMappingContext;
+/**
+ *
+ */
+UCLASS(BlueprintType, Const, Meta = (DisplayName = "GY Pawn Data", ShortTooltip = "Pawn을 정의하기 위해 사용되는 에셋"))
+class GY_API UGYPawnData : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+public:
+	UGYPawnData(const FObjectInitializer& ObjectInitializer);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Input")
+	TObjectPtr<UInputMappingContext> DefaultIMC;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Input")
+	TObjectPtr<UGYInputConfig> InputConfig;
+};
