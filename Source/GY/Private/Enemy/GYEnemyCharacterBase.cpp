@@ -42,7 +42,7 @@ UAbilitySystemComponent* AGYEnemyCharacterBase::GetAbilitySystemComponent() cons
 	return AbilitySystemComponent;
 }
 
-void AGYEnemyCharacterBase::InitWithID(const EEnemyType& InEnemyType)
+void AGYEnemyCharacterBase::InitWithType(const EEnemyType& InEnemyType)
 {
 	EnemyType = InEnemyType;
 	LoadDataAssetAndApply();
@@ -68,25 +68,6 @@ void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInsta
 	}
 }
 
-void AGYEnemyCharacterBase::SetCombatTarget(AActor* NewTarget)
-{
-	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
-	{
-		AIC->SetTargetActor(NewTarget);
-	}
-}
-
-void AGYEnemyCharacterBase::SetIsStunned(bool bNewStunned)
-{
-	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
-	{
-		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
-		{
-			BB->SetValueAsBool(EnemyBBKeys::IsStunned, bNewStunned);
-		}
-	}
-}
-
 void AGYEnemyCharacterBase::OnRep_Controller()
 {
 	Super::OnRep_Controller();
@@ -100,7 +81,6 @@ void AGYEnemyCharacterBase::LoadDataAssetAndApply()
 	UDataTable* TypeTable = EnemyTypeTable.LoadSynchronous();
 	if (!TypeTable) return;
 
-	// EEnemyType → FName 변환 ("Melee", "Ranged", "Boss")
 	FName RowKey = *UEnum::GetDisplayValueAsText(EnemyType).ToString();
 
 	const FEnemyTypeTableRow* TypeRow = TypeTable->FindRow<FEnemyTypeTableRow>(
@@ -163,7 +143,12 @@ void AGYEnemyCharacterBase::ApplyAIConfig(const FEnemyAIConfig& Config)
 		{
 			AIC->StartBehaviorTree(BT);
 		}
-		AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.AttackRadius);
+		AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.AttackRadius, Config.bHasPatrol);
+
+		if (Config.bHasPatrol && !Config.PatrolOffsets.IsEmpty())
+		{
+			AIC->SetPatrolPoints(Config.PatrolOffsets, GetActorLocation());
+		}
 	}
 }
 
@@ -276,7 +261,13 @@ void AGYEnemyCharacterBase::OnHealthChanged(const struct FOnAttributeChangeData&
 
 void AGYEnemyCharacterBase::OnStunTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
-	SetIsStunned(NewCount > 0);
+	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(EnemyBBKeys::IsStunned, NewCount > 0);
+		}
+	}
 }
 
 void AGYEnemyCharacterBase::Die()
@@ -292,13 +283,9 @@ void AGYEnemyCharacterBase::Die()
 		}
 		AIC->StopBehaviorTree();
 	}
-
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GetCharacterMovement()->DisableMovement();
-
 	//TODO 은서 : RewardConfig에서 데이터 값을 가져와 Drop Actor나 보상 처리 연결 필요
+	//TODO 은서 : Interface 상속받아서 deActivate 처리 로직이 들어가야함.
 	OnEnemyDead.Broadcast(this);
-	SetLifeSpan(5.f);
 }
 
 void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
@@ -315,6 +302,5 @@ void AGYEnemyCharacterBase::BeginPlay()
 	{
 		LoadDataAssetAndApply();
 	}
-
 }
 

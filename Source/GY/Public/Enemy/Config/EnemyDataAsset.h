@@ -44,6 +44,12 @@ struct FEnemyAnimationConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|State")
 	TSoftObjectPtr<UAnimSequence> DeadSequence;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Montage")
+	TSoftObjectPtr<UAnimMontage> StaggerMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Montage")
+	TSoftObjectPtr<UAnimMontage> LookAroundMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	TSoftClassPtr<UAnimInstance> AnimInstanceClass;
 };
@@ -57,13 +63,17 @@ struct FEnemyAIConfig
 	TSoftObjectPtr<UBehaviorTree> BehaviorTree;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
-	TSoftObjectPtr<UBlackboardData> BlackboardData;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	float DetectRadius = 800.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	float AttackRadius = 150.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Patrol")
+	bool bHasPatrol = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Patrol", meta = (EditCondition = "bHasPatrol"))
+	TArray<FVector> PatrolOffsets;
+
 };
 
 USTRUCT(BlueprintType)
