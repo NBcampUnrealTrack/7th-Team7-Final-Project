@@ -95,7 +95,7 @@ void UGYPawnExtensionComponent::OnRegister()
 void UGYPawnExtensionComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	BindOnActorInitStateChanged(NAME_None, FGameplayTag(), false);
 	ensure(TryToChangeInitState(GYGameplayTags::InitState_Spawned));
 	CheckDefaultInitialization();

@@ -7,8 +7,13 @@
 #include "Character/GYInputComponent.h"
 #include "Character/GYPawnData.h"
 #include "Character/GYPawnExtensionComponent.h"
+#include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/InputTag.h"
+#include "Core/GameplayTags/GameFeaturesInitTags.h"
+#include "GameFramework/PlayerState.h"
 #include "Logging/GYLogManager.h"
+#include "Player/GYPlayerState.h"
+
 // 이 컴포넌트의 이름표는 "Hero"로 지정합니다.
 const FName UGYHeroComponet::NAME_ActorFeatureName("Hero");
 
@@ -22,23 +27,89 @@ UGYHeroComponet::UGYHeroComponet(const FObjectInitializer& ObjectInitializer)
 bool UGYHeroComponet::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
                                          FGameplayTag DesiredState) const
 {
-	return IGameFrameworkInitStateInterface::CanChangeInitState(Manager, CurrentState, DesiredState);
+	// 여기서 다음 상태로 넘어갈 조건이 충족되었는지 검사합니다.
+	check(Manager);
+
+	APawn* Pawn = GetPawn<APawn>();
+
+	if (DesiredState == GYGameplayTags::InitState_Spawned)
+	{
+		if (Pawn)
+		{
+			return true;
+		}
+	}
+
+	if (CurrentState == GYGameplayTags::InitState_Spawned && DesiredState == GYGameplayTags::InitState_DataAvailable)
+	{
+
+
+		if (!GetPlayerState<AGYPlayerState>())
+		{
+			return false;
+		}
+		//If we're authority or autonomous, we need to wait for a controller with registered ownership of the player state.
+		if (Pawn->GetLocalRole() != ROLE_SimulatedProxy)
+		{
+			AController* Controller = GetController<AController>();
+
+			const bool bHasControllerPairedWithPS = (Controller != nullptr) && \
+				(Controller->PlayerState != nullptr) && \
+				(Controller->PlayerState->GetOwner() == Controller);
+
+			if (!bHasControllerPairedWithPS)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+	else if (CurrentState == GYGameplayTags::InitState_DataAvailable && DesiredState ==
+		GYGameplayTags::InitState_DataInitialized)
+	{
+		return Manager->HasFeatureReachedInitState(Pawn, UGYPawnExtensionComponent::NAME_ActorFeatureName,
+												   GYGameplayTags::InitState_DataInitialized);
+	}
+	else if (CurrentState == GYGameplayTags::InitState_DataInitialized && DesiredState ==
+		GYGameplayTags::InitState_GameplayReady)
+	{
+		return true;
+	}
+
+	return false;
 }
 
 void UGYHeroComponet::HandleChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
 	FGameplayTag DesiredState)
 {
-	IGameFrameworkInitStateInterface::HandleChangeInitState(Manager, CurrentState, DesiredState);
+	// 내가 DataInitialized 단계에 무사히 진입했다면(즉, PawnExtension도 준비가 끝났다면) 입력을 세팅합니다.
+	if (DesiredState == GYGameplayTags::InitState_DataInitialized)
+	{
+		APawn* Pawn = GetPawn<APawn>();
+		if (!Pawn) return;
+		if (UInputComponent* PlayerInputComponent = Pawn->InputComponent)
+		{
+			InitializePlayerInput(PlayerInputComponent);
+		}
+	}
 }
 
 void UGYHeroComponet::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
 {
-	IGameFrameworkInitStateInterface::OnActorInitStateChanged(Params);
+	CheckDefaultInitialization();
 }
 
 void UGYHeroComponet::CheckDefaultInitialization()
 {
-	IGameFrameworkInitStateInterface::CheckDefaultInitialization();
+	// 초기화 체인 굴리기 시작
+	static const TArray<FGameplayTag> StateChain = {
+		GYGameplayTags::InitState_Spawned,
+		GYGameplayTags::InitState_DataAvailable,
+		GYGameplayTags::InitState_DataInitialized,
+		GYGameplayTags::InitState_GameplayReady
+	};
+	ContinueInitStateChain(StateChain);
 }
 
 void UGYHeroComponet::InitializePlayerInput(UInputComponent* PlayerInputComponent)
@@ -112,13 +183,10 @@ void UGYHeroComponet::Input_Move(const FInputActionValue& InputActionValue)
 
 void UGYHeroComponet::OnRegister()
 {
+	RegisterInitStateFeature();
 	Super::OnRegister();
 }
 
-void UGYHeroComponet::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	Super::EndPlay(EndPlayReason);
-}
 
 
 // Called when the game starts
@@ -126,9 +194,16 @@ void UGYHeroComponet::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	BindOnActorInitStateChanged(UGYPawnExtensionComponent::NAME_ActorFeatureName, FGameplayTag(), false);
+	ensure(TryToChangeInitState(GYGameplayTags::InitState_Spawned));
+	CheckDefaultInitialization();
 
 }
 
+void UGYHeroComponet::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	UnregisterInitStateFeature();
+	Super::EndPlay(EndPlayReason);
+}
 
 
