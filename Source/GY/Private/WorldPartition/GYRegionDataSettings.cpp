@@ -27,7 +27,7 @@ void UGYRegionDataSettings::SetupPath(const FString& ActorRegionTablePath, const
 	if (bIsDirty)
 	{
 		SaveConfig();
-		UpdateDefaultConfigFile();
+		TryUpdateDefaultConfigFile();
 
 		GY_LOG(Game, JCM, "UGYRegionDataSettings SetupPath Complete");
 	}

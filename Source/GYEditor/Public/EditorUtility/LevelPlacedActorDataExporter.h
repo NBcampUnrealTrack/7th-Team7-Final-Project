@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Editor/Blutility/Classes/AssetActionUtility.h"
+#include "WorldPartition/LevelPlacedActorData.h"
 #include "LevelPlacedActorDataExporter.generated.h"
 
-struct FActorRegionTableRow;
 /**
  *
  */
 UCLASS(BlueprintType, Blueprintable, meta = (ShowWorldContext))
-class GY_API ULevelPlacedActorDataExporter : public UAssetActionUtility
+class GYEDITOR_API ULevelPlacedActorDataExporter : public UAssetActionUtility
 {
 	GENERATED_BODY()
 

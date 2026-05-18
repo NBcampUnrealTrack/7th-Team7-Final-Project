@@ -25,17 +25,7 @@ public class GY : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
-		if (Target.bBuildEditor)
-		{
-			PrivateDependencyModuleNames.AddRange(new string[]
-			{
-				"WorldPartitionEditor",
-				"Blutility",
-				"UMGEditor",
-				"UnrealEd",
-				"EditorScriptingUtilities",
-			});
-		}
+
 	}
 
 }
