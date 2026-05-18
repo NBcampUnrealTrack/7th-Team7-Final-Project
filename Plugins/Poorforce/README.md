@@ -87,13 +87,25 @@ push       → PR 생성 → 리뷰 → 머지
 
 ### LockAndSync 모드 (예: `Content/ThirdParty/PaidAssets/`)
 
-플러그인이 전부 자동:
+```
+[더블클릭]
+  열기   → 락 획득 → rclone check (비교만)
+           ├─ 디스크 = 드라이브 → 정상 열림
+           └─ 디스크 ≠ 드라이브 → 락 풀고 안내 다이얼로그
+                                "다른 사용자가 업데이트했습니다.
+                                 우클릭 → Poorforce → Sync 로 받은 후 다시 열어주세요."
+  작업/저장 → (자동)
+  닫기      → 변경 있으면 rclone 업로드 → 락 해제
+            → 변경 없으면 락만 해제 (업로드 skip)
 
+[우클릭 → Poorforce → Sync (download)]
+  → close all editors for asset
+  → 메모리 unload (UnloadPackages)
+  → rclone copyto (실제 다운로드)
+  → 사용자가 다음에 더블클릭하면 fresh 로드됨
 ```
-열기      → 락 획득 → rclone 다운로드 → 에디터 재오픈
-작업/저장 → (자동)
-닫기      → rclone 업로드 → 락 해제
-```
+
+**왜 자동 다운로드를 안 하는가:** 더블클릭 시 자동으로 다운받아 디스크를 덮어도, 메모리에 이미 로드된 UObject 가 있으면 에디터는 그 메모리 객체를 보여줌. 즉 다운로드 후 stale 메모리. 명시적 우클릭 Sync 만이 안전하게 메모리까지 갱신.
 
 ## 콘솔 커맨드
 
@@ -192,6 +204,14 @@ jobs:
 
 LockAndSync 모드에서는 디태치드 워처가 자동으로 업로드 + 락 해제 시도. 해당 락이 강제 해제됐던 거면 업로드 안 함 (덮어쓰기 방지).
 
+### "다른 사용자가 이 에셋을 업데이트했습니다" 다이얼로그 뜨면
+
+LockAndSync 에셋을 열려고 했는데 로컬 디스크와 드라이브가 달라서 차단된 상태. 안내대로:
+
+1. Content Browser 에서 그 에셋을 **우클릭 → Poorforce → Sync (download)** 선택
+2. notification "Sync 완료" 뜨면
+3. 그 에셋 더블클릭 → 최신 버전으로 열림
+
 ## 알려진 한계
 
 - **Windows 전용** (PowerShell 의존)
@@ -199,6 +219,7 @@ LockAndSync 모드에서는 디태치드 워처가 자동으로 업로드 + 락 
 - **Content Browser 락 오버레이 없음** (Redis 호출 비용 문제로 보류)
 - **워처가 죽으면 락 영구 유지** → TTL 이 최후 안전망
 - **에셋 삭제 처리 없음** — Pre/PostDelete 훅 미구현. LockAndSync 삭제 시 업로드 실패 다이얼로그 뜨고 리모트 파일 안 지워짐. 일단 삭제 피하기
+- **LockAndSync 자동 메모리 갱신 없음** — 더블클릭 시 자동 다운로드 안 함. 다른 사람이 업로드한 거 받으려면 명시적으로 우클릭 → Poorforce → Sync 필요
 - **맵(.umap) 락 처리 한계** — World 에셋은 main viewport에 직접 로드되므로:
   - **Content Browser 더블클릭** 만 락 hook 발화. Redis 락 + LFS 락 정상 동작
   - **default map 자동 로드 / File > Open Level / LoadMap 호출** 은 hook 없음 → 락 안 잡힘
