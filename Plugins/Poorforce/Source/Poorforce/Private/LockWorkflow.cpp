@@ -12,6 +12,7 @@
 #include "UI/PoorforceDialogs.h"
 
 #include "Editor.h"
+#include "UObject/Linker.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Framework/Notifications/NotificationManager.h"
@@ -254,6 +255,17 @@ void FLockWorkflow::SyncPrefetch(UObject* Asset, const FResolvedAsset& Resolved)
 
 			Task.EnterProgressFrame(0.f, FText::FromString(FString::Printf(
 				TEXT("다운로드 중: %s"), *Resolved.RelativePath)));
+
+			// 메모리에 이미 로드된 패키지의 linker가 디스크 파일을 잠그고 있어
+			// rclone rename 단계에서 access denied. ResetLoaders 로 linker 만 풀고
+			// 메모리 객체는 그대로 유지 (UnloadPackages 는 ContentBrowser 더블클릭 컨텍스트에서 크래시).
+			if (Asset != nullptr)
+			{
+				if (UPackage* PackageToReset = Asset->GetPackage())
+				{
+					ResetLoaders(PackageToReset);
+				}
+			}
 
 			const bool bDownloaded = DownloadSync(Resolved.LocalFilePath, Resolved.RemoteFilePath);
 
