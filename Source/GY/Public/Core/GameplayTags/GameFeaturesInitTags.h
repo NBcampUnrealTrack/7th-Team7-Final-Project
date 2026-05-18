@@ -4,7 +4,7 @@
 
 #include "NativeGameplayTags.h"
 
-namespace GYGameplayFeatureInitTags
+namespace GYGameplayTags
 {
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_Spawned);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_DataAvailable);

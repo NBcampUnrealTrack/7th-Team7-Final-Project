@@ -3,6 +3,8 @@
 
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
 
+namespace GYGameplayTags
+{
 
 UE_DEFINE_GAMEPLAY_TAG_COMMENT(InitState_Spawned, "InitState.Spawned",
                                "1:액터나 컴포넌트가 최초로 스폰, 기능추가가 가능한 상태 ");
@@ -13,3 +15,4 @@ UE_DEFINE_GAMEPLAY_TAG_COMMENT(InitState_DataInitialized, "InitState.DataInitial
 ;
 UE_DEFINE_GAMEPLAY_TAG_COMMENT(InitState_GameplayReady, "InitState.GameplayReady",
                                "4: 모든 준비가 끝낫당.");
+}
