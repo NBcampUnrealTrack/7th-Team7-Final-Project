@@ -44,6 +44,12 @@ struct FEnemyAnimationConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|State")
 	TSoftObjectPtr<UAnimSequence> DeadSequence;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Montage")
+	TSoftObjectPtr<UAnimMontage> StaggerMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Montage")
+	TSoftObjectPtr<UAnimMontage> LookAroundMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	TSoftClassPtr<UAnimInstance> AnimInstanceClass;
 };
