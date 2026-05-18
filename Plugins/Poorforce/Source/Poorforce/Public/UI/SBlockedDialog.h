@@ -14,12 +14,15 @@ enum class EBlockedDialogResult : uint8
 class SBlockedDialog : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SBlockedDialog) {}
+	SLATE_BEGIN_ARGS(SBlockedDialog)
+		: _bShowForceUnlock(true)
+	{}
 		SLATE_ARGUMENT(FString, RelativePath)
 		SLATE_ARGUMENT(FString, OwnerId)
 		SLATE_ARGUMENT(FString, ElapsedText)
 		SLATE_ARGUMENT(TWeakPtr<SWindow>, ParentWindow)
 		SLATE_ARGUMENT(EBlockedDialogResult*, OutResult)
+		SLATE_ARGUMENT(bool, bShowForceUnlock)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);

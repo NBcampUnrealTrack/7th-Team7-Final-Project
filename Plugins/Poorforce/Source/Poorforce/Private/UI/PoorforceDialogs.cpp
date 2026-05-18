@@ -36,7 +36,8 @@ namespace PoorforceDialogs
 	EBlockedDialogResult ShowBlockedDialog(
 		const FString& RelativePath,
 		const FString& OwnerId,
-		const FString& ElapsedText)
+		const FString& ElapsedText,
+		bool bShowForceUnlock)
 	{
 		EBlockedDialogResult Result = EBlockedDialogResult::Confirmed;
 
@@ -50,7 +51,8 @@ namespace PoorforceDialogs
 			.OwnerId(OwnerId)
 			.ElapsedText(ElapsedText)
 			.ParentWindow(Host)
-			.OutResult(&Result));
+			.OutResult(&Result)
+			.bShowForceUnlock(bShowForceUnlock));
 
 		FSlateApplication::Get().AddModalWindow(Host, GetParentWindowForModal(), /*bSlowTaskWindow=*/ false);
 

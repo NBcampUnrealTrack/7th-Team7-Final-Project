@@ -12,7 +12,8 @@ namespace PoorforceDialogs
 	EBlockedDialogResult ShowBlockedDialog(
 		const FString& RelativePath,
 		const FString& OwnerId,
-		const FString& ElapsedText);
+		const FString& ElapsedText,
+		bool bShowForceUnlock = true);
 
 	FForceUnlockDialogResult ShowForceUnlockDialog(
 		const FString& RelativePath,

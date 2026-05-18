@@ -19,6 +19,28 @@ void SBlockedDialog::Construct(const FArguments& InArgs)
 	const FString OwnerText   = FString::Printf(TEXT("작업자: %s"), *InArgs._OwnerId);
 	const FString ElapsedText = FString::Printf(TEXT("시작: %s"), *InArgs._ElapsedText);
 
+	TSharedRef<SUniformGridPanel> ButtonGrid = SNew(SUniformGridPanel)
+		.SlotPadding(FMargin(6.f, 0.f, 0.f, 0.f));
+
+	ButtonGrid->AddSlot(0, 0)
+	[
+		SNew(SButton)
+		.Text(LOCTEXT("Confirm", "확인"))
+		.HAlign(HAlign_Center)
+		.OnClicked(this, &SBlockedDialog::HandleConfirm)
+	];
+
+	if (InArgs._bShowForceUnlock)
+	{
+		ButtonGrid->AddSlot(1, 0)
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("ForceUnlock", "강제 해제..."))
+			.HAlign(HAlign_Center)
+			.OnClicked(this, &SBlockedDialog::HandleForceUnlock)
+		];
+	}
+
 	ChildSlot
 	[
 		SNew(SBorder)
@@ -60,24 +82,7 @@ void SBlockedDialog::Construct(const FArguments& InArgs)
 			.AutoHeight()
 			.HAlign(HAlign_Right)
 			[
-				SNew(SUniformGridPanel)
-				.SlotPadding(FMargin(6.f, 0.f, 0.f, 0.f))
-
-				+ SUniformGridPanel::Slot(0, 0)
-				[
-					SNew(SButton)
-					.Text(LOCTEXT("Confirm", "확인"))
-					.HAlign(HAlign_Center)
-					.OnClicked(this, &SBlockedDialog::HandleConfirm)
-				]
-
-				+ SUniformGridPanel::Slot(1, 0)
-				[
-					SNew(SButton)
-					.Text(LOCTEXT("ForceUnlock", "강제 해제..."))
-					.HAlign(HAlign_Center)
-					.OnClicked(this, &SBlockedDialog::HandleForceUnlock)
-				]
+				ButtonGrid
 			]
 		]
 	];

@@ -561,8 +561,12 @@ void FLockWorkflow::HandleBlockedByOther(
 
 	CloseAssetEditor(WeakAsset);
 
+	// LockOnly는 LFS lock force 권한이 일반 사용자에게 없어서 [강제 해제] 의미 없음 → 버튼 숨김.
+	// LockAndSync는 LFS 안 쓰므로 강제 해제 유효.
+	const bool bAllowForceUnlock = Resolved.Match->Mode == EPoorforcePathMode::LockAndSync;
+
 	const EBlockedDialogResult Choice = PoorforceDialogs::ShowBlockedDialog(
-		Resolved.RelativePath, Entry.OwnerId, ElapsedText);
+		Resolved.RelativePath, Entry.OwnerId, ElapsedText, bAllowForceUnlock);
 
 	if (Choice != EBlockedDialogResult::ForceUnlockRequested)
 	{
