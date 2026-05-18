@@ -284,7 +284,7 @@ void AGYEnemyCharacterBase::Die()
 		AIC->StopBehaviorTree();
 	}
 	//TODO 은서 : RewardConfig에서 데이터 값을 가져와 Drop Actor나 보상 처리 연결 필요
-	//TODO 은서 : Die Effect에서 Collision 끄는 옵션 넣어야 할 듯
+	//TODO 은서 : Interface 상속받아서 deActivate 처리 로직이 들어가야함.
 	OnEnemyDead.Broadcast(this);
 }
 
@@ -302,6 +302,5 @@ void AGYEnemyCharacterBase::BeginPlay()
 	{
 		LoadDataAssetAndApply();
 	}
-
 }
 
