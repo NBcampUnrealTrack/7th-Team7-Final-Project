@@ -75,6 +75,13 @@
 		{
 			"Name": "ComponentInjectionFeature",
 			"Enabled": true
+		},
+		{
+			"Name": "Poorforce",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		}
 	]
 }
