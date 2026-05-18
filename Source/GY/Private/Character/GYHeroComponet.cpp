@@ -83,6 +83,8 @@ bool UGYHeroComponet::CanChangeInitState(UGameFrameworkComponentManager* Manager
 void UGYHeroComponet::HandleChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
 	FGameplayTag DesiredState)
 {
+	GY_LOG(Player, KHB, "HandleChangeInitState: [%s] -> [%s]", *CurrentState.ToString(), *DesiredState.ToString());
+
 	// 내가 DataInitialized 단계에 무사히 진입했다면(즉, PawnExtension도 준비가 끝났다면) 입력을 세팅합니다.
 	if (DesiredState == GYGameplayTags::InitState_DataInitialized)
 	{
@@ -90,7 +92,12 @@ void UGYHeroComponet::HandleChangeInitState(UGameFrameworkComponentManager* Mana
 		if (!Pawn) return;
 		if (UInputComponent* PlayerInputComponent = Pawn->InputComponent)
 		{
+			GY_LOG(Player, KHB, "InitializePlayerInput 호출. IC 클래스: %s", *PlayerInputComponent->GetClass()->GetName());
 			InitializePlayerInput(PlayerInputComponent);
+		}
+		else
+		{
+			GY_ERROR(Player, KHB, "Pawn->InputComponent가 null - 입력 초기화 스킵됨");
 		}
 	}
 }
@@ -159,6 +166,7 @@ void UGYHeroComponet::InitializePlayerInput(UInputComponent* PlayerInputComponen
 
 void UGYHeroComponet::Input_Move(const FInputActionValue& InputActionValue)
 {
+	GY_LOG(Player, KHB, "Input_Move 호출됨");
 	APawn* Pawn = GetPawn<APawn>();
 	AController* Controller = Pawn ? Pawn->GetController() : nullptr;
 

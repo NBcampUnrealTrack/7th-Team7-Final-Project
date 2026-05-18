@@ -7,7 +7,7 @@ const UInputAction* UGYInputConfig::FindNativeInputActionForTag(const FGameplayT
 {
 	for (const FGYInputAction& ActionStruct : NativeInputActions)
 	{
-		if (ActionStruct.InputTag == InputTag)
+		if (ActionStruct.InputAction && (ActionStruct.InputTag == InputTag))
 		{
 			return ActionStruct.InputAction;
 		}
