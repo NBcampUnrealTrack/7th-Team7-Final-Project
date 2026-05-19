@@ -1,0 +1,50 @@
+name: Release Poorforce locks
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [develop]
+
+permissions:
+  contents: write   # git lfs unlock API 호출에 필요
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Make scripts executable
+        run: chmod +x Plugins/Poorforce/scripts/release-locks.sh Plugins/Poorforce/scripts/release-lfs-locks.sh
+
+      - name: Compute lock keys from changed files
+        id: keys
+        run: |
+          git diff --name-only origin/develop...HEAD \
+            | grep -E '^Content/GY/.*\.(uasset|umap)$' \
+            | sed -E 's|^Content/GY/||; s|\.(uasset|umap)$||; s|^|gy:asset:|' \
+            > keys.txt || true
+          echo "count=$(wc -l < keys.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Release Redis locks
+        if: steps.keys.outputs.count != '0'
+        env:
+          UPSTASH_URL: ${{ secrets.UPSTASH_URL }}
+          UPSTASH_TOKEN: ${{ secrets.UPSTASH_TOKEN }}
+        run: cat keys.txt | ./Plugins/Poorforce/scripts/release-locks.sh
+
+      - name: Compute LFS paths from changed files
+        id: lfspaths
+        run: |
+          git diff --name-only origin/develop...HEAD \
+            | grep -E '^Content/GY/.*\.(uasset|umap)$' \
+            > lfs_paths.txt || true
+          echo "count=$(wc -l < lfs_paths.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Release LFS locks
+        if: steps.lfspaths.outputs.count != '0'
+        run: cat lfs_paths.txt | ./Plugins/Poorforce/scripts/release-lfs-locks.sh

@@ -1,0 +1,14 @@
+# Unreal Engine generated
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+
+# Build artifacts
+*.pdb
+*.exp
+*.lib
+
+# OS
+Thumbs.db
+.DS_Store
