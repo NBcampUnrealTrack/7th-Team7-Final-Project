@@ -5,7 +5,7 @@
 #include "GameplayEffect.h"
 #include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
 
-static void ApplyInstantGEToAttribute(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Magnitude)
+static void PlayerResource_ApplyInstantGE(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Magnitude)
 {
 	if (!ASC || Magnitude == 0.f) return;
 
@@ -22,7 +22,7 @@ static void ApplyInstantGEToAttribute(UAbilitySystemComponent* ASC, const FGamep
 
 void UGYPlayerResourceStatics::ApplyFocusUse(UAbilitySystemComponent* ASC, float Amount)
 {
-	ApplyInstantGEToAttribute(ASC, UGYPlayerAttribute::GetCurrentFocusAttribute(), -Amount);
+	PlayerResource_ApplyInstantGE(ASC, UGYPlayerAttribute::GetCurrentFocusAttribute(), -Amount);
 }
 
 void UGYPlayerResourceStatics::ApplyFocusGain(UAbilitySystemComponent* ASC, float BaseAmount)
@@ -30,12 +30,12 @@ void UGYPlayerResourceStatics::ApplyFocusGain(UAbilitySystemComponent* ASC, floa
 	if (!ASC) return;
 	const UGYPlayerAttribute* PlayerAttr = ASC->GetSet<UGYPlayerAttribute>();
 	const float RegenRate = PlayerAttr ? PlayerAttr->GetFocusRegenRate() : 1.f;
-	ApplyInstantGEToAttribute(ASC, UGYPlayerAttribute::GetCurrentFocusAttribute(), BaseAmount * RegenRate);
+	PlayerResource_ApplyInstantGE(ASC, UGYPlayerAttribute::GetCurrentFocusAttribute(), BaseAmount * RegenRate);
 }
 
 void UGYPlayerResourceStatics::ApplyStaminaUse(UAbilitySystemComponent* ASC, float Amount)
 {
-	ApplyInstantGEToAttribute(ASC, UGYPlayerAttribute::GetCurrentStaminaAttribute(), -Amount);
+	PlayerResource_ApplyInstantGE(ASC, UGYPlayerAttribute::GetCurrentStaminaAttribute(), -Amount);
 }
 
 void UGYPlayerResourceStatics::UseStamina(UGYAbilitySystemComponent* ASC, float Amount)
@@ -50,7 +50,7 @@ void UGYPlayerResourceStatics::UseStamina(UGYAbilitySystemComponent* ASC, float 
 
 void UGYPlayerResourceStatics::ApplyHitResUse(UAbilitySystemComponent* ASC, float Amount)
 {
-	ApplyInstantGEToAttribute(ASC, UGYAdditionalAttribute::GetCurrentHitResAttribute(), -Amount);
+	PlayerResource_ApplyInstantGE(ASC, UGYAdditionalAttribute::GetCurrentHitResAttribute(), -Amount);
 }
 
 void UGYPlayerResourceStatics::DecreaseHitRes(UGYAbilitySystemComponent* ASC, float Amount)
@@ -65,7 +65,7 @@ void UGYPlayerResourceStatics::DecreaseHitRes(UGYAbilitySystemComponent* ASC, fl
 
 void UGYPlayerResourceStatics::ApplyPoiseUse(UAbilitySystemComponent* ASC, float Amount)
 {
-	ApplyInstantGEToAttribute(ASC, UGYAdditionalAttribute::GetCurrentPoiseAttribute(), -Amount);
+	PlayerResource_ApplyInstantGE(ASC, UGYAdditionalAttribute::GetCurrentPoiseAttribute(), -Amount);
 }
 
 void UGYPlayerResourceStatics::DecreasePoise(UGYAbilitySystemComponent* ASC, float Amount)
@@ -80,5 +80,5 @@ void UGYPlayerResourceStatics::DecreasePoise(UGYAbilitySystemComponent* ASC, flo
 
 void UGYPlayerResourceStatics::ApplyAttributeDelta(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Magnitude)
 {
-	ApplyInstantGEToAttribute(ASC, Attribute, Magnitude);
+	PlayerResource_ApplyInstantGE(ASC, Attribute, Magnitude);
 }
