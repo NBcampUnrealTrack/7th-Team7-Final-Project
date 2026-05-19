@@ -26,14 +26,5 @@ public class GY : ModuleRules
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
-
-		if (Target.Configuration != UnrealTargetConfiguration.Shipping)
-		{
-			PrivateDependencyModuleNames.AddRange(new string[]
-			{
-				"Slate",
-				"SlateCore"
-			});
-		}
 	}
 }

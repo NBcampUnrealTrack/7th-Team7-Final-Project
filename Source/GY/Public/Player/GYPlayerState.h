@@ -2,6 +2,7 @@
 
 #include "AbilitySystemInterface.h"
 #include "CoreMinimal.h"
+#include "AbilitySystem/Attributes/Player/GYWeaponAttribute.h"
 #include "GameFramework/PlayerState.h"
 #include "GYPlayerState.generated.h"
 
@@ -49,4 +50,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category="GAS")
 	TObjectPtr<UGYPlayerAttribute> PlayerAttribute;
+
+	UPROPERTY(VisibleAnywhere, Category="GAS")
+	TObjectPtr<UGYWeaponAttribute> WeaponAttribute;
 };

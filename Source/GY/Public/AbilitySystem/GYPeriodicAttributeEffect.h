@@ -11,6 +11,8 @@ class GY_API UGYPeriodicAttributeEffect : public UGameplayEffect
 	GENERATED_BODY()
 
 public:
+	UGYPeriodicAttributeEffect();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY")
 	FGameplayTag CombatTag;
 

@@ -26,25 +26,26 @@ public:
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
 private:
 	FGameplayEffectAttributeCaptureDefinition MaxStaminaDef;
+	FGameplayEffectAttributeCaptureDefinition StaminaRegenRateDef;
 };
 UCLASS()
-class GY_API UGYHitResRegenMagnitude : public UGYPercentOfMaxMagnitude
+class GY_API UGYStaggerRegenMagnitude : public UGYPercentOfMaxMagnitude
 {
 	GENERATED_BODY()
 public:
-	UGYHitResRegenMagnitude();
+	UGYStaggerRegenMagnitude();
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
 private:
-	FGameplayEffectAttributeCaptureDefinition MaxHitResDef;
+	FGameplayEffectAttributeCaptureDefinition MaxStaggerDef;
 };
 UCLASS()
-class GY_API UGYPoiseRegenMagnitude : public UGYPercentOfMaxMagnitude
+class GY_API UGYStunRegenMagnitude : public UGYPercentOfMaxMagnitude
 {
 	GENERATED_BODY()
 public:
-	UGYPoiseRegenMagnitude();
+	UGYStunRegenMagnitude();
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
 private:
-	FGameplayEffectAttributeCaptureDefinition MaxPoiseDef;
+	FGameplayEffectAttributeCaptureDefinition MaxStunDef;
 };
 

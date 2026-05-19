@@ -14,12 +14,4 @@ public:
 
 protected:
 	virtual void SetupInputComponent() override;
-
-#if !UE_BUILD_SHIPPING
-private:
-	void ToggleDebugMenu();
-
-	TSharedPtr<class SGYDebugMenu> DebugMenuWidget;
-	bool bDebugMenuVisible = false;
-#endif
 };

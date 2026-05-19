@@ -18,8 +18,11 @@ public class GYEditor : ModuleRules
             {
                 "CoreUObject",
                 "Engine",
+                "InputCore",
                 "Slate",
                 "SlateCore",
+                "GameplayAbilities",
+                "GameplayTags",
                 "WorldPartitionEditor",
                 "Blutility",
                 "UMGEditor",

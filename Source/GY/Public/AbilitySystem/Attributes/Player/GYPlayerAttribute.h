@@ -32,20 +32,6 @@ public:
 	UFUNCTION()
 	virtual void OnRep_MaxStamina(const FGameplayAttributeData& OldMaxStamina);
 
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_CurrentFocus)
-	FGameplayAttributeData CurrentFocus;
-	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, CurrentFocus)
-
-	UFUNCTION()
-	virtual void OnRep_CurrentFocus(const FGameplayAttributeData& OldCurrentFocus);
-
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_MaxFocus)
-	FGameplayAttributeData MaxFocus;
-	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, MaxFocus)
-
-	UFUNCTION()
-	virtual void OnRep_MaxFocus(const FGameplayAttributeData& OldMaxFocus);
-
 	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_Strength)
 	FGameplayAttributeData Strength;
 	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, Strength)
@@ -67,19 +53,19 @@ public:
 	UFUNCTION()
 	virtual void OnRep_Intelligence(const FGameplayAttributeData& OldIntelligence);
 
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_StaminaRegenRate)
+	FGameplayAttributeData StaminaRegenRate;
+	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, StaminaRegenRate)
+
+	UFUNCTION()
+	virtual void OnRep_StaminaRegenRate(const FGameplayAttributeData& OldStaminaRegenRate);
+
 	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_EvasionInvincibilityTime)
 	FGameplayAttributeData EvasionInvincibilityTime;
 	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, EvasionInvincibilityTime)
 
 	UFUNCTION()
 	virtual void OnRep_EvasionInvincibilityTime(const FGameplayAttributeData& OldEvasionInvincibilityTime);
-
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_FocusRegenRate)
-	FGameplayAttributeData FocusRegenRate;
-	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, FocusRegenRate)
-
-	UFUNCTION()
-	virtual void OnRep_FocusRegenRate(const FGameplayAttributeData& OldFocusRegenRate);
 
 	UPROPERTY(EditDefaultsOnly, Category="Attributes")
 	TObjectPtr<UGYStatScalingData> StatScalingData;
