@@ -20,9 +20,10 @@ unlock_one() {
     local path="$1"
     if [[ -z "$path" ]]; then return 0; fi
 
-    # --force: 본인 락엔 무영향. 다른 사람 락엔 admin 권한 요구 (PAT 인증으론 거부됨).
+    # --force 없이: PAT 본인 락만 해제. --force 는 본인 락에도 admin 권한을 요구함.
+    # 다른 사람 락은 거부되고 → CI 에서 Discord fallback 으로 떨어짐.
     local output
-    if output=$(git lfs unlock --force "$path" 2>&1); then
+    if output=$(git lfs unlock "$path" 2>&1); then
         echo "unlocked: $path"
     elif echo "$output" | grep -qiE "no matching|unable to find"; then
         echo "already unlocked: $path"
