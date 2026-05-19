@@ -9,6 +9,9 @@ class UAbilitySystemComponent;
 class UEquipmentLoadoutComponent;
 class UGYAbilitySystemComponent;
 class UInventoryComponent;
+class UGYPlayerBaseAttribute;
+class UGYPlayerAdditionalAttribute;
+class UGYPlayerAttribute;
 
 UCLASS()
 class GY_API AGYPlayerState : public APlayerState, public IAbilitySystemInterface
@@ -37,4 +40,13 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UEquipmentLoadoutComponent> EquipmentLoadoutComponent;
+
+	UPROPERTY(VisibleAnywhere, Category="GAS")
+	TObjectPtr<UGYPlayerBaseAttribute> BaseAttribute;
+
+	UPROPERTY(VisibleAnywhere, Category="GAS")
+	TObjectPtr<UGYPlayerAdditionalAttribute> AdditionalAttribute;
+
+	UPROPERTY(VisibleAnywhere, Category="GAS")
+	TObjectPtr<UGYPlayerAttribute> PlayerAttribute;
 };

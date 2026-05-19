@@ -86,7 +86,7 @@ void UGYPlayerAttribute::PreAttributeChange(const FGameplayAttribute& Attribute,
 
 	if (Attribute == GetCurrentStaminaAttribute())
 	{
-		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxStamina());
+		NewValue = FMath::Clamp(NewValue, -GetMaxStamina(), GetMaxStamina());
 	}
 	else if (Attribute == GetCurrentFocusAttribute())
 	{
@@ -98,9 +98,17 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 {
 	Super::PostGameplayEffectExecute(Data);
 
+	if (!StatScalingData) return;
+
+	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+	const float Magnitude = Data.EvaluatedData.Magnitude;
+
+	UGYPlayerBaseAttribute* Base = const_cast<UGYPlayerBaseAttribute*>(ASC->GetSet<UGYPlayerBaseAttribute>());
+	UGYPlayerAdditionalAttribute* Additional = const_cast<UGYPlayerAdditionalAttribute*>(ASC->GetSet<UGYPlayerAdditionalAttribute>());
+
 	if (Data.EvaluatedData.Attribute == GetCurrentStaminaAttribute())
 	{
-		SetCurrentStamina(FMath::Clamp(GetCurrentStamina(), 0.f, GetMaxStamina()));
+		SetCurrentStamina(FMath::Clamp(GetCurrentStamina(), -GetMaxStamina(), GetMaxStamina()));
 		return;
 	}
 
@@ -110,23 +118,17 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 		return;
 	}
 
-	if (!StatScalingData) return;
-
-	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
-	const float Magnitude = Data.EvaluatedData.Magnitude;
-
-	UGYPlayerBaseAttribute* Base = const_cast<UGYPlayerBaseAttribute*>(ASC->GetSet<UGYPlayerBaseAttribute>());
-	UGYPlayerAdditionalAttribute* Additional = const_cast<UGYPlayerAdditionalAttribute*>(ASC->GetSet<UGYPlayerAdditionalAttribute>());
-
 	if (Data.EvaluatedData.Attribute == GetStrengthAttribute())
 	{
 		if (Base)
 		{
-			Base->SetMaxHealth(Base->GetMaxHealth() + Magnitude * StatScalingData->StrengthToMaxHealth);
-		}
-		if (Additional)
-		{
-			Additional->SetHitResistance(Additional->GetHitResistance() + Magnitude * StatScalingData->StrengthToHitResistance);
+			const float OldMax = Base->GetMaxHealth();
+			const float NewMax = OldMax + Magnitude * StatScalingData->StrengthToMaxHealth;
+			Base->SetMaxHealth(NewMax);
+			if (OldMax > 0.f)
+			{
+				Base->SetCurrentHealth(FMath::Clamp(Base->GetCurrentHealth() * NewMax / OldMax, 0.f, NewMax));
+			}
 		}
 	}
 	else if (Data.EvaluatedData.Attribute == GetDexterityAttribute())

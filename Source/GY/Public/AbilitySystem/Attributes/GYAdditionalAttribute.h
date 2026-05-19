@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
@@ -16,12 +16,19 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_HitResistance)
-	FGameplayAttributeData HitResistance;
-	GY_ATTRIBUTE_ACCESSORS(UGYAdditionalAttribute, HitResistance)
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_CurrentHitRes)
+	FGameplayAttributeData CurrentHitRes;
+	GY_ATTRIBUTE_ACCESSORS(UGYAdditionalAttribute, CurrentHitRes)
 
 	UFUNCTION()
-	virtual void OnRep_HitResistance(const FGameplayAttributeData& OldHitResistance);
+	virtual void OnRep_CurrentHitRes(const FGameplayAttributeData& OldCurrentHitRes);
+
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_MaxHitRes)
+	FGameplayAttributeData MaxHitRes;
+	GY_ATTRIBUTE_ACCESSORS(UGYAdditionalAttribute, MaxHitRes)
+
+	UFUNCTION()
+	virtual void OnRep_MaxHitRes(const FGameplayAttributeData& OldMaxHitRes);
 
 	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_CurrentPoise)
 	FGameplayAttributeData CurrentPoise;
