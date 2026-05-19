@@ -30,6 +30,7 @@ bool UGYCameraComponent::CanChangeInitState(UGameFrameworkComponentManager* Mana
 		{
 			return false;
 		}
+		return true;
 	}
 	//2. Dataavailable 로 변경 조건
 	else if (CurrentState == GYGameplayTags::InitState_Spawned && DesiredState ==
