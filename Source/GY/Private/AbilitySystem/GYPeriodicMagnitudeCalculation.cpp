@@ -22,35 +22,51 @@ UGYStaminaRegenMagnitude::UGYStaminaRegenMagnitude()
 	MaxStaminaDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
 	MaxStaminaDef.bSnapshot = false;
 	RelevantAttributesToCapture.Add(MaxStaminaDef);
+
+	StaminaRegenRateDef.AttributeToCapture = UGYPlayerAttribute::GetStaminaRegenRateAttribute();
+	StaminaRegenRateDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
+	StaminaRegenRateDef.bSnapshot = false;
+	RelevantAttributesToCapture.Add(StaminaRegenRateDef);
 }
 
 float UGYStaminaRegenMagnitude::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
 {
-	return CalculateFromCaptured(MaxStaminaDef, Spec);
+	FAggregatorEvaluateParameters EvalParams;
+	EvalParams.SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
+	EvalParams.TargetTags = Spec.CapturedTargetTags.GetAggregatedTags();
+
+	float MaxStamina = 0.f;
+	GetCapturedAttributeMagnitude(MaxStaminaDef, Spec, EvalParams, MaxStamina);
+
+	float StaminaRegenRate = 0.f;
+	GetCapturedAttributeMagnitude(StaminaRegenRateDef, Spec, EvalParams, StaminaRegenRate);
+
+	const float Period = Spec.Def ? Spec.Def->Period.GetValueAtLevel(Spec.GetLevel()) : 0.1f;
+	return MaxStamina * RatePercentPerSecond * (1.f + StaminaRegenRate) * Period;
 }
 
-UGYHitResRegenMagnitude::UGYHitResRegenMagnitude()
+UGYStaggerRegenMagnitude::UGYStaggerRegenMagnitude()
 {
-	MaxHitResDef.AttributeToCapture = UGYAdditionalAttribute::GetMaxHitResAttribute();
-	MaxHitResDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
-	MaxHitResDef.bSnapshot = false;
-	RelevantAttributesToCapture.Add(MaxHitResDef);
+	MaxStaggerDef.AttributeToCapture = UGYAdditionalAttribute::GetMaxStaggerAttribute();
+	MaxStaggerDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
+	MaxStaggerDef.bSnapshot = false;
+	RelevantAttributesToCapture.Add(MaxStaggerDef);
 }
 
-float UGYHitResRegenMagnitude::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
+float UGYStaggerRegenMagnitude::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
 {
-	return CalculateFromCaptured(MaxHitResDef, Spec);
+	return CalculateFromCaptured(MaxStaggerDef, Spec);
 }
 
-UGYPoiseRegenMagnitude::UGYPoiseRegenMagnitude()
+UGYStunRegenMagnitude::UGYStunRegenMagnitude()
 {
-	MaxPoiseDef.AttributeToCapture = UGYAdditionalAttribute::GetMaxPoiseAttribute();
-	MaxPoiseDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
-	MaxPoiseDef.bSnapshot = false;
-	RelevantAttributesToCapture.Add(MaxPoiseDef);
+	MaxStunDef.AttributeToCapture = UGYAdditionalAttribute::GetMaxStunAttribute();
+	MaxStunDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
+	MaxStunDef.bSnapshot = false;
+	RelevantAttributesToCapture.Add(MaxStunDef);
 }
 
-float UGYPoiseRegenMagnitude::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
+float UGYStunRegenMagnitude::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
 {
-	return CalculateFromCaptured(MaxPoiseDef, Spec);
+	return CalculateFromCaptured(MaxStunDef, Spec);
 }

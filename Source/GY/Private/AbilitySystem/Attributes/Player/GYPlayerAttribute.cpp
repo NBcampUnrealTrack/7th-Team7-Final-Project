@@ -2,6 +2,7 @@
 #include "Data/GYStatScalingData.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAdditionalAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYWeaponAttribute.h"
 #include "AbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffect.h"
@@ -11,13 +12,11 @@ UGYPlayerAttribute::UGYPlayerAttribute()
 {
 	InitCurrentStamina(100.f);
 	InitMaxStamina(100.f);
-	InitCurrentFocus(50.f);
-	InitMaxFocus(50.f);
 	InitStrength(5.f);
 	InitDexterity(5.f);
 	InitIntelligence(5.f);
+	InitStaminaRegenRate(0.f);
 	InitEvasionInvincibilityTime(0.2f);
-	InitFocusRegenRate(1.f);
 }
 
 void UGYPlayerAttribute::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -26,13 +25,11 @@ void UGYPlayerAttribute::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
 	DOREPLIFETIME(UGYPlayerAttribute, CurrentStamina);
 	DOREPLIFETIME(UGYPlayerAttribute, MaxStamina);
-	DOREPLIFETIME(UGYPlayerAttribute, CurrentFocus);
-	DOREPLIFETIME(UGYPlayerAttribute, MaxFocus);
 	DOREPLIFETIME(UGYPlayerAttribute, Strength);
 	DOREPLIFETIME(UGYPlayerAttribute, Dexterity);
 	DOREPLIFETIME(UGYPlayerAttribute, Intelligence);
+	DOREPLIFETIME(UGYPlayerAttribute, StaminaRegenRate);
 	DOREPLIFETIME(UGYPlayerAttribute, EvasionInvincibilityTime);
-	DOREPLIFETIME(UGYPlayerAttribute, FocusRegenRate);
 }
 
 void UGYPlayerAttribute::OnRep_CurrentStamina(const FGameplayAttributeData& OldCurrentStamina)
@@ -43,16 +40,6 @@ void UGYPlayerAttribute::OnRep_CurrentStamina(const FGameplayAttributeData& OldC
 void UGYPlayerAttribute::OnRep_MaxStamina(const FGameplayAttributeData& OldMaxStamina)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, MaxStamina, OldMaxStamina);
-}
-
-void UGYPlayerAttribute::OnRep_CurrentFocus(const FGameplayAttributeData& OldCurrentFocus)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, CurrentFocus, OldCurrentFocus);
-}
-
-void UGYPlayerAttribute::OnRep_MaxFocus(const FGameplayAttributeData& OldMaxFocus)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, MaxFocus, OldMaxFocus);
 }
 
 void UGYPlayerAttribute::OnRep_Strength(const FGameplayAttributeData& OldStrength)
@@ -70,14 +57,14 @@ void UGYPlayerAttribute::OnRep_Intelligence(const FGameplayAttributeData& OldInt
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, Intelligence, OldIntelligence);
 }
 
+void UGYPlayerAttribute::OnRep_StaminaRegenRate(const FGameplayAttributeData& OldStaminaRegenRate)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, StaminaRegenRate, OldStaminaRegenRate);
+}
+
 void UGYPlayerAttribute::OnRep_EvasionInvincibilityTime(const FGameplayAttributeData& OldEvasionInvincibilityTime)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, EvasionInvincibilityTime, OldEvasionInvincibilityTime);
-}
-
-void UGYPlayerAttribute::OnRep_FocusRegenRate(const FGameplayAttributeData& OldFocusRegenRate)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, FocusRegenRate, OldFocusRegenRate);
 }
 
 void UGYPlayerAttribute::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -87,10 +74,6 @@ void UGYPlayerAttribute::PreAttributeChange(const FGameplayAttribute& Attribute,
 	if (Attribute == GetCurrentStaminaAttribute())
 	{
 		NewValue = FMath::Clamp(NewValue, -GetMaxStamina(), GetMaxStamina());
-	}
-	else if (Attribute == GetCurrentFocusAttribute())
-	{
-		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxFocus());
 	}
 }
 
@@ -105,16 +88,11 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 
 	UGYPlayerBaseAttribute* Base = const_cast<UGYPlayerBaseAttribute*>(ASC->GetSet<UGYPlayerBaseAttribute>());
 	UGYPlayerAdditionalAttribute* Additional = const_cast<UGYPlayerAdditionalAttribute*>(ASC->GetSet<UGYPlayerAdditionalAttribute>());
+	UGYWeaponAttribute* Weapon = const_cast<UGYWeaponAttribute*>(ASC->GetSet<UGYWeaponAttribute>());
 
 	if (Data.EvaluatedData.Attribute == GetCurrentStaminaAttribute())
 	{
 		SetCurrentStamina(FMath::Clamp(GetCurrentStamina(), -GetMaxStamina(), GetMaxStamina()));
-		return;
-	}
-
-	if (Data.EvaluatedData.Attribute == GetCurrentFocusAttribute())
-	{
-		SetCurrentFocus(FMath::Clamp(GetCurrentFocus(), 0.f, GetMaxFocus()));
 		return;
 	}
 
@@ -130,6 +108,10 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 				Base->SetCurrentHealth(FMath::Clamp(Base->GetCurrentHealth() * NewMax / OldMax, 0.f, NewMax));
 			}
 		}
+		if (Weapon)
+		{
+			Weapon->SetSwordAndShieldMultiplier(Weapon->GetSwordAndShieldMultiplier() + Magnitude * StatScalingData->StrengthToSwordAndShieldMultiplier);
+		}
 	}
 	else if (Data.EvaluatedData.Attribute == GetDexterityAttribute())
 	{
@@ -138,10 +120,17 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 			Additional->SetCriticalRate(Additional->GetCriticalRate() + Magnitude * StatScalingData->DexterityToCriticalRate);
 		}
 		SetEvasionInvincibilityTime(GetEvasionInvincibilityTime() + Magnitude * StatScalingData->DexterityToEvasionInvincibilityTime);
+		if (Weapon)
+		{
+			Weapon->SetSwordAndShieldMultiplier(Weapon->GetSwordAndShieldMultiplier() + Magnitude * StatScalingData->DexterityToSwordAndShieldMultiplier);
+		}
 	}
 	else if (Data.EvaluatedData.Attribute == GetIntelligenceAttribute())
 	{
-		SetMaxFocus(GetMaxFocus() + Magnitude * StatScalingData->IntelligenceToMaxFocus);
-		SetFocusRegenRate(GetFocusRegenRate() + Magnitude * StatScalingData->IntelligenceToFocusRegenRate);
+		if (Additional)
+		{
+			Additional->SetMaxStun(Additional->GetMaxStun() + Magnitude * StatScalingData->IntelligenceToMaxStun);
+		}
+		SetStaminaRegenRate(GetStaminaRegenRate() + Magnitude * StatScalingData->IntelligenceToStaminaRegenRate);
 	}
 }

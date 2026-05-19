@@ -1,5 +1,3 @@
-#if !UE_BUILD_SHIPPING
-
 #include "Debug/GYDebugMenu.h"
 #include "SlateOptMacros.h"
 #include "Widgets/Layout/SBox.h"
@@ -9,6 +7,7 @@
 #include "Widgets/Input/SButton.h"
 #include "Player/GYPlayerState.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "AbilitySystem/GYAdditionalResourceStatics.h"
 #include "AbilitySystem/GYPeriodicAttributeEffect.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "AbilitySystem/GYPlayerResourceStatics.h"
@@ -24,9 +23,9 @@ void SGYDebugMenu::Construct(const FArguments& InArgs)
 	[
 		SNew(SBox)
 		.WidthOverride(320.f)
-		.HAlign(HAlign_Left)
+		.HAlign(HAlign_Right)
 		.VAlign(VAlign_Top)
-		.Padding(FMargin(24.f, 24.f, 0.f, 0.f))
+		.Padding(FMargin(0.f, 24.f, 24.f, 0.f))
 		[
 			SNew(SBorder)
 			.BorderBackgroundColor(FLinearColor(0.05f, 0.05f, 0.05f, 0.88f))
@@ -51,25 +50,26 @@ void SGYDebugMenu::Construct(const FArguments& InArgs)
 				[ BuildOptionRow(FText::FromString(TEXT("Heal +25")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugHealPlayer)) ]
 
 				+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 2.f)
-				[ BuildOptionRow(FText::FromString(TEXT("Focus Use -25")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugFocusUse)) ]
-
-				+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 2.f)
-				[ BuildOptionRow(FText::FromString(TEXT("Focus Gain +25")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugFocusGain)) ]
-
-				+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 2.f)
 				[ BuildOptionRow(FText::FromString(TEXT("Use Stamina -25")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugUseStamina)) ]
 
 				+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 2.f)
-				[ BuildOptionRow(FText::FromString(TEXT("Decrease Hit Res -25")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugDecreaseHitRes)) ]
-				
-				+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 2.f)
-				[ BuildOptionRow(FText::FromString(TEXT("Decrease Poise -25")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugDecreasePoise)) ]
+				[ BuildOptionRow(FText::FromString(TEXT("Decrease Stagger -20")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugDecreaseStagger)) ]
 
 				+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 2.f)
-				[ BuildOptionRow(FText::FromString(TEXT("Set Combat State")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugSetCombatState)) ]
+				[ BuildOptionRow(FText::FromString(TEXT("Decrease Stun -40")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugDecreaseStun)) ]
 
 				+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 2.f)
-				[ BuildOptionRow(FText::FromString(TEXT("Set Base State")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugSetBaseState)) ]
+				[
+					SNew(SButton)
+					.OnClicked(FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugToggleCombatState))
+					.HAlign(HAlign_Left)
+					.ContentPadding(FMargin(6.f, 4.f))
+					[
+						SNew(STextBlock)
+						.Text(this, &SGYDebugMenu::GetCombatStateButtonText)
+						.ColorAndOpacity(FLinearColor::White)
+					]
+				]
 
 				+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 2.f)
 				[ BuildOptionRow(FText::FromString(TEXT("+1 Strength")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugAddStrength)) ]
@@ -117,56 +117,50 @@ FReply SGYDebugMenu::GY_DebugHealPlayer()
 	return FReply::Handled();
 }
 
-FReply SGYDebugMenu::GY_DebugFocusUse()
-{
-	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::ApplyFocusUse(ASC, 25.f);
-	return FReply::Handled();
-}
-
-FReply SGYDebugMenu::GY_DebugFocusGain()
-{
-	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::ApplyFocusGain(ASC, 25.f);
-	return FReply::Handled();
-}
-
 FReply SGYDebugMenu::GY_DebugUseStamina()
 {
 	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::UseStamina(ASC, 25.f);
 	return FReply::Handled();
 }
-FReply SGYDebugMenu::GY_DebugDecreaseHitRes()
+
+FReply SGYDebugMenu::GY_DebugDecreaseStagger()
 {
-	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::DecreaseHitRes(ASC, 20.f);
-	return FReply::Handled();
-}
-FReply SGYDebugMenu::GY_DebugDecreasePoise()
-{
-	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::DecreasePoise(ASC, 40.f);
+	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYAdditionalResourceStatics::DecreaseStagger(ASC, 20.f);
 	return FReply::Handled();
 }
 
-FReply SGYDebugMenu::GY_DebugSetCombatState()
+FReply SGYDebugMenu::GY_DebugDecreaseStun()
+{
+	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYAdditionalResourceStatics::DecreaseStun(ASC, 40.f);
+	return FReply::Handled();
+}
+
+FReply SGYDebugMenu::GY_DebugToggleCombatState()
 {
 	UGYAbilitySystemComponent* ASC = GetASC(PlayerState);
 	if (!ASC || !ASC->StaminaRegenEffect) return FReply::Handled();
 
 	const FGameplayTag CombatTag = GetDefault<UGYPeriodicAttributeEffect>(ASC->StaminaRegenEffect)->CombatTag;
-	if (CombatTag.IsValid())
+	if (!CombatTag.IsValid()) return FReply::Handled();
+
+	if (ASC->HasMatchingGameplayTag(CombatTag))
+		ASC->RemoveLooseGameplayTag(CombatTag);
+	else
 		ASC->AddLooseGameplayTag(CombatTag);
 
 	return FReply::Handled();
 }
 
-FReply SGYDebugMenu::GY_DebugSetBaseState()
+FText SGYDebugMenu::GetCombatStateButtonText() const
 {
 	UGYAbilitySystemComponent* ASC = GetASC(PlayerState);
-	if (!ASC || !ASC->StaminaRegenEffect) return FReply::Handled();
+	if (!ASC || !ASC->StaminaRegenEffect)
+		return FText::FromString(TEXT("Toggle Combat State"));
 
 	const FGameplayTag CombatTag = GetDefault<UGYPeriodicAttributeEffect>(ASC->StaminaRegenEffect)->CombatTag;
-	if (CombatTag.IsValid())
-		ASC->RemoveLooseGameplayTag(CombatTag);
-
-	return FReply::Handled();
+	return ASC->HasMatchingGameplayTag(CombatTag)
+		? FText::FromString(TEXT("Set Base State"))
+		: FText::FromString(TEXT("Set Combat State"));
 }
 
 FReply SGYDebugMenu::GY_DebugAddStrength()
@@ -186,5 +180,3 @@ FReply SGYDebugMenu::GY_DebugAddIntelligence()
 	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::ApplyAttributeDelta(ASC, UGYPlayerAttribute::GetIntelligenceAttribute(), 1.f);
 	return FReply::Handled();
 }
-
-#endif

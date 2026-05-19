@@ -13,33 +13,45 @@ void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 		if (Tag.IsValid())
 			RegisterGameplayTagEvent(Tag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &UGYAbilitySystemComponent::OnCombatTagChanged);
 	}
+	if (StaggerRegenEffect)
+	{
+		const FGameplayTag Tag = GetDefault<UGYPeriodicAttributeEffect>(StaggerRegenEffect)->CombatTag;
+		if (Tag.IsValid())
+			RegisterGameplayTagEvent(Tag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &UGYAbilitySystemComponent::OnCombatTagChanged);
+	}
+	if (StunRegenEffect)
+	{
+		const FGameplayTag Tag = GetDefault<UGYPeriodicAttributeEffect>(StunRegenEffect)->CombatTag;
+		if (Tag.IsValid())
+			RegisterGameplayTagEvent(Tag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &UGYAbilitySystemComponent::OnCombatTagChanged);
+	}
 
 	ScheduleEffect(StaminaRegenEffect, StaminaRegenGEHandle, StaminaRegenDelayHandle, &UGYAbilitySystemComponent::StartStaminaRegen);
-	ScheduleEffect(HitResRegenEffect, HitResRegenGEHandle, HitResRegenDelayHandle, &UGYAbilitySystemComponent::StartHitResRegen);
-	ScheduleEffect(PoiseRegenEffect, PoiseRegenGEHandle, PoiseRegenDelayHandle, &UGYAbilitySystemComponent::StartPoiseRegen);
+	ScheduleEffect(StaggerRegenEffect, StaggerRegenGEHandle, StaggerRegenDelayHandle, &UGYAbilitySystemComponent::StartStaggerRegen);
+	ScheduleEffect(StunRegenEffect, StunRegenGEHandle, StunRegenDelayHandle, &UGYAbilitySystemComponent::StartStunRegen);
 }
 
 void UGYAbilitySystemComponent::RescheduleStaminaRegen()
 {
 	ScheduleEffect(StaminaRegenEffect, StaminaRegenGEHandle, StaminaRegenDelayHandle, &UGYAbilitySystemComponent::StartStaminaRegen);
 }
-void UGYAbilitySystemComponent::RescheduleHitResRegen()
+void UGYAbilitySystemComponent::RescheduleStaggerRegen()
 {
-	ScheduleEffect(HitResRegenEffect, HitResRegenGEHandle, HitResRegenDelayHandle, &UGYAbilitySystemComponent::StartHitResRegen);
+	ScheduleEffect(StaggerRegenEffect, StaggerRegenGEHandle, StaggerRegenDelayHandle, &UGYAbilitySystemComponent::StartStaggerRegen);
 }
-void UGYAbilitySystemComponent::ReschedulePoiseRegen()
+void UGYAbilitySystemComponent::RescheduleStunRegen()
 {
-	ScheduleEffect(PoiseRegenEffect, PoiseRegenGEHandle, PoiseRegenDelayHandle, &UGYAbilitySystemComponent::StartPoiseRegen);
+	ScheduleEffect(StunRegenEffect, StunRegenGEHandle, StunRegenDelayHandle, &UGYAbilitySystemComponent::StartStunRegen);
 }
 
 void UGYAbilitySystemComponent::OnCombatTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
 	if (StaminaRegenEffect && GetDefault<UGYPeriodicAttributeEffect>(StaminaRegenEffect)->CombatTag == Tag)
 		ScheduleEffect(StaminaRegenEffect, StaminaRegenGEHandle, StaminaRegenDelayHandle, &UGYAbilitySystemComponent::StartStaminaRegen);
-	if (HitResRegenEffect && GetDefault<UGYPeriodicAttributeEffect>(HitResRegenEffect)->CombatTag == Tag)
-		ScheduleEffect(HitResRegenEffect, HitResRegenGEHandle, HitResRegenDelayHandle, &UGYAbilitySystemComponent::StartHitResRegen);
-	if (PoiseRegenEffect && GetDefault<UGYPeriodicAttributeEffect>(PoiseRegenEffect)->CombatTag == Tag)
-		ScheduleEffect(PoiseRegenEffect, PoiseRegenGEHandle, PoiseRegenDelayHandle, &UGYAbilitySystemComponent::StartPoiseRegen);
+	if (StaggerRegenEffect && GetDefault<UGYPeriodicAttributeEffect>(StaggerRegenEffect)->CombatTag == Tag)
+		ScheduleEffect(StaggerRegenEffect, StaggerRegenGEHandle, StaggerRegenDelayHandle, &UGYAbilitySystemComponent::StartStaggerRegen);
+	if (StunRegenEffect && GetDefault<UGYPeriodicAttributeEffect>(StunRegenEffect)->CombatTag == Tag)
+		ScheduleEffect(StunRegenEffect, StunRegenGEHandle, StunRegenDelayHandle, &UGYAbilitySystemComponent::StartStunRegen);
 }
 
 void UGYAbilitySystemComponent::ScheduleEffect(TSubclassOf<UGYPeriodicAttributeEffect> EffectClass, FActiveGameplayEffectHandle& Handle, FTimerHandle& DelayHandle, void(UGYAbilitySystemComponent::* StartFunc)())
@@ -81,17 +93,17 @@ void UGYAbilitySystemComponent::StartStaminaRegen()
 	if (PlayerAttr && GetNumericAttributeBase(UGYPlayerAttribute::GetCurrentStaminaAttribute()) >= PlayerAttr->GetMaxStamina()) return;
 	ApplyEffect(StaminaRegenEffect, StaminaRegenGEHandle);
 }
-void UGYAbilitySystemComponent::StartHitResRegen()
+void UGYAbilitySystemComponent::StartStaggerRegen()
 {
-	if (HitResRegenGEHandle.IsValid()) return;
+	if (StaggerRegenGEHandle.IsValid()) return;
 	const UGYAdditionalAttribute* AdditionalAttr = GetSet<UGYAdditionalAttribute>();
-	if (AdditionalAttr && GetNumericAttributeBase(UGYAdditionalAttribute::GetCurrentHitResAttribute()) >= AdditionalAttr->GetMaxHitRes()) return;
-	ApplyEffect(HitResRegenEffect, HitResRegenGEHandle);
+	if (AdditionalAttr && GetNumericAttributeBase(UGYAdditionalAttribute::GetCurrentStaggerAttribute()) >= AdditionalAttr->GetMaxStagger()) return;
+	ApplyEffect(StaggerRegenEffect, StaggerRegenGEHandle);
 }
-void UGYAbilitySystemComponent::StartPoiseRegen()
+void UGYAbilitySystemComponent::StartStunRegen()
 {
-	if (PoiseRegenGEHandle.IsValid()) return;
+	if (StunRegenGEHandle.IsValid()) return;
 	const UGYAdditionalAttribute* AdditionalAttr = GetSet<UGYAdditionalAttribute>();
-	if (AdditionalAttr && GetNumericAttributeBase(UGYAdditionalAttribute::GetCurrentPoiseAttribute()) >= AdditionalAttr->GetMaxPoise()) return;
-	ApplyEffect(PoiseRegenEffect, PoiseRegenGEHandle);
+	if (AdditionalAttr && GetNumericAttributeBase(UGYAdditionalAttribute::GetCurrentStunAttribute()) >= AdditionalAttr->GetMaxStun()) return;
+	ApplyEffect(StunRegenEffect, StunRegenGEHandle);
 }

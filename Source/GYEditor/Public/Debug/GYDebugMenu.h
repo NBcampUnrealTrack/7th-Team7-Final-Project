@@ -1,13 +1,11 @@
 #pragma once
 
-#if !UE_BUILD_SHIPPING
-
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 
 class AGYPlayerState;
 
-class GY_API SGYDebugMenu : public SCompoundWidget
+class SGYDebugMenu : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SGYDebugMenu) {}
@@ -23,16 +21,12 @@ private:
 
 	FReply GY_DebugDamagePlayer();
 	FReply GY_DebugHealPlayer();
-	FReply GY_DebugFocusUse();
-	FReply GY_DebugFocusGain();
 	FReply GY_DebugUseStamina();
-	FReply GY_DebugDecreaseHitRes();
-	FReply GY_DebugDecreasePoise();
-	FReply GY_DebugSetCombatState();
-	FReply GY_DebugSetBaseState();
+	FReply GY_DebugDecreaseStagger();
+	FReply GY_DebugDecreaseStun();
+	FReply GY_DebugToggleCombatState();
+	FText GetCombatStateButtonText() const;
 	FReply GY_DebugAddStrength();
 	FReply GY_DebugAddDexterity();
 	FReply GY_DebugAddIntelligence();
 };
-
-#endif

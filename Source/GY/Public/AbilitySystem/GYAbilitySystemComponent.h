@@ -14,15 +14,15 @@ public:
 	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
 
 	void RescheduleStaminaRegen();
-	void RescheduleHitResRegen();
-	void ReschedulePoiseRegen();
+	void RescheduleStaggerRegen();
+	void RescheduleStunRegen();
 
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UGYPeriodicAttributeEffect> StaminaRegenEffect;
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
-	TSubclassOf<UGYPeriodicAttributeEffect> HitResRegenEffect;
+	TSubclassOf<UGYPeriodicAttributeEffect> StaggerRegenEffect;
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
-	TSubclassOf<UGYPeriodicAttributeEffect> PoiseRegenEffect;
+	TSubclassOf<UGYPeriodicAttributeEffect> StunRegenEffect;
 
 private:
 	void OnCombatTagChanged(const FGameplayTag Tag, int32 NewCount);
@@ -32,13 +32,13 @@ private:
 	void StopEffect(FActiveGameplayEffectHandle& Handle, FTimerHandle& DelayHandle);
 
 	void StartStaminaRegen();
-	void StartHitResRegen();
-	void StartPoiseRegen();
+	void StartStaggerRegen();
+	void StartStunRegen();
 
 	FTimerHandle StaminaRegenDelayHandle;
 	FActiveGameplayEffectHandle StaminaRegenGEHandle;
-	FTimerHandle HitResRegenDelayHandle;
-	FActiveGameplayEffectHandle HitResRegenGEHandle;
-	FTimerHandle PoiseRegenDelayHandle;
-	FActiveGameplayEffectHandle PoiseRegenGEHandle;
+	FTimerHandle StaggerRegenDelayHandle;
+	FActiveGameplayEffectHandle StaggerRegenGEHandle;
+	FTimerHandle StunRegenDelayHandle;
+	FActiveGameplayEffectHandle StunRegenGEHandle;
 };
