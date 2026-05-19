@@ -52,35 +52,35 @@ void UCameraOcclusionComponent::CameraOcclusionTrace()
 	FVector Start = CameraComp->GetComponentLocation();
 	FVector End = SkeletalMeshComp->GetComponentLocation() + MeshOffset;
 
-	FHitResult OutHit;
+	TArray<FHitResult> OutHits;
 	TArray<AActor*> ActorsToIgnore;
 
-	// 시작-끝 사이에 구체 트레이스 투사
-	UKismetSystemLibrary::SphereTraceSingle(this, Start, End,
+	// 시작-끝 사이에 구체 트레이스 투사 (multi로 변경)
+	UKismetSystemLibrary::SphereTraceMulti(this, Start, End,
 	                                        TraceRadius, TraceChannel, false,
-	                                        ActorsToIgnore, DrawDebugType, OutHit, true);
+	                                        ActorsToIgnore, DrawDebugType, OutHits, true);
 
-	UPrimitiveComponent* HitComp = OutHit.GetComponent();
+	TSet<UPrimitiveComponent*> CurrentHit;
 
-	// 히트객체가 없어지면 -  숨긴 객체 복구
-	if (HitComp == nullptr || HitComp == CapsuleComp)
+	// 다중 트레이스 TSet에 추가
+	for (FHitResult& Hit : OutHits)
 	{
-		for (TObjectPtr<UPrimitiveComponent>& Wall : HiddenWalls)
+		UPrimitiveComponent* HitComp = Hit.GetComponent();
+		if (HitComp == nullptr || HitComp == CapsuleComp)
 		{
-			if (Wall == nullptr)
-			{
-				continue;
-			}
-			Wall->SetVisibility(true);
+			continue;
 		}
-		HiddenWalls.Empty();
-		return;
+
+		CurrentHit.Add(HitComp);
 	}
 
-	// Hitcomp 존재 여부 bool 체크, 없으면 추가
-	if (HiddenWalls.Contains(HitComp) == false)
+	// TSet 에서 Hitcomp 존재 여부 bool 체크, 없으면 추가
+	for (UPrimitiveComponent* HitComp : CurrentHit)
 	{
-		HiddenWalls.Add(HitComp);
+		if (HiddenWalls.Contains(HitComp) == false)
+		{
+			HiddenWalls.Add(HitComp);
+		}
 	}
 
 	// 배열 순회후 null 이면 제거, 히트시 숨김.
@@ -94,7 +94,7 @@ void UCameraOcclusionComponent::CameraOcclusionTrace()
 			continue;
 		}
 
-		if (Wall == HitComp)
+		if (CurrentHit.Contains(Wall))
 		{
 			Wall->SetVisibility(false);
 		}
