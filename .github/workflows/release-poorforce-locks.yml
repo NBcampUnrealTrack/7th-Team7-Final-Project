@@ -23,8 +23,11 @@ jobs:
 
       - name: Compute lock keys from changed files
         id: keys
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          git diff --name-only origin/develop...HEAD \
+          git diff --name-only "$BASE_SHA...$HEAD_SHA" \
             | grep -E '^Content/GY/.*\.(uasset|umap)$' \
             | sed -E 's|^Content/GY/||; s|\.(uasset|umap)$||; s|^|gy:asset:|' \
             > keys.txt || true
@@ -39,8 +42,11 @@ jobs:
 
       - name: Compute LFS paths from changed files
         id: lfspaths
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          git diff --name-only origin/develop...HEAD \
+          git diff --name-only "$BASE_SHA...$HEAD_SHA" \
             | grep -E '^Content/GY/.*\.(uasset|umap)$' \
             > lfs_paths.txt || true
           echo "count=$(wc -l < lfs_paths.txt)" >> "$GITHUB_OUTPUT"
