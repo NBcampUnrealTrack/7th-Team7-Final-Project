@@ -11,4 +11,7 @@ class GY_API AGYPlayerController : public APlayerController
 
 public:
 	AGYPlayerController();
+
+protected:
+	virtual void SetupInputComponent() override;
 };

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
@@ -16,26 +16,33 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_HitResistance)
-	FGameplayAttributeData HitResistance;
-	GY_ATTRIBUTE_ACCESSORS(UGYAdditionalAttribute, HitResistance)
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_CurrentStagger)
+	FGameplayAttributeData CurrentStagger;
+	GY_ATTRIBUTE_ACCESSORS(UGYAdditionalAttribute, CurrentStagger)
 
 	UFUNCTION()
-	virtual void OnRep_HitResistance(const FGameplayAttributeData& OldHitResistance);
+	virtual void OnRep_CurrentStagger(const FGameplayAttributeData& OldCurrentStagger);
 
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_CurrentPoise)
-	FGameplayAttributeData CurrentPoise;
-	GY_ATTRIBUTE_ACCESSORS(UGYAdditionalAttribute, CurrentPoise)
-
-	UFUNCTION()
-	virtual void OnRep_CurrentPoise(const FGameplayAttributeData& OldCurrentPoise);
-
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_MaxPoise)
-	FGameplayAttributeData MaxPoise;
-	GY_ATTRIBUTE_ACCESSORS(UGYAdditionalAttribute, MaxPoise)
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_MaxStagger)
+	FGameplayAttributeData MaxStagger;
+	GY_ATTRIBUTE_ACCESSORS(UGYAdditionalAttribute, MaxStagger)
 
 	UFUNCTION()
-	virtual void OnRep_MaxPoise(const FGameplayAttributeData& OldMaxPoise);
+	virtual void OnRep_MaxStagger(const FGameplayAttributeData& OldMaxStagger);
+
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_CurrentStun)
+	FGameplayAttributeData CurrentStun;
+	GY_ATTRIBUTE_ACCESSORS(UGYAdditionalAttribute, CurrentStun)
+
+	UFUNCTION()
+	virtual void OnRep_CurrentStun(const FGameplayAttributeData& OldCurrentStun);
+
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_MaxStun)
+	FGameplayAttributeData MaxStun;
+	GY_ATTRIBUTE_ACCESSORS(UGYAdditionalAttribute, MaxStun)
+
+	UFUNCTION()
+	virtual void OnRep_MaxStun(const FGameplayAttributeData& OldMaxStun);
 
 	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_CriticalRate)
 	FGameplayAttributeData CriticalRate;
