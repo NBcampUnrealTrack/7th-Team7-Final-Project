@@ -77,9 +77,6 @@ void SGYDebugMenu::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 2.f)
 				[ BuildOptionRow(FText::FromString(TEXT("+1 Dexterity")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugAddDexterity)) ]
 
-				+ SVerticalBox::Slot().AutoHeight().Padding(0.f, 2.f)
-				[ BuildOptionRow(FText::FromString(TEXT("+1 Intelligence")), FOnClicked::CreateSP(this, &SGYDebugMenu::GY_DebugAddIntelligence)) ]
-
 			]
 		]
 	];
@@ -172,11 +169,5 @@ FReply SGYDebugMenu::GY_DebugAddStrength()
 FReply SGYDebugMenu::GY_DebugAddDexterity()
 {
 	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::ApplyAttributeDelta(ASC, UGYPlayerAttribute::GetDexterityAttribute(), 1.f);
-	return FReply::Handled();
-}
-
-FReply SGYDebugMenu::GY_DebugAddIntelligence()
-{
-	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::ApplyAttributeDelta(ASC, UGYPlayerAttribute::GetIntelligenceAttribute(), 1.f);
 	return FReply::Handled();
 }

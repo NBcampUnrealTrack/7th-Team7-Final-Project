@@ -26,7 +26,6 @@ public:
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
 private:
 	FGameplayEffectAttributeCaptureDefinition MaxStaminaDef;
-	FGameplayEffectAttributeCaptureDefinition StaminaRegenRateDef;
 };
 UCLASS()
 class GY_API UGYStaggerRegenMagnitude : public UGYPercentOfMaxMagnitude

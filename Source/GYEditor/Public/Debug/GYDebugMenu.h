@@ -28,5 +28,4 @@ private:
 	FText GetCombatStateButtonText() const;
 	FReply GY_DebugAddStrength();
 	FReply GY_DebugAddDexterity();
-	FReply GY_DebugAddIntelligence();
 };

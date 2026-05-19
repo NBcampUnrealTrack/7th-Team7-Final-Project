@@ -46,20 +46,6 @@ public:
 	UFUNCTION()
 	virtual void OnRep_Dexterity(const FGameplayAttributeData& OldDexterity);
 
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_Intelligence)
-	FGameplayAttributeData Intelligence;
-	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, Intelligence)
-
-	UFUNCTION()
-	virtual void OnRep_Intelligence(const FGameplayAttributeData& OldIntelligence);
-
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_StaminaRegenRate)
-	FGameplayAttributeData StaminaRegenRate;
-	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, StaminaRegenRate)
-
-	UFUNCTION()
-	virtual void OnRep_StaminaRegenRate(const FGameplayAttributeData& OldStaminaRegenRate);
-
 	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_EvasionInvincibilityTime)
 	FGameplayAttributeData EvasionInvincibilityTime;
 	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, EvasionInvincibilityTime)

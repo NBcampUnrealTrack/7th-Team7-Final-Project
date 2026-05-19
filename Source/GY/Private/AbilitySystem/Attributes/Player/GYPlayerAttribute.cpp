@@ -12,10 +12,8 @@ UGYPlayerAttribute::UGYPlayerAttribute()
 {
 	InitCurrentStamina(100.f);
 	InitMaxStamina(100.f);
-	InitStrength(5.f);
-	InitDexterity(5.f);
-	InitIntelligence(5.f);
-	InitStaminaRegenRate(0.f);
+	InitStrength(0.f);
+	InitDexterity(0.f);
 	InitEvasionInvincibilityTime(0.2f);
 }
 
@@ -27,8 +25,6 @@ void UGYPlayerAttribute::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME(UGYPlayerAttribute, MaxStamina);
 	DOREPLIFETIME(UGYPlayerAttribute, Strength);
 	DOREPLIFETIME(UGYPlayerAttribute, Dexterity);
-	DOREPLIFETIME(UGYPlayerAttribute, Intelligence);
-	DOREPLIFETIME(UGYPlayerAttribute, StaminaRegenRate);
 	DOREPLIFETIME(UGYPlayerAttribute, EvasionInvincibilityTime);
 }
 
@@ -50,16 +46,6 @@ void UGYPlayerAttribute::OnRep_Strength(const FGameplayAttributeData& OldStrengt
 void UGYPlayerAttribute::OnRep_Dexterity(const FGameplayAttributeData& OldDexterity)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, Dexterity, OldDexterity);
-}
-
-void UGYPlayerAttribute::OnRep_Intelligence(const FGameplayAttributeData& OldIntelligence)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, Intelligence, OldIntelligence);
-}
-
-void UGYPlayerAttribute::OnRep_StaminaRegenRate(const FGameplayAttributeData& OldStaminaRegenRate)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, StaminaRegenRate, OldStaminaRegenRate);
 }
 
 void UGYPlayerAttribute::OnRep_EvasionInvincibilityTime(const FGameplayAttributeData& OldEvasionInvincibilityTime)
@@ -124,13 +110,5 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 		{
 			Weapon->SetSwordAndShieldMultiplier(Weapon->GetSwordAndShieldMultiplier() + Magnitude * StatScalingData->DexterityToSwordAndShieldMultiplier);
 		}
-	}
-	else if (Data.EvaluatedData.Attribute == GetIntelligenceAttribute())
-	{
-		if (Additional)
-		{
-			Additional->SetMaxStun(Additional->GetMaxStun() + Magnitude * StatScalingData->IntelligenceToMaxStun);
-		}
-		SetStaminaRegenRate(GetStaminaRegenRate() + Magnitude * StatScalingData->IntelligenceToStaminaRegenRate);
 	}
 }

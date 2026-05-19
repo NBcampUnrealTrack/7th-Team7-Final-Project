@@ -27,10 +27,4 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Dexterity")
 	float DexterityToSwordAndShieldMultiplier = 0.015f;
-
-	UPROPERTY(EditDefaultsOnly, Category="Intelligence")
-	float IntelligenceToMaxStun = 5.f;
-
-	UPROPERTY(EditDefaultsOnly, Category="Intelligence")
-	float IntelligenceToStaminaRegenRate = 0.02f;
 };

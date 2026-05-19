@@ -22,11 +22,6 @@ UGYStaminaRegenMagnitude::UGYStaminaRegenMagnitude()
 	MaxStaminaDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
 	MaxStaminaDef.bSnapshot = false;
 	RelevantAttributesToCapture.Add(MaxStaminaDef);
-
-	StaminaRegenRateDef.AttributeToCapture = UGYPlayerAttribute::GetStaminaRegenRateAttribute();
-	StaminaRegenRateDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
-	StaminaRegenRateDef.bSnapshot = false;
-	RelevantAttributesToCapture.Add(StaminaRegenRateDef);
 }
 
 float UGYStaminaRegenMagnitude::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
@@ -38,11 +33,8 @@ float UGYStaminaRegenMagnitude::CalculateBaseMagnitude_Implementation(const FGam
 	float MaxStamina = 0.f;
 	GetCapturedAttributeMagnitude(MaxStaminaDef, Spec, EvalParams, MaxStamina);
 
-	float StaminaRegenRate = 0.f;
-	GetCapturedAttributeMagnitude(StaminaRegenRateDef, Spec, EvalParams, StaminaRegenRate);
-
 	const float Period = Spec.Def ? Spec.Def->Period.GetValueAtLevel(Spec.GetLevel()) : 0.1f;
-	return MaxStamina * RatePercentPerSecond * (1.f + StaminaRegenRate) * Period;
+	return MaxStamina * RatePercentPerSecond * Period;
 }
 
 UGYStaggerRegenMagnitude::UGYStaggerRegenMagnitude()
