@@ -4,13 +4,20 @@ on:
   pull_request:
     types: [closed]
     branches: [develop]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: '재실행할 PR 번호 (이미 머지된 PR)'
+        required: true
+        type: string
 
 permissions:
   contents: write   # git lfs unlock API 호출에 필요
+  pull-requests: read   # workflow_dispatch 에서 PR 정보 조회용
 
 jobs:
   release:
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,19 +25,44 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - name: Resolve PR SHAs
+        id: shas
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            PR_JSON=$(gh api "repos/${{ github.repository }}/pulls/${{ inputs.pr_number }}")
+            BASE_SHA=$(echo "$PR_JSON" | jq -r .base.sha)
+            HEAD_SHA=$(echo "$PR_JSON" | jq -r .head.sha)
+          else
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          fi
+          echo "base=$BASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "Resolved: base=$BASE_SHA head=$HEAD_SHA"
+
       - name: Make scripts executable
         run: chmod +x Plugins/Poorforce/scripts/release-locks.sh Plugins/Poorforce/scripts/release-lfs-locks.sh
 
       - name: Compute lock keys from changed files
         id: keys
+        env:
+          BASE_SHA: ${{ steps.shas.outputs.base }}
+          HEAD_SHA: ${{ steps.shas.outputs.head }}
         run: |
-          git diff --name-only origin/develop...HEAD \
-            | grep -E '^Content/GY/.*\.(uasset|umap)$' \
-            | sed -E 's|^Content/GY/||; s|\.(uasset|umap)$||; s|^|gy:asset:|' \
+          # Content/<첫폴더>/ 를 떼고 gy:asset: prefix 부여 — PoorforceConfig ManagedPaths 의
+          # ContentPath(/Game/GY/, /Game/ThirdParty/, /Game/GYEditor/) 1-depth 가정.
+          # 에디터 자동 생성 폴더(Collections/Developers/__*__) 는 락 대상 아니므로 제외.
+          git diff --name-only "$BASE_SHA...$HEAD_SHA" \
+            | grep -E '^Content/[^/]+/.*\.(uasset|umap)$' \
+            | grep -Ev '^Content/(Collections|Developers|__[^/]+__)/' \
+            | sed -E 's|^Content/[^/]+/||; s|\.(uasset|umap)$||; s|^|gy:asset:|' \
             > keys.txt || true
           echo "count=$(wc -l < keys.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Release Redis locks
+        id: redis
         if: steps.keys.outputs.count != '0'
         env:
           UPSTASH_URL: ${{ secrets.UPSTASH_URL }}
@@ -39,12 +71,56 @@ jobs:
 
       - name: Compute LFS paths from changed files
         id: lfspaths
+        env:
+          BASE_SHA: ${{ steps.shas.outputs.base }}
+          HEAD_SHA: ${{ steps.shas.outputs.head }}
         run: |
-          git diff --name-only origin/develop...HEAD \
-            | grep -E '^Content/GY/.*\.(uasset|umap)$' \
+          git diff --name-only "$BASE_SHA...$HEAD_SHA" \
+            | grep -E '^Content/[^/]+/.*\.(uasset|umap)$' \
+            | grep -Ev '^Content/(Collections|Developers|__[^/]+__)/' \
             > lfs_paths.txt || true
           echo "count=$(wc -l < lfs_paths.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Release LFS locks
+        id: lfs
         if: steps.lfspaths.outputs.count != '0'
         run: cat lfs_paths.txt | ./Plugins/Poorforce/scripts/release-lfs-locks.sh
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          REDIS_OUTCOME: ${{ steps.redis.outcome }}
+          LFS_OUTCOME: ${{ steps.lfs.outcome }}
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            PR_REF="#${{ inputs.pr_number }} (수동 재실행)"
+          else
+            PR_REF="#${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}"
+          fi
+
+          CONTENT="🚨 **Poorforce 락 해제 실패** — ${PR_REF}"$'\n'"${RUN_URL}"
+
+          if [[ "$REDIS_OUTCOME" == "failure" ]]; then
+            REDIS_LIST=$(head -n 30 keys.txt 2>/dev/null || echo "(목록 파일 없음)")
+            REDIS_COUNT=$(wc -l < keys.txt 2>/dev/null || echo 0)
+            CONTENT="${CONTENT}"$'\n\n'"**Redis 키 (${REDIS_COUNT}개)**"$'\n'"\`\`\`"$'\n'"${REDIS_LIST}"$'\n'"\`\`\`"
+          fi
+
+          if [[ "$LFS_OUTCOME" == "failure" ]]; then
+            LFS_LIST=$(head -n 30 lfs_paths.txt 2>/dev/null || echo "(목록 파일 없음)")
+            LFS_COUNT=$(wc -l < lfs_paths.txt 2>/dev/null || echo 0)
+            CONTENT="${CONTENT}"$'\n\n'"**LFS 경로 (${LFS_COUNT}개)**"$'\n'"\`\`\`"$'\n'"${LFS_LIST}"$'\n'"\`\`\`"
+          fi
+
+          # release 두 스텝 모두 실패가 아닌데도 잡이 failed면 그 전 단계(checkout/SHA 조회/Compute) 실패
+          if [[ "$REDIS_OUTCOME" != "failure" && "$LFS_OUTCOME" != "failure" ]]; then
+            CONTENT="${CONTENT}"$'\n\n'"(release 단계 이전에서 실패 — 워크플로우 로그 확인 필요)"
+          fi
+
+          CONTENT="${CONTENT}"$'\n\n'"수동 재해제: \`Run workflow\` 로 PR 번호 입력해서 재시도"
+
+          PAYLOAD=$(jq -n --arg c "$CONTENT" '{content: $c}')
+          curl -fsS -X POST -H "Content-Type: application/json" \
+            -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
