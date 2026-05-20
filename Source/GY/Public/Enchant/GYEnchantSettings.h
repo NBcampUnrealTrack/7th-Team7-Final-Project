@@ -19,4 +19,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Config, Category = "Enchant")
 	FName DefaultCostRowName = FName("Default");
+
+	UPROPERTY(EditAnywhere, Config, Category = "Enchant")
+	TSoftObjectPtr<UDataTable> PenaltyOptionTable;
 };

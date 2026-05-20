@@ -1,6 +1,8 @@
 #include "Loot/LootService.h"
 
+#include "Core/GameplayTags/ItemTags.h"
 #include "Enchant/EnchantSlotPolicy.h"
+#include "Enchant/GYEnchantSettings.h"
 #include "Engine/DataTable.h"
 #include "Items/EnchantOptionRow.h"
 #include "Items/Fragments/ItemFragment_Enchantable.h"
@@ -119,6 +121,18 @@ namespace
 
 		return Result;
 	}
+
+	FName RollPenaltyOption(FRandomStream& Stream)
+	{
+		const UGYEnchantSettings* Settings = GetDefault<UGYEnchantSettings>();
+		if (!IsValid(Settings)) return NAME_None;
+
+		UDataTable* PenaltyPool = Settings->PenaltyOptionTable.LoadSynchronous();
+		if (!IsValid(PenaltyPool)) return NAME_None;
+
+		const TArray<FOptionCandidate> Candidates = GatherOptionCandidates(PenaltyPool);
+		return PickWeightedOption(Candidates, Stream);
+	}
 }
 
 FLootResult ULootService::RollLoot(const FLootContext& Context, UDataTable* LootTable, const FRandomStream& Seed) const
@@ -142,8 +156,13 @@ FLootResult ULootService::RollLoot(const FLootContext& Context, UDataTable* Loot
 	Drop.UsedSeed = Seed.GetInitialSeed();
 	Drop.RolledOptionIds = RollEnchantOptions(Drop.Definition.LoadSynchronous(), Drop.GradeTag, Stream);
 
+	if (Drop.GradeTag.MatchesTagExact(GYGameplayTags::Item_Grade_Legendary_Engraved))
+	{
+		const FName PenaltyId = RollPenaltyOption(Stream);
+		if (!PenaltyId.IsNone()) Drop.RolledOptionIds.Add(PenaltyId);
+	}
+
 	// TODO: CT_RegionScaling으로 Grade/Level 결정
-	// TODO: Grade == Legendary 시 Penalty 자동 부여
 	// TODO: PartySize 보정
 
 	Result.Drops.Add(Drop);

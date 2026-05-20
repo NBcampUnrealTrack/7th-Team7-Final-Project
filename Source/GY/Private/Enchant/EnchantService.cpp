@@ -1,5 +1,6 @@
 #include "Enchant/EnchantService.h"
 
+#include "Core/GameplayTags/ItemTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Enchant/EnchantCostRow.h"
 #include "Enchant/EnchantSlotPolicy.h"
@@ -51,6 +52,17 @@ namespace
 			if (Roll <= 0) return Candidate.Id;
 		}
 		return Candidates.Last().Id;
+	}
+
+	FName RollPenaltyOption(const UGYEnchantSettings* Settings, FRandomStream& Stream)
+	{
+		if (!IsValid(Settings)) return NAME_None;
+
+		UDataTable* PenaltyPool = Settings->PenaltyOptionTable.LoadSynchronous();
+		if (!IsValid(PenaltyPool)) return NAME_None;
+
+		const TArray<FRollCandidate> Candidates = GatherCandidates(PenaltyPool);
+		return PickWeighted(Candidates, Stream);
 	}
 }
 
@@ -134,6 +146,12 @@ bool UEnchantService::TryEnchant(UInventoryComponent* Inventory,
 	}
 
 	if (Rolled.IsEmpty()) return false;
+
+	if (Entry->GradeTag.MatchesTagExact(GYGameplayTags::Item_Grade_Legendary_Engraved))
+	{
+		const FName PenaltyId = RollPenaltyOption(Settings, Stream);
+		if (!PenaltyId.IsNone()) Rolled.Add(PenaltyId);
+	}
 
 	Inventory->MutateEntry(InstanceId, [&Rolled](FInventoryEntry& E)
 	{

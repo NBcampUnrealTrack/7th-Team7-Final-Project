@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/OptionTags.h"
 #include "Enchant/EnchantService.h"
+#include "Enchant/GYEnchantSettings.h"
 #include "Engine/DataTable.h"
 #include "Engine/GameInstance.h"
 #include "Equipment/EquipmentInstance.h"
@@ -202,14 +203,22 @@ void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance
 	if (Entry.EnchantOptionIds.IsEmpty()) return;
 
 	const UItemFragment_Enchantable* EnchantFragment = Def->FindFragment<UItemFragment_Enchantable>();
-	if (EnchantFragment == nullptr) return;
+	UDataTable* ItemPool = (EnchantFragment != nullptr) ? EnchantFragment->EnchantOptionPoolTable.LoadSynchronous() : nullptr;
 
-	UDataTable* Pool = EnchantFragment->EnchantOptionPoolTable.LoadSynchronous();
-	if (!IsValid(Pool)) return;
+	const UGYEnchantSettings* Settings = GetDefault<UGYEnchantSettings>();
+	UDataTable* PenaltyPool = IsValid(Settings) ? Settings->PenaltyOptionTable.LoadSynchronous() : nullptr;
 
 	for (const FName& OptionId : Entry.EnchantOptionIds)
 	{
-		const FEnchantOptionRow* Row = Pool->FindRow<FEnchantOptionRow>(OptionId, TEXT("ApplyEnchantOptions"));
+		const FEnchantOptionRow* Row = nullptr;
+		if (IsValid(ItemPool))
+		{
+			Row = ItemPool->FindRow<FEnchantOptionRow>(OptionId, TEXT("ApplyEnchantOptions"));
+		}
+		if (Row == nullptr && IsValid(PenaltyPool))
+		{
+			Row = PenaltyPool->FindRow<FEnchantOptionRow>(OptionId, TEXT("ApplyEnchantOptions.Penalty"));
+		}
 		if (Row == nullptr) continue;
 		if (!IsValid(Row->TemplateGE)) continue;
 
