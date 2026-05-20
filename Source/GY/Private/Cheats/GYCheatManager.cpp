@@ -1,6 +1,9 @@
 #include "Cheats/GYCheatManager.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Core/GameplayTags/CurrencyTags.h"
+#include "Currency/CurrencyComponent.h"
+#include "Currency/CurrencyEntry.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
@@ -188,6 +191,79 @@ void UGYCheatManager::Server_UnequipSlot_Implementation(FGameplayTag SlotTag)
 	if (!IsValid(Loadout)) return;
 
 	Loadout->Server_RequestUnequip(SlotTag);
+}
+
+// ============================================================
+// Currency / Enchant / Disassemble
+// ============================================================
+
+void UGYCheatManager::GY_AddTimeShards(int32 Amount)
+{
+	Server_AddTimeShards(Amount);
+}
+
+void UGYCheatManager::GY_PrintCurrency()
+{
+	AGYPlayerState* PS = GetGYPlayerState(this);
+	if (!IsValid(PS)) return;
+
+	UCurrencyComponent* Currency = PS->GetCurrencyComponent();
+	if (!IsValid(Currency)) return;
+
+	UE_LOG(LogTemp, Log, TEXT("=== Currency ==="));
+	for (const FCurrencyEntry& Entry : Currency->GetEntries())
+	{
+		UE_LOG(LogTemp, Log, TEXT("  %s = %d"), *Entry.CurrencyTag.ToString(), Entry.Amount);
+	}
+}
+
+void UGYCheatManager::GY_Disassemble(int32 InvIndex)
+{
+	AGYPlayerState* PS = GetGYPlayerState(this);
+	if (!IsValid(PS)) return;
+
+	UInventoryComponent* Inv = PS->GetInventoryComponent();
+	if (!IsValid(Inv)) return;
+
+	const TArray<FInventoryEntry>& Entries = Inv->GetEntries();
+	if (!Entries.IsValidIndex(InvIndex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GY_Disassemble: invalid index %d (inventory size = %d)"), InvIndex, Entries.Num());
+		return;
+	}
+
+	const FGuid InstanceId = Entries[InvIndex].InstanceId;
+	Inv->Server_RequestDisassemble(InstanceId);
+}
+
+void UGYCheatManager::GY_Enchant(int32 InvIndex)
+{
+	AGYPlayerState* PS = GetGYPlayerState(this);
+	if (!IsValid(PS)) return;
+
+	UInventoryComponent* Inv = PS->GetInventoryComponent();
+	if (!IsValid(Inv)) return;
+
+	const TArray<FInventoryEntry>& Entries = Inv->GetEntries();
+	if (!Entries.IsValidIndex(InvIndex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GY_Enchant: invalid index %d (inventory size = %d)"), InvIndex, Entries.Num());
+		return;
+	}
+
+	const FGuid InstanceId = Entries[InvIndex].InstanceId;
+	Inv->Server_RequestEnchant(InstanceId);
+}
+
+void UGYCheatManager::Server_AddTimeShards_Implementation(int32 Amount)
+{
+	AGYPlayerState* PS = GetGYPlayerState(this);
+	if (!IsValid(PS)) return;
+
+	UCurrencyComponent* Currency = PS->GetCurrencyComponent();
+	if (!IsValid(Currency)) return;
+
+	Currency->TryAdd(GYGameplayTags::Currency_TimeShard, Amount);
 }
 
 // ============================================================

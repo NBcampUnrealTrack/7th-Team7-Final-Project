@@ -30,6 +30,18 @@ public:
 	void GY_PrintLoadout();
 
 	UFUNCTION(Exec)
+	void GY_AddTimeShards(int32 Amount);
+
+	UFUNCTION(Exec)
+	void GY_PrintCurrency();
+
+	UFUNCTION(Exec)
+	void GY_Disassemble(int32 InvIndex);
+
+	UFUNCTION(Exec)
+	void GY_Enchant(int32 InvIndex);
+
+	UFUNCTION(Exec)
 	void GY_SpawnLootBox(const FString& SourceId, const FString& LootTablePath);
 
 	UFUNCTION(Exec)
@@ -65,6 +77,9 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void Server_UnequipSlot(FGameplayTag SlotTag);
+
+	UFUNCTION(Server, Reliable)
+	void Server_AddTimeShards(int32 Amount);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SpawnLootBox(const FString& SourceId, const FString& LootTablePath);
