@@ -4,13 +4,17 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/OptionTags.h"
+#include "Enchant/EnchantService.h"
 #include "Engine/DataTable.h"
+#include "Engine/GameInstance.h"
 #include "Equipment/EquipmentInstance.h"
 #include "Equipment/GYEquipmentSettings.h"
 #include "GameFramework/Pawn.h"
 #include "GameplayEffect.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
+#include "Items/EnchantOptionRow.h"
+#include "Items/Fragments/ItemFragment_Enchantable.h"
 #include "Items/Fragments/ItemFragment_Equippable.h"
 #include "Items/Fragments/ItemFragment_GrantedAbilitySet.h"
 #include "Items/Fragments/ItemFragment_Weapon.h"
@@ -25,6 +29,38 @@ UActiveEquipmentComponent::UActiveEquipmentComponent()
 	SetIsReplicatedByDefault(true);
 	bReplicateUsingRegisteredSubObjectList = true;
 	EquippedItems.OwnerComponent = this;
+}
+
+void UActiveEquipmentComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!GetOwner()->HasAuthority()) return;
+
+	if (UGameInstance* GI = GetWorld()->GetGameInstance())
+	{
+		if (UEnchantService* Enchant = GI->GetSubsystem<UEnchantService>())
+		{
+			EnchantedHandle = Enchant->OnItemEnchanted.AddUObject(this, &UActiveEquipmentComponent::HandleItemEnchanted);
+		}
+	}
+}
+
+void UActiveEquipmentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (EnchantedHandle.IsValid())
+	{
+		if (UGameInstance* GI = GetWorld() != nullptr ? GetWorld()->GetGameInstance() : nullptr)
+		{
+			if (UEnchantService* Enchant = GI->GetSubsystem<UEnchantService>())
+			{
+				Enchant->OnItemEnchanted.Remove(EnchantedHandle);
+			}
+		}
+		EnchantedHandle.Reset();
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void UActiveEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -153,12 +189,43 @@ void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* In
 	}
 
 	ApplyWeaponBaseStats(Instance, Def, ASC);
+	ApplyEnchantOptions(Instance, Def, Entry, ASC);
 
 	// TODO: SetByCaller(Stat.Modifier.Deviation = 1 + Entry.StatDeviation) 주입 — Template GE 인프라 후
 	// TODO: Entry.SocketedGemInstanceIds 순회 → 각 Gem의 AbilitySet 부여 — GemSocketService 후
-	// TODO: Entry.EnchantOptionIds 순회 → 인챈트 옵션 DataTable → Template GE 적용 — 카탈로그 fetch 후
 	// TODO: Entry.EnhancementLevel > 0 → 강화 GE 적용 — EnhancementService + Curve 후
 	// TODO: ApplyMasteryPenaltyIfNeeded — MasteryComponent (character 도메인) 후
+}
+
+void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance, UItemDefinition* Def, const FInventoryEntry& Entry, UAbilitySystemComponent* ASC)
+{
+	if (Entry.EnchantOptionIds.IsEmpty()) return;
+
+	const UItemFragment_Enchantable* EnchantFragment = Def->FindFragment<UItemFragment_Enchantable>();
+	if (EnchantFragment == nullptr) return;
+
+	UDataTable* Pool = EnchantFragment->EnchantOptionPoolTable.LoadSynchronous();
+	if (!IsValid(Pool)) return;
+
+	for (const FName& OptionId : Entry.EnchantOptionIds)
+	{
+		const FEnchantOptionRow* Row = Pool->FindRow<FEnchantOptionRow>(OptionId, TEXT("ApplyEnchantOptions"));
+		if (Row == nullptr) continue;
+		if (!IsValid(Row->TemplateGE)) continue;
+
+		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+		Context.AddSourceObject(Instance);
+
+		FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(Row->TemplateGE, 1.f, Context);
+		if (!Spec.IsValid()) continue;
+
+		Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude1, Row->Magnitude1);
+		Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude2, Row->Magnitude2);
+		Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude3, Row->Magnitude3);
+
+		const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
+		Instance->GetMutableGrantedHandles().GameplayEffectHandles.Add(Handle);
+	}
 }
 
 void UActiveEquipmentComponent::ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC)
@@ -195,6 +262,32 @@ void UActiveEquipmentComponent::RevokeAbilitySets(UEquipmentInstance* Instance)
 	if (!IsValid(ASC)) return;
 
 	Instance->GetMutableGrantedHandles().TakeFromAbilitySystem(ASC);
+}
+
+void UActiveEquipmentComponent::HandleItemEnchanted(FGuid InstanceId)
+{
+	if (!GetOwner()->HasAuthority()) return;
+
+	const FEquipmentEntry* Found = EquippedItems.Entries.FindByPredicate([&InstanceId](const FEquipmentEntry& E)
+	{
+		return IsValid(E.Instance) && E.Instance->GetInstanceId() == InstanceId;
+	});
+
+	if (Found == nullptr) return;
+
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (!IsValid(Pawn)) return;
+
+	AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>();
+	if (!IsValid(PS)) return;
+
+	UInventoryComponent* Inv = PS->GetInventoryComponent();
+	if (!IsValid(Inv)) return;
+
+	const FInventoryEntry* Entry = Inv->FindEntry(InstanceId);
+	if (Entry == nullptr) return;
+
+	RefreshEquipment(*Entry);
 }
 
 void UActiveEquipmentComponent::OnLoadoutSlotChanged(FGameplayTag SlotTag, FGuid NewInstanceId)
