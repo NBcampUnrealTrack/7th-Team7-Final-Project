@@ -5,4 +5,5 @@
 namespace GYGameplayTags
 {
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interaction_Open_LootBox)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interaction_Open_Door)
 }
