@@ -29,6 +29,11 @@ public class GYEditor : ModuleRules
                 "UnrealEd",
                 "EditorScriptingUtilities",
                 "GY",
+				"EditorFramework",
+				"GraphEditor",
+				"BlueprintGraph",
+				"ToolMenus",
+
 
             }
         );
