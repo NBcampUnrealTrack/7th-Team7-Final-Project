@@ -31,6 +31,7 @@ void UGameFeatureAction_AddAbilities::OnGameFeatureActivating(FGameFeatureActiva
 		Reset(ActiveData);
 	}
 	Super::OnGameFeatureActivating(Context);
+
 }
 
 void UGameFeatureAction_AddAbilities::OnGameFeatureDeactivating(FGameFeatureDeactivatingContext& Context)
@@ -58,50 +59,26 @@ EDataValidationResult UGameFeatureAction_AddAbilities::IsDataValid(FDataValidati
 			Context.AddError(FText::Format(LOCTEXT("EntryHasNullActor", "Null ActorClass at index {0} in AbilitiesList"), FText::AsNumber(EntryIndex)));
 		}
 
-		if (Entry.GrantedAbilities.IsEmpty() && Entry.GrantedAttributes.IsEmpty() && Entry.GrantedAbilitySets.IsEmpty())
+		if (Entry.GrantedAbilitySets.IsEmpty())
 		{
 			Result = EDataValidationResult::Invalid;
 			Context.AddError(FText::Format(LOCTEXT("EntryHasNoAddOns", "Index {0} in AbilitiesList will do nothing (no granted abilities, attributes, or ability sets)"), FText::AsNumber(EntryIndex)));
 		}
 
-		int32 AbilityIndex = 0;
-		for (const FLyraAbilityGrant& Ability : Entry.GrantedAbilities)
-		{
-			if (Ability.AbilityType.IsNull())
-			{
-				Result = EDataValidationResult::Invalid;
-				Context.AddError(FText::Format(LOCTEXT("EntryHasNullAbility", "Null AbilityType at index {0} in AbilitiesList[{1}].GrantedAbilities"), FText::AsNumber(AbilityIndex), FText::AsNumber(EntryIndex)));
-			}
-			++AbilityIndex;
-		}
-
-		int32 AttributesIndex = 0;
-		for (const FLyraAttributeSetGrant& Attributes : Entry.GrantedAttributes)
-		{
-			if (Attributes.AttributeSetType.IsNull())
-			{
-				Result = EDataValidationResult::Invalid;
-				Context.AddError(FText::Format(LOCTEXT("EntryHasNullAttributeSet", "Null AttributeSetType at index {0} in AbilitiesList[{1}].GrantedAttributes"), FText::AsNumber(AttributesIndex), FText::AsNumber(EntryIndex)));
-			}
-			++AttributesIndex;
-		}
 
 		int32 AttributeSetIndex = 0;
-		for (const TSoftObjectPtr<const ULyraAbilitySet>& AttributeSetPtr : Entry.GrantedAbilitySets)
+		for (const TSoftObjectPtr<const UAbilitySet>& AttributeSetPtr : Entry.GrantedAbilitySets)
 		{
 			if (AttributeSetPtr.IsNull())
 			{
 				Result = EDataValidationResult::Invalid;
-				Context.AddError(FText::Format(LOCTEXT("EntryHasNullAttributeSet", "Null AbilitySet at index {0} in AbilitiesList[{1}].GrantedAbilitySets"), FText::AsNumber(AttributeSetIndex), FText::AsNumber(EntryIndex)));
+				Context.AddError(FText::Format(LOCTEXT("EntryHasNullAbilitySet", "Null AbilitySet at index {0} in AbilitiesList[{1}].GrantedAbilitySets"), FText::AsNumber(AttributeSetIndex), FText::AsNumber(EntryIndex)));
 			}
 			++AttributeSetIndex;
 		}
 		++EntryIndex;
 	}
-
 	return Result;
-
-	return EDataValidationResult::NotValidated;
 }
 #endif
 
@@ -153,7 +130,8 @@ void UGameFeatureAction_AddAbilities::HandleActorExtension(AActor* Actor, FName 
 		{
 			RemoveActorAbilities(Actor, *ActiveData);
 		}
-		else if ((EventName == UGameFrameworkComponentManager::NAME_ExtensionAdded) || (EventName == ALyraPlayerState::NAME_LyraAbilityReady))
+
+		else if ((EventName == UGameFrameworkComponentManager::NAME_ExtensionAdded) || (EventName == UGameFrameworkComponentManager::NAME_GameActorReady))
 		{
 			AddActorAbilities(Actor, Entry, *ActiveData);
 		}
@@ -163,64 +141,22 @@ void UGameFeatureAction_AddAbilities::HandleActorExtension(AActor* Actor, FName 
 void UGameFeatureAction_AddAbilities::AddActorAbilities(AActor* Actor, const FGameFeatureAbilitiesEntry& AbilitiesEntry, FPerContextData& ActiveData)
 {
 	check(Actor);
-	if (!Actor->HasAuthority())
-	{
-		return;
-	}
+	if (!Actor->HasAuthority()) return;
 
-	// early out if Actor already has ability extensions applied
-	if (ActiveData.ActiveExtensions.Find(Actor) != nullptr)
-	{
-		return;
-	}
+	if (ActiveData.ActiveExtensions.Find(Actor) != nullptr) return;
 
 	if (UAbilitySystemComponent* AbilitySystemComponent = FindOrAddComponentForActor<UAbilitySystemComponent>(Actor, AbilitiesEntry, ActiveData))
 	{
 		FActorExtensions AddedExtensions;
-		AddedExtensions.Abilities.Reserve(AbilitiesEntry.GrantedAbilities.Num());
-		AddedExtensions.Attributes.Reserve(AbilitiesEntry.GrantedAttributes.Num());
 		AddedExtensions.AbilitySetHandles.Reserve(AbilitiesEntry.GrantedAbilitySets.Num());
 
-		for (const FLyraAbilityGrant& Ability : AbilitiesEntry.GrantedAbilities)
+
+		for (const TSoftObjectPtr<const UAbilitySet>& SetPtr : AbilitiesEntry.GrantedAbilitySets)
 		{
-			if (!Ability.AbilityType.IsNull())
+			if (const UAbilitySet* Set = SetPtr.Get())
 			{
-				FGameplayAbilitySpec NewAbilitySpec(Ability.AbilityType.LoadSynchronous());
-				FGameplayAbilitySpecHandle AbilityHandle = AbilitySystemComponent->GiveAbility(NewAbilitySpec);
-
-				AddedExtensions.Abilities.Add(AbilityHandle);
-			}
-		}
-
-		for (const FLyraAttributeSetGrant& Attributes : AbilitiesEntry.GrantedAttributes)
-		{
-			if (!Attributes.AttributeSetType.IsNull())
-			{
-				TSubclassOf<UAttributeSet> SetType = Attributes.AttributeSetType.LoadSynchronous();
-				if (SetType)
-				{
-					UAttributeSet* NewSet = NewObject<UAttributeSet>(AbilitySystemComponent->GetOwner(), SetType);
-					if (!Attributes.InitializationData.IsNull())
-					{
-						UDataTable* InitData = Attributes.InitializationData.LoadSynchronous();
-						if (InitData)
-						{
-							NewSet->InitFromMetaDataTable(InitData);
-						}
-					}
-
-					AddedExtensions.Attributes.Add(NewSet);
-					AbilitySystemComponent->AddAttributeSetSubobject(NewSet);
-				}
-			}
-		}
-
-		ULyraAbilitySystemComponent* LyraASC = CastChecked<ULyraAbilitySystemComponent>(AbilitySystemComponent);
-		for (const TSoftObjectPtr<const ULyraAbilitySet>& SetPtr : AbilitiesEntry.GrantedAbilitySets)
-		{
-			if (const ULyraAbilitySet* Set = SetPtr.Get())
-			{
-				Set->GiveToAbilitySystem(LyraASC, &AddedExtensions.AbilitySetHandles.AddDefaulted_GetRef());
+				// UAbilitySet.h 에 정의된 함수 호출
+				Set->GiveToAbilitySystem(AbilitySystemComponent, &AddedExtensions.AbilitySetHandles.AddDefaulted_GetRef(), Actor);
 			}
 		}
 
@@ -238,23 +174,13 @@ void UGameFeatureAction_AddAbilities::RemoveActorAbilities(AActor* Actor, FPerCo
 	{
 		if (UAbilitySystemComponent* AbilitySystemComponent = Actor->FindComponentByClass<UAbilitySystemComponent>())
 		{
-			for (UAttributeSet* AttribSetInstance : ActorExtensions->Attributes)
-			{
-				AbilitySystemComponent->RemoveSpawnedAttribute(AttribSetInstance);
-			}
 
-			for (FGameplayAbilitySpecHandle AbilityHandle : ActorExtensions->Abilities)
+			for (FAbilitySetGrantedHandles& SetHandle : ActorExtensions->AbilitySetHandles)
 			{
-				AbilitySystemComponent->SetRemoveAbilityOnEnd(AbilityHandle);
-			}
 
-			ULyraAbilitySystemComponent* LyraASC = CastChecked<ULyraAbilitySystemComponent>(AbilitySystemComponent);
-			for (FLyraAbilitySet_GrantedHandles& SetHandle : ActorExtensions->AbilitySetHandles)
-			{
-				SetHandle.TakeFromAbilitySystem(LyraASC);
+				SetHandle.TakeFromAbilitySystem(AbilitySystemComponent);
 			}
 		}
-
 		ActiveData.ActiveExtensions.Remove(Actor);
 	}
 }
