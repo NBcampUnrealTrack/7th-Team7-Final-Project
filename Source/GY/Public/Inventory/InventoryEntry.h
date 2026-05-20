@@ -23,6 +23,9 @@ struct GY_API FInventoryEntry : public FFastArraySerializerItem
 	int32 StackCount = 1;
 
 	UPROPERTY(VisibleAnywhere)
+	int32 Level = 1;
+
+	UPROPERTY(VisibleAnywhere)
 	int32 EnhancementLevel = 0;
 
 	UPROPERTY(VisibleAnywhere)
