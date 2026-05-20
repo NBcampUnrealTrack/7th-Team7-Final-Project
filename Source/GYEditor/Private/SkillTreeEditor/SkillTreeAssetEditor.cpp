@@ -7,6 +7,7 @@
 #include "GraphEditor.h"
 #include "IDetailsView.h"
 #include "PropertyEditorModule.h"
+#include "Framework/Commands/GenericCommands.h"
 #include "Modules/ModuleManager.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Styling/AppStyle.h"
@@ -27,8 +28,22 @@ void FSkillTreeAssetEditor::InitEditor(
 	EditorGraph->Schema = USkillTreeGraphSchema::StaticClass();
 
 	RebuildGraph();
+
+	GraphEditorCommands = MakeShareable(new FUICommandList);
+
+	GraphEditorCommands->MapAction(
+		FGenericCommands::Get().Delete,
+		FExecuteAction::CreateSP(this, &FSkillTreeAssetEditor::DeleteSelectedNodes),
+		FCanExecuteAction::CreateSP(this, &FSkillTreeAssetEditor::CanDeleteSelectedNodes));
+
+	GraphEditorCommands->MapAction(
+		FGenericCommands::Get().SelectAll,
+		FExecuteAction::CreateSP(this, &FSkillTreeAssetEditor::SelectAllNodes));
+
 	CreateGraphEditor();
 	CreateDetailsView();
+
+
 
 	const TSharedRef<FTabManager::FLayout> Layout =
 		FTabManager::NewLayout("SkillTreeAssetEditor")
@@ -53,16 +68,16 @@ void FSkillTreeAssetEditor::RegisterTabSpawners(
 	FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 
 	InTabManager->RegisterTabSpawner(
-		          GraphTabId,
-		          FOnSpawnTab::CreateSP(this, &FSkillTreeAssetEditor::SpawnGraphTab))
-	          .SetDisplayName(NSLOCTEXT("SkillTree", "GraphTab", "Graph"))
-	          .SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "GraphEditor.EventGraph_16x"));
+		            GraphTabId,
+		            FOnSpawnTab::CreateSP(this, &FSkillTreeAssetEditor::SpawnGraphTab))
+	            .SetDisplayName(NSLOCTEXT("SkillTree", "GraphTab", "Graph"))
+	            .SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "GraphEditor.EventGraph_16x"));
 
 	InTabManager->RegisterTabSpawner(
-		          DetailsTabId,
-		          FOnSpawnTab::CreateSP(this, &FSkillTreeAssetEditor::SpawnDetailsTab))
-	          .SetDisplayName(NSLOCTEXT("SkillTree", "DetailsTab", "Details"))
-	          .SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Details"));
+		            DetailsTabId,
+		            FOnSpawnTab::CreateSP(this, &FSkillTreeAssetEditor::SpawnDetailsTab))
+	            .SetDisplayName(NSLOCTEXT("SkillTree", "DetailsTab", "Details"))
+	            .SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Details"));
 }
 
 void FSkillTreeAssetEditor::UnregisterTabSpawners(
@@ -100,7 +115,8 @@ void FSkillTreeAssetEditor::CreateGraphEditor()
 	GraphEditor = SNew(SGraphEditor)
 		.IsEditable(true)
 		.GraphToEdit(EditorGraph)
-		.GraphEvents(Events);
+		.GraphEvents(Events)
+		.AdditionalCommands(GraphEditorCommands);
 }
 
 void FSkillTreeAssetEditor::CreateDetailsView()
@@ -159,6 +175,52 @@ void FSkillTreeAssetEditor::OnNodeDoubleClicked(UEdGraphNode* Node)
 	}
 }
 
+void FSkillTreeAssetEditor::DeleteSelectedNodes()
+{
+	const FScopedTransaction Transaction(NSLOCTEXT("SkillTree", "DeleteNodes", "DeleteNodes"));
+
+	TArray<UEdGraphNode*> NodesToDelete;
+	const FGraphPanelSelectionSet SelectedNodes = GraphEditor->GetSelectedNodes();
+
+	for (UObject* Obj : SelectedNodes)
+	{
+		UEdGraphNode* Node = Cast<UEdGraphNode>(Obj);
+		if (Node && Node->CanUserDeleteNode())
+		{
+			NodesToDelete.Add(Node);
+		}
+	}
+
+	for (UEdGraphNode* Node : NodesToDelete)
+	{
+		Node->Modify();
+		for (UEdGraphPin* Pin : Node->Pins)
+		{
+			EditorGraph->GetSchema()->BreakPinLinks(*Pin, true);
+		}
+		EditorGraph->RemoveNode(Node);
+	}
+
+	EditorGraph->NotifyGraphChanged();
+	CompileAsset();
+}
+
+bool FSkillTreeAssetEditor::CanDeleteSelectedNodes() const
+{
+	const FGraphPanelSelectionSet SelectedNodes = GraphEditor->GetSelectedNodes();
+	for (UObject* Obj : SelectedNodes)
+	{
+		if (UEdGraphNode* Node = Cast<UEdGraphNode>(Obj))
+		{
+			if (Node->CanUserDeleteNode())
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void FSkillTreeAssetEditor::NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent,
                                              FProperty* PropertyThatChanged)
 {
@@ -166,4 +228,10 @@ void FSkillTreeAssetEditor::NotifyPostChange(const FPropertyChangedEvent& Proper
 	{
 		GraphEditor->NotifyGraphChanged();
 	}
+}
+
+
+void FSkillTreeAssetEditor::SelectAllNodes() const
+{
+	GraphEditor->SelectAllNodes();
 }

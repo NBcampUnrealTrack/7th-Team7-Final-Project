@@ -1,8 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "SkillTreeEditor/SkillTreeGraph.h"
-
+﻿#include "SkillTreeEditor/SkillTreeGraph.h"
 #include "FileHelpers.h"
 #include "SkillTree/SkillNodeDataAsset.h"
 #include "SkillTree/SkillTreeDataAsset.h"

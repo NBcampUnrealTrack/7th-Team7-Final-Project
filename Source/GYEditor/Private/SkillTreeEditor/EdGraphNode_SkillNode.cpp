@@ -1,7 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "SkillTreeEditor/EdGraphNode_SkillNode.h"
+﻿#include "SkillTreeEditor/EdGraphNode_SkillNode.h"
 #include "SkillTree/SkillNodeDataAsset.h"
 
 const FName UEdGraphNode_SkillNode::PinCategory = TEXT("SkillNode");
@@ -20,7 +17,7 @@ FText UEdGraphNode_SkillNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 			       ? FText::FromName(SkillAsset->GetFName())
 			       : SkillAsset->SkillName;
 	}
-	return NSLOCTEXT("SkillTree", "EmptyNode", "(비어있음)");
+	return NSLOCTEXT("SkillTree", "EmptyNode", "(NoName)");
 }
 
 FText UEdGraphNode_SkillNode::GetTooltipText() const

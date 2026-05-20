@@ -1,5 +1,4 @@
 ﻿#include "SkillTreeEditor/SkillTreeGraphSchemaAction.h"
-
 #include "AssetToolsModule.h"
 #include "IAssetTools.h"
 #include "Factories/DataAssetFactory.h"

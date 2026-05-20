@@ -25,6 +25,7 @@ public:
 	virtual void UnregisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) override;
 	virtual void NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent,
 	                              FProperty* PropertyThatChanged) override;
+	void SelectAllNodes() const;
 
 protected:
 	virtual void SaveAsset_Execute() override;
@@ -37,6 +38,11 @@ private:
 
 	void OnSelectionChanged(const TSet<UObject*>& Selected);
 	void OnNodeDoubleClicked(UEdGraphNode* Node);
+
+	void DeleteSelectedNodes();
+	bool CanDeleteSelectedNodes() const;
+
+	TSharedPtr<FUICommandList> GraphEditorCommands;
 
 	TSharedRef<SDockTab> SpawnGraphTab(const FSpawnTabArgs& Args);
 	TSharedRef<SDockTab> SpawnDetailsTab(const FSpawnTabArgs& Args);

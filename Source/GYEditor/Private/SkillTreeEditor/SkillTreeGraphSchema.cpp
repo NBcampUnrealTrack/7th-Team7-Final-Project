@@ -1,9 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "SkillTreeEditor/SkillTreeGraphSchema.h"
-
-
+﻿#include "SkillTreeEditor/SkillTreeGraphSchema.h"
 #include "SkillTreeEditor/EdGraphNode_SkillNode.h"
 #include "SkillTree/SkillNodeDataAsset.h"
 #include "Framework/Commands/GenericCommands.h"
@@ -19,20 +14,20 @@ const FPinConnectionResponse USkillTreeGraphSchema::CanCreateConnection(
 	{
 		return FPinConnectionResponse(
 			CONNECT_RESPONSE_DISALLOW,
-			NSLOCTEXT("SkillTree", "SameNode", "같은 노드"));
+			NSLOCTEXT("SkillTree", "SameNode", "SameNode"));
 	}
 	if (A->Direction == B->Direction)
 	{
 		return FPinConnectionResponse(
 			CONNECT_RESPONSE_DISALLOW,
-			NSLOCTEXT("SkillTree", "SameDir", "방향 불일치"));
+			NSLOCTEXT("SkillTree", "SameDir", "SameDir"));
 	}
 	const UEdGraphPin* InputPin = (A->Direction == EGPD_Input) ? A : B;
 	if (InputPin->LinkedTo.Num() > 0)
 	{
 		return FPinConnectionResponse(
 			CONNECT_RESPONSE_BREAK_OTHERS_A,
-			NSLOCTEXT("SkillTree", "Replace", "기존 부모 교체"));
+			NSLOCTEXT("SkillTree", "Replace", "Replace"));
 	}
 	return FPinConnectionResponse(
 		CONNECT_RESPONSE_MAKE,
@@ -59,12 +54,10 @@ void USkillTreeGraphSchema::GetContextMenuActions(
 	if (!Context->Node) return;
 
 	FToolMenuSection& Section = Menu->AddSection("SkillNodeActions",
-	                                             NSLOCTEXT("SkillTree", "NodeActions", "노드"));
+	                                             NSLOCTEXT("SkillTree", "NodeActions", "NodeActions"));
 
 	Section.AddMenuEntry(FGenericCommands::Get().Delete);
-	Section.AddMenuEntry(FGenericCommands::Get().Cut);
-	Section.AddMenuEntry(FGenericCommands::Get().Copy);
-	Section.AddMenuEntry(FGenericCommands::Get().Duplicate);
+	Section.AddMenuEntry(FGenericCommands::Get().SelectAll);
 }
 
 FLinearColor USkillTreeGraphSchema::GetPinTypeColor(const FEdGraphPinType& PinType) const
@@ -127,9 +120,9 @@ void USkillTreeGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 {
 	TSharedPtr<FSkillTreeGraphSchemaAction_NewNode> Action =
 		MakeShared<FSkillTreeGraphSchemaAction_NewNode>(
-			NSLOCTEXT("SkillTree", "SkillNodeCategory", "스킬 노드"),
-			NSLOCTEXT("SkillTree", "AddSkillNode", "새 스킬 노드 생성"),
-			NSLOCTEXT("SkillTree", "AddSkillNodeTooltip", "새 USkillNodeDataAsset을 생성하고 노드로 추가합니다."),
+			NSLOCTEXT("SkillTree", "SkillNodeCategory", "SkillNode"),
+			NSLOCTEXT("SkillTree", "AddSkillNode", "Create New SkillNode"),
+			NSLOCTEXT("SkillTree", "AddSkillNodeTooltip", "Create New SkillNode"),
 			0);
 
 	ContextMenuBuilder.AddAction(Action);
