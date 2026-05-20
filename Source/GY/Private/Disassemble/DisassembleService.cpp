@@ -3,6 +3,9 @@
 #include "Core/GameplayTags/CurrencyTags.h"
 #include "Core/GameplayTags/ItemTags.h"
 #include "Currency/CurrencyComponent.h"
+#include "Disassemble/DisassembleRewardRow.h"
+#include "Disassemble/GYDisassembleSettings.h"
+#include "Engine/DataTable.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
@@ -11,17 +14,24 @@
 
 namespace
 {
-	constexpr int32 Reward_Normal = 1;
-	constexpr int32 Reward_Special = 5;
-	constexpr int32 Reward_Legendary = 20;
-	constexpr int32 Reward_Unspecified = 1;
-
-	int32 ComputeReward(FGameplayTag GradeTag)
+	bool LookupReward(UDataTable* Table, FGameplayTag GradeTag, int32 Level, FGameplayTag& OutCurrencyTag, int32& OutAmount)
 	{
-		if (GradeTag == GYGameplayTags::Item_Grade_Legendary) return Reward_Legendary;
-		if (GradeTag == GYGameplayTags::Item_Grade_Special) return Reward_Special;
-		if (GradeTag == GYGameplayTags::Item_Grade_Normal) return Reward_Normal;
-		return Reward_Unspecified;
+		if (!IsValid(Table)) return false;
+		if (!GradeTag.IsValid()) return false;
+
+		bool bFound = false;
+		Table->ForeachRow<FDisassembleRewardRow>(TEXT("DisassembleService::LookupReward"),
+			[&](const FName& RowName, const FDisassembleRewardRow& Row)
+			{
+				if (bFound) return;
+				if (!Row.GradeTag.MatchesTagExact(GradeTag)) return;
+				if (Row.Level != Level) return;
+
+				OutCurrencyTag = Row.CurrencyTag.IsValid() ? Row.CurrencyTag : GYGameplayTags::Currency_TimeShard;
+				OutAmount = Row.Amount;
+				bFound = true;
+			});
+		return bFound;
 	}
 
 	bool IsInstanceEquipped(const UInventoryComponent* Inventory, const FGuid& InstanceId)
@@ -63,15 +73,25 @@ bool UDisassembleService::TryDisassemble(UInventoryComponent* Inventory, UCurren
 		return false;
 	}
 
-	const FGameplayTag GradeTag = Entry->GradeTag;
+	const UGYDisassembleSettings* Settings = GetDefault<UGYDisassembleSettings>();
+	UDataTable* RewardTable = IsValid(Settings) ? Settings->RewardTable.LoadSynchronous() : nullptr;
+
+	FGameplayTag RewardCurrency;
+	int32 RewardPerItem = 0;
+	if (!LookupReward(RewardTable, Entry->GradeTag, Entry->Level, RewardCurrency, RewardPerItem))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Disassemble: no reward configured for grade=%s level=%d"),
+			*Entry->GradeTag.ToString(), Entry->Level);
+		return false;
+	}
+
 	const int32 StackCount = Entry->StackCount;
-	const int32 Reward = ComputeReward(GradeTag) * StackCount;
+	const int32 Reward = RewardPerItem * StackCount;
 
 	if (!Inventory->TryRemoveItem(InstanceId, StackCount)) return false;
 
-	const FGameplayTag CurrencyTag = GYGameplayTags::Currency_TimeShard;
-	Currency->TryAdd(CurrencyTag, Reward);
+	Currency->TryAdd(RewardCurrency, Reward);
 
-	OnItemDisassembled.Broadcast(InstanceId, CurrencyTag, Reward);
+	OnItemDisassembled.Broadcast(InstanceId, RewardCurrency, Reward);
 	return true;
 }
