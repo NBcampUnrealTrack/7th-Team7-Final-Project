@@ -11,6 +11,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Item_Grade_Normal, "Item.Grade.Normal");
 	UE_DEFINE_GAMEPLAY_TAG(Item_Grade_Special, "Item.Grade.Special");
 	UE_DEFINE_GAMEPLAY_TAG(Item_Grade_Legendary, "Item.Grade.Legendary");
+	UE_DEFINE_GAMEPLAY_TAG(Item_Grade_Legendary_Engraved, "Item.Grade.Legendary.Engraved");
 
 	UE_DEFINE_GAMEPLAY_TAG(Gem_Type_Inherent, "Gem.Type.Inherent");
 	UE_DEFINE_GAMEPLAY_TAG(Gem_Type_Common, "Gem.Type.Common");
