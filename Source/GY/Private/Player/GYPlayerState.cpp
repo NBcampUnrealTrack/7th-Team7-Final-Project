@@ -23,10 +23,10 @@ AGYPlayerState::AGYPlayerState()
 	WeaponAttribute = CreateDefaultSubobject<UGYWeaponAttribute>(TEXT("WeaponAttribute"));
 
 
-	AbilitySystemComponent->GetSpawnedAttributes_Mutable().AddUnique(BaseAttribute);
-	AbilitySystemComponent->GetSpawnedAttributes_Mutable().AddUnique(AdditionalAttribute);
-	AbilitySystemComponent->GetSpawnedAttributes_Mutable().AddUnique(PlayerAttribute);
-	AbilitySystemComponent->GetSpawnedAttributes_Mutable().AddUnique(WeaponAttribute);
+	AbilitySystemComponent->AddAttributeSetSubobject(BaseAttribute.Get());
+	AbilitySystemComponent->AddAttributeSetSubobject(AdditionalAttribute.Get());
+	AbilitySystemComponent->AddAttributeSetSubobject(PlayerAttribute.Get());
+	AbilitySystemComponent->AddAttributeSetSubobject(WeaponAttribute.Get());
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	EquipmentLoadoutComponent = CreateDefaultSubobject<UEquipmentLoadoutComponent>(TEXT("EquipmentLoadoutComponent"));
