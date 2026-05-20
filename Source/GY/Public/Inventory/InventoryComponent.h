@@ -29,6 +29,12 @@ public:
 
 	const TArray<FInventoryEntry>& GetEntries() const { return Inventory.Entries; }
 
+	UFUNCTION(Server, Reliable)
+	void Server_RequestEnchant(const FGuid& InstanceId);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RequestDisassemble(const FGuid& InstanceId);
+
 	FOnInventoryChanged OnInventoryChanged;
 
 protected:
