@@ -145,7 +145,6 @@ void AGYEnemyCharacterBase::ApplyAIConfig(const FEnemyAIConfig& Config)
 			AIC->StartBehaviorTree(BT);
 		}
 		AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.AttackRadius, Config.bHasPatrol);
-
 		if (Config.bHasPatrol && !Config.PatrolOffsets.IsEmpty())
 		{
 			AIC->SetPatrolPoints(Config.PatrolOffsets, GetActorLocation());
