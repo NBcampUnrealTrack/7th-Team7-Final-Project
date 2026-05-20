@@ -9,7 +9,7 @@
 
 #include "UObject/SavePackage.h"
 #include "WorldPartition/ActorDescContainerInstance.h"
-#include "WorldPartition/GYRegionDataSettings.h"
+#include "WorldPartition/GYActorGuidDataSettings.h"
 #include "WorldPartition/LevelPlacedActorData.h"
 #include "WorldPartition/WorldPartition.h"
 #include "WorldPartition/WorldPartitionActorDescInstance.h"
@@ -36,10 +36,10 @@ void ULevelPlacedActorDataExporter::ExportMonsterData()
 		return;
 	}
 
-	const UGYRegionDataSettings* RegionDataSettings = GetDefault<UGYRegionDataSettings>();
-	if (!RegionDataSettings)
+	const UGYActorGuidDataSettings* ActorGuidDataSettings = GetDefault<UGYActorGuidDataSettings>();
+	if (!ActorGuidDataSettings)
 	{
-		GY_ERROR(Game, JCM, "Get RegionDataSettings Fail");
+		GY_ERROR(Game, JCM, "Get ActorGuidDataSettings Fail");
 		return;
 	}
 
@@ -54,24 +54,21 @@ void ULevelPlacedActorDataExporter::ExportMonsterData()
 		CollectActorsFromWorld(TargetWorld);
 	}
 
-	GY_LOG(Game, JCM, "ULevelPlacedActorDataExporter: %d DataLayer Collected", DataLayerMonsterMap.Num());
+	GY_LOG(Game, JCM, "ULevelPlacedActorDataExporter: %d Actor Collected", ActorGuidSet.Num());
 
 	bool bSuccess = true;
 	if (UDataTable* SpawnTable = BuildActorRegionTable())
 	{
-		bSuccess &= SaveDataTable(SpawnTable, OutputPath / TEXT("DT_ActorRegionData"));
+		bSuccess = SaveDataTable(SpawnTable, OutputPath / TEXT("DT_ActorGuidData"));
 	}
-	if (UDataTable* SummaryTable = BuildRegionSummaryTable())
-	{
-		bSuccess &= SaveDataTable(SummaryTable, OutputPath / TEXT("DT_RegionSummary"));
-	}
+
 	GY_LOG(Game, JCM, "MonsterDataExporter: %s", bSuccess ? TEXT("완료") : TEXT("일부 저장 실패"));
 
 	if (bSuccess)
 	{
-		if (UGYRegionDataSettings* MutableSettings = GetMutableDefault<UGYRegionDataSettings>())
+		if (UGYActorGuidDataSettings* MutableSettings = GetMutableDefault<UGYActorGuidDataSettings>())
 		{
-			MutableSettings->SetupPath(OutputPath/TEXT("DT_ActorRegionData.")+TEXT("DT_ActorRegionData"), OutputPath/TEXT("DT_RegionSummary.")+TEXT("DT_RegionSummary"));
+			MutableSettings->SetupPath(OutputPath/TEXT("DT_ActorGuidData.")+TEXT("DT_ActorGuidData"));
 		}
 	}
 
@@ -79,7 +76,7 @@ void ULevelPlacedActorDataExporter::ExportMonsterData()
 
 void ULevelPlacedActorDataExporter::CollectActorsFromWorld(UWorld* World)
 {
-	DataLayerMonsterMap.Empty();
+	ActorGuidSet.Empty();
 
 	UWorldPartition* WP = World->GetWorldPartition();
 
@@ -120,16 +117,12 @@ void ULevelPlacedActorDataExporter::CollectActorsFromWorld(UWorld* World)
 				TargetActor = MutableDescInstance->GetActor();
 			}
 
-			// 2. 액터 변수에 Guid 주역 및 에디터 수정 마킹 (Dirty)
 			if (TargetActor)
 			{
-				// 에디터의 Undo 시스템 등록 및 에셋 변경 마킹 (컨트롤+S로 저장되도록 보장)
 				TargetActor->Modify();
 
-				// 인터페이스 형태로 캐스팅하여 Guid 주입 함수 호출
 				if (IWorldPartitionLevelPlacedActor* Interface = Cast<IWorldPartitionLevelPlacedActor>(TargetActor))
 				{
-					// 가공할 고유 Guid (ActorDesc의 Guid를 그대로 사용)
 					FGuid ActorGuid = ActorDesc->GetGuid();
 					Interface->SetPersistentGuid(ActorGuid);
 
@@ -143,23 +136,7 @@ void ULevelPlacedActorDataExporter::CollectActorsFromWorld(UWorld* World)
 			}
 
 
-			FActorRegionTableRow Row;
-			Row.ActorGuid = ActorDesc->GetGuid();
-
-			TArray<FName> DataLayers = DescInstance.GetDataLayers();
-
-			if (DataLayers.IsEmpty()) continue;
-
-			if (DataLayers.Num()>1)
-			{
-				GY_LOG(Game, JCM, "액터가 여러 DataLayer에 중복으로 들어가있음: %s", *ActorDesc->GetGuid().ToString());
-			}
-			if (DataLayers.Num()>0)
-			{
-				Row.RegionName = DataLayers[0];
-			}
-
-			DataLayerMonsterMap.FindOrAdd(Row.RegionName).Add(Row);
+			ActorGuidSet.Add(ActorDesc->GetGuid());
 		}
 		return true;
 	});
@@ -167,34 +144,18 @@ void ULevelPlacedActorDataExporter::CollectActorsFromWorld(UWorld* World)
 
 UDataTable* ULevelPlacedActorDataExporter::BuildActorRegionTable()
 {
-	UPackage* Pkg = CreatePackage(*(OutputPath / TEXT("DT_ActorRegionData")));
-	UDataTable* Table = NewObject<UDataTable>(Pkg, FName("DT_ActorRegionData"), RF_Public | RF_Standalone);
-	Table->RowStruct = FActorRegionTableRow::StaticStruct();
+	UPackage* Pkg = CreatePackage(*(OutputPath / TEXT("DT_ActorGuidData")));
+	UDataTable* Table = NewObject<UDataTable>(Pkg, FName("DT_ActorGuidData"), RF_Public | RF_Standalone);
+	Table->RowStruct = FActorGuidTableRow::StaticStruct();
 
 	int32 Idx = 0;
-	for (const auto& [Layer, Rows] : DataLayerMonsterMap)
+	for (const FGuid& TargetActorGuid : ActorGuidSet)
 	{
-		for (const FActorRegionTableRow& Row : Rows)
-		{
-			Table->AddRow(FName(*FString::Printf(TEXT("Monster_%04d"), Idx++)), Row);
-		}
+		FActorGuidTableRow Row;
+		Row.ActorGuid = TargetActorGuid;
+		Table->AddRow(FName(*FString::Printf(TEXT("Monster_%04d"), Idx++)), Row);
 	}
 
-	return Table;
-}
-
-UDataTable* ULevelPlacedActorDataExporter::BuildRegionSummaryTable()
-{
-	UPackage* Pkg = CreatePackage(*(OutputPath / TEXT("DT_RegionSummary")));
-	UDataTable* Table = NewObject<UDataTable>(Pkg, FName("DT_RegionSummary"), RF_Public | RF_Standalone);
-	Table->RowStruct = FRegionDataTableRow::StaticStruct();
-
-	for (const auto& [LayerName, Monsters] : DataLayerMonsterMap)
-	{
-		FRegionDataTableRow Row;
-		Row.RegionName = LayerName;
-		Table->AddRow(LayerName, Row);
-	}
 	return Table;
 }
 

@@ -9,22 +9,10 @@
  *
  */
 USTRUCT(BlueprintType)
-struct GY_API FActorRegionTableRow : public FTableRowBase
+struct GY_API FActorGuidTableRow : public FTableRowBase
 {
 	GENERATED_BODY()
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FGuid ActorGuid;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	FName RegionName;
-};
-
-USTRUCT(BlueprintType)
-struct GY_API FRegionDataTableRow : public FTableRowBase
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName RegionName;
 
 };
