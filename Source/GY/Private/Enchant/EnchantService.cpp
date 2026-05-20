@@ -105,6 +105,13 @@ bool UEnchantService::TryEnchant(UInventoryComponent* Inventory,
 		return false;
 	}
 
+	const int32 SlotCount = EnchantSlotPolicy::GetBonusSlotCount(Entry->GradeTag);
+	if (SlotCount <= 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Enchant: grade %s has no bonus slots"), *Entry->GradeTag.ToString());
+		return false;
+	}
+
 	const UGYEnchantSettings* Settings = GetDefault<UGYEnchantSettings>();
 	UDataTable* CostTable = IsValid(Settings) ? Settings->EnchantCostTable.LoadSynchronous() : nullptr;
 	if (IsValid(CostTable))
@@ -120,13 +127,6 @@ bool UEnchantService::TryEnchant(UInventoryComponent* Inventory,
 				return false;
 			}
 		}
-	}
-
-	const int32 SlotCount = EnchantSlotPolicy::GetBonusSlotCount(Entry->GradeTag);
-	if (SlotCount <= 0)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Enchant: grade %s has no bonus slots"), *Entry->GradeTag.ToString());
-		return false;
 	}
 
 	FRandomStream Stream = Seed;
