@@ -3,8 +3,9 @@
 #pragma once
 
 #include "GameFeatureAction_WorldActionBase.h"
-#include "Abilities/GameplayAbility.h"
-#include "AbilitySystem/LyraAbilitySet.h"
+#include "AbilitySystem/AbilitySet.h"
+#include "AbilitySystem/AbilitySetGrantedHandles.h"
+
 
 #include "GameFeatureAction_AddAbilities.generated.h"
 
@@ -15,62 +16,22 @@ class UDataTable;
 struct FComponentRequestHandle;
 class ULyraAbilitySet;
 
-USTRUCT(BlueprintType)
-struct FLyraAbilityGrant
-{
-	GENERATED_BODY()
 
-	// Type of ability to grant
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AssetBundles="Client,Server"))
-	TSoftClassPtr<UGameplayAbility> AbilityType;
-
-	// Input action to bind the ability to, if any (can be left unset)
-// 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-// 	TSoftObjectPtr<UInputAction> InputAction;
-};
-
-USTRUCT(BlueprintType)
-struct FLyraAttributeSetGrant
-{
-	GENERATED_BODY()
-
-	// Ability set to grant
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AssetBundles="Client,Server"))
-	TSoftClassPtr<UAttributeSet> AttributeSetType;
-
-	// Data table referent to initialize the attributes with, if any (can be left unset)
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AssetBundles="Client,Server"))
-	TSoftObjectPtr<UDataTable> InitializationData;
-};
 
 USTRUCT()
 struct FGameFeatureAbilitiesEntry
 {
 	GENERATED_BODY()
 
-	// The base actor class to add to
+	// 기능을 주입할 대상 액터 클래스
 	UPROPERTY(EditAnywhere, Category="Abilities")
 	TSoftClassPtr<AActor> ActorClass;
 
-	// List of abilities to grant to actors of the specified class
-	UPROPERTY(EditAnywhere, Category="Abilities")
-	TArray<FLyraAbilityGrant> GrantedAbilities;
-
-	// List of attribute sets to grant to actors of the specified class 
-	UPROPERTY(EditAnywhere, Category="Attributes")
-	TArray<FLyraAttributeSetGrant> GrantedAttributes;
-
-	// List of ability sets to grant to actors of the specified class
-	UPROPERTY(EditAnywhere, Category="Attributes", meta=(AssetBundles="Client,Server"))
-	TArray<TSoftObjectPtr<const ULyraAbilitySet>> GrantedAbilitySets;
+	// 주입할 어빌리티 세트 목록
+	UPROPERTY(EditAnywhere, Category="Abilities", meta=(AssetBundles="Client,Server"))
+	TArray<TSoftObjectPtr<const UAbilitySet>> GrantedAbilitySets;
 };
 
-//////////////////////////////////////////////////////////////////////
-// UGameFeatureAction_AddAbilities
-
-/**
- * GameFeatureAction responsible for granting abilities (and attributes) to actors of a specified type.
- */
 UCLASS(MinimalAPI, meta = (DisplayName = "Add Abilities"))
 class UGameFeatureAction_AddAbilities final : public UGameFeatureAction_WorldActionBase
 {
@@ -97,7 +58,7 @@ private:
 	{
 		TArray<FGameplayAbilitySpecHandle> Abilities;
 		TArray<UAttributeSet*> Attributes;
-		TArray<FLyraAbilitySet_GrantedHandles> AbilitySetHandles;
+		TArray<FAbilitySetGrantedHandles> AbilitySetHandles;
 	};
 
 	struct FPerContextData
@@ -105,8 +66,8 @@ private:
 		TMap<AActor*, FActorExtensions> ActiveExtensions;
 		TArray<TSharedPtr<FComponentRequestHandle>> ComponentRequests;
 	};
-	
-	TMap<FGameFeatureStateChangeContext, FPerContextData> ContextData;	
+
+	TMap<FGameFeatureStateChangeContext, FPerContextData> ContextData;
 
 	//~ Begin UGameFeatureAction_WorldActionBase interface
 	virtual void AddToWorld(const FWorldContext& WorldContext, const FGameFeatureStateChangeContext& ChangeContext) override;

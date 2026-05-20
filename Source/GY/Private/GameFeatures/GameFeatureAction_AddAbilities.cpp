@@ -1,16 +1,18 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
+#include "GameFeatures/GameFeatureAction_AddAbilities.h"
 
-#include "GameFeatureAction_AddAbilities.h"
 #include "Engine/GameInstance.h"
 #include "Components/GameFrameworkComponentManager.h"
-#include "AbilitySystem/LyraAbilitySystemComponent.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Engine/World.h"
-#include "Player/LyraPlayerState.h" //@TODO: For the fname
+#include "Player/GYPlayerState.h" //@TODO: For the fname
 #include "GameFeatures/GameFeatureAction_WorldActionBase.h"
 
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
 #endif
+
+
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(GameFeatureAction_AddAbilities)
 
@@ -112,7 +114,7 @@ void UGameFeatureAction_AddAbilities::AddToWorld(const FWorldContext& WorldConte
 	if ((GameInstance != nullptr) && (World != nullptr) && World->IsGameWorld())
 	{
 		if (UGameFrameworkComponentManager* ComponentMan = UGameInstance::GetSubsystem<UGameFrameworkComponentManager>(GameInstance))
-		{			
+		{
 			int32 EntryIndex = 0;
 			for (const FGameFeatureAbilitiesEntry& Entry : AbilitiesList)
 			{
@@ -169,7 +171,7 @@ void UGameFeatureAction_AddAbilities::AddActorAbilities(AActor* Actor, const FGa
 	// early out if Actor already has ability extensions applied
 	if (ActiveData.ActiveExtensions.Find(Actor) != nullptr)
 	{
-		return;	
+		return;
 	}
 
 	if (UAbilitySystemComponent* AbilitySystemComponent = FindOrAddComponentForActor<UAbilitySystemComponent>(Actor, AbilitiesEntry, ActiveData))
@@ -260,7 +262,7 @@ void UGameFeatureAction_AddAbilities::RemoveActorAbilities(AActor* Actor, FPerCo
 UActorComponent* UGameFeatureAction_AddAbilities::FindOrAddComponentForActor(UClass* ComponentType, AActor* Actor, const FGameFeatureAbilitiesEntry& AbilitiesEntry, FPerContextData& ActiveData)
 {
 	UActorComponent* Component = Actor->FindComponentByClass(ComponentType);
-	
+
 	bool bMakeComponentRequest = (Component == nullptr);
 	if (Component)
 	{
