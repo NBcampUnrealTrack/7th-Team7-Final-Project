@@ -1,6 +1,9 @@
 #include "Loot/LootService.h"
 
 #include "Engine/DataTable.h"
+#include "Items/EnchantOptionRow.h"
+#include "Items/Fragments/ItemFragment_Enchantable.h"
+#include "Items/ItemDefinition.h"
 #include "Loot/LootTableRow.h"
 
 namespace
@@ -44,6 +47,75 @@ namespace
 	{
 		return Stream.FRandRange(-0.05f, 0.05f);
 	}
+
+	struct FOptionCandidate
+	{
+		FName Id;
+		int32 Weight = 0;
+	};
+
+	TArray<FOptionCandidate> GatherOptionCandidates(UDataTable* Pool)
+	{
+		TArray<FOptionCandidate> Result;
+		if (!IsValid(Pool)) return Result;
+
+		Pool->ForeachRow<FEnchantOptionRow>(TEXT("LootService::RollOptions"),
+			[&Result](const FName& RowName, const FEnchantOptionRow& Row)
+			{
+				if (Row.RollWeight > 0)
+				{
+					Result.Add({RowName, Row.RollWeight});
+				}
+			});
+		return Result;
+	}
+
+	FName PickWeightedOption(const TArray<FOptionCandidate>& Candidates, FRandomStream& Stream)
+	{
+		int32 TotalWeight = 0;
+		for (const FOptionCandidate& Candidate : Candidates)
+		{
+			TotalWeight += Candidate.Weight;
+		}
+		if (TotalWeight <= 0) return NAME_None;
+
+		int32 Roll = Stream.RandRange(1, TotalWeight);
+		for (const FOptionCandidate& Candidate : Candidates)
+		{
+			Roll -= Candidate.Weight;
+			if (Roll <= 0) return Candidate.Id;
+		}
+		return Candidates.Last().Id;
+	}
+
+	TArray<FName> RollEnchantOptions(UItemDefinition* Def, FRandomStream& Stream)
+	{
+		TArray<FName> Result;
+		if (!IsValid(Def)) return Result;
+
+		const UItemFragment_Enchantable* Fragment = Def->FindFragment<UItemFragment_Enchantable>();
+		if (Fragment == nullptr) return Result;
+
+		UDataTable* Pool = Fragment->EnchantOptionPoolTable.LoadSynchronous();
+		if (!IsValid(Pool)) return Result;
+
+		TArray<FOptionCandidate> Candidates = GatherOptionCandidates(Pool);
+		const int32 SlotCount = FMath::Max(1, Fragment->MaxOptionSlots);
+
+		for (int32 i = 0; i < SlotCount; ++i)
+		{
+			if (Candidates.IsEmpty()) break;
+			const FName Picked = PickWeightedOption(Candidates, Stream);
+			if (Picked.IsNone()) break;
+			Result.Add(Picked);
+			Candidates.RemoveAll([&Picked](const FOptionCandidate& Candidate)
+			{
+				return Candidate.Id == Picked;
+			});
+		}
+
+		return Result;
+	}
 }
 
 FLootResult ULootService::RollLoot(const FLootContext& Context, UDataTable* LootTable, const FRandomStream& Seed) const
@@ -63,9 +135,9 @@ FLootResult ULootService::RollLoot(const FLootContext& Context, UDataTable* Loot
 	Drop.Count = Stream.RandRange(Picked->MinCount, Picked->MaxCount);
 	Drop.StatDeviation = RollStatDeviation(Stream);
 	Drop.UsedSeed = Seed.GetInitialSeed();
+	Drop.RolledOptionIds = RollEnchantOptions(Drop.Definition.LoadSynchronous(), Stream);
 
 	// TODO: CT_RegionScaling으로 Grade/Level 결정
-	// TODO: EnchantOption 풀 롤 → RolledOptionIds 채움
 	// TODO: Grade == Legendary 시 Penalty 자동 부여
 	// TODO: PartySize 보정
 
