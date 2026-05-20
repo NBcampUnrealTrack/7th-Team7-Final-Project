@@ -21,33 +21,34 @@ bool UGYCameraComponent::CanChangeInitState(UGameFrameworkComponentManager* Mana
                                             FGameplayTag DesiredState) const
 {
 	check(Manager);
-
 	APawn* Pawn = GetPawn<APawn>();
-	//1. 메모리 할당 직후 Spawned로 변경 조건
-	if (DesiredState == GYGameplayTags::InitState_Spawned)
+
+	// [None] -> Spawned
+	if (!CurrentState.IsValid() && DesiredState == GYGameplayTags::InitState_Spawned)
 	{
-		if (Pawn == nullptr)
-		{
-			return false;
-		}
+		return IsValid(Pawn);
+	}
+
+	// Spawned -> DataAvailable
+	if (CurrentState == GYGameplayTags::InitState_Spawned &&
+		DesiredState == GYGameplayTags::InitState_DataAvailable)
+	{
 		return true;
 	}
-	//2. Dataavailable 로 변경 조건
-	else if (CurrentState == GYGameplayTags::InitState_Spawned && DesiredState ==
-		GYGameplayTags::InitState_DataAvailable)
+
+	// DataAvailable -> DataInitialized (PawnExtension이 같은 단계 이상 도달했는가)
+	if (CurrentState == GYGameplayTags::InitState_DataAvailable &&
+		DesiredState == GYGameplayTags::InitState_DataInitialized)
 	{
-		//현재 사용할 데이터가 아무것도 없기에
-		return true;
+		return Manager->HasFeatureReachedInitState(
+			Pawn,
+			UGYPawnExtensionComponent::NAME_ActorFeatureName,
+			GYGameplayTags::InitState_DataInitialized);
 	}
-	//3. DataInitialized 로 변경 조건
-	else if (CurrentState == GYGameplayTags::InitState_DataAvailable && DesiredState ==
-		GYGameplayTags::InitState_DataInitialized)
-	{
-		//캐릭터의 ExtComp가 초기화완료되었는가
-		return Manager->HasFeatureReachedInitState(Pawn, UGYPawnExtensionComponent::NAME_ActorFeatureName,
-		                                           GYGameplayTags::InitState_DataInitialized);
-	}
-	else if (DesiredState == GYGameplayTags::InitState_GameplayReady)
+
+	// DataInitialized -> GameplayReady
+	if (CurrentState == GYGameplayTags::InitState_DataInitialized &&
+		DesiredState == GYGameplayTags::InitState_GameplayReady)
 	{
 		return true;
 	}
