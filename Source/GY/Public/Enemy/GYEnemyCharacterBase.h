@@ -42,6 +42,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Enemy|Anim")
 	UAnimMontage* GetMontageByTag(const FGameplayTag& Tag) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Enemy")
+	virtual void Die();
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
@@ -64,8 +66,7 @@ protected:
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
 	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
 
-	UFUNCTION(BlueprintCallable, Category = "Enemy")
-	virtual void Die();
+
 
 	void BuildMontageMap(const FEnemyAnimationConfig& Config);
 public:

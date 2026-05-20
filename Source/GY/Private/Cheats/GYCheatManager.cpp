@@ -1,5 +1,7 @@
 #include "Cheats/GYCheatManager.h"
 
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Enemy/GYEnemyAIController.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
@@ -12,6 +14,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Loot/LootBoxActor.h"
 #include "Loot/LootTypes.h"
+#include "Enemy/GYEnemyCharacterBase.h"
 #include "Player/GYPlayerState.h"
 
 namespace
@@ -299,6 +302,105 @@ void UGYCheatManager::GY_TakeAllLoot()
 	}
 
 	Server_TakeAllLoot(Box);
+}
+
+void UGYCheatManager::GY_SpawnEnemy(const FString& EnemyTypeName)
+{
+	EEnemyType Type = EEnemyType::None;
+	if (EnemyTypeName.Equals(TEXT("Melee"),  ESearchCase::IgnoreCase)) Type = EEnemyType::Melee;
+	else if (EnemyTypeName.Equals(TEXT("Ranged"), ESearchCase::IgnoreCase)) Type = EEnemyType::Ranged;
+	else if (EnemyTypeName.Equals(TEXT("Boss"),   ESearchCase::IgnoreCase)) Type = EEnemyType::Boss;
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GY_SpawnEnemy: 알 수 없는 타입 '%s'. Melee / Ranged / Boss 중 선택"), *EnemyTypeName);
+		return;
+	}
+	Server_SpawnEnemy(Type);
+}
+
+void UGYCheatManager::GY_KillAllEnemies()
+{
+	Server_KillAllEnemies();
+}
+
+void UGYCheatManager::GY_SetEnemyBB(const FString& KeyName, bool bValue)
+{
+	TArray<AActor*> Enemies;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGYEnemyCharacterBase::StaticClass(), Enemies);
+
+	for (AActor* Actor : Enemies)
+	{
+		if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Actor))
+		{
+			if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(Enemy->GetController()))
+			{
+				if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+				{
+					BB->SetValueAsBool(FName(*KeyName), bValue);
+				}
+			}
+		}
+	}
+}
+
+void UGYCheatManager::Server_SpawnEnemy_Implementation(EEnemyType EnemyType)
+{
+	APawn* Pawn = GetCheatPawn(this);
+	if (!IsValid(Pawn)) return;
+
+	const TSoftClassPtr<AGYEnemyCharacterBase>* Found = EnemyClassMap.Find(EnemyType);
+	if (!Found || Found->IsNull())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Server_SpawnEnemy: EnemyClassMap에 타입 등록 안 됨"));
+		return;
+	}
+
+	TSubclassOf<AGYEnemyCharacterBase> EnemyClass = Found->LoadSynchronous();
+	if (!EnemyClass) return;
+
+	FVector SpawnLoc = Pawn->GetActorLocation() + Pawn->GetActorForwardVector() * 300.f;
+
+	// 바닥 LineTrace
+	FHitResult HitResult;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(Pawn);
+
+	const FVector TraceStart = SpawnLoc + FVector(0.f, 0.f, 500.f);
+	const FVector TraceEnd   = SpawnLoc - FVector(0.f, 0.f, 1000.f);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_WorldStatic, QueryParams))
+	{
+		SpawnLoc = HitResult.ImpactPoint;  // 바닥 표면 위치로 교체
+	}
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	AGYEnemyCharacterBase* Enemy = Pawn->GetWorld()->SpawnActor<AGYEnemyCharacterBase>(
+		EnemyClass, SpawnLoc, FRotator::ZeroRotator, Params);
+
+	if (IsValid(Enemy))
+	{
+		Enemy->InitWithType(EnemyType);
+	}
+}
+
+void UGYCheatManager::Server_KillAllEnemies_Implementation()
+{
+	TArray<AActor*> Enemies;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGYEnemyCharacterBase::StaticClass(), Enemies);
+
+	for (AActor* Actor : Enemies)
+	{
+		if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Actor))
+		{
+			if (!Enemy->IsDead())
+			{
+				Enemy->Die();
+			}
+		}
+	}
+	UE_LOG(LogTemp, Log, TEXT("GY_KillAllEnemies: %d 마리 처리"), Enemies.Num());
 }
 
 void UGYCheatManager::Server_SpawnLootBox_Implementation(const FString& SourceId, const FString& LootTablePath)

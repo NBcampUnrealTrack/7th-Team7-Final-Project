@@ -20,10 +20,51 @@ EBTNodeResult::Type UBTTask_MoveToNextPatrolPoint::ExecuteTask(UBehaviorTreeComp
 	const FPathFollowingRequestResult Result = AIC->MoveTo(MoveRequest);
 
 	if (Result.Code == EPathFollowingRequestResult::Failed)
-	{
 		return EBTNodeResult::Failed;
+
+	if (Result.Code == EPathFollowingRequestResult::AlreadyAtGoal)
+	{
+		AIC->AdvancePatrolIndex();
+		return EBTNodeResult::Succeeded;
 	}
 
-	AIC->AdvancePatrolIndex();
-	return EBTNodeResult::Succeeded;
+	CachedOwnerComp = &OwnerComp;
+	AIC->ReceiveMoveCompleted.AddDynamic(this, &UBTTask_MoveToNextPatrolPoint::OnMoveCompleted);
+
+	return EBTNodeResult::InProgress;
+}
+
+void UBTTask_MoveToNextPatrolPoint::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
+	EBTNodeResult::Type TaskResult)
+{
+	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetOwner());
+	if (AIC)
+	{
+		AIC->ReceiveMoveCompleted.RemoveDynamic(this,
+			&UBTTask_MoveToNextPatrolPoint::OnMoveCompleted);
+	}
+	CachedOwnerComp = nullptr;
+}
+
+void UBTTask_MoveToNextPatrolPoint::OnMoveCompleted(FAIRequestID RequestID, EPathFollowingResult::Type Result)
+{
+	if (!CachedOwnerComp) return;
+
+	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(
+		CachedOwnerComp->GetAIOwner());
+
+	if (AIC)
+	{
+		AIC->ReceiveMoveCompleted.RemoveDynamic(this,
+			&UBTTask_MoveToNextPatrolPoint::OnMoveCompleted);
+		AIC->AdvancePatrolIndex();
+	}
+
+	const EBTNodeResult::Type NodeResult =
+		(Result == EPathFollowingResult::Success)
+		? EBTNodeResult::Succeeded
+		: EBTNodeResult::Failed;
+
+	FinishLatentTask(*CachedOwnerComp, NodeResult);
+	CachedOwnerComp = nullptr;
 }
