@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "GameplayTagContainer.h"
 #include "LootTableRow.generated.h"
 
 class UItemDefinition;
@@ -16,6 +17,12 @@ struct GY_API FLootTableRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UItemDefinition> Definition;
+
+	UPROPERTY(EditAnywhere, meta = (Categories = "Item.Grade"))
+	FGameplayTag GradeTag;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 1))
+	int32 Level = 1;
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 1))
 	int32 Weight = 1;

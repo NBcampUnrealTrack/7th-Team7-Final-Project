@@ -136,6 +136,8 @@ FLootResult ULootService::RollLoot(const FLootContext& Context, UDataTable* Loot
 	FLootDrop Drop;
 	Drop.Definition = Picked->Definition;
 	Drop.Count = Stream.RandRange(Picked->MinCount, Picked->MaxCount);
+	Drop.GradeTag = Picked->GradeTag;
+	Drop.Level = Picked->Level;
 	Drop.StatDeviation = RollStatDeviation(Stream);
 	Drop.UsedSeed = Seed.GetInitialSeed();
 	Drop.RolledOptionIds = RollEnchantOptions(Drop.Definition.LoadSynchronous(), Drop.GradeTag, Stream);
