@@ -1,5 +1,6 @@
 #include "Loot/LootService.h"
 
+#include "Enchant/EnchantSlotPolicy.h"
 #include "Engine/DataTable.h"
 #include "Items/EnchantOptionRow.h"
 #include "Items/Fragments/ItemFragment_Enchantable.h"
@@ -88,10 +89,13 @@ namespace
 		return Candidates.Last().Id;
 	}
 
-	TArray<FName> RollEnchantOptions(UItemDefinition* Def, FRandomStream& Stream)
+	TArray<FName> RollEnchantOptions(UItemDefinition* Def, FGameplayTag GradeTag, FRandomStream& Stream)
 	{
 		TArray<FName> Result;
 		if (!IsValid(Def)) return Result;
+
+		const int32 SlotCount = EnchantSlotPolicy::GetBonusSlotCount(GradeTag);
+		if (SlotCount <= 0) return Result;
 
 		const UItemFragment_Enchantable* Fragment = Def->FindFragment<UItemFragment_Enchantable>();
 		if (Fragment == nullptr) return Result;
@@ -100,7 +104,6 @@ namespace
 		if (!IsValid(Pool)) return Result;
 
 		TArray<FOptionCandidate> Candidates = GatherOptionCandidates(Pool);
-		const int32 SlotCount = FMath::Max(1, Fragment->MaxOptionSlots);
 
 		for (int32 i = 0; i < SlotCount; ++i)
 		{
@@ -135,7 +138,7 @@ FLootResult ULootService::RollLoot(const FLootContext& Context, UDataTable* Loot
 	Drop.Count = Stream.RandRange(Picked->MinCount, Picked->MaxCount);
 	Drop.StatDeviation = RollStatDeviation(Stream);
 	Drop.UsedSeed = Seed.GetInitialSeed();
-	Drop.RolledOptionIds = RollEnchantOptions(Drop.Definition.LoadSynchronous(), Stream);
+	Drop.RolledOptionIds = RollEnchantOptions(Drop.Definition.LoadSynchronous(), Drop.GradeTag, Stream);
 
 	// TODO: CT_RegionScaling으로 Grade/Level 결정
 	// TODO: Grade == Legendary 시 Penalty 자동 부여

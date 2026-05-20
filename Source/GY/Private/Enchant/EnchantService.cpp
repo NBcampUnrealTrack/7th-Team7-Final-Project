@@ -2,6 +2,7 @@
 
 #include "Currency/CurrencyComponent.h"
 #include "Enchant/EnchantCostRow.h"
+#include "Enchant/EnchantSlotPolicy.h"
 #include "Enchant/GYEnchantSettings.h"
 #include "Engine/DataTable.h"
 #include "Inventory/InventoryComponent.h"
@@ -109,9 +110,14 @@ bool UEnchantService::TryEnchant(UInventoryComponent* Inventory,
 		}
 	}
 
-	FRandomStream Stream = Seed;
-	const int32 SlotCount = FMath::Max(1, Fragment->MaxOptionSlots);
+	const int32 SlotCount = EnchantSlotPolicy::GetBonusSlotCount(Entry->GradeTag);
+	if (SlotCount <= 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Enchant: grade %s has no bonus slots"), *Entry->GradeTag.ToString());
+		return false;
+	}
 
+	FRandomStream Stream = Seed;
 	TArray<FName> Rolled;
 	for (int32 i = 0; i < SlotCount; ++i)
 	{

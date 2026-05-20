@@ -14,7 +14,4 @@ class GY_API UItemFragment_Enchantable : public UItemFragment
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSoftObjectPtr<UDataTable> EnchantOptionPoolTable;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = 1))
-	int32 MaxOptionSlots = 1;
 };
