@@ -2,6 +2,7 @@
 
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Enemy/GYEnemyAIController.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
@@ -12,6 +13,7 @@
 #include "Inventory/InventoryEntry.h"
 #include "Items/ItemDefinition.h"
 #include "Kismet/GameplayStatics.h"
+#include "Logging/GYLogManager.h"
 #include "Loot/LootBoxActor.h"
 #include "Loot/LootTypes.h"
 #include "Enemy/GYEnemyCharacterBase.h"
@@ -302,6 +304,140 @@ void UGYCheatManager::GY_TakeAllLoot()
 	}
 
 	Server_TakeAllLoot(Box);
+}
+
+void UGYCheatManager::GY_AddCameraTag(const FString& TagName)
+{
+	APawn* Pawn = GetCheatPawn(this);
+
+	if (!IsValid(Pawn))
+	{
+		return;
+	}
+
+	IAbilitySystemInterface* ASI =
+		Cast<IAbilitySystemInterface>(Pawn);
+
+	if (!ASI)
+	{
+		return;
+	}
+
+	UGYAbilitySystemComponent* ASC =
+		Cast<UGYAbilitySystemComponent>(
+			ASI->GetAbilitySystemComponent());
+
+	if (!ASC)
+	{
+		return;
+	}
+
+	const FGameplayTag Tag =
+		FGameplayTag::RequestGameplayTag(
+			FName(*TagName),
+			false);
+
+	if (!Tag.IsValid())
+	{
+		GY_WARN(Player, CYS, "Invalid Tag: %s", *TagName);
+
+		return;
+	}
+
+	ASC->AddLooseGameplayTag(Tag);
+
+	GY_LOG(Player, CYS, "Added Camera Tag: %s", *Tag.ToString());
+}
+
+void UGYCheatManager::GY_RemoveCameraTag(const FString& TagName)
+{
+	APawn* Pawn = GetCheatPawn(this);
+
+	if (!IsValid(Pawn))
+	{
+		return;
+	}
+
+	IAbilitySystemInterface* ASI =
+		Cast<IAbilitySystemInterface>(Pawn);
+
+	if (!ASI)
+	{
+		return;
+	}
+
+	UGYAbilitySystemComponent* ASC =
+		Cast<UGYAbilitySystemComponent>(
+			ASI->GetAbilitySystemComponent());
+
+	if (!ASC)
+	{
+		return;
+	}
+
+	const FGameplayTag Tag =
+		FGameplayTag::RequestGameplayTag(
+			FName(*TagName),
+			false);
+
+	if (!Tag.IsValid())
+	{
+		return;
+	}
+
+	ASC->RemoveLooseGameplayTag(Tag);
+
+	GY_LOG(Player, CYS, "Removed Camera Tag: %s", *Tag.ToString());
+}
+
+void UGYCheatManager::GY_ToggleCameraTag(const FString& TagName)
+{
+	APawn* Pawn = GetCheatPawn(this);
+
+	if (!IsValid(Pawn))
+	{
+		return;
+	}
+
+	IAbilitySystemInterface* ASI =
+		Cast<IAbilitySystemInterface>(Pawn);
+
+	if (!ASI)
+	{
+		return;
+	}
+
+	UGYAbilitySystemComponent* ASC =
+		Cast<UGYAbilitySystemComponent>(
+			ASI->GetAbilitySystemComponent());
+
+	if (!ASC)
+	{
+		return;
+	}
+
+	const FGameplayTag Tag =
+		FGameplayTag::RequestGameplayTag(
+			FName(*TagName),
+			false);
+
+	if (!Tag.IsValid())
+	{
+		return;
+	}
+
+	if (ASC->HasMatchingGameplayTag(Tag))
+	{
+		ASC->RemoveLooseGameplayTag(Tag);
+
+		GY_LOG(Player, CYS, "Removed Camera Tag: %s", *Tag.ToString());
+	}
+	else
+	{
+		ASC->AddLooseGameplayTag(Tag);
+
+		GY_LOG(Player, CYS, "Added Camera Tag: %s", *Tag.ToString());
+	}
 }
 
 void UGYCheatManager::GY_SpawnEnemy(const FString& EnemyTypeName)

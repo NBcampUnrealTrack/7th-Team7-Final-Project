@@ -47,6 +47,15 @@ public:
 	UFUNCTION(Exec)
 	void GY_TakeAllLoot();
 
+	UFUNCTION(Exec)
+	void GY_AddCameraTag(const FString& TagName);
+
+	UFUNCTION(Exec)
+	void GY_RemoveCameraTag(const FString& TagName);
+
+	UFUNCTION(Exec)
+	void GY_ToggleCameraTag(const FString& TagName);
+
 	// Enemy Debug
 	UFUNCTION(Exec)
 	void GY_SpawnEnemy(const FString& EnemyTypeName);
