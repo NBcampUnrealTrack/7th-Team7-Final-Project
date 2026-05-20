@@ -115,8 +115,24 @@ void UGYCheatManager::GY_PrintInventory()
 	{
 		UItemDefinition* Def = Entry.Definition.LoadSynchronous();
 		const FName ItemId = IsValid(Def) ? Def->ItemId : NAME_None;
-		UE_LOG(LogTemp, Log, TEXT("  [%d] %s x%d (InstanceId=%s)"),
-			Index, *ItemId.ToString(), Entry.StackCount, *Entry.InstanceId.ToString());
+
+		FString OptionList;
+		for (const FName& OptionId : Entry.EnchantOptionIds)
+		{
+			if (!OptionList.IsEmpty()) OptionList += TEXT(",");
+			OptionList += OptionId.ToString();
+		}
+		if (OptionList.IsEmpty()) OptionList = TEXT("-");
+
+		UE_LOG(LogTemp, Log, TEXT("  [%d] %s x%d Lv%d Grade=%s Options=[%s] Dev=%.3f (InstanceId=%s)"),
+			Index,
+			*ItemId.ToString(),
+			Entry.StackCount,
+			Entry.Level,
+			*Entry.GradeTag.ToString(),
+			*OptionList,
+			Entry.StatDeviation,
+			*Entry.InstanceId.ToString());
 		++Index;
 	}
 }
