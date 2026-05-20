@@ -19,10 +19,11 @@ void FSkillTreeAssetEditor::InitEditor(
 	const TSharedPtr<IToolkitHost>& Host,
 	USkillTreeDataAsset* InAsset)
 {
+	ensureMsgf(InAsset, TEXT("InAsset is nullptr"));
+
 	SkillTreeAsset = InAsset;
 
-	EditorGraph = NewObject<USkillTreeGraph>(
-		GetTransientPackage(), NAME_None, RF_Transactional);
+	EditorGraph = NewObject<USkillTreeGraph>(InAsset, NAME_None, RF_Transactional);
 	EditorGraph->Schema = USkillTreeGraphSchema::StaticClass();
 
 	RebuildGraph();
@@ -51,15 +52,17 @@ void FSkillTreeAssetEditor::RegisterTabSpawners(
 {
 	FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 
-	InTabManager->RegisterTabSpawner(GraphTabId,
-	                                 FOnSpawnTab::CreateSP(this, &FSkillTreeAssetEditor::SpawnGraphTab))
-	            .SetDisplayName(NSLOCTEXT("SkillTree", "GraphTab", "Graph"))
-	            .SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "GraphEditor.EventGraph_16x"));
+	InTabManager->RegisterTabSpawner(
+		          GraphTabId,
+		          FOnSpawnTab::CreateSP(this, &FSkillTreeAssetEditor::SpawnGraphTab))
+	          .SetDisplayName(NSLOCTEXT("SkillTree", "GraphTab", "Graph"))
+	          .SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "GraphEditor.EventGraph_16x"));
 
-	InTabManager->RegisterTabSpawner(DetailsTabId,
-	                                 FOnSpawnTab::CreateSP(this, &FSkillTreeAssetEditor::SpawnDetailsTab))
-	            .SetDisplayName(NSLOCTEXT("SkillTree", "DetailsTab", "Details"))
-	            .SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Details"));
+	InTabManager->RegisterTabSpawner(
+		          DetailsTabId,
+		          FOnSpawnTab::CreateSP(this, &FSkillTreeAssetEditor::SpawnDetailsTab))
+	          .SetDisplayName(NSLOCTEXT("SkillTree", "DetailsTab", "Details"))
+	          .SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Details"));
 }
 
 void FSkillTreeAssetEditor::UnregisterTabSpawners(
@@ -133,24 +136,34 @@ void FSkillTreeAssetEditor::OnSelectionChanged(const TSet<UObject*>& Selected)
 {
 	TArray<UObject*> Objects;
 	for (UObject* Obj : Selected)
+	{
 		if (UEdGraphNode_SkillNode* N = Cast<UEdGraphNode_SkillNode>(Obj))
-			if (N->SkillAsset) Objects.Add(N->SkillAsset);
-
-	DetailsView->SetObjects(Objects.Num() > 0
-		                        ? Objects
-		                        : TArray<UObject*>{SkillTreeAsset});
+		{
+			if (N->SkillAsset)
+			{
+				Objects.Add(N->SkillAsset);
+			}
+		}
+	}
+	DetailsView->SetObjects(Objects.Num() > 0 ? Objects : TArray<UObject*>{SkillTreeAsset});
 }
 
 void FSkillTreeAssetEditor::OnNodeDoubleClicked(UEdGraphNode* Node)
 {
 	if (UEdGraphNode_SkillNode* N = Cast<UEdGraphNode_SkillNode>(Node))
+	{
 		if (N->SkillAsset)
+		{
 			GEditor->SyncBrowserToObjects(TArray<UObject*>{N->SkillAsset});
+		}
+	}
 }
 
-void FSkillTreeAssetEditor::NotifyPostChange(
-	const FPropertyChangedEvent&, FProperty*)
+void FSkillTreeAssetEditor::NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent,
+                                             FProperty* PropertyThatChanged)
 {
 	if (GraphEditor.IsValid())
+	{
 		GraphEditor->NotifyGraphChanged();
+	}
 }

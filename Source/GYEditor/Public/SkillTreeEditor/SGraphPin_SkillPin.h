@@ -14,8 +14,7 @@ public:
 protected:
 	virtual FSlateColor GetPinColor() const override;
 	virtual TSharedRef<SWidget> GetDefaultValueWidget() override;
-	virtual FVector2D ComputeDesiredSize(float) const override;
-
+	virtual FVector2D ComputeDesiredSize(float LayoutScaleMultiplier) const override;
 	virtual int32 OnPaint(
 		const FPaintArgs& Args, const FGeometry& AllottedGeometry,
 		const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements,

@@ -3,6 +3,7 @@
 
 #include "SkillTreeEditor/SkillTreeGraph.h"
 
+#include "FileHelpers.h"
 #include "SkillTree/SkillNodeDataAsset.h"
 #include "SkillTree/SkillTreeDataAsset.h"
 #include "SkillTreeEditor/EdGraphNode_SkillNode.h"
@@ -18,17 +19,26 @@ void USkillTreeGraph::RebuildGraphFromAsset(USkillTreeDataAsset* InAsset)
 	TQueue<USkillNodeDataAsset*> Queue;
 
 	for (USkillNodeDataAsset* Root : InAsset->RootNodes)
-		if (Root) Queue.Enqueue(Root);
+	{
+		if (Root)
+		{
+			Queue.Enqueue(Root);
+		}
+	}
 
 	while (!Queue.IsEmpty())
 	{
 		USkillNodeDataAsset* Current = nullptr;
 		Queue.Dequeue(Current);
+
 		if (!Current || AllSkills.Contains(Current)) continue;
+
 		AllSkills.Add(Current);
 
 		for (USkillNodeDataAsset* Child : Current->Children)
+		{
 			if (Child) Queue.Enqueue(Child);
+		}
 	}
 
 	for (USkillNodeDataAsset* SkillAsset : AllSkills)
@@ -58,7 +68,7 @@ void USkillTreeGraph::RebuildGraphFromAsset(USkillTreeDataAsset* InAsset)
 			UEdGraphNode_SkillNode** ParentNode = AssetToNodeMap.Find(ParentAsset);
 			if (!ParentNode) continue;
 			UEdGraphPin* Out = (*ParentNode)->GetOutputPin();
-			UEdGraphPin* In  = ChildNode->GetInputPin();
+			UEdGraphPin* In = ChildNode->GetInputPin();
 			if (Out && In) Out->MakeLinkTo(In);
 		}
 	}
@@ -68,16 +78,12 @@ void USkillTreeGraph::RebuildGraphFromAsset(USkillTreeDataAsset* InAsset)
 
 void USkillTreeGraph::CompileAsset(USkillTreeDataAsset* InAsset)
 {
+	if (false == IsValid(InAsset)) return;
+
 	InAsset->RootNodes.Empty();
 	InAsset->SkillNodePositions.Empty();
 
-	for (UEdGraphNode* Node : Nodes)
-	{
-		UEdGraphNode_SkillNode* SkillNode = Cast<UEdGraphNode_SkillNode>(Node);
-		if (!SkillNode || !SkillNode->SkillAsset) continue;
-		SkillNode->SkillAsset->Prerequisites.Empty();
-		SkillNode->SkillAsset->Children.Empty();
-	}
+	TArray<UPackage*> PackagesToSave;
 
 	for (UEdGraphNode* Node : Nodes)
 	{
@@ -87,6 +93,15 @@ void USkillTreeGraph::CompileAsset(USkillTreeDataAsset* InAsset)
 		InAsset->SkillNodePositions.Add(
 			SkillNode->SkillAsset->GetFName(),
 			FVector2D(SkillNode->NodePosX, SkillNode->NodePosY));
+
+		SkillNode->SkillAsset->Prerequisites.Empty();
+		SkillNode->SkillAsset->Children.Empty();
+	}
+
+	for (UEdGraphNode* Node : Nodes)
+	{
+		UEdGraphNode_SkillNode* SkillNode = Cast<UEdGraphNode_SkillNode>(Node);
+		if (!SkillNode || !SkillNode->SkillAsset) continue;
 
 		UEdGraphPin* InputPin = SkillNode->GetInputPin();
 		if (InputPin)
@@ -100,14 +115,27 @@ void USkillTreeGraph::CompileAsset(USkillTreeDataAsset* InAsset)
 					{
 						SkillNode->SkillAsset->Prerequisites.Add(Parent->SkillAsset);
 						Parent->SkillAsset->Children.Add(SkillNode->SkillAsset);
+
+						PackagesToSave.AddUnique(
+							Parent->SkillAsset->GetOutermost());
 					}
 				}
 			}
 		}
 
 		const bool bIsRoot = !InputPin || InputPin->LinkedTo.Num() == 0;
-		if (bIsRoot) InAsset->RootNodes.Add(SkillNode->SkillAsset);
+
+		if (bIsRoot)
+		{
+			InAsset->RootNodes.Add(SkillNode->SkillAsset);
+		}
+
+		PackagesToSave.AddUnique(SkillNode->SkillAsset->GetOutermost());
 	}
+
+	PackagesToSave.AddUnique(InAsset->GetOutermost());
+
+	FEditorFileUtils::PromptForCheckoutAndSave(PackagesToSave, false, false);
 
 	InAsset->MarkPackageDirty();
 }

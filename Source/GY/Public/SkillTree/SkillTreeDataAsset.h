@@ -18,7 +18,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SkillTree")
 	TArray<TObjectPtr<USkillNodeDataAsset>> RootNodes;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SkillTree")
 	TMap<FName, FVector2D> SkillNodePositions;
 
 

@@ -15,9 +15,7 @@ public:
 
     virtual void UpdateGraphNode() override;
     virtual void CreatePinWidgets() override;
-    virtual void AddPin(const TSharedRef<SGraphPin>& PinToAdd) override;
-    virtual FVector2D ComputeDesiredSize(float) const override;
-    virtual bool IsNameReadOnly() const override { return true; }
+    virtual FVector2D ComputeDesiredSize(float LayoutScaleMultiplier) const override;
 
     virtual int32 OnPaint(
         const FPaintArgs& Args,
@@ -31,6 +29,10 @@ public:
     virtual FReply OnMouseButtonDown(
         const FGeometry& MyGeometry,
         const FPointerEvent& MouseEvent) override;
+
+protected:
+    virtual void AddPin(const TSharedRef<SGraphPin>& PinToAdd) override;
+    virtual bool IsNameReadOnly() const override { return true; }
 
 private:
     void DrawCircle(
