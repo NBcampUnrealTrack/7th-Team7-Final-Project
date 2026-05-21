@@ -18,6 +18,9 @@ class GY_API UActiveEquipmentComponent : public UActorComponent
 public:
 	UActiveEquipmentComponent();
 
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	UEquipmentInstance* EquipItem(const struct FInventoryEntry& Entry);
 
 	UFUNCTION(BlueprintCallable)
@@ -30,6 +33,8 @@ public:
 
 	void OnLoadoutSlotChanged(FGameplayTag SlotTag, FGuid NewInstanceId);
 
+	void HandleItemEnchanted(FGuid InstanceId);
+
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -37,7 +42,10 @@ protected:
 	void RevokeAbilitySets(UEquipmentInstance* Instance);
 
 	void ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC);
+	void ApplyEnchantOptions(UEquipmentInstance* Instance, UItemDefinition* Def, const struct FInventoryEntry& Entry, UAbilitySystemComponent* ASC);
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Equipment")
 	FEquipmentList EquippedItems;
+
+	FDelegateHandle EnchantedHandle;
 };

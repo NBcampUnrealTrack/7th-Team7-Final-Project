@@ -1,8 +1,13 @@
 #include "Inventory/InventoryComponent.h"
 
+#include "Currency/CurrencyComponent.h"
+#include "Disassemble/DisassembleService.h"
+#include "Enchant/EnchantService.h"
+#include "Engine/GameInstance.h"
 #include "Items/ItemDefinition.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "Net/UnrealNetwork.h"
+#include "Player/GYPlayerState.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -105,6 +110,44 @@ const FInventoryEntry* UInventoryComponent::FindEntry(const FGuid& InstanceId) c
 	{
 		return Entry.InstanceId == InstanceId;
 	});
+}
+
+void UInventoryComponent::Server_RequestEnchant_Implementation(const FGuid& InstanceId)
+{
+	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwner());
+	if (!IsValid(PS)) return;
+
+	UCurrencyComponent* Currency = PS->GetCurrencyComponent();
+	if (!IsValid(Currency)) return;
+
+	UGameInstance* GI = GetWorld()->GetGameInstance();
+	if (!IsValid(GI)) return;
+
+	UEnchantService* Enchant = GI->GetSubsystem<UEnchantService>();
+	if (!IsValid(Enchant)) return;
+
+	FRandomStream Seed;
+	Seed.GenerateNewSeed();
+
+	TArray<FName> Rolled;
+	Enchant->TryEnchant(this, Currency, InstanceId, Seed, Rolled);
+}
+
+void UInventoryComponent::Server_RequestDisassemble_Implementation(const FGuid& InstanceId)
+{
+	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwner());
+	if (!IsValid(PS)) return;
+
+	UCurrencyComponent* Currency = PS->GetCurrencyComponent();
+	if (!IsValid(Currency)) return;
+
+	UGameInstance* GI = GetWorld()->GetGameInstance();
+	if (!IsValid(GI)) return;
+
+	UDisassembleService* Disassemble = GI->GetSubsystem<UDisassembleService>();
+	if (!IsValid(Disassemble)) return;
+
+	Disassemble->TryDisassemble(this, Currency, InstanceId);
 }
 
 TArray<FInventoryEntry> UInventoryComponent::GetAllEntriesByCategory(FGameplayTag CategoryTag) const

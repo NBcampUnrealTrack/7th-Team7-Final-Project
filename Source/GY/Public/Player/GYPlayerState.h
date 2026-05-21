@@ -7,6 +7,7 @@
 #include "GYPlayerState.generated.h"
 
 class UAbilitySystemComponent;
+class UCurrencyComponent;
 class UEquipmentLoadoutComponent;
 class UGYAbilitySystemComponent;
 class UInventoryComponent;
@@ -32,6 +33,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	UEquipmentLoadoutComponent* GetEquipmentLoadoutComponent() const { return EquipmentLoadoutComponent; }
 
+	UFUNCTION(BlueprintPure)
+	UCurrencyComponent* GetCurrencyComponent() const { return CurrencyComponent; }
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UGYAbilitySystemComponent> AbilitySystemComponent;
@@ -41,6 +45,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UEquipmentLoadoutComponent> EquipmentLoadoutComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UCurrencyComponent> CurrencyComponent;
 
 	UPROPERTY(VisibleAnywhere, Category="GAS")
 	TObjectPtr<UGYPlayerBaseAttribute> BaseAttribute;

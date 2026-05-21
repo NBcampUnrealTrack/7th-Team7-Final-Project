@@ -5,6 +5,7 @@
 #include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAdditionalAttribute.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "Currency/CurrencyComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Inventory/InventoryComponent.h"
 
@@ -30,6 +31,7 @@ AGYPlayerState::AGYPlayerState()
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	EquipmentLoadoutComponent = CreateDefaultSubobject<UEquipmentLoadoutComponent>(TEXT("EquipmentLoadoutComponent"));
+	CurrencyComponent = CreateDefaultSubobject<UCurrencyComponent>(TEXT("CurrencyComponent"));
 }
 
 UAbilitySystemComponent* AGYPlayerState::GetAbilitySystemComponent() const

@@ -92,6 +92,7 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 	Inv->MutateEntry(OutId, [&Drop](FInventoryEntry& Entry)
 	{
 		Entry.GradeTag = Drop.GradeTag;
+		Entry.Level = Drop.Level;
 		Entry.StatDeviation = Drop.StatDeviation;
 		Entry.EnchantOptionIds = Drop.RolledOptionIds;
 		Entry.EnhancementLevel = Drop.EnhancementLevel;

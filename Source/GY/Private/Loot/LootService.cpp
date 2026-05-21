@@ -1,5 +1,6 @@
 #include "Loot/LootService.h"
 
+#include "Enchant/EnchantOptionRoller.h"
 #include "Engine/DataTable.h"
 #include "Loot/LootTableRow.h"
 
@@ -61,12 +62,13 @@ FLootResult ULootService::RollLoot(const FLootContext& Context, UDataTable* Loot
 	FLootDrop Drop;
 	Drop.Definition = Picked->Definition;
 	Drop.Count = Stream.RandRange(Picked->MinCount, Picked->MaxCount);
+	Drop.GradeTag = Picked->GradeTag;
+	Drop.Level = Picked->Level;
 	Drop.StatDeviation = RollStatDeviation(Stream);
 	Drop.UsedSeed = Seed.GetInitialSeed();
+	Drop.RolledOptionIds = EnchantOptionRoller::RollAllOptions(Drop.Definition.LoadSynchronous(), Drop.GradeTag, Stream);
 
 	// TODO: CT_RegionScaling으로 Grade/Level 결정
-	// TODO: EnchantOption 풀 롤 → RolledOptionIds 채움
-	// TODO: Grade == Legendary 시 Penalty 자동 부여
 	// TODO: PartySize 보정
 
 	Result.Drops.Add(Drop);

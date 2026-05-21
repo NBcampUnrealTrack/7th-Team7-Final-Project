@@ -15,6 +15,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Item_Grade_Normal)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Item_Grade_Special)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Item_Grade_Legendary)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Item_Grade_Legendary_Engraved)
 
 	// Gem Type
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gem_Type_Inherent)
