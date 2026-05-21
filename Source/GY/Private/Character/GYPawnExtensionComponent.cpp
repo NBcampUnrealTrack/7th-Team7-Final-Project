@@ -5,6 +5,7 @@
 
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
+#include "Logging/GYLogManager.h"
 
 // 이 extcomp의 이름은 PawnExtension 임
 const FName UGYPawnExtensionComponent::NAME_ActorFeatureName("PawnExtension");
@@ -18,6 +19,7 @@ UGYPawnExtensionComponent::UGYPawnExtensionComponent(const FObjectInitializer& O
 bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
 	FGameplayTag DesiredState) const
 {
+
 	// 여기서 다음 상태로 넘어갈 조건이 충족되었는지 검사합니다.
 	check(Manager);
 
@@ -31,7 +33,8 @@ bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManage
 		}
 	}
 
-	if (CurrentState == GYGameplayTags::InitState_Spawned && DesiredState == GYGameplayTags::InitState_DataAvailable)
+	if (CurrentState == GYGameplayTags::InitState_Spawned &&
+		DesiredState == GYGameplayTags::InitState_DataAvailable)
 	{
 		// Pawn data is required.
 		if (!PawnData)
@@ -48,12 +51,24 @@ bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManage
 
 		return true;
 	}
-	else if (CurrentState == GYGameplayTags::InitState_DataAvailable && DesiredState ==
-		GYGameplayTags::InitState_DataInitialized)
+	if (CurrentState == GYGameplayTags::InitState_DataAvailable &&
+		DesiredState == GYGameplayTags::InitState_DataInitialized)
 	{
-		return Manager->HaveAllFeaturesReachedInitState(Pawn, GYGameplayTags::InitState_DataAvailable);
+		if (!Manager->HaveAllFeaturesReachedInitState(Pawn, GYGameplayTags::InitState_DataAvailable))
+		{
+			return false;
+		}
+
+		if (Pawn->IsLocallyControlled() && !Pawn->InputComponent)
+		{
+			return false;
+		}
+
+		return true;
 	}
-	else if (CurrentState == GYGameplayTags::InitState_DataInitialized && DesiredState == GYGameplayTags::InitState_GameplayReady)
+
+	if (CurrentState == GYGameplayTags::InitState_DataInitialized &&
+		DesiredState == GYGameplayTags::InitState_GameplayReady)
 	{
 		return true;
 	}
@@ -64,6 +79,7 @@ bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManage
 void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentManager* Manager,
 	FGameplayTag CurrentState, FGameplayTag DesiredState)
 {
+	GY_LOG(Player, KHB, "ExtComp : [%s] -> [%s]", *CurrentState.ToString(), *DesiredState.ToString());
 	//상태가 변했을 때 필요한 세팅(예: DataAvailable이 되면 PawnData를 캐싱함)
 	//이건 각 컴포넌트가 알아서 구현함.
 }
@@ -76,6 +92,7 @@ void UGYPawnExtensionComponent::OnActorInitStateChanged(const FActorInitStateCha
 
 void UGYPawnExtensionComponent::CheckDefaultInitialization()
 {
+	GY_LOG(Player, KHB, "ExtComp: CheckDefaultInitialization 호출됨");
 	// 조건들을 검사하고 ContinueInitStateChain()을 호출하여 상태 머신을 굴려주는 함수입니다.
 	static const TArray<FGameplayTag> StateChain = {
 		GYGameplayTags::InitState_Spawned, GYGameplayTags::InitState_DataAvailable,

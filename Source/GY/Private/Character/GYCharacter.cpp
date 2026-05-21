@@ -2,6 +2,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "Logging/GYLogManager.h"
+#include "Character/GYHeroComponent.h"
 #include "Character/GYPawnExtensionComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Equipment/ActiveEquipmentComponent.h"
@@ -58,6 +59,11 @@ void AGYCharacter::OnRep_Controller()
 	{
 		PawnExtComponent->CheckDefaultInitialization();
 	}
+	// HeroComp는 PawnExt가 정지해도 알림을 못 받으므로 직접 재트리거
+	if (UGYHeroComponent* HeroComp = FindComponentByClass<UGYHeroComponent>())
+	{
+		HeroComp->CheckDefaultInitialization();
+	}
 }
 
 void AGYCharacter::OnRep_PlayerState()
@@ -76,7 +82,11 @@ void AGYCharacter::OnRep_PlayerState()
 	{
 		PawnExtComponent->CheckDefaultInitialization();
 	}
-
+	// HeroComp는 PawnExt가 정지해도 알림을 못 받으므로 직접 재트리거
+	if (UGYHeroComponent* HeroComp = FindComponentByClass<UGYHeroComponent>())
+	{
+		HeroComp->CheckDefaultInitialization();
+	}
 }
 
 
@@ -101,6 +111,11 @@ void AGYCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 	{
 		// 멈춰있던 초기화 상태가 있다면 마저 진행하라고 체인을 다시 굴려줍니다.
 		PawnExtComponent->CheckDefaultInitialization();
+	}
+	// HeroComp는 PawnExt가 정지해도 알림을 못 받으므로 직접 재트리거
+	if (UGYHeroComponent* HeroComp = FindComponentByClass<UGYHeroComponent>())
+	{
+		HeroComp->CheckDefaultInitialization();
 	}
 }
 
