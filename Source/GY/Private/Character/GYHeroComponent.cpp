@@ -43,18 +43,21 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 	{
 
 
-		// Pawn->PlayerState 자체가 유효해야 함. 아래 Controller 체크와 합쳐 폰-PS-컨트롤러 트리오 확보.
 		if (!GetPlayerState<AGYPlayerState>())
 		{
 			return false;
 		}
-		// Authority/Autonomous는 컨트롤러도 있어야 함.
-		// Owner pairing(PlayerState->GetOwner() == Controller)은 별개 actor channel로 replicate되어
-		// cross-reference resolve 타이밍이 불확정. 트리거 ordering 운에 맡기지 않기 위해 검사 제외.
-		// Pawn->PlayerState가 유효한 시점이면 게임플레이상 충분하다.
+		// Authority/Autonomous는 Pawn-Controller-PlayerState 트리오가 완전히 paired될 때까지 대기.
+		// 다른 trigger들(OnRep_*, SetupPlayerInputComponent)이 있어 race로 영구 정지하지 않음.
 		if (Pawn->GetLocalRole() != ROLE_SimulatedProxy)
 		{
-			if (!IsValid(GetController<AController>()))
+			AController* Controller = GetController<AController>();
+
+			const bool bHasControllerPairedWithPS = (Controller != nullptr) &&
+				(Controller->PlayerState != nullptr) &&
+				(Controller->PlayerState->GetOwner() == Controller);
+
+			if (!bHasControllerPairedWithPS)
 			{
 				return false;
 			}
