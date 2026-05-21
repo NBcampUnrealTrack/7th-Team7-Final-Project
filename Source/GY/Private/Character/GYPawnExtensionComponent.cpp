@@ -93,7 +93,12 @@ void UGYPawnExtensionComponent::OnActorInitStateChanged(const FActorInitStateCha
 void UGYPawnExtensionComponent::CheckDefaultInitialization()
 {
 	GY_LOG(Player, KHB, "ExtComp: CheckDefaultInitialization 호출됨");
-	// 조건들을 검사하고 ContinueInitStateChain()을 호출하여 상태 머신을 굴려주는 함수입니다.
+
+	// 같은 액터의 모든 init-state 컴포넌트(Hero 등)에게도 체인 재검사 기회를 준다.
+	// 외부 이벤트(OnRep_Controller 등)로 PawnExt가 트리거됐을 때 본인만 굴리면
+	// 이미 진행된 PawnExt는 노옵이라 Hero가 영영 깨어나지 못한다.
+	CheckDefaultInitializationForImplementers();
+
 	static const TArray<FGameplayTag> StateChain = {
 		GYGameplayTags::InitState_Spawned, GYGameplayTags::InitState_DataAvailable,
 		GYGameplayTags::InitState_DataInitialized, GYGameplayTags::InitState_GameplayReady
