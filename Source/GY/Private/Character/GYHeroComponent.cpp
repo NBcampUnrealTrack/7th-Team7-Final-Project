@@ -40,7 +40,8 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 		}
 	}
 
-	if (CurrentState == GYGameplayTags::InitState_Spawned && DesiredState == GYGameplayTags::InitState_DataAvailable)
+	if (CurrentState == GYGameplayTags::InitState_Spawned &&
+		DesiredState == GYGameplayTags::InitState_DataAvailable)
 	{
 
 
@@ -65,14 +66,18 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 
 		return true;
 	}
-	else if (CurrentState == GYGameplayTags::InitState_DataAvailable && DesiredState ==
-		GYGameplayTags::InitState_DataInitialized)
+
+	if (CurrentState == GYGameplayTags::InitState_DataAvailable &&
+		DesiredState== GYGameplayTags::InitState_DataInitialized)
 	{
-		return Manager->HasFeatureReachedInitState(Pawn, UGYPawnExtensionComponent::NAME_ActorFeatureName,
-												   GYGameplayTags::InitState_DataInitialized);
+		return Manager->HasFeatureReachedInitState(
+			Pawn,
+			UGYPawnExtensionComponent::NAME_ActorFeatureName,
+			GYGameplayTags::InitState_DataInitialized);
 	}
-	else if (CurrentState == GYGameplayTags::InitState_DataInitialized && DesiredState ==
-		GYGameplayTags::InitState_GameplayReady)
+
+	if (CurrentState == GYGameplayTags::InitState_DataInitialized &&
+		DesiredState ==GYGameplayTags::InitState_GameplayReady)
 	{
 		return true;
 	}
@@ -83,7 +88,7 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
 	FGameplayTag DesiredState)
 {
-	GY_LOG(Player, KHB, "HandleChangeInitState: [%s] -> [%s]", *CurrentState.ToString(), *DesiredState.ToString());
+	GY_LOG(Player, KHB, "HeroComp : [%s] -> [%s]", *CurrentState.ToString(), *DesiredState.ToString());
 
 	// 내가 DataInitialized 단계에 무사히 진입했다면(즉, PawnExtension도 준비가 끝났다면) 입력을 세팅합니다.
 	if (DesiredState == GYGameplayTags::InitState_DataInitialized)
