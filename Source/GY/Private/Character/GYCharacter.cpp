@@ -20,6 +20,11 @@ void AGYCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
+	if (PawnExtComponent)
+	{
+		PawnExtComponent->CheckDefaultInitialization();
+	}
+
 	if (!HasAuthority()) return;
 
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
@@ -43,12 +48,6 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	{
 		ActiveEquipmentComponent->OnLoadoutSlotChanged(Entry.SlotTag, Entry.InstanceId);
 	}
-
-	if (PawnExtComponent)
-	{
-		PawnExtComponent->CheckDefaultInitialization();
-	}
-
 }
 
 void AGYCharacter::OnRep_Controller()
@@ -66,6 +65,11 @@ void AGYCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
+	if (PawnExtComponent)
+	{
+		PawnExtComponent->CheckDefaultInitialization();
+	}
+
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!IsValid(PS)) return;
 
@@ -73,12 +77,6 @@ void AGYCharacter::OnRep_PlayerState()
 	{
 		ASC->InitAbilityActorInfo(PS, this);
 	}
-
-	if (PawnExtComponent)
-	{
-		PawnExtComponent->CheckDefaultInitialization();
-	}
-
 }
 
 
