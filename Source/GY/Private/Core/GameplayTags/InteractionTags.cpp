@@ -3,4 +3,5 @@
 namespace GYGameplayTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(Interaction_Open_LootBox, "Interaction.Open.LootBox");
+	UE_DEFINE_GAMEPLAY_TAG(Interaction_Open_Door, "Interaction.Open.Door")
 }
