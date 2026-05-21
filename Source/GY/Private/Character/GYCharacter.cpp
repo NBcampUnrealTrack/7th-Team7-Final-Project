@@ -42,6 +42,22 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	{
 		ActiveEquipmentComponent->OnLoadoutSlotChanged(Entry.SlotTag, Entry.InstanceId);
 	}
+
+	if (PawnExtComponent)
+	{
+		PawnExtComponent->CheckDefaultInitialization();
+	}
+
+}
+
+void AGYCharacter::OnRep_Controller()
+{
+	Super::OnRep_Controller();
+
+	if (PawnExtComponent)
+	{
+		PawnExtComponent->CheckDefaultInitialization();
+	}
 }
 
 void AGYCharacter::OnRep_PlayerState()
@@ -55,7 +71,15 @@ void AGYCharacter::OnRep_PlayerState()
 	{
 		ASC->InitAbilityActorInfo(PS, this);
 	}
+
+	if (PawnExtComponent)
+	{
+		PawnExtComponent->CheckDefaultInitialization();
+	}
+
 }
+
+
 
 UAbilitySystemComponent* AGYCharacter::GetAbilitySystemComponent() const
 {
