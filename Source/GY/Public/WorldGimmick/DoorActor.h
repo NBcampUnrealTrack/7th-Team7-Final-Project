@@ -25,8 +25,11 @@ public:
 	virtual void GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOption) const override;
 	virtual void OnInteract(FGameplayTag OptionTag, APawn* Interactor) override;
 
+	bool GetDoorState() const;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
 	TObjectPtr<UStaticMeshComponent> DoorFrameMesh;
+
 
 protected:
 	void DoorMove();
@@ -40,7 +43,6 @@ protected:
 
 	UFUNCTION()
 	void OnRep_Open();
-
 
 	UPROPERTY(ReplicatedUsing = OnRep_Open)
 	bool bIsOpen = false;

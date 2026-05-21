@@ -21,9 +21,16 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
+	// beginplay용 세팅 함수
+protected:
+	void InitializeDoorMesh();
+	void SyncDoorState();
+	void InitializeTimeline();
+
+public:
 	void SetOpen(const bool bOpen);
 
-	//uproperty가 위로
+	// uproperty가 위로 가게 정렬
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
 	FComponentReference DoorMeshRef;
@@ -43,9 +50,13 @@ protected:
 	UFUNCTION()
 	void OnTimelineUpdate(float Value);
 
+	UFUNCTION()
+	void OnTimelineFinished();
+
 	FVector StartLocation;
 	FRotator StartRotation;
 	FVector EndLocation;
 	FRotator EndRotation;
 	FTimeline MoveTimeline;
+	bool bIsOpen = false;
 };

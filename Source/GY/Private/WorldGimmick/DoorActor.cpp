@@ -23,6 +23,8 @@ void ADoorActor::BeginPlay()
 	Super::BeginPlay();
 
 	GetComponents<UDoorMovementComponent>(DoorComponents);
+
+	DoorInitialize();
 }
 
 void ADoorActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOption) const
@@ -41,7 +43,11 @@ void ADoorActor::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 	}
 
 	DoorMove();
-	OnRep_Open();
+}
+
+bool ADoorActor::GetDoorState() const
+{
+	return bIsOpen;
 }
 
 void ADoorActor::DoorMove()
@@ -51,7 +57,7 @@ void ADoorActor::DoorMove()
 		return;
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("DoorMove Function Called!"));
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("InitializeTimeline Function Called!"));
 
 	bIsOpen = !bIsOpen;
 
