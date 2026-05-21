@@ -44,6 +44,7 @@ void AGYPlayerController::BeginPlay()
 		{
 			UIManager->PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDWidgetClass);
 		}
+		EnableCheats();
 	}
 }
 
