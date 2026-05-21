@@ -4,6 +4,7 @@
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 
 #include "AbilitySystemComponent.h"
+#include "Animation/AnimMontage.h"
 #include "AbilitySystem/Abilities/Fragment/AbilityFragment.h"
 #include "AbilitySystem/Abilities/Fragment/AbilityFragmentModifierComponent.h"
 #include "AbilitySystem/Abilities/Fragment/AbilityFragmentRegistry.h"
@@ -282,6 +283,13 @@ void UGYPlayerGameplayAbility::OnGameplayEventDispatched(FGameplayEventData Payl
 		}
 	}
 
+}
+
+float UGYPlayerGameplayAbility::PlayMontageForLogic(UAnimMontage* Montage, float PlayRate)
+{
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return 0.f;
+	return ASC->PlayMontage(this, CurrentActivationInfo, Montage, PlayRate);
 }
 
 AGYCharacter* UGYPlayerGameplayAbility::GetGYCharacter() const

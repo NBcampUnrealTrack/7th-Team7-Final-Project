@@ -12,7 +12,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Equipment_Slot_Accessory2)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Equipment_Slot_Accessory3)
 
-	// Weapon Type (Mastery key와 동일)
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_Sword)
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_Greatsword)
+	// Weapon Type
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_Unarmed)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_SwordAndShield)
 }
