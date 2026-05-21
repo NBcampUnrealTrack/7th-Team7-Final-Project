@@ -15,4 +15,10 @@ namespace GYGameplayTags
 	// Inventory events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Inventory_ItemAdded)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Inventory_ItemRemoved)
+
+	// Attack events
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Anim_Attack_DoTrace)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Anim_ComboWindowOpen)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Anim_ComboWindowClose)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Input_Attack)
 }
