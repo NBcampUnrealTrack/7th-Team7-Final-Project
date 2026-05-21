@@ -29,6 +29,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|UI", meta=(AllowPrivateAccess=true))
 	TSubclassOf<UCommonActivatableWidget> HUDWidgetClass;
 public:
+
 	UPROPERTY(Replicated)
 	TObjectPtr<AGYServerCheatProxy> ServerCheatProxy;
 };

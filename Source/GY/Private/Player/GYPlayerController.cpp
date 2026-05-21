@@ -17,7 +17,7 @@ AGYPlayerController::AGYPlayerController()
 void AGYPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
+#if !UE_BUILD_SHIPPING
 	if (HasAuthority())
 	{
 		FActorSpawnParameters Params;
@@ -25,7 +25,7 @@ void AGYPlayerController::BeginPlay()
 		ServerCheatProxy = GetWorld()->SpawnActor<AGYServerCheatProxy>(Params);
 		ServerCheatProxy->OwnerController = this;
 	}
-
+#endif
 	// 안정성 체크 -> UI 서버 생성 차단
 	if (IsLocalController())
 	{
@@ -50,7 +50,10 @@ void AGYPlayerController::BeginPlay()
 void AGYPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+#if !UE_BUILD_SHIPPING
 	DOREPLIFETIME(AGYPlayerController,ServerCheatProxy);
+#endif
 }
 
 void AGYPlayerController::SetupInputComponent()
