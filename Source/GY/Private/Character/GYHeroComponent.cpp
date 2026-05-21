@@ -31,13 +31,11 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 	check(Manager);
 
 	APawn* Pawn = GetPawn<APawn>();
+	if (!Pawn) return false;
 
 	if (DesiredState == GYGameplayTags::InitState_Spawned)
 	{
-		if (Pawn)
-		{
-			return true;
-		}
+		return true;
 	}
 
 	if (CurrentState == GYGameplayTags::InitState_Spawned &&
@@ -45,20 +43,18 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 	{
 
 
+		// Pawn->PlayerState 자체가 유효해야 함. 아래 Controller 체크와 합쳐 폰-PS-컨트롤러 트리오 확보.
 		if (!GetPlayerState<AGYPlayerState>())
 		{
 			return false;
 		}
-		//If we're authority or autonomous, we need to wait for a controller with registered ownership of the player state.
+		// Authority/Autonomous는 컨트롤러도 있어야 함.
+		// Owner pairing(PlayerState->GetOwner() == Controller)은 별개 actor channel로 replicate되어
+		// cross-reference resolve 타이밍이 불확정. 트리거 ordering 운에 맡기지 않기 위해 검사 제외.
+		// Pawn->PlayerState가 유효한 시점이면 게임플레이상 충분하다.
 		if (Pawn->GetLocalRole() != ROLE_SimulatedProxy)
 		{
-			AController* Controller = GetController<AController>();
-
-			const bool bHasControllerPairedWithPS = (Controller != nullptr) && \
-				(Controller->PlayerState != nullptr) && \
-				(Controller->PlayerState->GetOwner() == Controller);
-
-			if (!bHasControllerPairedWithPS)
+			if (!IsValid(GetController<AController>()))
 			{
 				return false;
 			}
@@ -95,6 +91,9 @@ void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 	{
 		APawn* Pawn = GetPawn<APawn>();
 		if (!Pawn) return;
+		// 서버가 보는 원격 클라 폰에는 InputComponent가 없는 게 정상이므로 시도 자체를 막는다.
+		if (!Pawn->IsLocallyControlled()) return;
+
 		if (UInputComponent* PlayerInputComponent = Pawn->InputComponent)
 		{
 			GY_LOG(Player, KHB, "InitializePlayerInput 호출. IC 클래스: %s", *PlayerInputComponent->GetClass()->GetName());
