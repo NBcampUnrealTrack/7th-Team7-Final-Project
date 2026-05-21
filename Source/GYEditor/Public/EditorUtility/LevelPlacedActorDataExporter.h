@@ -19,16 +19,16 @@ public:
 	ULevelPlacedActorDataExporter();
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RegionData")
-	FString OutputPath = TEXT("/Game/GY/RegionData");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorGuidData")
+	FString OutputPath = TEXT("/Game/GY/Data/Tables/ActorGuidData");
 
 private:
-	UFUNCTION(CallInEditor, Category = "RegionData")
+	UFUNCTION(CallInEditor, Category = "ActorGuidData")
 	void ExportMonsterData();
 
 private:
 #if WITH_EDITOR
-	TMap<FName, TArray<FActorRegionTableRow>> DataLayerMonsterMap;
+	TSet<FGuid> ActorGuidSet;
 
 	void CollectActorsFromWorld(UWorld* World);
 	UDataTable* BuildActorRegionTable();
