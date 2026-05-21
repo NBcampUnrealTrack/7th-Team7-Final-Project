@@ -1,9 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿#include "Camera/GYCameraComponent.h"
 
-
-#include "Camera/GYCameraComponent.h"
-
+#include "AbilitySystemInterface.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/GYCameraModeData.h"
 #include "Character/GYPawnExtensionComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
@@ -64,6 +64,11 @@ void UGYCameraComponent::HandleChangeInitState(UGameFrameworkComponentManager* M
 		APawn* Pawn = GetPawn<APawn>();
 		if (!Pawn || !Pawn->GetRootComponent()) return;
 
+		if (!Pawn->IsLocallyControlled())
+		{
+			return;
+		}
+
 		// 1. 런타임에 스프링 암 동적 생성(NewObject) 및 세팅
 		SpringArmComponent = NewObject<USpringArmComponent>(Pawn, TEXT("SpringArmComponent"));
 		if (SpringArmComponent)
@@ -71,7 +76,6 @@ void UGYCameraComponent::HandleChangeInitState(UGameFrameworkComponentManager* M
 			SpringArmComponent->SetupAttachment(Pawn->GetRootComponent());
 			SpringArmComponent->TargetArmLength = 800.0f;
 			SpringArmComponent->bUsePawnControlRotation = false; // 회전 연동 끄기
-
 
 			SpringArmComponent->SetUsingAbsoluteRotation(true);
 			SpringArmComponent->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));
@@ -81,8 +85,7 @@ void UGYCameraComponent::HandleChangeInitState(UGameFrameworkComponentManager* M
 			SpringArmComponent->bInheritPitch = false;
 			SpringArmComponent->bInheritYaw = false;
 			SpringArmComponent->bInheritRoll = false;
-			// 탑뷰는 천장이나 벽에 카메라가 부딪혀서 화면으로 훅 당겨지는 현상을 보통 끕니다.
-			SpringArmComponent->bDoCollisionTest = false;
+
 			SpringArmComponent->RegisterComponent(); // 런타임 생성 컴포넌트는 반드시 수동으로 레지스터 호출 - 오너등록
 		}
 
@@ -94,6 +97,10 @@ void UGYCameraComponent::HandleChangeInitState(UGameFrameworkComponentManager* M
 			CameraComponent->bUsePawnControlRotation = false;
 			CameraComponent->RegisterComponent();
 		}
+		// 카메라 모드 초기 세팅
+		InitializeCameraModes();
+		RegisterCameraTagEvents();
+		ResolveCameraMode();
 	}
 }
 
@@ -125,6 +132,7 @@ void UGYCameraComponent::BeginPlay()
 	BindOnActorInitStateChanged(UGYPawnExtensionComponent::NAME_ActorFeatureName, FGameplayTag(), false);
 	ensure(TryToChangeInitState(GYGameplayTags::InitState_Spawned));
 	CheckDefaultInitialization();
+	SetIsReplicated(false); //로컬에서 계산
 }
 
 void UGYCameraComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -133,3 +141,226 @@ void UGYCameraComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+/* 카메라 모드 제어 */
+void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+                                       FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	APawn* Pawn = GetPawn<APawn>();
+
+	//로컬에서만 실행
+	if (!Pawn || !Pawn->IsLocallyControlled())
+	{
+		return;
+	}
+
+	if (!CurrentCameraMode)
+	{
+		return;
+	}
+
+	FGYCameraView NewView;
+
+	CurrentCameraMode->UpdateCamera(
+		DeltaTime,
+		NewView);
+
+	// 현재 > 목표 까지 보간
+	CurrentView.PivotLocation =
+		FMath::VInterpTo(
+			CurrentView.PivotLocation,
+			NewView.PivotLocation,
+			DeltaTime,
+			NewView.LocationInterpSpeed);
+
+	CurrentView.TargetArmLength =
+		FMath::FInterpTo(
+			CurrentView.TargetArmLength,
+			NewView.TargetArmLength,
+			DeltaTime,
+			NewView.ZoomInterpSpeed);
+
+	CurrentView.FOV =
+		FMath::FInterpTo(
+			CurrentView.FOV,
+			NewView.FOV,
+			DeltaTime,
+			NewView.FOVInterpSpeed);
+
+	ApplyCameraView(CurrentView);
+}
+
+void UGYCameraComponent::InitializeCameraModes()
+{
+	//데이터 에셋 캐싱
+	CameraModeMap.Empty();
+
+	for (UGYCameraModeData* Data : CameraModeAssets)
+	{
+		if (!Data)
+		{
+			continue;
+		}
+		CameraModeMap.Add(Data->CameraModeTag, Data);
+	}
+}
+
+void UGYCameraComponent::RegisterCameraTagEvents()
+{
+	// 게임플레이 태그 변경 시 카메라 모드 갱신
+	UGYAbilitySystemComponent* ASC =
+		GetAbilitySystemComponent();
+
+	if (!ASC)
+	{
+		return;
+	}
+
+	for (const auto& Pair : CameraModeMap)
+	{
+		ASC->RegisterGameplayTagEvent(
+			   Pair.Key,
+			   EGameplayTagEventType::NewOrRemoved)
+		   .AddUObject(
+			   this,
+			   &UGYCameraComponent::OnCameraTagChanged
+		   );
+	}
+}
+
+void UGYCameraComponent::ResolveCameraMode()
+{
+	// 우선 순위 비교 후 모드 결정
+	UGYAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+
+	if (!ASC)
+	{
+		SetCameraMode(DefaultCameraMode);
+		return;
+	}
+
+	UGYCameraModeData* BestMode = DefaultCameraMode;
+	int32 BestPriority = -9999;
+
+	for (const auto& Pair : CameraModeMap)
+	{
+		const FGameplayTag& Tag = Pair.Key;
+		UGYCameraModeData* Data = Pair.Value;
+
+		if (!Data)
+		{
+			continue;
+		}
+
+		if (ASC->HasMatchingGameplayTag(Tag))
+		{
+			if (Data->Priority > BestPriority)
+			{
+				BestPriority = Data->Priority;
+				BestMode = Data;
+			}
+		}
+	}
+
+	if (CurrentCameraMode &&
+		CurrentCameraMode->GetCameraData() == BestMode)
+	{
+		return;
+	}
+
+	SetCameraMode(BestMode);
+}
+
+void UGYCameraComponent::SetCameraMode(UGYCameraModeData* NewModeData)
+{
+	if (!NewModeData)
+	{
+		return;
+	}
+	// 같으면 생략
+	if (CurrentCameraMode && CurrentCameraMode->GetCameraData() == NewModeData)
+	{
+		return;
+	}
+	// 이미 존재하는거 제거
+	if (CurrentCameraMode)
+	{
+		CurrentCameraMode->ExitMode();
+	}
+
+	CurrentCameraMode = nullptr;
+
+	// 모드 세팅
+	if (NewModeData->CameraModeClass)
+	{
+		CurrentCameraMode =
+			NewObject<UGYCameraModeBase>(
+				this,
+				NewModeData->CameraModeClass);
+
+		if (CurrentCameraMode)
+		{
+			CurrentCameraMode->Initialize(this, NewModeData);
+			CurrentCameraMode->EnterMode();
+
+			// 보간 시작점을 새 모드의 목표값으로 맞춰 첫 프레임에 카메라가 순간 이동하는 현상 방지
+			// SetCameraMode가 여러 번 호출될 수 있으므로 최초 1회만 실행
+			if (!bInitializedView)
+			{
+				FGYCameraView InitialView;
+
+				CurrentCameraMode->UpdateCamera(
+					0.f,
+					InitialView);
+
+				CurrentView = InitialView;
+
+				ApplyCameraView(CurrentView);
+
+				bInitializedView = true;
+			}
+		}
+	}
+}
+
+void UGYCameraComponent::ApplyCameraView(const FGYCameraView& View) const
+{
+	// 뷰 적용
+	if (!SpringArmComponent || !CameraComponent)
+	{
+		return;
+	}
+
+	SpringArmComponent->TargetArmLength = View.TargetArmLength;
+	SpringArmComponent->SocketOffset = View.SocketOffset;
+	SpringArmComponent->SetWorldLocation(View.PivotLocation);
+
+	CameraComponent->SetFieldOfView(View.FOV);
+}
+
+UGYAbilitySystemComponent* UGYCameraComponent::GetAbilitySystemComponent() const
+{
+	APawn* Pawn = GetPawn<APawn>();
+
+	if (!Pawn)
+	{
+		return nullptr;
+	}
+
+	if (IAbilitySystemInterface* ASI =
+		Cast<IAbilitySystemInterface>(Pawn))
+	{
+		return Cast<UGYAbilitySystemComponent>(
+			ASI->GetAbilitySystemComponent());
+	}
+
+	return nullptr;
+}
+
+void UGYCameraComponent::OnCameraTagChanged(
+	const FGameplayTag Tag,
+	int32 NewCount)
+{
+	ResolveCameraMode();
+}
