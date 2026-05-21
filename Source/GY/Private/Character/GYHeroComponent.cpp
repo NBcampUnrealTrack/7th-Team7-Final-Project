@@ -50,6 +50,8 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 			return false;
 		}
 		//If we're authority or autonomous, we need to wait for a controller with registered ownership of the player state.
+		//번역 : "만약 우리가 권한(Authority)을 가지고 있거나 자율(Autonomous) 상태라면,
+		//플레이어 스테이트(Player State)의 소유권이 등록된 컨트롤러를 기다려야 합니다."
 		if (Pawn->GetLocalRole() != ROLE_SimulatedProxy)
 		{
 			AController* Controller = GetController<AController>();
@@ -64,13 +66,21 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 			}
 		}
 
+
 		return true;
 	}
 
 	if (CurrentState == GYGameplayTags::InitState_DataAvailable &&
 		DesiredState== GYGameplayTags::InitState_DataInitialized)
 	{
-		return Manager->HasFeatureReachedInitState(
+		AGYPlayerState* GYPlayerState = GetPlayerState<AGYPlayerState>();
+
+		if (Pawn->IsLocallyControlled() && !Pawn->InputComponent)
+		{
+			return false;
+		}
+		return GYPlayerState &&
+			Manager->HasFeatureReachedInitState(
 			Pawn,
 			UGYPawnExtensionComponent::NAME_ActorFeatureName,
 			GYGameplayTags::InitState_DataInitialized);
@@ -94,7 +104,9 @@ void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 	if (DesiredState == GYGameplayTags::InitState_DataInitialized)
 	{
 		APawn* Pawn = GetPawn<APawn>();
-		if (!Pawn) return;
+		AGYPlayerState* GYPlayerState = GetPlayerState<AGYPlayerState>();
+		if (!Pawn || !GYPlayerState) return;
+
 		if (UInputComponent* PlayerInputComponent = Pawn->InputComponent)
 		{
 			GY_LOG(Player, KHB, "InitializePlayerInput 호출. IC 클래스: %s", *PlayerInputComponent->GetClass()->GetName());
@@ -102,18 +114,26 @@ void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 		}
 		else
 		{
-			GY_ERROR(Player, KHB, "Pawn->InputComponent가 null - 입력 초기화 스킵됨");
+			GY_ERROR(Player, KHB, "Pawn->InputComponent가 null - 입력 초기화 스킵됨 -서버");
 		}
 	}
 }
 
 void UGYHeroComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
 {
-	CheckDefaultInitialization();
+	if (Params.FeatureName == UGYPawnExtensionComponent::NAME_ActorFeatureName)
+	{
+		if (Params.FeatureState == GYGameplayTags::InitState_DataInitialized)
+		{
+			// If the extension component says all all other components are initialized, try to progress to next state
+			CheckDefaultInitialization();
+		}
+	}
 }
 
 void UGYHeroComponent::CheckDefaultInitialization()
 {
+	GY_LOG(Player, KHB, "HeroComp: CheckDefaultInitialization 호출됨");
 	// 초기화 체인 굴리기 시작
 	static const TArray<FGameplayTag> StateChain = {
 		GYGameplayTags::InitState_Spawned,

@@ -54,17 +54,7 @@ bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManage
 	if (CurrentState == GYGameplayTags::InitState_DataAvailable &&
 		DesiredState == GYGameplayTags::InitState_DataInitialized)
 	{
-		if (!Manager->HaveAllFeaturesReachedInitState(Pawn, GYGameplayTags::InitState_DataAvailable))
-		{
-			return false;
-		}
-
-		if (Pawn->IsLocallyControlled() && !Pawn->InputComponent)
-		{
-			return false;
-		}
-
-		return true;
+		return Manager->HaveAllFeaturesReachedInitState(Pawn, GYGameplayTags::InitState_DataAvailable);
 	}
 
 	if (CurrentState == GYGameplayTags::InitState_DataInitialized &&
@@ -87,12 +77,22 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 void UGYPawnExtensionComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
 {
 	// 다른 컴포넌트(예: HeroComponent)가 준비되었다는 소식을 들으면, 나도 다음 단계로 넘어갈 수 있는지 체크합니다.
-	CheckDefaultInitialization();
+	// If another feature is now in DataAvailable, see if we should transition to DataInitialized
+	// 본인이 아닐 때 실행
+	if (Params.FeatureName != NAME_ActorFeatureName)
+	{
+		if (Params.FeatureState == GYGameplayTags::InitState_DataAvailable)
+		{
+			CheckDefaultInitialization();
+		}
+	}
 }
 
 void UGYPawnExtensionComponent::CheckDefaultInitialization()
 {
 	GY_LOG(Player, KHB, "ExtComp: CheckDefaultInitialization 호출됨");
+
+	CheckDefaultInitializationForImplementers();
 	// 조건들을 검사하고 ContinueInitStateChain()을 호출하여 상태 머신을 굴려주는 함수입니다.
 	static const TArray<FGameplayTag> StateChain = {
 		GYGameplayTags::InitState_Spawned, GYGameplayTags::InitState_DataAvailable,
