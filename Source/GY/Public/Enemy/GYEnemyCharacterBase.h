@@ -66,6 +66,8 @@ protected:
 	//TODO 은서 : Enemy Attribute에 세팅 해야함.
 	void InitStatsFromDataTable();
 
+	void TryGrantGASFromDataAsset();
+
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
 	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
 
@@ -106,6 +108,8 @@ protected:
 	TObjectPtr<UGYEnemyAdditionalAttribute> AdditionalAttribute;
 
 	bool bIsDead = false;
+
+	bool bGASGrantedFromDataAsset = false;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category ="Enemy|Anim")
 	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> MontageMap;

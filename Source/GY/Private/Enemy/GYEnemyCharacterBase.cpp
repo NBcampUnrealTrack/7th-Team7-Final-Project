@@ -120,8 +120,9 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 
 	if (HasAuthority())
 	{
-		ApplyAIConfig(LoadedDataAsset->AIConfig);
 		InitStatsFromDataTable();
+		ApplyAIConfig(LoadedDataAsset->AIConfig);
+		TryGrantGASFromDataAsset();
 	}
 }
 
@@ -172,20 +173,14 @@ void AGYEnemyCharacterBase::InitGAS()
 	AbilitySystemComponent->InitAbilityActorInfo(this,this);
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
-		UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
-		.AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
+        UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
+        .AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
 
-	const FGameplayTag StunTag = GYStateTags::State_Hit_Stun;
 	AbilitySystemComponent->RegisterGameplayTagEvent(
-		StunTag, EGameplayTagEventType::NewOrRemoved)
+		GYStateTags::State_Hit_Stun, EGameplayTagEventType::NewOrRemoved)
 		.AddUObject(this, &AGYEnemyCharacterBase::OnStunTagChanged);
 
-	if (HasAuthority() && LoadedDataAsset)
-	{
-		ApplyInitStatEffect();
-		ApplyPassiveEffects();
-		GrantDefaultAbilities();
-	}
+	TryGrantGASFromDataAsset();
 }
 
 void AGYEnemyCharacterBase::GrantDefaultAbilities()
@@ -247,6 +242,23 @@ void AGYEnemyCharacterBase::InitStatsFromDataTable()
 	if (!Row) return;
 
 	GetCharacterMovement()->MaxWalkSpeed = Row->MoveSpeed;
+}
+
+void AGYEnemyCharacterBase::TryGrantGASFromDataAsset()
+{
+	if (bGASGrantedFromDataAsset) return;
+	if (!HasAuthority()) return;
+	if (!AbilitySystemComponent || !LoadedDataAsset) return;
+	if (!AbilitySystemComponent->AbilityActorInfo.IsValid() ||
+		!AbilitySystemComponent->AbilityActorInfo->OwnerActor.IsValid())
+	{
+		return;
+	}
+
+	ApplyInitStatEffect();
+	ApplyPassiveEffects();
+	GrantDefaultAbilities();
+	bGASGrantedFromDataAsset = true;
 }
 
 void AGYEnemyCharacterBase::OnHealthChanged(const struct FOnAttributeChangeData& Data)
