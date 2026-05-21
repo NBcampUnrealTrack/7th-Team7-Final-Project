@@ -10,3 +10,8 @@ AGYGameMode::AGYGameMode()
 	PlayerStateClass = AGYPlayerState::StaticClass();
 	PlayerControllerClass = AGYPlayerController::StaticClass();
 }
+
+bool AGYGameMode::AllowCheats(APlayerController* P)
+{
+	return true;
+}

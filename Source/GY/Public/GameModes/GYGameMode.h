@@ -11,4 +11,5 @@ class GY_API AGYGameMode : public AGameModeBase
 
 public:
 	AGYGameMode();
+	virtual bool AllowCheats(APlayerController* P) override;
 };
