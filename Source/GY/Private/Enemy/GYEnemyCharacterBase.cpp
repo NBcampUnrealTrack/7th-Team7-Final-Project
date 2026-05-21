@@ -111,19 +111,21 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 	ApplyVisualConfig(LoadedDataAsset->VisualConfig);
 	ApplyAnimConfig(LoadedDataAsset->AnimationConfig);
 	BuildMontageMap(LoadedDataAsset->AnimationConfig);
+	ApplyAIConfig(LoadedDataAsset->AIConfig);
+	InitStatsFromDataTable();
 
-	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(
-		GetMesh()->GetAnimInstance()))
+	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
 		InitAnimInstanceAssets(AnimInst);
 	}
 
 	if (HasAuthority())
 	{
-		InitStatsFromDataTable();
-		ApplyAIConfig(LoadedDataAsset->AIConfig);
-		TryGrantGASFromDataAsset();
+		ApplyInitStatEffect();
+		ApplyPassiveEffects();
+		GrantDefaultAbilities();
 	}
+
 }
 
 void AGYEnemyCharacterBase::ApplyVisualConfig(const FEnemyVisualConfig& Config)
@@ -144,18 +146,25 @@ void AGYEnemyCharacterBase::ApplyVisualConfig(const FEnemyVisualConfig& Config)
 
 void AGYEnemyCharacterBase::ApplyAIConfig(const FEnemyAIConfig& Config)
 {
-	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController());
+	if (!AIC)
 	{
-		if (UBehaviorTree* BT = Config.BehaviorTree.LoadSynchronous())
-		{
-			AIC->StartBehaviorTree(BT);
-		}
-		AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.AttackRadius, Config.bHasPatrol);
-		if (Config.bHasPatrol && !Config.PatrolOffsets.IsEmpty())
-		{
-			AIC->SetPatrolPoints(Config.PatrolOffsets, GetActorLocation());
-		}
+		UE_LOG(LogTemp, Warning, TEXT("[Enemy] ApplyAIConfig: Controller null, BT 미시작"));
+		return;
 	}
+
+	UBehaviorTree* BT = Config.BehaviorTree.LoadSynchronous();
+	if (!BT)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Enemy] ApplyAIConfig: BT 에셋 null"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("[Enemy] BT 시작: %s"), *BT->GetName());
+	AIC->StartBehaviorTree(BT);
+
+	UE_LOG(LogTemp, Warning, TEXT("[Enemy] BT 시작 후 IsRunning: %s"),
+		AIC->GetBrainComponent() && AIC->GetBrainComponent()->IsRunning() ? TEXT("YES") : TEXT("NO"));
 }
 
 void AGYEnemyCharacterBase::ApplyAnimConfig(const FEnemyAnimationConfig& Config)
@@ -314,6 +323,11 @@ void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimePro
 void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	if (HasAuthority() && LoadedDataAsset)
+	{
+		ApplyAIConfig(LoadedDataAsset->AIConfig);
+	}
 	InitGAS();
 }
 
