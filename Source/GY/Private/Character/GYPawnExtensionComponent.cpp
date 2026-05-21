@@ -95,8 +95,8 @@ void UGYPawnExtensionComponent::CheckDefaultInitialization()
 	GY_LOG(Player, KHB, "ExtComp: CheckDefaultInitialization 호출됨");
 
 	// 같은 액터의 모든 init-state 컴포넌트(Hero 등)에게도 체인 재검사 기회를 준다.
-	// 외부 이벤트(OnRep_Controller 등)로 PawnExt가 트리거됐을 때 본인만 굴리면
-	// 이미 진행된 PawnExt는 노옵이라 Hero가 영영 깨어나지 못한다.
+	// PawnExt가 이미 GameplayReady면 ContinueInitStateChain은 변화 없이 종료되고,
+	// 따라서 Hero에게 상태 변경 알림도 안 가서 Hero가 깨어나지 못한다.
 	CheckDefaultInitializationForImplementers();
 
 	static const TArray<FGameplayTag> StateChain = {
