@@ -23,7 +23,10 @@ public class GY : ModuleRules
 			"NavigationSystem",
 			"GameplayMessageRuntime",
 			"ModularGameplay",
-			"GameFeatures"
+			"GameFeatures",
+			"CommonUI",
+			"CommonInput",
+			"GYUI",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

@@ -15,7 +15,6 @@ public class GYUI : ModuleRules
 			"Slate",
 			"SlateCore",
 			"UMG",
-			"GY",
 			"GameplayMessageRuntime",
 			"CommonUI",
 			"CommonInput",
