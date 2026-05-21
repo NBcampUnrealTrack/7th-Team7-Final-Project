@@ -31,13 +31,11 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 	check(Manager);
 
 	APawn* Pawn = GetPawn<APawn>();
+	if (!Pawn) return false;
 
 	if (DesiredState == GYGameplayTags::InitState_Spawned)
 	{
-		if (Pawn)
-		{
-			return true;
-		}
+		return true;
 	}
 
 	if (CurrentState == GYGameplayTags::InitState_Spawned &&
