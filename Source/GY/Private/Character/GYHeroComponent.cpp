@@ -104,6 +104,8 @@ void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 		APawn* Pawn = GetPawn<APawn>();
 		AGYPlayerState* GYPlayerState = GetPlayerState<AGYPlayerState>();
 		if (!Pawn || !GYPlayerState) return;
+		// 서버가 보는 원격 클라 폰에는 InputComponent가 없는 게 정상이므로 시도 자체를 막는다.
+		if (!Pawn->IsLocallyControlled()) return;
 
 		if (UInputComponent* PlayerInputComponent = Pawn->InputComponent)
 		{
@@ -112,7 +114,7 @@ void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 		}
 		else
 		{
-			GY_ERROR(Player, KHB, "Pawn->InputComponent가 null - 입력 초기화 스킵됨 -서버");
+			GY_ERROR(Player, KHB, "Pawn->InputComponent가 null - 입력 초기화 스킵됨");
 		}
 	}
 }
