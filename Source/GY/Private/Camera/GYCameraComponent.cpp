@@ -8,6 +8,7 @@
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Logging/GYLogManager.h"
 
 const FName UGYCameraComponent::NAME_ActorFeatureName("CameraComponent");
 
@@ -59,6 +60,9 @@ bool UGYCameraComponent::CanChangeInitState(UGameFrameworkComponentManager* Mana
 void UGYCameraComponent::HandleChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
                                                FGameplayTag DesiredState)
 {
+	//상태를 출력하기위한 로오그
+	GY_LOG(Player, KHB, "CameraComp: [%s] -> [%s]", *CurrentState.ToString(), *DesiredState.ToString());
+
 	if (DesiredState == GYGameplayTags::InitState_DataInitialized)
 	{
 		APawn* Pawn = GetPawn<APawn>();

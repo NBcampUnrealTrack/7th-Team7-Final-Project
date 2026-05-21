@@ -14,4 +14,7 @@ public:
 
 protected:
 	virtual void SetupInputComponent() override;
+
+	// 클라이언트: PC->PlayerState 복제 완료 시 폰 컴포넌트 체인 재트리거
+	virtual void OnRep_PlayerState() override;
 };
