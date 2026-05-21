@@ -44,10 +44,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	virtual void Die();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_Controller() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void LoadDataAssetAndApply();
 	void OnDataAssetLoaded();
@@ -66,9 +69,10 @@ protected:
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
 	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
 
-
-
 	void BuildMontageMap(const FEnemyAnimationConfig& Config);
+
+	UFUNCTION()
+	void OnRep_EnemyType();
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyDead OnEnemyDead;
@@ -77,7 +81,7 @@ public:
 	FOnEnemyHit OnEnemyHit;
 
 protected:
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Enemy|Data")
+	UPROPERTY(ReplicatedUsing = OnRep_EnemyType, BlueprintReadOnly, Category = "Enemy|Data")
 	EEnemyType EnemyType;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Enemy|Data")

@@ -17,6 +17,7 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/DataTables/EnemyStatRow.h"
+#include "Net/UnrealNetwork.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 {
@@ -110,13 +111,17 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 	ApplyVisualConfig(LoadedDataAsset->VisualConfig);
 	ApplyAnimConfig(LoadedDataAsset->AnimationConfig);
 	BuildMontageMap(LoadedDataAsset->AnimationConfig);
-	ApplyAIConfig(LoadedDataAsset->AIConfig);
-	InitStatsFromDataTable();
 
 	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(
 		GetMesh()->GetAnimInstance()))
 	{
 		InitAnimInstanceAssets(AnimInst);
+	}
+
+	if (HasAuthority())
+	{
+		ApplyAIConfig(LoadedDataAsset->AIConfig);
+		InitStatsFromDataTable();
 	}
 }
 
@@ -175,7 +180,7 @@ void AGYEnemyCharacterBase::InitGAS()
 		StunTag, EGameplayTagEventType::NewOrRemoved)
 		.AddUObject(this, &AGYEnemyCharacterBase::OnStunTagChanged);
 
-	if (LoadedDataAsset)
+	if (HasAuthority() && LoadedDataAsset)
 	{
 		ApplyInitStatEffect();
 		ApplyPassiveEffects();
@@ -288,6 +293,12 @@ void AGYEnemyCharacterBase::Die()
 	OnEnemyDead.Broadcast(this);
 }
 
+void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGYEnemyCharacterBase, EnemyType);
+}
+
 void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
@@ -312,6 +323,14 @@ void AGYEnemyCharacterBase::BuildMontageMap(const FEnemyAnimationConfig& Config)
 		{
 			MontageMap.Add(Pair.Key, Loaded);
 		}
+	}
+}
+
+void AGYEnemyCharacterBase::OnRep_EnemyType()
+{
+	if (EnemyType != EEnemyType::None && !LoadedDataAsset)
+	{
+		LoadDataAssetAndApply();
 	}
 }
 
