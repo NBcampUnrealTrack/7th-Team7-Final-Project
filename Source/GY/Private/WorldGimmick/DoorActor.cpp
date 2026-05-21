@@ -4,7 +4,6 @@
 #include "WorldGimmick/DoorActor.h"
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Net/UnrealNetwork.h"
-#include "Logging/GYLogManager.h"
 
 ADoorActor::ADoorActor()
 {
@@ -24,7 +23,6 @@ void ADoorActor::BeginPlay()
 
 	GetComponents<UDoorMovementComponent>(DoorComponents);
 
-	DoorInitialize();
 }
 
 void ADoorActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOption) const
