@@ -97,10 +97,11 @@ void AGYCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 	GY_LOG(Player, KHB, "SetupPlayerInputComponent 호출됨. IC: %s", PlayerInputComponent ? *PlayerInputComponent->GetClass()->GetName() : TEXT("null"));
 	InputComponent = PlayerInputComponent;
 
-	// 멈춰있던 초기화 상태가 있다면 마저 진행하라고 체인을 다시 굴려줍니다.
-	PawnExtComponent->CheckDefaultInitialization();
-
-
+	if (PawnExtComponent)
+	{
+		// 멈춰있던 초기화 상태가 있다면 마저 진행하라고 체인을 다시 굴려줍니다.
+		PawnExtComponent->CheckDefaultInitialization();
+	}
 }
 
 void AGYCharacter::PreInitializeComponents()
