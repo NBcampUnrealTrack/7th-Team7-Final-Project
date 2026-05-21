@@ -4,74 +4,71 @@
 #include "WorldGimmick/DoorActor.h"
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Net/UnrealNetwork.h"
-#include "WorldGimmick/DoorMovementComponent.h"
+#include "Logging/GYLogManager.h"
 
-
-// Sets default values
 ADoorActor::ADoorActor()
 {
 	bReplicates = true;
 	PrimaryActorTick.bCanEverTick = false;
+
+	USceneComponent* Scene = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
+	SetRootComponent(Scene);
+
+	DoorFrameMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FrameMesh"));
+	DoorFrameMesh->SetupAttachment(Scene);
 }
 
-void ADoorActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const
+void ADoorActor::BeginPlay()
+{
+	Super::BeginPlay();
+
+	GetComponents<UDoorMovementComponent>(DoorComponents);
+}
+
+void ADoorActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOption) const
 {
 	FInteractionOption Option;
 	Option.OptionTag = GYGameplayTags::Interaction_Open_Door;
-
-	// bIsOpen == true  → 현재 열린 상태 → "닫기" 표시
-	// bIsOpen == false → 현재 닫힌 상태 → "열기" 표시
-	if (bIsOpen)
-	{
-		Option.Text = CloseText;
-	}
-	else
-	{
-		Option.Text = OpenText;
-	}
-
-	OutOptions.Add(Option);
+	Option.Text = NSLOCTEXT("Door", "Open", "열기");
+	OutOption.Add(Option);
 }
 
 void ADoorActor::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 {
-	if (HasAuthority == false)
+	if (HasAuthority() == false)
 	{
 		return;
 	}
 
-	if (OptionTag != GYGameplayTags::Interaction_Open_Door)
-	{
-		return;
-	}
-
-	bIsOpen = !bIsOpen;
-	OnRep_IsOpen();
+	DoorMove();
+	OnRep_Open();
 }
 
-void ADoorActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+void ADoorActor::DoorMove()
+{
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("DoorMove Function Called!"));
+
+	bIsOpen = !bIsOpen;
+
+	OnRep_Open();
+}
+
+void ADoorActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ADoorActor, bIsOpen);
+	DOREPLIFETIME(ADoorActor, bIsOpen)
 }
 
-void ADoorActor::OnRep_IsOpen()
+void ADoorActor::OnRep_Open()
 {
-	for (UDoorMovementComponent* MovementComponent : Movements)
+	for (UDoorMovementComponent* DoorComp : DoorComponents)
 	{
-		if (MovementComponent == nullptr)
-		{
-			continue;
-		}
-
-		if (bIsOpen)
-		{
-			MovementComponent->DoorOpen();
-		}
-		else
-		{
-			MovementComponent->DoorClose();
-		}
+		DoorComp->SetOpen(bIsOpen);
 	}
 }

@@ -5,38 +5,43 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interaction/Interactable.h"
+#include "WorldGimmick/DoorMovementComponent.h"
+
 #include "DoorActor.generated.h"
 
-class UDoorMovementComponent;
 
 UCLASS()
-class GY_API ADoorActor : public AActor, IInteractable
+class GY_API ADoorActor : public AActor, public IInteractable
 {
 	GENERATED_BODY()
 
 public:
 	ADoorActor();
 
-	virtual void GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const override;
+protected:
+	virtual void BeginPlay() override;
+
+public:
+	virtual void GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOption) const override;
 	virtual void OnInteract(FGameplayTag OptionTag, APawn* Interactor) override;
 
-protected:
-	//virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
+	TObjectPtr<UStaticMeshComponent> DoorFrameMesh;
 
 protected:
-	UPROPERTY(EditAnywhere, Instanced, Category = "Door")
-	TArray<TObjectPtr<UDoorMovementComponent>> Movements;
+	void DoorMove();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Door")
+	TArray<TObjectPtr<UDoorMovementComponent>> DoorComponents;
+
+	//replicated
 protected:
-	UPROPERTY(EditAnywhere, Category = "Door")
-	FText OpenText = NSLOCTEXT("Door", "Open", "열기");
-
-	UPROPERTY(EditAnywhere, Category = "Door")
-	FText CloseText = NSLOCTEXT("Door", "Close", "닫기");
-
-	UPROPERTY(ReplicatiedUsing = OnRep_IsOpen)
-	bool bIsOpen = false;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION()
-	void OnRep_IsOpen();
+	void OnRep_Open();
+
+
+	UPROPERTY(ReplicatedUsing = OnRep_Open)
+	bool bIsOpen = false;
 };

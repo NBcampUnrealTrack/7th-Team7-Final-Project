@@ -7,7 +7,7 @@
 UDoorMovementComponent::UDoorMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 }
 
 
@@ -15,50 +15,59 @@ void UDoorMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (DoorMesh == nullptr)
+	TargetDoorMesh = Cast<UStaticMeshComponent>(DoorMeshRef.GetComponent(GetOwner()));
+	if (TargetDoorMesh == nullptr)
 	{
 		return;
 	}
 
-	ClosedLocation = DoorMesh->GetRelativeLocation();
-	ClosedRotation = DoorMesh->GetRelativeRotation();
+	StartLocation = TargetDoorMesh->GetRelativeLocation();
+	StartRotation = TargetDoorMesh->GetRelativeRotation();
+	EndLocation = StartLocation + MoveOffset;
+	EndRotation = StartRotation + RotateOffset;
 
-	if (Curve == nullptr)
+	if (MoveCurve == nullptr)
 	{
 		return;
 	}
 
-	FOnTimelineFloat TimelineFloat;
-	TimelineFloat.BindUFunction(this, FName("OnTimelineTick"));
-	Timeline.AddInterpFloat(Curve, TimelineFloat);
+	FOnTimelineFloat UpdateTimeline;
+	UpdateTimeline.BindUFunction(this, FName("OnTimelineUpdate"));
+	MoveTimeline.AddInterpFloat(MoveCurve, UpdateTimeline);
 }
-
 
 void UDoorMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                            FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	Timeline.TickTimeline(DeltaTime);
+
+	MoveTimeline.TickTimeline(DeltaTime);
 }
 
-void UDoorMovementComponent::DoorOpen()
+void UDoorMovementComponent::SetOpen(const bool bOpen)
 {
-	Timeline.Play();
+	SetComponentTickEnabled(true);
+
+	if (bOpen)
+	{
+		MoveTimeline.Play();
+	}
+	else
+	{
+		MoveTimeline.Reverse();
+	}
 }
 
-void UDoorMovementComponent::DoorClose()
+void UDoorMovementComponent::OnTimelineUpdate(float Value)
 {
-	Timeline.Reverse();
-}
-
-void UDoorMovementComponent::OnTimelineTick(float Value)
-{
-	if (DoorMesh == nullptr)
+	if (TargetDoorMesh == nullptr)
 	{
 		return;
 	}
 
-	const FVector NewLocation = FMath::Lerp(ClosedLocation, ClosedLocation + LocationOffset, Value);
-	const FRotator NewRotator = FMath::Lerp(ClosedRotation, ClosedRotation + RotationOffset, Value);
-}
+	FVector CurrentLocation = FMath::Lerp(StartLocation, EndLocation, Value);
+	FRotator CurrentRotation = FMath::Lerp(StartRotation, EndRotation, Value);
 
+	TargetDoorMesh->SetRelativeLocation(CurrentLocation);
+	TargetDoorMesh->SetRelativeRotation(CurrentRotation);
+}

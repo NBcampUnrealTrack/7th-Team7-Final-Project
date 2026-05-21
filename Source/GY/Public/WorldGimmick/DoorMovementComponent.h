@@ -5,9 +5,9 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Components/TimelineComponent.h"
-#include "DoorMovementComponent.generated.h"
+#include "Engine/EngineTypes.h"
 
-class FTimeLine;
+#include "DoorMovementComponent.generated.h"
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class GY_API UDoorMovementComponent : public UActorComponent
@@ -17,38 +17,35 @@ class GY_API UDoorMovementComponent : public UActorComponent
 public:
 	UDoorMovementComponent();
 
-protected:
 	virtual void BeginPlay() override;
-
-public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
-public:
-	void DoorOpen();
-	void DoorClose();
+	void SetOpen(const bool bOpen);
 
-	// 에디터 설정
-public:
-	UPROPERTY(EditAnywhere, Category = "Door")
-	TObjectPtr<UStaticMeshComponent> DoorMesh;
+	//uproperty가 위로
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
+	FComponentReference DoorMeshRef;
 
-	UPROPERTY(EditAnywhere, Category = "Door")
-	FVector LocationOffset = FVector::ZeroVector;
+	UPROPERTY()
+	TObjectPtr<UStaticMeshComponent> TargetDoorMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Door")
-	FRotator RotationOffset = FRotator::ZeroRotator;
+	UPROPERTY(EditAnywhere, Category = "Door|MoveOffset")
+	FVector MoveOffset;
 
-	UPROPERTY(EditAnywhere, Category = "Door")
-	TObjectPtr<UCurveFloat> Curve;
+	UPROPERTY(EditAnywhere, Category = "Door|MoveOffset")
+	FRotator RotateOffset;
 
-private:
-	FTimeline Timeline;
-
-	FVector ClosedLocation;
-	FRotator ClosedRotation;
+	UPROPERTY(EditAnywhere, Category = "Door|MoveOffset")
+	TObjectPtr<UCurveFloat> MoveCurve;
 
 	UFUNCTION()
-	void OnTimelineTick(float Value);
+	void OnTimelineUpdate(float Value);
 
+	FVector StartLocation;
+	FRotator StartRotation;
+	FVector EndLocation;
+	FRotator EndRotation;
+	FTimeline MoveTimeline;
 };
