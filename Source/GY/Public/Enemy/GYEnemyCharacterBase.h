@@ -44,10 +44,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	virtual void Die();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_Controller() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void LoadDataAssetAndApply();
 	void OnDataAssetLoaded();
@@ -63,12 +66,15 @@ protected:
 	//TODO 은서 : Enemy Attribute에 세팅 해야함.
 	void InitStatsFromDataTable();
 
+	void TryGrantGASFromDataAsset();
+
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
 	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
 
-
-
 	void BuildMontageMap(const FEnemyAnimationConfig& Config);
+
+	UFUNCTION()
+	void OnRep_EnemyType();
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyDead OnEnemyDead;
@@ -77,7 +83,7 @@ public:
 	FOnEnemyHit OnEnemyHit;
 
 protected:
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Enemy|Data")
+	UPROPERTY(ReplicatedUsing = OnRep_EnemyType, BlueprintReadOnly, Category = "Enemy|Data")
 	EEnemyType EnemyType;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Enemy|Data")
@@ -102,6 +108,8 @@ protected:
 	TObjectPtr<UGYEnemyAdditionalAttribute> AdditionalAttribute;
 
 	bool bIsDead = false;
+
+	bool bGASGrantedFromDataAsset = false;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category ="Enemy|Anim")
 	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> MontageMap;
