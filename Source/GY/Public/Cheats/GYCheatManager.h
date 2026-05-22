@@ -110,4 +110,7 @@ private:
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Debug")
 	TMap<EEnemyType, TSoftClassPtr<AGYEnemyCharacterBase>> EnemyClassMap;
+
+	UFUNCTION(Exec)
+	void GY_TestHitCue();
 };
