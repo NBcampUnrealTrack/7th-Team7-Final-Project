@@ -9,11 +9,11 @@
 
 #include "UObject/SavePackage.h"
 #include "WorldPartition/ActorDescContainerInstance.h"
-#include "WorldPartition/GYActorGuidDataSettings.h"
-#include "WorldPartition/LevelPlacedActorData.h"
+#include "World/ActorManagement//GYWorldDataSettings.h"
+#include "World/ActorManagement//LevelPlacedActorData.h"
 #include "WorldPartition/WorldPartition.h"
 #include "WorldPartition/WorldPartitionActorDescInstance.h"
-#include "WorldPartition/WorldPartitionLevelPlacedActor.h"
+#include "World/ActorManagement//WorldPartitionLevelPlacedActor.h"
 
 ULevelPlacedActorDataExporter::ULevelPlacedActorDataExporter()
 {
@@ -36,7 +36,7 @@ void ULevelPlacedActorDataExporter::ExportMonsterData()
 		return;
 	}
 
-	const UGYActorGuidDataSettings* ActorGuidDataSettings = GetDefault<UGYActorGuidDataSettings>();
+	const UGYWorldDataSettings* ActorGuidDataSettings = GetDefault<UGYWorldDataSettings>();
 	if (!ActorGuidDataSettings)
 	{
 		GY_ERROR(Game, JCM, "Get ActorGuidDataSettings Fail");
@@ -66,7 +66,7 @@ void ULevelPlacedActorDataExporter::ExportMonsterData()
 
 	if (bSuccess)
 	{
-		if (UGYActorGuidDataSettings* MutableSettings = GetMutableDefault<UGYActorGuidDataSettings>())
+		if (UGYWorldDataSettings* MutableSettings = GetMutableDefault<UGYWorldDataSettings>())
 		{
 			MutableSettings->SetupPath(OutputPath/TEXT("DT_ActorGuidData.")+TEXT("DT_ActorGuidData"));
 		}

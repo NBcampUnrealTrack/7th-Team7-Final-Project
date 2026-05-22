@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Editor/Blutility/Classes/AssetActionUtility.h"
-#include "WorldPartition/LevelPlacedActorData.h"
 #include "LevelPlacedActorDataExporter.generated.h"
 
 /**

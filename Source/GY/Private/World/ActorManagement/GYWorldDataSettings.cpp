@@ -1,13 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "WorldPartition/GYActorGuidDataSettings.h"
+﻿#include "World/ActorManagement/GYWorldDataSettings.h"
 
 #include "Logging/GYLogManager.h"
 
 
 
-void UGYActorGuidDataSettings::SetupPath(const FString& ActorGuidTablePath)
+void UGYWorldDataSettings::SetupPath(const FString& ActorGuidTablePath)
 {
 
 	FSoftObjectPath ActorGuidPath(*ActorGuidTablePath);
