@@ -3,6 +3,7 @@
 #include "AbilitySystemInterface.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/GYCameraEffectBase.h"
 #include "Camera/GYCameraModeData.h"
 #include "Character/GYPawnExtensionComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
@@ -192,6 +193,33 @@ void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 			DeltaTime,
 			NewView.FOVInterpSpeed);
 
+	CurrentView.SocketOffset =
+		FMath::VInterpTo(
+			CurrentView.SocketOffset,
+			NewView.SocketOffset,
+			DeltaTime,
+			10.f);
+
+	// 이펙트 적용
+	for (int32 i = ActiveEffects.Num() - 1; i >= 0; --i)
+	{
+		UGYCameraEffectBase* Effect = ActiveEffects[i];
+
+		if (!Effect)
+		{
+			ActiveEffects.RemoveAt(i);
+			continue;
+		}
+
+		Effect->UpdateEffect(
+			DeltaTime,
+			CurrentView);
+
+		if (Effect->IsFinished())
+		{
+			ActiveEffects.RemoveAt(i);
+		}
+	}
 	ApplyCameraView(CurrentView);
 }
 
@@ -367,4 +395,30 @@ void UGYCameraComponent::OnCameraTagChanged(
 	int32 NewCount)
 {
 	ResolveCameraMode();
+}
+
+void UGYCameraComponent::PushCameraEffect(const FGYCameraEffectContext& Context)
+{
+	const TSubclassOf<UGYCameraEffectBase>* FoundClass =
+		CameraEffectMap.Find(Context.Type);
+
+	if (!FoundClass || !(*FoundClass))
+	{
+		return;
+	}
+
+	UGYCameraEffectBase* NewEffect =
+		NewObject<UGYCameraEffectBase>(
+			this,
+			*FoundClass);
+
+	if (!NewEffect)
+	{
+		return;
+	}
+	GY_WARN(Player, CYS, "카메라 이펙트 전달");
+
+	NewEffect->Initialize(Context);
+
+	ActiveEffects.Add(NewEffect);
 }

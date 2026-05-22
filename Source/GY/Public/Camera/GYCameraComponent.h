@@ -8,6 +8,10 @@
 #include "GYCameraComponent.generated.h"
 
 
+enum class EGYCameraEffectType : uint8;
+struct FGYCameraEffectContext;
+class UGYCameraEffectData;
+class UGYCameraEffectBase;
 class UGYAbilitySystemComponent;
 class UGYCameraModeData;
 class UCameraComponent;
@@ -112,4 +116,15 @@ protected:
 	UGYAbilitySystemComponent* GetAbilitySystemComponent() const;
 
 	void OnCameraTagChanged(FGameplayTag Tag, int32 NewCount);
+
+public:
+	/* 카메라 이펙트 */
+	void PushCameraEffect(const FGYCameraEffectContext& Context);
+private:
+	// 활성된 카메라 효과
+	UPROPERTY()
+	TArray<TObjectPtr<UGYCameraEffectBase>> ActiveEffects;
+
+	UPROPERTY(EditDefaultsOnly)
+	TMap<EGYCameraEffectType, TSubclassOf<UGYCameraEffectBase>> CameraEffectMap;
 };
