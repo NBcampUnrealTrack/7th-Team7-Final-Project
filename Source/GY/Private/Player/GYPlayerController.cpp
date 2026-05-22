@@ -22,8 +22,13 @@ void AGYPlayerController::BeginPlay()
 	{
 		FActorSpawnParameters Params;
 		Params.Owner = this;
-		ServerCheatProxy = GetWorld()->SpawnActor<AGYServerCheatProxy>(Params);
-		ServerCheatProxy->OwnerController = this;
+		ServerCheatProxy = GetWorld()->SpawnActor<AGYServerCheatProxy>(
+			ServerCheatProxyClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
+
+		if (ServerCheatProxy)
+		{
+			ServerCheatProxy->OwnerController = this;
+		}
 	}
 #endif
 	// 안정성 체크 -> UI 서버 생성 차단

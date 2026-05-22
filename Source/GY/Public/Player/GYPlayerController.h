@@ -30,6 +30,9 @@ protected:
 	TSubclassOf<UCommonActivatableWidget> HUDWidgetClass;
 public:
 
+	UPROPERTY(EditDefaultsOnly, Category = "Cheat")
+	TSubclassOf<AGYServerCheatProxy> ServerCheatProxyClass;
+
 	UPROPERTY(Replicated)
 	TObjectPtr<AGYServerCheatProxy> ServerCheatProxy;
 };
