@@ -1,5 +1,12 @@
 #include "Enemy/Abilities/GYEnemyAttackAbilityBase.h"
 #include "AbilitySystemComponent.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+
+UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
+{
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
+}
 
 bool UGYEnemyAttackAbilityBase::CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const
 {
@@ -26,4 +33,37 @@ float UGYEnemyAttackAbilityBase::GetRemainingCooldown(const UAbilitySystemCompon
 	if (Durations.IsEmpty()) return 0.f;
 
 	return FMath::Max(0.f, Durations[0]);
+}
+
+void UGYEnemyAttackAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData* TriggerEventData)
+{
+	UE_LOG(LogTemp,Error,TEXT("Ability Start"));
+	if (!CommitAbility(Handle, ActorInfo, ActivationInfo) || !AttackMontage)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	UE_LOG(LogTemp,Error,TEXT("Ability Start1"));
+	UAbilityTask_PlayMontageAndWait* Task =
+		UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+			this, NAME_None, AttackMontage, PlayRate, NAME_None, true);
+	UE_LOG(LogTemp,Error,TEXT("Ability Start2"));
+	Task->OnCompleted.AddDynamic(this, &UGYEnemyAttackAbilityBase::OnMontageFinished);
+	Task->OnBlendOut.AddDynamic(this, &UGYEnemyAttackAbilityBase::OnMontageFinished);
+	Task->OnInterrupted.AddDynamic(this, &UGYEnemyAttackAbilityBase::OnMontageInterrupted);
+	Task->OnCancelled.AddDynamic(this, &UGYEnemyAttackAbilityBase::OnMontageInterrupted);
+	Task->ReadyForActivation();
+	UE_LOG(LogTemp,Error,TEXT("Ability Start3"));
+}
+
+void UGYEnemyAttackAbilityBase::OnMontageFinished()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UGYEnemyAttackAbilityBase::OnMontageInterrupted()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

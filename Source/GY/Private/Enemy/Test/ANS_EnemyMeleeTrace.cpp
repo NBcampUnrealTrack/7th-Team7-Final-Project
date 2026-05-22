@@ -1,0 +1,52 @@
+#include "Enemy/Test/ANS_EnemyMeleeTrace.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystem/GYCombatStatics.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/Actor.h"
+#include "Kismet/KismetSystemLibrary.h"
+
+void UANS_EnemyMeleeTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+                                       float TotalDuration, const FAnimNotifyEventReference& EventReference)
+{
+	AlreadyHit.Reset();
+}
+
+void UANS_EnemyMeleeTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
+{
+	if (!MeshComp) return;
+	AActor* Owner = MeshComp->GetOwner();
+	if (!Owner || !Owner->HasAuthority()) return; // 서버에서만
+
+	const FVector Start = MeshComp->GetSocketLocation(StartBone);
+	const FVector End   = MeshComp->GetSocketLocation(EndBone);
+
+	TArray<AActor*> Ignore; Ignore.Add(Owner);
+	TArray<FHitResult> Hits;
+	const bool bHit = UKismetSystemLibrary::SphereTraceMultiByProfile(
+		MeshComp, Start, End, Radius, TEXT("Pawn"), false, Ignore,
+		bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+		Hits, true);
+
+	if (!bHit) return;
+
+	for (const FHitResult& H : Hits)
+	{
+		AActor* Target = H.GetActor();
+		if (!Target || Target == Owner) continue;
+		if (AlreadyHit.Contains(Target)) continue;
+		AlreadyHit.Add(Target);
+
+		if (UAbilitySystemComponent* TargetASC =
+			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Target))
+		{
+			UGYCombatStatics::ApplyDamage(TargetASC, Damage);
+		}
+	}
+}
+
+void UANS_EnemyMeleeTrace::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	const FAnimNotifyEventReference& EventReference)
+{
+	AlreadyHit.Reset();
+}

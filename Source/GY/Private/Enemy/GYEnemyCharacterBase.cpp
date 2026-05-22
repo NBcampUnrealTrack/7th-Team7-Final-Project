@@ -17,6 +17,7 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/DataTables/EnemyStatRow.h"
+#include "Net/UnrealNetwork.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 {
@@ -113,11 +114,18 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 	ApplyAIConfig(LoadedDataAsset->AIConfig);
 	InitStatsFromDataTable();
 
-	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(
-		GetMesh()->GetAnimInstance()))
+	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
 		InitAnimInstanceAssets(AnimInst);
 	}
+
+	if (HasAuthority())
+	{
+		ApplyInitStatEffect();
+		ApplyPassiveEffects();
+		GrantDefaultAbilities();
+	}
+
 }
 
 void AGYEnemyCharacterBase::ApplyVisualConfig(const FEnemyVisualConfig& Config)
@@ -138,18 +146,25 @@ void AGYEnemyCharacterBase::ApplyVisualConfig(const FEnemyVisualConfig& Config)
 
 void AGYEnemyCharacterBase::ApplyAIConfig(const FEnemyAIConfig& Config)
 {
-	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController());
+	if (!AIC)
 	{
-		if (UBehaviorTree* BT = Config.BehaviorTree.LoadSynchronous())
-		{
-			AIC->StartBehaviorTree(BT);
-		}
-		AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.AttackRadius, Config.bHasPatrol);
-		if (Config.bHasPatrol && !Config.PatrolOffsets.IsEmpty())
-		{
-			AIC->SetPatrolPoints(Config.PatrolOffsets, GetActorLocation());
-		}
+		UE_LOG(LogTemp, Warning, TEXT("[Enemy] ApplyAIConfig: Controller null, BT 미시작"));
+		return;
 	}
+
+	UBehaviorTree* BT = Config.BehaviorTree.LoadSynchronous();
+	if (!BT)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Enemy] ApplyAIConfig: BT 에셋 null"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("[Enemy] BT 시작: %s"), *BT->GetName());
+	AIC->StartBehaviorTree(BT);
+
+	UE_LOG(LogTemp, Warning, TEXT("[Enemy] BT 시작 후 IsRunning: %s"),
+		AIC->GetBrainComponent() && AIC->GetBrainComponent()->IsRunning() ? TEXT("YES") : TEXT("NO"));
 }
 
 void AGYEnemyCharacterBase::ApplyAnimConfig(const FEnemyAnimationConfig& Config)
@@ -167,20 +182,14 @@ void AGYEnemyCharacterBase::InitGAS()
 	AbilitySystemComponent->InitAbilityActorInfo(this,this);
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
-		UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
-		.AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
+        UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
+        .AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
 
-	const FGameplayTag StunTag = GYStateTags::State_Hit_Stun;
 	AbilitySystemComponent->RegisterGameplayTagEvent(
-		StunTag, EGameplayTagEventType::NewOrRemoved)
+		GYStateTags::State_Hit_Stun, EGameplayTagEventType::NewOrRemoved)
 		.AddUObject(this, &AGYEnemyCharacterBase::OnStunTagChanged);
 
-	if (LoadedDataAsset)
-	{
-		ApplyInitStatEffect();
-		ApplyPassiveEffects();
-		GrantDefaultAbilities();
-	}
+	TryGrantGASFromDataAsset();
 }
 
 void AGYEnemyCharacterBase::GrantDefaultAbilities()
@@ -244,6 +253,23 @@ void AGYEnemyCharacterBase::InitStatsFromDataTable()
 	GetCharacterMovement()->MaxWalkSpeed = Row->MoveSpeed;
 }
 
+void AGYEnemyCharacterBase::TryGrantGASFromDataAsset()
+{
+	if (bGASGrantedFromDataAsset) return;
+	if (!HasAuthority()) return;
+	if (!AbilitySystemComponent || !LoadedDataAsset) return;
+	if (!AbilitySystemComponent->AbilityActorInfo.IsValid() ||
+		!AbilitySystemComponent->AbilityActorInfo->OwnerActor.IsValid())
+	{
+		return;
+	}
+
+	ApplyInitStatEffect();
+	ApplyPassiveEffects();
+	GrantDefaultAbilities();
+	bGASGrantedFromDataAsset = true;
+}
+
 void AGYEnemyCharacterBase::OnHealthChanged(const struct FOnAttributeChangeData& Data)
 {
 	if (Data.NewValue <= 0.f && !bIsDead)
@@ -288,9 +314,20 @@ void AGYEnemyCharacterBase::Die()
 	OnEnemyDead.Broadcast(this);
 }
 
+void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGYEnemyCharacterBase, EnemyType);
+}
+
 void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	if (HasAuthority() && LoadedDataAsset)
+	{
+		ApplyAIConfig(LoadedDataAsset->AIConfig);
+	}
 	InitGAS();
 }
 
@@ -312,6 +349,14 @@ void AGYEnemyCharacterBase::BuildMontageMap(const FEnemyAnimationConfig& Config)
 		{
 			MontageMap.Add(Pair.Key, Loaded);
 		}
+	}
+}
+
+void AGYEnemyCharacterBase::OnRep_EnemyType()
+{
+	if (EnemyType != EEnemyType::None && !LoadedDataAsset)
+	{
+		LoadDataAssetAndApply();
 	}
 }
 

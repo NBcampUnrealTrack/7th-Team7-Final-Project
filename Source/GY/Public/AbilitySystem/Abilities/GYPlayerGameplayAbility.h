@@ -12,6 +12,7 @@ class AGYCharacter;
 class UAbilityLogicBase;
 class UAbilityFragment;
 class UAbilityFragmentRegistry;
+class UAnimMontage;
 
 /**
  * 어빌리티가 기본적인 기능을 가지되 Logic으로 기능 추가가 가능
@@ -106,6 +107,7 @@ protected:
 public:
 	AGYCharacter* GetGYCharacter() const;
 	UEquipmentInstance* GetCurrentWeapon() const;
+	float PlayMontageForLogic(UAnimMontage* Montage, float PlayRate = 1.f);
 
 	void RequestEnd(bool bWasCancelled = false)
 	{

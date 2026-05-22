@@ -9,6 +9,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Equipment_Slot_Accessory2, "Equipment.Slot.Accessory2");
 	UE_DEFINE_GAMEPLAY_TAG(Equipment_Slot_Accessory3, "Equipment.Slot.Accessory3");
 
-	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_Sword, "Weapon.Type.Sword");
-	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_Greatsword, "Weapon.Type.Greatsword");
+	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_Unarmed,        "Weapon.Type.Unarmed");
+	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_SwordAndShield, "Weapon.Type.SwordAndShield");
 }

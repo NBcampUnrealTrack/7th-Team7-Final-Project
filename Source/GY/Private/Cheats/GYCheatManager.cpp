@@ -6,9 +6,7 @@
 #include "Currency/CurrencyEntry.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
-#include "Camera/GYCameraComponent.h"
-#include "Camera/GYCameraEffectTypes.h"
-#include "Core/GameplayTags/GameplayCueTags.h"
+#include "Cheats/GYServerCheatProxy.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
@@ -23,6 +21,7 @@
 #include "Loot/LootBoxActor.h"
 #include "Loot/LootTypes.h"
 #include "Enemy/GYEnemyCharacterBase.h"
+#include "Player/GYPlayerController.h"
 #include "Player/GYPlayerState.h"
 
 namespace
@@ -32,6 +31,13 @@ namespace
 		APlayerController* PC = CheatManager->GetOuterAPlayerController();
 		if (!IsValid(PC)) return nullptr;
 		return PC->GetPlayerState<AGYPlayerState>();
+	}
+
+	AGYPlayerController* GetGYPlayerController(const UCheatManager* CheatManager)
+	{
+		APlayerController* PC = CheatManager->GetOuterAPlayerController();
+		if (!IsValid(PC)) return nullptr;
+		return Cast<AGYPlayerController>(PC);
 	}
 
 	APawn* GetCheatPawn(const UCheatManager* CheatManager)
@@ -87,12 +93,20 @@ namespace
 
 void UGYCheatManager::GY_AddItem(const FString& ItemPath, int32 Count)
 {
-	Server_AddItem(ItemPath, Count);
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_AddItem(ItemPath, Count);
 }
 
 void UGYCheatManager::GY_EquipItem(const FString& ItemPath)
 {
-	Server_EquipItem(ItemPath);
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_EquipItem(ItemPath);
 }
 
 void UGYCheatManager::GY_UnequipSlot(const FString& SlotTagName)
@@ -103,7 +117,13 @@ void UGYCheatManager::GY_UnequipSlot(const FString& SlotTagName)
 		UE_LOG(LogTemp, Warning, TEXT("GY_UnequipSlot: invalid tag '%s'"), *SlotTagName);
 		return;
 	}
-	Server_UnequipSlot(SlotTag);
+
+
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_UnequipSlot(SlotTag);
 }
 
 void UGYCheatManager::GY_PrintInventory()
@@ -158,61 +178,6 @@ void UGYCheatManager::GY_PrintLoadout()
 	}
 }
 
-void UGYCheatManager::Server_AddItem_Implementation(const FString& ItemPath, int32 Count)
-{
-	AGYPlayerState* PS = GetGYPlayerState(this);
-	if (!IsValid(PS)) return;
-
-	UInventoryComponent* Inv = PS->GetInventoryComponent();
-	if (!IsValid(Inv)) return;
-
-	UItemDefinition* Def = LoadObject<UItemDefinition>(nullptr, *ItemPath);
-	if (!IsValid(Def))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Server_AddItem: failed to load %s"), *ItemPath);
-		return;
-	}
-
-	FGuid OutId;
-	if (Inv->TryAddItem(Def, Count, OutId))
-	{
-		UE_LOG(LogTemp, Log, TEXT("Server_AddItem: %s x%d (InstanceId=%s)"),
-			*Def->ItemId.ToString(), Count, *OutId.ToString());
-	}
-}
-
-void UGYCheatManager::Server_EquipItem_Implementation(const FString& ItemPath)
-{
-	AGYPlayerState* PS = GetGYPlayerState(this);
-	if (!IsValid(PS)) return;
-
-	UInventoryComponent* Inv = PS->GetInventoryComponent();
-	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
-	if (!IsValid(Inv) || !IsValid(Loadout)) return;
-
-	UItemDefinition* Def = LoadObject<UItemDefinition>(nullptr, *ItemPath);
-	if (!IsValid(Def))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Server_EquipItem: failed to load %s"), *ItemPath);
-		return;
-	}
-
-	FGuid OutId;
-	if (!Inv->TryAddItem(Def, 1, OutId)) return;
-
-	Loadout->Server_RequestEquip(OutId);
-}
-
-void UGYCheatManager::Server_UnequipSlot_Implementation(FGameplayTag SlotTag)
-{
-	AGYPlayerState* PS = GetGYPlayerState(this);
-	if (!IsValid(PS)) return;
-
-	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
-	if (!IsValid(Loadout)) return;
-
-	Loadout->Server_RequestUnequip(SlotTag);
-}
 
 // ============================================================
 // Currency / Enchant / Disassemble
@@ -220,7 +185,11 @@ void UGYCheatManager::Server_UnequipSlot_Implementation(FGameplayTag SlotTag)
 
 void UGYCheatManager::GY_AddTimeShards(int32 Amount)
 {
-	Server_AddTimeShards(Amount);
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_AddTimeShards(Amount);
 }
 
 void UGYCheatManager::GY_PrintCurrency()
@@ -276,16 +245,7 @@ void UGYCheatManager::GY_Enchant(int32 InvIndex)
 	Inv->Server_RequestEnchant(InstanceId);
 }
 
-void UGYCheatManager::Server_AddTimeShards_Implementation(int32 Amount)
-{
-	AGYPlayerState* PS = GetGYPlayerState(this);
-	if (!IsValid(PS)) return;
 
-	UCurrencyComponent* Currency = PS->GetCurrencyComponent();
-	if (!IsValid(Currency)) return;
-
-	Currency->TryAdd(GYGameplayTags::Currency_TimeShard, Amount);
-}
 
 // ============================================================
 // Loot / Interaction
@@ -293,7 +253,11 @@ void UGYCheatManager::Server_AddTimeShards_Implementation(int32 Amount)
 
 void UGYCheatManager::GY_SpawnLootBox(const FString& SourceId, const FString& LootTablePath)
 {
-	Server_SpawnLootBox(SourceId, LootTablePath);
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_SpawnLootBox(SourceId, LootTablePath);
 }
 
 void UGYCheatManager::GY_GetNearestInteractionOptions()
@@ -341,7 +305,11 @@ void UGYCheatManager::GY_InvokeInteraction(const FString& OptionTagName)
 		return;
 	}
 
-	Server_InvokeInteraction(Nearest, OptionTag);
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_InvokeInteraction(Nearest, OptionTag);
 }
 
 void UGYCheatManager::GY_PrintLootBoxContents()
@@ -383,7 +351,11 @@ void UGYCheatManager::GY_TakeFromLootBox(int32 DropIndex)
 		return;
 	}
 
-	Server_TakeFromLootBox(Box, DropIndex);
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_TakeFromLootBox(Box, DropIndex);
 }
 
 void UGYCheatManager::GY_TakeAllLoot()
@@ -398,7 +370,11 @@ void UGYCheatManager::GY_TakeAllLoot()
 		return;
 	}
 
-	Server_TakeAllLoot(Box);
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_TakeAllLoot(Box);
 }
 
 void UGYCheatManager::GY_AddCameraTag(const FString& TagName)
@@ -546,12 +522,20 @@ void UGYCheatManager::GY_SpawnEnemy(const FString& EnemyTypeName)
 		UE_LOG(LogTemp, Warning, TEXT("GY_SpawnEnemy: 알 수 없는 타입 '%s'. Melee / Ranged / Boss 중 선택"), *EnemyTypeName);
 		return;
 	}
-	Server_SpawnEnemy(Type);
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_SpawnEnemy(Type);
 }
 
 void UGYCheatManager::GY_KillAllEnemies()
 {
-	Server_KillAllEnemies();
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_KillAllEnemies();
 }
 
 void UGYCheatManager::GY_SetEnemyBB(const FString& KeyName, bool bValue)
@@ -572,172 +556,5 @@ void UGYCheatManager::GY_SetEnemyBB(const FString& KeyName, bool bValue)
 			}
 		}
 	}
-}
-
-void UGYCheatManager::GY_TestHitCue()
-{
-	APawn* Pawn = GetCheatPawn(this);
-
-	if (!Pawn)
-	{
-		return;
-	}
-
-	IAbilitySystemInterface* ASI =
-		Cast<IAbilitySystemInterface>(Pawn);
-
-	if (!ASI)
-	{
-		return;
-	}
-
-	UAbilitySystemComponent* ASC =
-		ASI->GetAbilitySystemComponent();
-
-	if (!ASC)
-	{
-		return;
-	}
-
-	FGameplayCueParameters Params;
-
-	// 피격 방향
-	Params.Normal =
-		-Pawn->GetActorForwardVector();
-
-	// 강도
-	Params.RawMagnitude = 80.f;
-
-	// 위치
-	Params.Location =
-		Pawn->GetActorLocation();
-
-	ASC->ExecuteGameplayCue(
-		GYGameplayTags::GameplayCue_Combat_Hit_Light,
-		Params);
-}
-
-void UGYCheatManager::Server_SpawnEnemy_Implementation(EEnemyType EnemyType)
-{
-	APawn* Pawn = GetCheatPawn(this);
-	if (!IsValid(Pawn)) return;
-
-	const TSoftClassPtr<AGYEnemyCharacterBase>* Found = EnemyClassMap.Find(EnemyType);
-	if (!Found || Found->IsNull())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Server_SpawnEnemy: EnemyClassMap에 타입 등록 안 됨"));
-		return;
-	}
-
-	TSubclassOf<AGYEnemyCharacterBase> EnemyClass = Found->LoadSynchronous();
-	if (!EnemyClass) return;
-
-	FVector SpawnLoc = Pawn->GetActorLocation() + Pawn->GetActorForwardVector() * 300.f;
-
-	// 바닥 LineTrace
-	FHitResult HitResult;
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(Pawn);
-
-	const FVector TraceStart = SpawnLoc + FVector(0.f, 0.f, 500.f);
-	const FVector TraceEnd   = SpawnLoc - FVector(0.f, 0.f, 1000.f);
-
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_WorldStatic, QueryParams))
-	{
-		SpawnLoc = HitResult.ImpactPoint;  // 바닥 표면 위치로 교체
-	}
-
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-	AGYEnemyCharacterBase* Enemy = Pawn->GetWorld()->SpawnActor<AGYEnemyCharacterBase>(
-		EnemyClass, SpawnLoc, FRotator::ZeroRotator, Params);
-
-	if (IsValid(Enemy))
-	{
-		Enemy->InitWithType(EnemyType);
-	}
-}
-
-void UGYCheatManager::Server_KillAllEnemies_Implementation()
-{
-	TArray<AActor*> Enemies;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGYEnemyCharacterBase::StaticClass(), Enemies);
-
-	for (AActor* Actor : Enemies)
-	{
-		if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Actor))
-		{
-			if (!Enemy->IsDead())
-			{
-				Enemy->Die();
-			}
-		}
-	}
-	UE_LOG(LogTemp, Log, TEXT("GY_KillAllEnemies: %d 마리 처리"), Enemies.Num());
-}
-
-void UGYCheatManager::Server_SpawnLootBox_Implementation(const FString& SourceId, const FString& LootTablePath)
-{
-	APawn* Pawn = GetCheatPawn(this);
-	if (!IsValid(Pawn)) return;
-
-	UDataTable* Table = LoadObject<UDataTable>(nullptr, *LootTablePath);
-	if (!IsValid(Table))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Server_SpawnLootBox: failed to load table %s"), *LootTablePath);
-		return;
-	}
-
-	const FVector SpawnLocation = Pawn->GetActorLocation() + Pawn->GetActorForwardVector() * 200.f;
-
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-	ALootBoxActor* Box = Pawn->GetWorld()->SpawnActor<ALootBoxActor>(
-		ALootBoxActor::StaticClass(), SpawnLocation, FRotator::ZeroRotator, Params);
-
-	if (!IsValid(Box)) return;
-
-	Box->LootSourceId = FName(*SourceId);
-	Box->LootTable = Table;
-
-	UE_LOG(LogTemp, Log, TEXT("Server_SpawnLootBox: spawned %s (SourceId=%s)"),
-		*Box->GetName(), *SourceId);
-}
-
-void UGYCheatManager::Server_InvokeInteraction_Implementation(AActor* Target, FGameplayTag OptionTag)
-{
-	if (!IsValid(Target)) return;
-
-	IInteractable* Interactable = Cast<IInteractable>(Target);
-	if (Interactable == nullptr) return;
-
-	APawn* Pawn = GetCheatPawn(this);
-	if (!IsValid(Pawn)) return;
-
-	Interactable->OnInteract(OptionTag, Pawn);
-}
-
-void UGYCheatManager::Server_TakeFromLootBox_Implementation(AActor* Box, int32 DropIndex)
-{
-	ALootBoxActor* LootBox = Cast<ALootBoxActor>(Box);
-	if (!IsValid(LootBox)) return;
-
-	APawn* Pawn = GetCheatPawn(this);
-	if (!IsValid(Pawn)) return;
-
-	LootBox->TakeItem(DropIndex, Pawn);
-}
-
-void UGYCheatManager::Server_TakeAllLoot_Implementation(AActor* Box)
-{
-	ALootBoxActor* LootBox = Cast<ALootBoxActor>(Box);
-	if (!IsValid(LootBox)) return;
-
-	APawn* Pawn = GetCheatPawn(this);
-	if (!IsValid(Pawn)) return;
-
-	LootBox->TakeAll(Pawn);
 }
 
