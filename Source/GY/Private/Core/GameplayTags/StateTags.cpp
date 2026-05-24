@@ -15,4 +15,8 @@ namespace GYStateTags
 	UE_DEFINE_GAMEPLAY_TAG(State_Combat_SuperArmor, "State.Combat.SuperArmor");
 
 	UE_DEFINE_GAMEPLAY_TAG(Action_Reviving, "Action.Reviving");
+
+	UE_DEFINE_GAMEPLAY_TAG(State_Interaction_TimeRift, "State.Interaction.TimeRift");
+
+
 }

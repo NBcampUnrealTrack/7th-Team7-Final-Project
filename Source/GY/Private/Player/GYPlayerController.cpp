@@ -7,7 +7,9 @@
 #include "Character/GYHeroComponent.h"
 #include "Character/GYPawnExtensionComponent.h"
 #include "Cheats/GYServerCheatProxy.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Net/UnrealNetwork.h"
+#include "Player/GYPlayerState.h"
 
 AGYPlayerController::AGYPlayerController()
 {
@@ -58,7 +60,7 @@ void AGYPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimePrope
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 #if !UE_BUILD_SHIPPING
-	DOREPLIFETIME(AGYPlayerController,ServerCheatProxy);
+	DOREPLIFETIME(AGYPlayerController, ServerCheatProxy);
 #endif
 }
 
@@ -67,3 +69,18 @@ void AGYPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 }
 
+void AGYPlayerController::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
+	if (!PS) return;
+
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	UGYUIManagerSubsystem* UIManager = GetLocalPlayer()->GetSubsystem<UGYUIManagerSubsystem>();
+	if (!UIManager) return;
+
+	UIManager->BindASC(ASC);
+}

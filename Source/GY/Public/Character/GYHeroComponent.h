@@ -32,7 +32,7 @@ public:
 	void InitializePlayerInput(UInputComponent* PlayerInputComponent);
 
 	void Input_Move(const FInputActionValue& InputActionValue);
-
+	void Input_Interact(const FInputActionValue& InputActionValue);
 protected:
 	//생명 주기 함수
 	virtual void OnRegister() override;

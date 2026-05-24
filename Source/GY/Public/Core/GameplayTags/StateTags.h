@@ -17,4 +17,7 @@ namespace GYStateTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Combat_SuperArmor)
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_Reviving)
+
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift)
+
 }

@@ -23,6 +23,80 @@ bool UGYUIManagerSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 	return true;
 }
 
+void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
+{
+	if (!InASC || BoundASC == InASC)
+	{
+		return;
+	}
+
+	if (BoundASC.IsValid())
+	{
+		for (auto& Pair : TagWidgetMap)
+		{
+			BoundASC->UnregisterGameplayTagEvent(
+				Pair.Value.DelegateHandle,
+				Pair.Key,
+				EGameplayTagEventType::NewOrRemoved);
+		}
+	}
+
+	BoundASC = InASC;
+
+	// 등록된 태그 전부 재구독
+	for (auto& Pair : TagWidgetMap)
+	{
+		Pair.Value.DelegateHandle =
+			InASC->RegisterGameplayTagEvent(Pair.Key, EGameplayTagEventType::NewOrRemoved)
+			     .AddUObject(this, &UGYUIManagerSubsystem::OnTagChanged);
+	}
+}
+
+void UGYUIManagerSubsystem::RegisterTagDrivenWidget(
+	FGameplayTag StateTag,
+	FGameplayTag LayerTag,
+	TSubclassOf<UCommonActivatableWidget> WidgetClass)
+{
+	FTagWidgetEntry Entry;
+	Entry.LayerTag = LayerTag;
+	Entry.WidgetClass = WidgetClass;
+
+	if (BoundASC.IsValid())
+	{
+		Entry.DelegateHandle =
+			BoundASC->RegisterGameplayTagEvent(StateTag, EGameplayTagEventType::NewOrRemoved)
+			        .AddUObject(this, &UGYUIManagerSubsystem::OnTagChanged);
+	}
+
+	TagWidgetMap.Add(StateTag, Entry);
+}
+
+void UGYUIManagerSubsystem::OnTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	FTagWidgetEntry* Entry = TagWidgetMap.Find(Tag);
+	if (!Entry)
+	{
+		return;
+	}
+	//위젯push
+	if (NewCount > 0)
+	{
+		if (!Entry->ActiveWidget.IsValid())
+		{
+			UCommonActivatableWidget* Widget = PushWidgetToLayer(Entry->LayerTag, Entry->WidgetClass);
+			Entry->ActiveWidget = Widget;
+		}
+	}
+	else//위젯 pop
+	{
+		if (Entry->ActiveWidget.IsValid())
+		{
+			PopWidget(Entry->ActiveWidget.Get());
+			Entry->ActiveWidget = nullptr;
+		}
+	}
+}
+
 void UGYUIManagerSubsystem::CreatePrimaryGameLayout(TSubclassOf<UGYPrimaryGameLayout> LayoutClass)
 {
 	if (PrimaryGameLayout) return; // 중복 생성 방지
