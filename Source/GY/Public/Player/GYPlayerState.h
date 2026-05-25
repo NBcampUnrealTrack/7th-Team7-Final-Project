@@ -2,6 +2,7 @@
 
 #include "AbilitySystemInterface.h"
 #include "CoreMinimal.h"
+#include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "AbilitySystem/Attributes/Player/GYWeaponAttribute.h"
 #include "GameFramework/PlayerState.h"
 #include "GYPlayerState.generated.h"
@@ -10,6 +11,7 @@ class UAbilitySystemComponent;
 class UCurrencyComponent;
 class UEquipmentLoadoutComponent;
 class UGYAbilitySystemComponent;
+class UGYPawnData;
 class UInventoryComponent;
 class UGYPlayerBaseAttribute;
 class UGYPlayerAdditionalAttribute;
@@ -24,8 +26,12 @@ public:
 	AGYPlayerState();
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UGYAbilitySystemComponent* GetGYAbilitySystemComponent() const { return AbilitySystemComponent; }
+
+	const UGYPawnData* GetPawnData() const { return PawnData; }
+	void SetPawnData(const UGYPawnData* InPawnData);
 
 	UFUNCTION(BlueprintPure)
 	UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
@@ -37,6 +43,15 @@ public:
 	UCurrencyComponent* GetCurrencyComponent() const { return CurrencyComponent; }
 
 protected:
+	UFUNCTION()
+	void OnRep_PawnData();
+
+	UPROPERTY(ReplicatedUsing = OnRep_PawnData)
+	TObjectPtr<const UGYPawnData> PawnData;
+
+	UPROPERTY()
+	FAbilitySetGrantedHandles GrantedHandles;
+
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UGYAbilitySystemComponent> AbilitySystemComponent;
 

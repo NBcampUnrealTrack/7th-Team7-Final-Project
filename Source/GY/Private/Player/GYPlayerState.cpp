@@ -1,13 +1,16 @@
 ﻿#include "Player/GYPlayerState.h"
 
+#include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystem/Attributes/CombatAttributeSet.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAdditionalAttribute.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "Character/GYPawnData.h"
 #include "Currency/CurrencyComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Inventory/InventoryComponent.h"
+#include "Net/UnrealNetwork.h"
 
 AGYPlayerState::AGYPlayerState()
 {
@@ -37,4 +40,37 @@ AGYPlayerState::AGYPlayerState()
 UAbilitySystemComponent* AGYPlayerState::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void AGYPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGYPlayerState, PawnData);
+}
+
+void AGYPlayerState::SetPawnData(const UGYPawnData* InPawnData)
+{
+	check(InPawnData);
+
+	if (GetLocalRole() != ROLE_Authority) return;
+	if (PawnData) return;
+
+	PawnData = InPawnData;
+
+	if (AbilitySystemComponent)
+	{
+		for (const UAbilitySet* AbilitySet : PawnData->AbilitySets)
+		{
+			if (AbilitySet)
+			{
+				AbilitySet->GiveToAbilitySystem(AbilitySystemComponent, &GrantedHandles);
+			}
+		}
+	}
+
+	ForceNetUpdate();
+}
+
+void AGYPlayerState::OnRep_PawnData()
+{
 }

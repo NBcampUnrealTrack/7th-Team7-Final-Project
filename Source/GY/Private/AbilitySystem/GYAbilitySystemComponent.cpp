@@ -1,10 +1,12 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "AbilitySystem/GYPeriodicAttributeEffect.h"
 #include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
 
 void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
 {
+
 	Super::InitAbilityActorInfo(InOwnerActor, InAvatarActor);
 
 	if (StaminaRegenEffect)
@@ -26,11 +28,32 @@ void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 			RegisterGameplayTagEvent(Tag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &UGYAbilitySystemComponent::OnCombatTagChanged);
 	}
 
-	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		ScheduleEffect(StaminaRegenEffect, StaminaRegenGEHandle, StaminaRegenDelayHandle, &UGYAbilitySystemComponent::StartStaminaRegen);
+		ScheduleEffect(StaggerRegenEffect, StaggerRegenGEHandle, StaggerRegenDelayHandle, &UGYAbilitySystemComponent::StartStaggerRegen);
+		ScheduleEffect(StunRegenEffect,    StunRegenGEHandle,    StunRegenDelayHandle,    &UGYAbilitySystemComponent::StartStunRegen);
+	}
 
-	ScheduleEffect(StaminaRegenEffect, StaminaRegenGEHandle, StaminaRegenDelayHandle, &UGYAbilitySystemComponent::StartStaminaRegen);
-	ScheduleEffect(StaggerRegenEffect, StaggerRegenGEHandle, StaggerRegenDelayHandle, &UGYAbilitySystemComponent::StartStaggerRegen);
-	ScheduleEffect(StunRegenEffect, StunRegenGEHandle, StunRegenDelayHandle, &UGYAbilitySystemComponent::StartStunRegen);
+	TryActivateAbilitiesOnSpawn();
+}
+
+void UGYAbilitySystemComponent::Server_SendGameplayEvent_Implementation(FGameplayTag EventTag,
+	FGameplayEventData Payload)
+{
+	HandleGameplayEvent(EventTag, &Payload);
+}
+
+void UGYAbilitySystemComponent::TryActivateAbilitiesOnSpawn()
+{
+	ABILITYLIST_SCOPE_LOCK();
+	for (const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+	{
+		if (const UGYGameplayAbility* AbilityCDO = Cast<UGYGameplayAbility>(Spec.Ability))
+		{
+			AbilityCDO->TryActivateAbilityOnSpawn(AbilityActorInfo.Get(), Spec);
+		}
+	}
 }
 
 void UGYAbilitySystemComponent::RescheduleStaminaRegen()

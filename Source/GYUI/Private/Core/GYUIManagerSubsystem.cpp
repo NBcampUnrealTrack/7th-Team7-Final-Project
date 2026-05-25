@@ -85,6 +85,14 @@ void UGYUIManagerSubsystem::OnTagChanged(const FGameplayTag Tag, int32 NewCount)
 		{
 			UCommonActivatableWidget* Widget = PushWidgetToLayer(Entry->LayerTag, Entry->WidgetClass);
 			Entry->ActiveWidget = Widget;
+
+			if (Widget)
+			{
+				Widget->OnDeactivated().AddLambda([Entry]()
+				{
+					Entry->ActiveWidget = nullptr;
+				});
+			}
 		}
 	}
 	else//위젯 pop

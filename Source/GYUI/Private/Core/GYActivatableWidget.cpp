@@ -1,5 +1,6 @@
 ﻿#include "Core/GYActivatableWidget.h"
 #include "CommonInputTypeEnum.h"
+#include "Core/GYUIManagerSubsystem.h"
 
 UGYActivatableWidget::UGYActivatableWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -17,5 +18,26 @@ TOptional<FUIInputConfig> UGYActivatableWidget::GetDesiredInputConfig() const
 	case EGYWidgetInputMode::Default:
 	default:
 		return TOptional<FUIInputConfig>();
+	}
+}
+
+void UGYActivatableWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	if (TagDrivenWidgets.Num() == 0) return;
+
+	ULocalPlayer* LocalPlayer = GetOwningLocalPlayer();
+	if (!LocalPlayer) return;
+
+	UGYUIManagerSubsystem* UIManager = LocalPlayer->GetSubsystem<UGYUIManagerSubsystem>();
+	if (!UIManager) return;
+
+	for (const FGYTagDrivenWidgetEntry& Entry : TagDrivenWidgets)
+	{
+		if (Entry.StateTag.IsValid() && Entry.WidgetClass)
+		{
+			UIManager->RegisterTagDrivenWidget(Entry.StateTag, Entry.LayerTag, Entry.WidgetClass);
+		}
 	}
 }

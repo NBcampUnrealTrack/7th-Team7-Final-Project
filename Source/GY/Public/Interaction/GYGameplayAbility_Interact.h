@@ -4,13 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
+#include "Interaction/InteractionOption.h"
 #include "GYGameplayAbility_Interact.generated.h"
 
 class IInteractable;
-struct FInteractionOption;
-/**
- *
- */
+
 UCLASS()
 class GY_API UGYGameplayAbility_Interact : public UGYGameplayAbility
 {
@@ -28,11 +26,20 @@ public:
 	UFUNCTION()
 	void UpdateInteraction(const TScriptInterface<IInteractable>& Interactable);
 
-	void TriggerInteraction();
+	UFUNCTION()
+	void OnNearestInteractableChanged(const TScriptInterface<IInteractable>& Interactable);
+
+	UFUNCTION()
+	void OnInteractEventReceived(FGameplayEventData Payload);
+
+	void TriggerInteraction(FGameplayTag OptionTag = FGameplayTag());
 
 
 protected:
 	TScriptInterface<IInteractable> CurrentInteractable;
+
+	UPROPERTY()
+	TArray<FInteractionOption> CurrentOptions;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	float InteractionScanRange = 300.f;

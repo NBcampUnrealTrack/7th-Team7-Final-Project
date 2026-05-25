@@ -15,6 +15,8 @@ ATimeRift::ATimeRift()
 
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	SetRootComponent(StaticMeshComponent);
+
+	InteractTag = GYGameplayTags::Interaction_TimeRift_Sit;
 }
 
 // Called when the game starts or when spawned

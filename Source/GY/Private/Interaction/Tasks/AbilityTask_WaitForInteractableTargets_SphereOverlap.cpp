@@ -49,12 +49,13 @@ void UAbilityTask_WaitForInteractableTargets_SphereOverlap::PerformOverlap()
 		false);
 	Params.AddIgnoredActor(Avatar);
 
+	//TODO: Optimization
 	TArray<FOverlapResult> Overlaps;
 	GetWorld()->OverlapMultiByChannel(
 		Overlaps,
 		Avatar->GetActorLocation(),
 		FQuat::Identity,
-		ECC_WorldDynamic,
+		ECC_Visibility,
 		FCollisionShape::MakeSphere(InteractionScanRange),
 		Params);
 
