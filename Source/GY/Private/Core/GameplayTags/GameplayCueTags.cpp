@@ -1,0 +1,32 @@
+#include "Core/GameplayTags/GameplayCueTags.h"
+
+namespace GYGameplayTags
+{
+	// 플레이어 피격
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Hit_Light, "GameplayCue.Combat.Hit.Light");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Hit_Heavy, "GameplayCue.Combat.Hit.Heavy");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Hit_Critical, "GameplayCue.Combat.Hit.Critical");
+
+	// 보스 액션
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Boss_Slam, "GameplayCue.Combat.Boss.Slam");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Boss_Roar, "GameplayCue.Combat.Boss.Roar");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Boss_Laser, "GameplayCue.Combat.Boss.Laser");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Boss_PhaseTransition, "GameplayCue.Combat.Boss.PhaseTransition");
+
+	// 플레이어 액션
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Player_Dash, "GameplayCue.Combat.Player.Dash");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Player_Parry, "GameplayCue.Combat.Player.Parry");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Player_Ultimate, "GameplayCue.Combat.Player.Ultimate");
+
+	// 상태 이상
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Stun, "GameplayCue.Status.Stun");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Burn, "GameplayCue.Status.Burn");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Frozen, "GameplayCue.Status.Frozen");
+
+	// 카메라 이펙트
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_HitLight, "GameplayCue.Camera.HitLight");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_HitHeavy, "GameplayCue.Camera.HitHeavy");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_ZoomIn, "GameplayCue.Camera.ZoomIn");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_BossSlam, "GameplayCue.Camera.BossSlam");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_Execution, "GameplayCue.Camera.Execution");
+}
