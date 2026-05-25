@@ -24,9 +24,6 @@ public class GY : ModuleRules
 			"GameplayMessageRuntime",
 			"ModularGameplay",
 			"GameFeatures",
-			"CommonUI",
-			"CommonInput",
-			"GYUI",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

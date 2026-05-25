@@ -41,13 +41,11 @@ void AGYGameMode::UpdateWorldTime(float DeltaTime)
 	float CurrentTime = GYGameState->GetCurrentTime();
 
 	CurrentTime += DeltaTime * GYGameState->GetTimeScale();
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("CurrentTIme : %f"), CurrentTime));
 	if (CurrentTime > GYGameState->GetMidnight())
 	{
 		UGYWorldResetSubsystem* WorldResetSubsystem = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>();
 		if (WorldResetSubsystem)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("WorldReset!")));
 			WorldResetSubsystem->ResetWorld();
 		}
 		CurrentTime = ActorGuidDataSettings->StartOfDayHour * 60.f * 60.f;

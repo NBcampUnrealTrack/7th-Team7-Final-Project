@@ -1,9 +1,14 @@
 ﻿#include "Core/GYUIManagerSubsystem.h"
 #include "GYUI/Public/Core/GYPrimaryGameLayout.h"
+#include "Core/GYUISettings.h"
+#include "GameplayTags/GYUILayerTags.h"
 #include "CommonActivatableWidget.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "Blueprint/UserWidget.h"
+#include "GY/Public/Player/GYPlayerController.h"
+#include "GY/Public/Player/GYPlayerState.h"
 
 void UGYUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -21,6 +26,49 @@ bool UGYUIManagerSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 	if (!Super::ShouldCreateSubsystem(Outer)) return false;
 	if (IsRunningDedicatedServer()) return false;
 	return true;
+}
+
+void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayerController)
+{
+	Super::PlayerControllerChanged(NewPlayerController);
+
+	if (!NewPlayerController || !NewPlayerController->IsLocalController()) return;
+
+	if (const UGYUISettings* Settings = GetDefault<UGYUISettings>())
+	{
+		if (UClass* LayoutClass = Settings->PrimaryGameLayoutClass.LoadSynchronous())
+		{
+			CreatePrimaryGameLayout(LayoutClass);
+		}
+		if (UClass* HUDClass = Settings->HUDWidgetClass.LoadSynchronous())
+		{
+			PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDClass);
+		}
+	}
+
+	if (AGYPlayerState* PS = NewPlayerController->GetPlayerState<AGYPlayerState>())
+	{
+		if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+		{
+			BindASC(ASC);
+		}
+	}
+
+	if (AGYPlayerController* GYPC = Cast<AGYPlayerController>(NewPlayerController))
+	{
+		GYPC->OnPlayerStateInitialized.AddUObject(this, &UGYUIManagerSubsystem::HandlePlayerStateInitialized);
+	}
+}
+
+void UGYUIManagerSubsystem::HandlePlayerStateInitialized(AGYPlayerController* PC)
+{
+	if (!PC) return;
+	AGYPlayerState* PS = PC->GetPlayerState<AGYPlayerState>();
+	if (!PS) return;
+	if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+	{
+		BindASC(ASC);
+	}
 }
 
 void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)

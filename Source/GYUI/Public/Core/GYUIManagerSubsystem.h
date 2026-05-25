@@ -5,6 +5,7 @@
 #include "GameplayTagContainer.h"
 #include "GYUIManagerSubsystem.generated.h"
 
+class AGYPlayerController;
 class UCommonActivatableWidget;
 class UGYPrimaryGameLayout;
 
@@ -20,6 +21,7 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
+	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 
 	//PlayerState의 태그 구독
 	void BindASC(UAbilitySystemComponent* InASC);
@@ -68,4 +70,6 @@ private:
 	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
 
 	void OnTagChanged(const FGameplayTag Tag, int32 NewCount);
+
+	void HandlePlayerStateInitialized(AGYPlayerController* PC);
 };

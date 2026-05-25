@@ -4,9 +4,9 @@
 #include "GameFramework/PlayerController.h"
 #include "GYPlayerController.generated.h"
 
-class UGYPrimaryGameLayout;
-class UCommonActivatableWidget;
 class AGYServerCheatProxy;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FGYPlayerStateInitializedDelegate, AGYPlayerController* /*PC*/);
 
 UCLASS()
 class GY_API AGYPlayerController : public APlayerController
@@ -17,18 +17,13 @@ public:
 	AGYPlayerController();
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
+	FGYPlayerStateInitializedDelegate OnPlayerStateInitialized;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void OnRep_PlayerState() override;
-
-	/** UI 레이아웃 클래스 정보 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|UI", meta=(AllowPrivateAccess=true))
-	TSubclassOf<UGYPrimaryGameLayout> PrimaryGameLayoutClass;
-
-	/** 기본 HUD 루트 위젯 클래스 정보 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|UI", meta=(AllowPrivateAccess=true))
-	TSubclassOf<UCommonActivatableWidget> HUDWidgetClass;
+	virtual void OnPossess(APawn* InPawn) override;
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Cheat")
