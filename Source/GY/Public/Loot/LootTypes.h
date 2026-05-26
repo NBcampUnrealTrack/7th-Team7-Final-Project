@@ -51,11 +51,5 @@ struct GY_API FLootContext
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite)
-	FName SourceId;
-
-	UPROPERTY(BlueprintReadWrite)
-	int32 RegionLevel = 1;
-
-	UPROPERTY(BlueprintReadWrite)
 	int32 PartySize = 1;
 };

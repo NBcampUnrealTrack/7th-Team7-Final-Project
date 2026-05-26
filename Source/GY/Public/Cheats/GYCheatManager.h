@@ -42,7 +42,7 @@ public:
 	void GY_Enchant(int32 InvIndex);
 
 	UFUNCTION(Exec)
-	void GY_SpawnLootBox(const FString& SourceId, const FString& LootTablePath);
+	void GY_SpawnLootBox(const FString& RegionDataPath);
 
 	UFUNCTION(Exec)
 	void GY_GetNearestInteractionOptions();

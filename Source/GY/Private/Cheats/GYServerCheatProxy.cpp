@@ -9,6 +9,7 @@
 #include "Items/ItemDefinition.h"
 #include "Kismet/GameplayStatics.h"
 #include "Loot/LootBoxActor.h"
+#include "Loot/RegionLootData.h"
 #include "Player/GYPlayerState.h"
 
 namespace
@@ -114,15 +115,15 @@ void AGYServerCheatProxy::Server_KillAllEnemies_Implementation()
 	UE_LOG(LogTemp, Log, TEXT("GY_KillAllEnemies: %d 마리 처리"), Enemies.Num());
 }
 
-void AGYServerCheatProxy::Server_SpawnLootBox_Implementation(const FString& SourceId, const FString& LootTablePath)
+void AGYServerCheatProxy::Server_SpawnLootBox_Implementation(const FString& RegionDataPath)
 {
 	APawn* Pawn = GetCheatPawn(this);
 	if (!IsValid(Pawn)) return;
 
-	UDataTable* Table = LoadObject<UDataTable>(nullptr, *LootTablePath);
-	if (!IsValid(Table))
+	URegionLootData* Region = LoadObject<URegionLootData>(nullptr, *RegionDataPath);
+	if (!IsValid(Region))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Server_SpawnLootBox: failed to load table %s"), *LootTablePath);
+		UE_LOG(LogTemp, Warning, TEXT("Server_SpawnLootBox: failed to load region data %s"), *RegionDataPath);
 		return;
 	}
 
@@ -136,11 +137,10 @@ void AGYServerCheatProxy::Server_SpawnLootBox_Implementation(const FString& Sour
 
 	if (!IsValid(Box)) return;
 
-	Box->LootSourceId = FName(*SourceId);
-	Box->LootTable = Table;
+	Box->RegionData = Region;
 
-	UE_LOG(LogTemp, Log, TEXT("Server_SpawnLootBox: spawned %s (SourceId=%s)"),
-		*Box->GetName(), *SourceId);
+	UE_LOG(LogTemp, Log, TEXT("Server_SpawnLootBox: spawned %s (Region=%s)"),
+		*Box->GetName(), *Region->RegionId.ToString());
 }
 
 void AGYServerCheatProxy::Server_InvokeInteraction_Implementation(AActor* Target, FGameplayTag OptionTag)

@@ -2,38 +2,34 @@
 
 #include "Enchant/EnchantOptionRoller.h"
 #include "Engine/DataTable.h"
-#include "Loot/LootTableRow.h"
+#include "Items/ItemDefinition.h"
+#include "Loot/LootRows.h"
+#include "Loot/RegionLootData.h"
 
 namespace
 {
-	TArray<const FLootTableRow*> GatherCandidates(UDataTable* LootTable, FName SourceId)
+	template <typename TRow>
+	const TRow* PickWeighted(UDataTable* Table, FRandomStream& Stream)
 	{
-		TArray<const FLootTableRow*> Result;
-		if (!IsValid(LootTable)) return Result;
+		if (!IsValid(Table)) return nullptr;
 
-		LootTable->ForeachRow<FLootTableRow>(TEXT("LootService::RollLoot"),
-			[&Result, SourceId](const FName& RowName, const FLootTableRow& Row)
+		TArray<const TRow*> Candidates;
+		int32 TotalWeight = 0;
+
+		Table->ForeachRow<TRow>(TEXT("LootService::PickWeighted"),
+			[&Candidates, &TotalWeight](const FName&, const TRow& Row)
 			{
-				if (Row.SourceId == SourceId && Row.Weight > 0)
+				if (Row.Weight > 0)
 				{
-					Result.Add(&Row);
+					Candidates.Add(&Row);
+					TotalWeight += Row.Weight;
 				}
 			});
 
-		return Result;
-	}
-
-	const FLootTableRow* PickWeightedCandidate(const TArray<const FLootTableRow*>& Candidates, FRandomStream& Stream)
-	{
-		int32 TotalWeight = 0;
-		for (const FLootTableRow* Row : Candidates)
-		{
-			TotalWeight += Row->Weight;
-		}
 		if (TotalWeight <= 0) return nullptr;
 
 		int32 Roll = Stream.RandRange(1, TotalWeight);
-		for (const FLootTableRow* Row : Candidates)
+		for (const TRow* Row : Candidates)
 		{
 			Roll -= Row->Weight;
 			if (Roll <= 0) return Row;
@@ -47,28 +43,28 @@ namespace
 	}
 }
 
-FLootResult ULootService::RollLoot(const FLootContext& Context, UDataTable* LootTable, const FRandomStream& Seed) const
+FLootResult ULootService::RollLoot(const URegionLootData* Region, const FLootContext& Context, const FRandomStream& Seed) const
 {
 	FLootResult Result;
-
-	const TArray<const FLootTableRow*> Candidates = GatherCandidates(LootTable, Context.SourceId);
-	if (Candidates.IsEmpty()) return Result;
+	if (!IsValid(Region)) return Result;
 
 	FRandomStream Stream = Seed;
 
-	const FLootTableRow* Picked = PickWeightedCandidate(Candidates, Stream);
-	if (Picked == nullptr) return Result;
+	const FItemPoolRow* ItemRow = PickWeighted<FItemPoolRow>(Region->ItemPool, Stream);
+	const FGradeDistributionRow* GradeRow = PickWeighted<FGradeDistributionRow>(Region->GradeDistribution, Stream);
+	const FLevelDistributionRow* LevelRow = PickWeighted<FLevelDistributionRow>(Region->LevelDistribution, Stream);
+
+	if (ItemRow == nullptr || GradeRow == nullptr || LevelRow == nullptr) return Result;
 
 	FLootDrop Drop;
-	Drop.Definition = Picked->Definition;
-	Drop.Count = Stream.RandRange(Picked->MinCount, Picked->MaxCount);
-	Drop.GradeTag = Picked->GradeTag;
-	Drop.Level = Picked->Level;
+	Drop.Definition = ItemRow->Definition;
+	Drop.Count = Stream.RandRange(ItemRow->MinCount, ItemRow->MaxCount);
+	Drop.GradeTag = GradeRow->GradeTag;
+	Drop.Level = LevelRow->Level;
 	Drop.StatDeviation = RollStatDeviation(Stream);
 	Drop.UsedSeed = Seed.GetInitialSeed();
 	Drop.RolledOptionIds = EnchantOptionRoller::RollAllOptions(Drop.Definition.LoadSynchronous(), Drop.GradeTag, Stream);
 
-	// TODO: CT_RegionScaling으로 Grade/Level 결정
 	// TODO: PartySize 보정
 
 	Result.Drops.Add(Drop);

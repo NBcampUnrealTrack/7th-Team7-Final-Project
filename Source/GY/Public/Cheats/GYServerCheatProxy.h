@@ -29,7 +29,7 @@ public:
 	void Server_AddTimeShards(int32 Amount);
 
 	UFUNCTION(Server, Reliable)
-	void Server_SpawnLootBox(const FString& SourceId, const FString& LootTablePath);
+	void Server_SpawnLootBox(const FString& RegionDataPath);
 
 	UFUNCTION(Server, Reliable)
 	void Server_InvokeInteraction(AActor* Target, FGameplayTag OptionTag);

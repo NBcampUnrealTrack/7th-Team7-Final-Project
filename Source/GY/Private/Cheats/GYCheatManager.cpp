@@ -251,13 +251,13 @@ void UGYCheatManager::GY_Enchant(int32 InvIndex)
 // Loot / Interaction
 // ============================================================
 
-void UGYCheatManager::GY_SpawnLootBox(const FString& SourceId, const FString& LootTablePath)
+void UGYCheatManager::GY_SpawnLootBox(const FString& RegionDataPath)
 {
 	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
 	if (!AGYPlayerController) return;
 	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
 	if (!AGYServerCheatProxy) return;
-	AGYServerCheatProxy->Server_SpawnLootBox(SourceId, LootTablePath);
+	AGYServerCheatProxy->Server_SpawnLootBox(RegionDataPath);
 }
 
 void UGYCheatManager::GY_GetNearestInteractionOptions()

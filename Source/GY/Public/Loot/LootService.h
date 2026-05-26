@@ -5,7 +5,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "LootService.generated.h"
 
-class UDataTable;
+class URegionLootData;
 
 UCLASS()
 class GY_API ULootService : public UGameInstanceSubsystem
@@ -13,5 +13,5 @@ class GY_API ULootService : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
-	FLootResult RollLoot(const FLootContext& Context, UDataTable* LootTable, const FRandomStream& Seed) const;
+	FLootResult RollLoot(const URegionLootData* Region, const FLootContext& Context, const FRandomStream& Seed) const;
 };

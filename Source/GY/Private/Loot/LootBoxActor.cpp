@@ -2,11 +2,11 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Core/GameplayTags/InteractionTags.h"
-#include "Engine/DataTable.h"
 #include "Engine/GameInstance.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
 #include "Loot/LootService.h"
+#include "Loot/RegionLootData.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
 
@@ -59,14 +59,13 @@ void ALootBoxActor::OpenBox(APawn* Opener)
 	ULootService* LootService = GI->GetSubsystem<ULootService>();
 	if (!IsValid(LootService)) return;
 
-	UDataTable* Table = LootTable.LoadSynchronous();
-	if (!IsValid(Table)) return;
+	const URegionLootData* Region = RegionData.LoadSynchronous();
+	if (!IsValid(Region)) return;
 
 	FLootContext Context;
-	Context.SourceId = LootSourceId;
 
 	const FRandomStream Seed(FMath::Rand());
-	const FLootResult Result = LootService->RollLoot(Context, Table, Seed);
+	const FLootResult Result = LootService->RollLoot(Region, Context, Seed);
 
 	PendingDrops = Result.Drops;
 	bOpened = true;
