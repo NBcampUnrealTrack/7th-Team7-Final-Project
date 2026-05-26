@@ -68,7 +68,17 @@ FLockWorkflow::FLockWorkflow(
 		[this](const FString&, UPackage* Package, FObjectPostSaveContext)
 		{
 			if (!IsValid(Package)) return;
-			SavedPackageNamesThisSession.Add(Package->GetName());
+			const FString PackageName = Package->GetName();
+			SavedPackageNamesThisSession.Add(PackageName);
+
+			if (ReadOnlyOpenedPackageNames.Contains(PackageName))
+			{
+				const FString Msg = FString::Printf(
+					TEXT("저장됨, 그러나 락이 없어 push 시 LFS가 거부할 수 있습니다: %s"),
+					*PackageName);
+				UE_LOG(LogPoorforce, Warning, TEXT("%s"), *Msg);
+				NotifyUserWarning(Msg);
+			}
 		});
 }
 
@@ -193,6 +203,14 @@ void FLockWorkflow::HandleAssetOpened(UObject* Asset, bool bSkipInitialDownload)
 	// RemoveEditingObject → AddEditingObject 를 호출해서 close/open 이벤트를 발화함.
 	// OnAssetEditorOpened 가 발화할 때까지 close는 무시.
 	OpeningAssetPackageNames.Add(Resolved.PackageName);
+
+	// "그래도 열기" 로 재오픈되는 경로 — 락 시퀀스 다시 타지 않음 (다이얼로그 무한루프 방지).
+	if (ReadOnlyOpenedPackageNames.Contains(Resolved.PackageName))
+	{
+		UE_LOG(LogPoorforce, Verbose,
+			TEXT("Skip lock acquisition — read-only opened: %s"), *Resolved.RelativePath);
+		return;
+	}
 
 	if (InFlightSyncs.Contains(Resolved.LockKey))
 	{
@@ -495,6 +513,12 @@ void FLockWorkflow::HandleAssetClosed(UObject* Asset)
 		return;
 	}
 
+	if (ReadOnlyOpenedPackageNames.Remove(Resolved.PackageName) > 0)
+	{
+		UE_LOG(LogPoorforce, Verbose,
+			TEXT("Read-only opened asset closed: %s"), *Resolved.RelativePath);
+	}
+
 	if (!OwnedLockKeys.Contains(Resolved.LockKey))
 	{
 		return;
@@ -537,6 +561,8 @@ void FLockWorkflow::HandleAssetClosed(UObject* Asset)
 void FLockWorkflow::HandleAssetRenamed(const FString& OldPackageName, UObject* NewAsset)
 {
 	if (!Client.IsValid()) return;
+
+	ReadOnlyOpenedPackageNames.Remove(OldPackageName);
 
 	const FPoorforceManagedPath* OldMatch = PoorforcePathResolver::ResolveLongestPrefix(OldPackageName, Config.ManagedPaths);
 	if (OldMatch != nullptr)
@@ -669,9 +695,25 @@ void FLockWorkflow::HandleBlockedByOther(
 	// LockOnly는 LFS lock force 권한이 일반 사용자에게 없어서 [강제 해제] 의미 없음 → 버튼 숨김.
 	// LockAndSync는 LFS 안 쓰므로 강제 해제 유효.
 	const bool bAllowForceUnlock = Resolved.Match->Mode == EPoorforcePathMode::LockAndSync;
+	// LockOnly만 "그래도 열기" 허용. LockAndSync는 로컬/리모트 sync 깨질 위험 있어 금지.
+	const bool bAllowOpenAnyway  = Resolved.Match->Mode == EPoorforcePathMode::LockOnly;
 
 	const EBlockedDialogResult Choice = PoorforceDialogs::ShowBlockedDialog(
-		Resolved.RelativePath, Entry.OwnerId, ElapsedText, bAllowForceUnlock);
+		Resolved.RelativePath, Entry.OwnerId, ElapsedText, bAllowForceUnlock, bAllowOpenAnyway);
+
+	if (Choice == EBlockedDialogResult::OpenAnywayRequested)
+	{
+		ReadOnlyOpenedPackageNames.Add(Resolved.PackageName);
+		UE_LOG(LogPoorforce, Log,
+			TEXT("[Case 3 → OpenAnyway] '%s' opened without lock. Saves will warn but not be blocked."),
+			*Resolved.RelativePath);
+
+		ReopenAssetEditor(WeakAsset);
+		NotifyUserWarning(FString::Printf(
+			TEXT("락 없이 열림: %s\n저장은 가능하지만 push 시 LFS가 거부할 수 있습니다."),
+			*Resolved.RelativePath));
+		return;
+	}
 
 	if (Choice != EBlockedDialogResult::ForceUnlockRequested)
 	{

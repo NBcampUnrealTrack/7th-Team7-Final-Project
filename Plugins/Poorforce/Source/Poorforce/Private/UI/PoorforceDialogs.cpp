@@ -37,13 +37,14 @@ namespace PoorforceDialogs
 		const FString& RelativePath,
 		const FString& OwnerId,
 		const FString& ElapsedText,
-		bool bShowForceUnlock)
+		bool bShowForceUnlock,
+		bool bShowOpenAnyway)
 	{
 		EBlockedDialogResult Result = EBlockedDialogResult::Confirmed;
 
 		const TSharedRef<SWindow> Host = MakeHostWindow(
 			FText::FromString(TEXT("Poorforce — 잠긴 에셋")),
-			FVector2D(480.f, 240.f));
+			FVector2D(560.f, 260.f));
 
 		Host->SetContent(
 			SNew(SBlockedDialog)
@@ -52,7 +53,8 @@ namespace PoorforceDialogs
 			.ElapsedText(ElapsedText)
 			.ParentWindow(Host)
 			.OutResult(&Result)
-			.bShowForceUnlock(bShowForceUnlock));
+			.bShowForceUnlock(bShowForceUnlock)
+			.bShowOpenAnyway(bShowOpenAnyway));
 
 		FSlateApplication::Get().AddModalWindow(Host, GetParentWindowForModal(), /*bSlowTaskWindow=*/ false);
 
