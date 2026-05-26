@@ -2,6 +2,7 @@
 #include "AbilitySystem/Attributes/GYBaseAttribute.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
+#include "Logging/GYLogManager.h"
 
 static void ApplyInstantGEToAttribute(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Magnitude)
 {
@@ -25,9 +26,9 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* ASC, float RawDamage
 	const float Defense = Base ? Base->GetDefense() : 0.f;
 	const float Effective = FMath::Max(0.f, RawDamage - Defense);
 
-	UE_LOG(LogTemp, Warning, TEXT("[CombatStatics] ApplyDamage - Raw: %.1f, Defense: %.1f, Effective: %.1f, Target: %s"),
-		RawDamage, Defense, Effective,
-		ASC->GetAvatarActor() ? *ASC->GetAvatarActor()->GetName() : TEXT("Unknown"));
+	GY_WARN(Combat, ESK, "[CombatStatics] ApplyDamage - Raw: %.1f, Defense: %.1f, Effective: %.1f, Target: %s",
+	RawDamage, Defense, Effective,
+	ASC->GetAvatarActor() ? *ASC->GetAvatarActor()->GetName() : TEXT("Unknown"));
 
 	ApplyInstantGEToAttribute(ASC, UGYBaseAttribute::GetCurrentHealthAttribute(), -Effective);
 }
