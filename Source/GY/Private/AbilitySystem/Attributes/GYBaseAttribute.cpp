@@ -2,6 +2,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
+#include "Logging/GYLogManager.h"
 
 UGYBaseAttribute::UGYBaseAttribute()
 {
@@ -20,6 +21,10 @@ void UGYBaseAttribute::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UGYBaseAttribute::OnRep_CurrentHealth(const FGameplayAttributeData& OldCurrentHealth)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYBaseAttribute, CurrentHealth, OldCurrentHealth);
+	GY_WARN(Network, ESK, "HP Replicated (클라) %.1f -> %.1f - Owner: %s",
+		OldCurrentHealth.GetCurrentValue(),
+		CurrentHealth.GetCurrentValue(),
+		GetOwningActor() ? *GetOwningActor()->GetName() : TEXT("Unknown"));
 }
 
 void UGYBaseAttribute::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
@@ -45,4 +50,10 @@ void UGYBaseAttribute::PreAttributeChange(const FGameplayAttribute& Attribute, f
 void UGYBaseAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
+	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
+	{
+		GY_WARN(Combat, ESK, "HP 변경 (서버) %.1f / %.1f - Owner: %s",
+			GetCurrentHealth(), GetMaxHealth(),
+			GetOwningActor() ? *GetOwningActor()->GetName() : TEXT("Unknown"));
+	}
 }

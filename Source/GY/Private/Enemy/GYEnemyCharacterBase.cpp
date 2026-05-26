@@ -119,13 +119,19 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 		InitAnimInstanceAssets(AnimInst);
 	}
 
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	}
+
 	if (HasAuthority())
 	{
 		ApplyInitStatEffect();
-		ApplyPassiveEffects();
+		//ApplyPassiveEffects();
 		GrantDefaultAbilities();
 	}
 
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
 
 void AGYEnemyCharacterBase::ApplyVisualConfig(const FEnemyVisualConfig& Config)
@@ -160,11 +166,8 @@ void AGYEnemyCharacterBase::ApplyAIConfig(const FEnemyAIConfig& Config)
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("[Enemy] BT 시작: %s"), *BT->GetName());
 	AIC->StartBehaviorTree(BT);
 
-	UE_LOG(LogTemp, Warning, TEXT("[Enemy] BT 시작 후 IsRunning: %s"),
-		AIC->GetBrainComponent() && AIC->GetBrainComponent()->IsRunning() ? TEXT("YES") : TEXT("NO"));
 }
 
 void AGYEnemyCharacterBase::ApplyAnimConfig(const FEnemyAnimationConfig& Config)
@@ -265,7 +268,7 @@ void AGYEnemyCharacterBase::TryGrantGASFromDataAsset()
 	}
 
 	ApplyInitStatEffect();
-	ApplyPassiveEffects();
+	//ApplyPassiveEffects();
 	GrantDefaultAbilities();
 	bGASGrantedFromDataAsset = true;
 }
@@ -363,10 +366,5 @@ void AGYEnemyCharacterBase::OnRep_EnemyType()
 void AGYEnemyCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (EnemyType != EEnemyType::None && !LoadedDataAsset)
-	{
-		LoadDataAssetAndApply();
-	}
 }
 

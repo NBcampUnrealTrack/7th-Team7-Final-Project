@@ -61,6 +61,7 @@ protected:
 
 	void InitGAS();
 	void GrantDefaultAbilities();
+	//TODO 은서 : 코드에서 Effect 생성해주므로 사실상 필요없을수도있음
 	void ApplyPassiveEffects();
 	void ApplyInitStatEffect();
 	//TODO 은서 : Enemy Attribute에 세팅 해야함.

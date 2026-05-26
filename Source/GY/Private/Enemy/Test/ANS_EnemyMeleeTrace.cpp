@@ -9,6 +9,7 @@ void UANS_EnemyMeleeTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSe
                                        float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	AlreadyHit.Reset();
+	bDebug = true;
 }
 
 void UANS_EnemyMeleeTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -16,15 +17,22 @@ void UANS_EnemyMeleeTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeq
 {
 	if (!MeshComp) return;
 	AActor* Owner = MeshComp->GetOwner();
-	if (!Owner || !Owner->HasAuthority()) return; // 서버에서만
+	if (!Owner || !Owner->HasAuthority()) return;
 
 	const FVector Start = MeshComp->GetSocketLocation(StartBone);
 	const FVector End   = MeshComp->GetSocketLocation(EndBone);
 
-	TArray<AActor*> Ignore; Ignore.Add(Owner);
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
+
+	TArray<AActor*> Ignore;
+	Ignore.Add(Owner);
 	TArray<FHitResult> Hits;
-	const bool bHit = UKismetSystemLibrary::SphereTraceMultiByProfile(
-		MeshComp, Start, End, Radius, TEXT("Pawn"), false, Ignore,
+
+	const bool bHit = UKismetSystemLibrary::SphereTraceMultiForObjects(
+		MeshComp, Start, End, Radius,
+		ObjectTypes,
+		false, Ignore,
 		bDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
 		Hits, true);
 

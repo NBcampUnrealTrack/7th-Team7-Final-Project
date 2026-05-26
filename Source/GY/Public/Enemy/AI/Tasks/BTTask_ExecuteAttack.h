@@ -1,7 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "BehaviorTree/BTTaskNode.h"
+#include "AbilitySystemComponent.h"
 #include "BTTask_ExecuteAttack.generated.h"
 
 class UGYEnemyAttackAbilityBase;
@@ -21,11 +23,17 @@ public:
 		EBTNodeResult::Type TaskResult) override;
 
 private:
-	void OnAbilityEnded(UGameplayAbility* Ability);
+	void OnASCAbilityEnded(const FAbilityEndedData& EndedData);
 
 	UPROPERTY()
 	TObjectPtr<UBehaviorTreeComponent> CachedOwnerComp;
 
 	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> CachedASC;
+
+	FGameplayAbilitySpecHandle CachedAbilityHandle;
+
+	UPROPERTY()
 	TObjectPtr<UGYEnemyAttackAbilityBase> ActiveAbility;
+
 };

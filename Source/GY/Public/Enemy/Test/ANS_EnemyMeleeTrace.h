@@ -14,7 +14,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Trace")
 	FName EndBone = TEXT("hand_r");
 	UPROPERTY(EditAnywhere, Category = "Trace")
-	float Radius = 30.f;
+	float Radius = 80.f;
 	UPROPERTY(EditAnywhere, Category = "Trace")
 	float Damage = 10.f;
 	UPROPERTY(EditAnywhere, Category = "Trace")
