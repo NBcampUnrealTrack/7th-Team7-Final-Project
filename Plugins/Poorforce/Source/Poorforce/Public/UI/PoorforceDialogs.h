@@ -13,7 +13,8 @@ namespace PoorforceDialogs
 		const FString& RelativePath,
 		const FString& OwnerId,
 		const FString& ElapsedText,
-		bool bShowForceUnlock = true);
+		bool bShowForceUnlock = true,
+		bool bShowOpenAnyway = false);
 
 	FForceUnlockDialogResult ShowForceUnlockDialog(
 		const FString& RelativePath,

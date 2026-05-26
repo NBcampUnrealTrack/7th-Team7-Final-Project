@@ -30,9 +30,24 @@ void SBlockedDialog::Construct(const FArguments& InArgs)
 		.OnClicked(this, &SBlockedDialog::HandleConfirm)
 	];
 
+	int32 NextColumn = 1;
+
+	if (InArgs._bShowOpenAnyway)
+	{
+		ButtonGrid->AddSlot(NextColumn++, 0)
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("OpenAnyway", "그래도 열기"))
+			.ToolTipText(LOCTEXT("OpenAnywayTooltip",
+				"락 없이 엽니다. 저장은 가능하나 push 시 LFS가 거부할 수 있습니다."))
+			.HAlign(HAlign_Center)
+			.OnClicked(this, &SBlockedDialog::HandleOpenAnyway)
+		];
+	}
+
 	if (InArgs._bShowForceUnlock)
 	{
-		ButtonGrid->AddSlot(1, 0)
+		ButtonGrid->AddSlot(NextColumn++, 0)
 		[
 			SNew(SButton)
 			.Text(LOCTEXT("ForceUnlock", "강제 해제..."))
@@ -98,6 +113,13 @@ FReply SBlockedDialog::HandleConfirm()
 FReply SBlockedDialog::HandleForceUnlock()
 {
 	if (OutResult != nullptr) *OutResult = EBlockedDialogResult::ForceUnlockRequested;
+	CloseParent();
+	return FReply::Handled();
+}
+
+FReply SBlockedDialog::HandleOpenAnyway()
+{
+	if (OutResult != nullptr) *OutResult = EBlockedDialogResult::OpenAnywayRequested;
 	CloseParent();
 	return FReply::Handled();
 }

@@ -65,6 +65,7 @@ private:
 	TSet<FString> InFlightSyncs;
 	TSet<FString> OpeningAssetPackageNames;
 	TSet<FString> SavedPackageNamesThisSession;
+	TSet<FString> ReadOnlyOpenedPackageNames;
 
 	FDelegateHandle PackageSavedHandle;
 
