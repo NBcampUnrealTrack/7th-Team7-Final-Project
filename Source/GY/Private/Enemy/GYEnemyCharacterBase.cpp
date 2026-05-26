@@ -127,7 +127,7 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 	if (HasAuthority())
 	{
 		ApplyInitStatEffect();
-		ApplyPassiveEffects();
+		//ApplyPassiveEffects();
 		GrantDefaultAbilities();
 	}
 
@@ -268,7 +268,7 @@ void AGYEnemyCharacterBase::TryGrantGASFromDataAsset()
 	}
 
 	ApplyInitStatEffect();
-	ApplyPassiveEffects();
+	//ApplyPassiveEffects();
 	GrantDefaultAbilities();
 	bGASGrantedFromDataAsset = true;
 }
