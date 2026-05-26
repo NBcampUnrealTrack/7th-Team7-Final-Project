@@ -9,7 +9,7 @@ class UGYCameraComponent;
 class UGYCameraModeData;
 
 
-UCLASS(Abstract)
+UCLASS()
 class GY_API UGYCameraModeBase : public UObject
 {
 	GENERATED_BODY()
