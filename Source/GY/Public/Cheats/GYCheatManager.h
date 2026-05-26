@@ -81,4 +81,6 @@ public:
 	UFUNCTION(Exec)
 	void GY_AddXP(float Amount);
 
+	UFUNCTION(Exec)
+	void GY_TestHitCue();
 };

@@ -7,6 +7,7 @@
 #include "Enemy/GYEnemyAIController.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Cheats/GYServerCheatProxy.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
@@ -576,4 +577,47 @@ void UGYCheatManager::GY_AddXP(float Amount)
 	AGYServerCheatProxy->Server_AddXP(Amount);
 }
 UE_ENABLE_OPTIMIZATION
+
+void UGYCheatManager::GY_TestHitCue()
+{
+	APawn* Pawn = GetCheatPawn(this);
+
+	if (!Pawn)
+	{
+		return;
+	}
+
+	IAbilitySystemInterface* ASI =
+		Cast<IAbilitySystemInterface>(Pawn);
+
+	if (!ASI)
+	{
+		return;
+	}
+
+	UAbilitySystemComponent* ASC =
+		ASI->GetAbilitySystemComponent();
+
+	if (!ASC)
+	{
+		return;
+	}
+
+	FGameplayCueParameters Params;
+
+	// 피격 방향
+	Params.Normal =
+		-Pawn->GetActorForwardVector();
+
+	// 강도
+	Params.RawMagnitude = 80.f;
+
+	// 위치
+	Params.Location =
+		Pawn->GetActorLocation();
+
+	ASC->ExecuteGameplayCue(
+		GYGameplayTags::GameplayCue_Combat_Hit_Heavy,
+		Params);
+}
 
