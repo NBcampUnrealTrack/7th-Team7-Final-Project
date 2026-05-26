@@ -18,5 +18,11 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_ChargeMontage)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Collision)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Cancel)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Parry)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_ParryMontage)
+
+	// State
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Parrying)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_CancelWindow)
 
 }

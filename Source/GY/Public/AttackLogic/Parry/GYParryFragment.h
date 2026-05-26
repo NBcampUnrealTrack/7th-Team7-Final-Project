@@ -4,39 +4,36 @@
 #include "AbilitySystem/Abilities/Fragment/AbilityFragment.h"
 #include "AttackLogic/Shared/GYAttributeCost.h"
 #include "GameplayTagContainer.h"
-#include "GYChargeFragment.generated.h"
+#include "GYParryFragment.generated.h"
 
 USTRUCT(BlueprintType)
-struct GY_API FGYChargeData
+struct GY_API FGYParryData
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0", Units = "s"))
-	float MinChargeTime = 0.5f;
+	float ParryTime = 0.5f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0", Units = "s"))
-	float MaxChargeTime = 2.0f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1.0"))
-	float DamageMultiplier = 2.0f;
+	float ParryAnimTime = 0.5f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cost")
-	FGYAttributeCost ChargeCost;
+	FGYAttributeCost StaminaCost;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cost")
-	FGYAttributeCost AttackCost;
+	FGYAttributeCost StaminaReward;
 };
 
 UCLASS(EditInlineNew, DefaultToInstanced)
-class GY_API UGYChargeFragment : public UAbilityFragment
+class GY_API UGYParryFragment : public UAbilityFragment
 {
 	GENERATED_BODY()
 
 public:
-	UGYChargeFragment();
+	UGYParryFragment();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Charge")
-	TMap<FGameplayTag, FGYChargeData> ChargeDataSets;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Parry")
+	TMap<FGameplayTag, FGYParryData> ParryDataSets;
 
-	const FGYChargeData* GetBestMatchingData(const FGameplayTagContainer& OwnedTags) const;
+	const FGYParryData* GetBestMatchingData(const FGameplayTagContainer& OwnedTags) const;
 };

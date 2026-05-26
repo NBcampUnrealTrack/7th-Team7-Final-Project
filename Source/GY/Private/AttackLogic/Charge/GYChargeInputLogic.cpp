@@ -14,7 +14,8 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	ChargeStartTime = 0.f;
 
 	FGameplayTagContainer OwnedTags;
-	if (UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo())
+	UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo();
+	if (ASC)
 	{
 		ASC->GetOwnedGameplayTags(OwnedTags);
 	}
@@ -48,6 +49,12 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	if (CachedMontageSet && CachedMontageSet->ChargeMontage)
 	{
 		Ability->PlayMontageForLogic(CachedMontageSet->ChargeMontage, 1.f);
+	}
+
+	if (ASC && ChargeData && ChargeData->ChargeCost.Attribute.IsValid() && ChargeData->ChargeCost.Amount > 0.f)
+	{
+		const float Current = ASC->GetNumericAttributeBase(ChargeData->ChargeCost.Attribute);
+		ASC->SetNumericAttributeBase(ChargeData->ChargeCost.Attribute, FMath::Max(0.f, Current - ChargeData->ChargeCost.Amount));
 	}
 
 	bCharging = true;
@@ -151,6 +158,37 @@ void UGYChargeInputLogic::ExecuteAttack()
 	}
 
 	CachedAbility->SetDamageMultiplier(DamageMultiplier);
+
+	if (const UGYChargeFragment* CostFragment = CachedAbility->GetFragment<UGYChargeFragment>())
+	{
+		const FGYChargeData* CostData = CostFragment->GetBestMatchingData(OwnedTags);
+		if (!CostData && !FallbackTags.IsEmpty())
+		{
+			CostData = CostFragment->GetBestMatchingData(FallbackTags);
+		}
+
+		if (CostData && CostData->AttackCost.Attribute.IsValid() && CostData->AttackCost.Amount > 0.f)
+		{
+			float Alpha = 0.f;
+			if (ElapsedTime >= CostData->MaxChargeTime)
+			{
+				Alpha = 1.f;
+			}
+			else if (ElapsedTime >= CostData->MinChargeTime)
+			{
+				const float Range = FMath::Max(CostData->MaxChargeTime - CostData->MinChargeTime, KINDA_SMALL_NUMBER);
+				Alpha = (ElapsedTime - CostData->MinChargeTime) / Range;
+			}
+
+			UAbilitySystemComponent* CostASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+			if (CostASC)
+			{
+				const float CostAmount = FMath::Lerp(0.f, CostData->AttackCost.Amount, Alpha);
+				const float Current = CostASC->GetNumericAttributeBase(CostData->AttackCost.Attribute);
+				CostASC->SetNumericAttributeBase(CostData->AttackCost.Attribute, FMath::Max(0.f, Current - CostAmount));
+			}
+		}
+	}
 
 	if (CachedMontageSet && CachedMontageSet->AttackMontage)
 	{

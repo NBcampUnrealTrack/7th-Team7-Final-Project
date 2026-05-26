@@ -104,6 +104,10 @@ void AGYTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &AGYTestCharacter::OnAttack);
 			EIC->BindAction(AttackAction, ETriggerEvent::Completed, this, &AGYTestCharacter::OnAttackReleased);
 		}
+		if (ParryAction)
+		{
+			EIC->BindAction(ParryAction, ETriggerEvent::Started, this, &AGYTestCharacter::OnParry);
+		}
 	}
 }
 
@@ -156,6 +160,29 @@ void AGYTestCharacter::OnAttackReleased(const FInputActionValue& Value)
 	Payload.EventTag = GYGameplayTags::Event_Input_AttackRelease;
 	Payload.Instigator = this;
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, GYGameplayTags::Event_Input_AttackRelease, Payload);
+}
+
+void AGYTestCharacter::OnParry(const FInputActionValue& Value)
+{
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	FGameplayEventData Payload;
+	Payload.EventTag = GYGameplayTags::Event_Input_Parry;
+	Payload.Instigator = this;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, GYGameplayTags::Event_Input_Parry, Payload);
+
+	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+	{
+		if (Spec.IsActive() && Spec.Ability &&
+			(Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Combo) ||
+			 Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Charge)))
+		{
+			return;
+		}
+	}
+
+	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Parry));
 }
 
 void AGYTestCharacter::OnHoldToChargeThreshold()

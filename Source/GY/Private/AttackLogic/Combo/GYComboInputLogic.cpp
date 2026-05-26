@@ -170,16 +170,24 @@ void UGYComboInputLogic::PlayCurrentMontage()
 			FallbackTags.AddTag(CachedAbility->DefaultWeaponTypeTag);
 		}
 
-		const TArray<float>* Multipliers = Fragment->GetBestMatchingMultipliers(OwnedTags);
-		if (!Multipliers && !FallbackTags.IsEmpty())
+		const TArray<FGYComboStepData>* Steps = Fragment->GetBestMatchingSteps(OwnedTags);
+		if (!Steps && !FallbackTags.IsEmpty())
 		{
-			Multipliers = Fragment->GetBestMatchingMultipliers(FallbackTags);
+			Steps = Fragment->GetBestMatchingSteps(FallbackTags);
 		}
 
 		float Multiplier = 1.f;
-		if (Multipliers && Multipliers->IsValidIndex(ComboIndex))
+		if (Steps && Steps->IsValidIndex(ComboIndex))
 		{
-			Multiplier = (*Multipliers)[ComboIndex];
+			const FGYComboStepData& Step = (*Steps)[ComboIndex];
+			Multiplier = Step.DamageMultiplier;
+
+			UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+			if (ASC && Step.StaminaCost.Attribute.IsValid() && Step.StaminaCost.Amount > 0.f)
+			{
+				const float Current = ASC->GetNumericAttributeBase(Step.StaminaCost.Attribute);
+				ASC->SetNumericAttributeBase(Step.StaminaCost.Attribute, FMath::Max(0.f, Current - Step.StaminaCost.Amount));
+			}
 		}
 		CachedAbility->SetDamageMultiplier(Multiplier);
 	}

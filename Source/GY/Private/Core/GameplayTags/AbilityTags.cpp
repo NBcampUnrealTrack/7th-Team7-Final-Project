@@ -16,4 +16,10 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ChargeMontage, "Ability.Fragment.ChargeMontage");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Collision, "Ability.Fragment.Collision");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Cancel, "Ability.Fragment.Cancel");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Parry, "Ability.Fragment.Parry");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ParryMontage, "Ability.Fragment.ParryMontage");
+
+	// State
+	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Parrying, "Ability.State.Parrying");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow, "Ability.State.CancelWindow");
 }

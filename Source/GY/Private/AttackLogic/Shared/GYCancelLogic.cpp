@@ -21,7 +21,14 @@ TArray<FGameplayTag> UGYCancelLogic::GetSubscribedEventTags() const
 	const UGYCancelFragment* Fragment = CachedAbility->GetFragment<UGYCancelFragment>();
 	if (!Fragment) return {};
 
-	return Fragment->CancelEventTags.GetGameplayTagArray();
+	TArray<FGameplayTag> Tags = Fragment->CancelEvents;
+
+	for (const FGYCancelWindowEntry& Entry : Fragment->CancelWithinWindow)
+	{
+		if (Entry.EventTag.IsValid()) Tags.AddUnique(Entry.EventTag);
+	}
+
+	return Tags;
 }
 
 void UGYCancelLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
@@ -32,16 +39,41 @@ void UGYCancelLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEvent
 	if (!ASC) return;
 
 	const UGYCancelFragment* Fragment = CachedAbility->GetFragment<UGYCancelFragment>();
-	const float BlendOutTime = Fragment ? Fragment->MontageBlendOutTime : -1.f;
+	if (!Fragment) return;
 
-	if (BlendOutTime >= 0.f)
+	if (Fragment->CancelEvents.Contains(EventTag))
 	{
-		ASC->CurrentMontageStop(BlendOutTime);
+		DoCancel(ASC, Fragment);
+		return;
 	}
-	CachedAbility->RequestEnd(true);
+
+	bool bShouldCancel = false;
+	for (const FGYCancelWindowEntry& Entry : Fragment->CancelWithinWindow)
+	{
+		if (Entry.EventTag == EventTag && Entry.WindowTag.IsValid() && ASC->HasMatchingGameplayTag(Entry.WindowTag))
+		{
+			bShouldCancel = true;
+			break;
+		}
+	}
+
+	if (bShouldCancel)
+	{
+		DoCancel(ASC, Fragment);
+	}
 }
 
 TArray<FGameplayTag> UGYCancelLogic::GetRequiredFragmentTags() const
 {
 	return { GYGameplayTags::Ability_Fragment_Cancel };
+}
+
+void UGYCancelLogic::DoCancel(UAbilitySystemComponent* ASC, const UGYCancelFragment* Fragment)
+{
+	const float BlendOutTime = Fragment->MontageBlendOutTime;
+	if (BlendOutTime >= 0.f)
+	{
+		ASC->CurrentMontageStop(BlendOutTime);
+	}
+	CachedAbility->RequestEnd(true);
 }

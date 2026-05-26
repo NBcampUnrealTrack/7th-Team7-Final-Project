@@ -5,6 +5,18 @@
 #include "GameplayTagContainer.h"
 #include "GYCancelFragment.generated.h"
 
+USTRUCT(BlueprintType)
+struct FGYCancelWindowEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag EventTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag WindowTag;
+};
+
 UCLASS(EditInlineNew, DefaultToInstanced)
 class GY_API UGYCancelFragment : public UAbilityFragment
 {
@@ -14,7 +26,10 @@ public:
 	UGYCancelFragment();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Cancel")
-	FGameplayTagContainer CancelEventTags;
+	TArray<FGameplayTag> CancelEvents;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Cancel")
+	TArray<FGYCancelWindowEntry> CancelWithinWindow;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Cancel", meta = (ClampMin = "-1.0"))
 	float MontageBlendOutTime = -1.f;

@@ -2,14 +2,13 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Logic/AbilityLogicBase.h"
-#include "GameplayTagContainer.h"
-#include "GYCancelLogic.generated.h"
+#include "GYParryInputLogic.generated.h"
 
-class UGYCancelFragment;
-class UAbilitySystemComponent;
+struct FGYParryMontageSet;
+struct FGYParryData;
 
 UCLASS()
-class GY_API UGYCancelLogic : public UAbilityLogicBase
+class GY_API UGYParryInputLogic : public UAbilityLogicBase
 {
 	GENERATED_BODY()
 
@@ -21,7 +20,15 @@ public:
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 
 private:
-	void DoCancel(UAbilitySystemComponent* ASC, const UGYCancelFragment* Fragment);
+	void OnParryWindowExpired();
+	void OnParryAnimExpired();
+	void PlayEndMontage();
+	void RemoveParryTag();
 
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
+	const FGYParryMontageSet* CachedMontageSet = nullptr;
+	const FGYParryData* CachedParryData = nullptr;
+	FTimerHandle ParryWindowTimer;
+	FTimerHandle ParryAnimTimer;
+	FTimerHandle EndMontageTimer;
 };

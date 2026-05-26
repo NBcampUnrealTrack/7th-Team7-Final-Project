@@ -36,6 +36,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Test|Input")
 	TObjectPtr<UInputAction> AttackAction;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Test|Input")
+	TObjectPtr<UInputAction> ParryAction;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Test|Stats")
 	float InitialHealth = 100.f;
 
@@ -53,6 +56,7 @@ private:
 	void OnAttack(const FInputActionValue& Value);
 	void OnAttackReleased(const FInputActionValue& Value);
 	void OnHoldToChargeThreshold();
+	void OnParry(const FInputActionValue& Value);
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArm;
