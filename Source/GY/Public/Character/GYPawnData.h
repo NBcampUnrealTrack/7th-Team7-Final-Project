@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -6,11 +6,10 @@
 #include "Engine/DataAsset.h"
 #include "GYPawnData.generated.h"
 
+class UAbilitySet;
 class UGYInputConfig;
 class UInputMappingContext;
-/**
- *
- */
+
 UCLASS(BlueprintType, Const, Meta = (DisplayName = "GY Pawn Data", ShortTooltip = "Pawn을 정의하기 위해 사용되는 에셋"))
 class GY_API UGYPawnData : public UPrimaryDataAsset
 {
@@ -20,6 +19,10 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Input")
 	TObjectPtr<UInputMappingContext> DefaultIMC;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Input")
 	TObjectPtr<UGYInputConfig> InputConfig;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Abilities")
+	TArray<TObjectPtr<UAbilitySet>> AbilitySets;
 };

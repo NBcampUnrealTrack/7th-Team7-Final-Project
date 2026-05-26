@@ -11,6 +11,7 @@
 #include "Core/GameplayTags/InputTag.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
 #include "GameFramework/PlayerState.h"
+#include "Interaction/GYGameplayAbility_Interact.h"
 #include "Logging/GYLogManager.h"
 #include "Player/GYPlayerState.h"
 
@@ -181,6 +182,8 @@ void UGYHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompone
 
 		InputComponent->BindNativeAction(PawnData->InputConfig, GYGameplayTags::InputTag_Move, ETriggerEvent::Triggered,
 										 this, &ThisClass::Input_Move, true);
+		InputComponent->BindNativeAction(PawnData->InputConfig, GYGameplayTags::InputTag_Interact, ETriggerEvent::Triggered,
+										this, &ThisClass::Input_Interact, true);
 	}
 	else
 	{
@@ -210,6 +213,27 @@ void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 		{
 			const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
 			Pawn->AddMovementInput(MovementDirection, Value.Y);
+		}
+	}
+}
+
+void UGYHeroComponent::Input_Interact(const FInputActionValue& InputActionValue)
+{
+	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
+	if (!PS) return;
+
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromClass(UGYGameplayAbility_Interact::StaticClass());
+	if (!Spec) return;
+
+	for (UGameplayAbility* Instance : Spec->GetAbilityInstances())
+	{
+		if (UGYGameplayAbility_Interact* InteractAbility = Cast<UGYGameplayAbility_Interact>(Instance))
+		{
+			InteractAbility->TriggerInteraction();
+			return;
 		}
 	}
 }

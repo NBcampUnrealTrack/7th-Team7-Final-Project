@@ -20,6 +20,17 @@ void AGYCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
+	if (HasAuthority())
+	{
+		if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
+		{
+			if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+			{
+				ASC->InitAbilityActorInfo(PS, this);
+			}
+		}
+	}
+
 	if (PawnExtComponent)
 	{
 		PawnExtComponent->CheckDefaultInitialization();
@@ -29,12 +40,6 @@ void AGYCharacter::PossessedBy(AController* NewController)
 
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!IsValid(PS)) return;
-
-	if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
-	{
-		ASC->InitAbilityActorInfo(PS, this);
-	}
-
 	if (!IsValid(ActiveEquipmentComponent)) return;
 
 	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
@@ -54,11 +59,18 @@ void AGYCharacter::OnRep_Controller()
 {
 	Super::OnRep_Controller();
 
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
+	{
+		if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+		{
+			ASC->InitAbilityActorInfo(PS, this);
+		}
+	}
+
 	if (PawnExtComponent)
 	{
 		PawnExtComponent->CheckDefaultInitialization();
 	}
-
 }
 
 void AGYCharacter::OnRep_PlayerState()

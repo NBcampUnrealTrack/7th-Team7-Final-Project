@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "CommonActivatableWidget.h"
+#include "GameplayTagContainer.h"
 #include "GYActivatableWidget.generated.h"
 
 UENUM(BlueprintType)
@@ -9,6 +10,21 @@ enum class EGYWidgetInputMode : uint8
 	Default     UMETA(DisplayName = "Default"),
 	Game        UMETA(DisplayName = "Game"),
 	Menu        UMETA(DisplayName = "Menu"),
+};
+
+USTRUCT(BlueprintType)
+struct FGYTagDrivenWidgetEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag StateTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag LayerTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UCommonActivatableWidget> WidgetClass;
 };
 
 /**
@@ -27,6 +43,7 @@ public:
 	virtual TOptional<FUIInputConfig> GetDesiredInputConfig() const override;
 
 protected:
+	virtual void NativeConstruct() override;
 	/** 해당 위젯의 입력 모드를 설정할 수 있게 함 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GY|Input")
 	EGYWidgetInputMode InputMode = EGYWidgetInputMode::Default;
@@ -34,5 +51,8 @@ protected:
 	/** 게임 모드일 때 마우스 커서 화면 안에 가둘지 설정 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GY|Input")
 	EMouseCaptureMode GameMouseCaptureMode = EMouseCaptureMode::CapturePermanently;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI")
+	TArray<FGYTagDrivenWidgetEntry> TagDrivenWidgets;
 
 };

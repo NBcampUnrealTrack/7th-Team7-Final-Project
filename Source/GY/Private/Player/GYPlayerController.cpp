@@ -1,13 +1,11 @@
 #include "Player/GYPlayerController.h"
 #include "Cheats/GYCheatManager.h"
-#include "GYUI/Public/Core/GYPrimaryGameLayout.h"
-#include "GYUI/Public/Core/GYUIManagerSubsystem.h"
-#include "GYUI/Public/GameplayTags/GYUILayerTags.h"
-#include "CommonActivatableWidget.h"
 #include "Character/GYHeroComponent.h"
 #include "Character/GYPawnExtensionComponent.h"
 #include "Cheats/GYServerCheatProxy.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Net/UnrealNetwork.h"
+#include "Player/GYPlayerState.h"
 
 AGYPlayerController::AGYPlayerController()
 {
@@ -31,24 +29,8 @@ void AGYPlayerController::BeginPlay()
 		}
 	}
 #endif
-	// 안정성 체크 -> UI 서버 생성 차단
 	if (IsLocalController())
 	{
-		ULocalPlayer* LocalPlayer = GetLocalPlayer();
-		if (!LocalPlayer) return;
-
-		UGYUIManagerSubsystem* UIManager = LocalPlayer->GetSubsystem<UGYUIManagerSubsystem>();
-		if (!UIManager) return;
-
-		if (PrimaryGameLayoutClass) // 레이아웃을 전체 화면에 띄움
-		{
-			UIManager->CreatePrimaryGameLayout(PrimaryGameLayoutClass);
-		}
-
-		if (HUDWidgetClass) // Layer_Game에 HUD 넣어두기
-		{
-			UIManager->PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDWidgetClass);
-		}
 		EnableCheats();
 	}
 }
@@ -58,7 +40,7 @@ void AGYPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimePrope
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 #if !UE_BUILD_SHIPPING
-	DOREPLIFETIME(AGYPlayerController,ServerCheatProxy);
+	DOREPLIFETIME(AGYPlayerController, ServerCheatProxy);
 #endif
 }
 
@@ -67,3 +49,22 @@ void AGYPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 }
 
+void AGYPlayerController::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	if (PlayerState)
+	{
+		OnPlayerStateInitialized.Broadcast(this);
+	}
+}
+
+void AGYPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	if (PlayerState)
+	{
+		OnPlayerStateInitialized.Broadcast(this);
+	}
+}

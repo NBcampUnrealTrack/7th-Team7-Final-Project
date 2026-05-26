@@ -1,9 +1,11 @@
 ﻿#pragma once
 
+#include "AbilitySystemComponent.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "GameplayTagContainer.h"
 #include "GYUIManagerSubsystem.generated.h"
 
+class AGYPlayerController;
 class UCommonActivatableWidget;
 class UGYPrimaryGameLayout;
 
@@ -19,6 +21,16 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
+	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
+
+	//PlayerState의 태그 구독
+	void BindASC(UAbilitySystemComponent* InASC);
+
+	void RegisterTagDrivenWidget(
+		FGameplayTag StateTag,
+		FGameplayTag LayerTag,
+		TSubclassOf<UCommonActivatableWidget> WidgetClass);
+
 
 	/** PrimaryGameLayout 생성 후 화면 띄움 */
 	UFUNCTION(BlueprintCallable, Category = "GY|UI")
@@ -44,4 +56,20 @@ public:
 protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UGYPrimaryGameLayout> PrimaryGameLayout;
+
+private:
+	struct FTagWidgetEntry
+	{
+		FGameplayTag LayerTag;
+		TSubclassOf<UCommonActivatableWidget> WidgetClass;
+		TWeakObjectPtr<UCommonActivatableWidget> ActiveWidget;
+		FDelegateHandle DelegateHandle;
+	};
+
+	TMap<FGameplayTag, FTagWidgetEntry> TagWidgetMap;
+	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
+
+	void OnTagChanged(const FGameplayTag Tag, int32 NewCount);
+
+	void HandlePlayerStateInitialized(AGYPlayerController* PC);
 };

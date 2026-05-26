@@ -6,4 +6,7 @@
 namespace GYGameplayTags
 {
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Move);
+
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Interact)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Exit)
 }

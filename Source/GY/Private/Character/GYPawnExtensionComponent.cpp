@@ -3,9 +3,12 @@
 
 #include "Character/GYPawnExtensionComponent.h"
 
+#include "Character/GYPawnData.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
+#include "GameFramework/Pawn.h"
 #include "Logging/GYLogManager.h"
+#include "Player/GYPlayerState.h"
 
 // 이 extcomp의 이름은 PawnExtension 임
 const FName UGYPawnExtensionComponent::NAME_ActorFeatureName("PawnExtension");
@@ -70,8 +73,18 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 	FGameplayTag CurrentState, FGameplayTag DesiredState)
 {
 	GY_LOG(Player, KHB, "ExtComp : [%s] -> [%s]", *CurrentState.ToString(), *DesiredState.ToString());
-	//상태가 변했을 때 필요한 세팅(예: DataAvailable이 되면 PawnData를 캐싱함)
-	//이건 각 컴포넌트가 알아서 구현함.
+
+	if (DesiredState == GYGameplayTags::InitState_DataAvailable)
+	{
+		APawn* Pawn = GetPawn<APawn>();
+		if (Pawn && Pawn->HasAuthority() && PawnData)
+		{
+			if (AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>())
+			{
+				PS->SetPawnData(PawnData);
+			}
+		}
+	}
 }
 
 void UGYPawnExtensionComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)

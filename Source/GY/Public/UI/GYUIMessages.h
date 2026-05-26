@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Interaction/InteractionOption.h"
 #include "GYUIMessages.generated.h"
 
 /** 데미지 적중, 플로팅 데미지 텍스트 트리거, 히트레벨에 따른 UI 변화 */
@@ -101,4 +102,14 @@ struct GY_API FGYPartyMemberMessage
 
     UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<APlayerState> Member;
     UPROPERTY(BlueprintReadWrite) FGameplayTag EventTag;
+};
+
+/** 상호작용 */
+USTRUCT(BlueprintType)
+struct GY_API FGYInteractionOptionsMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FInteractionOption> Options;
 };

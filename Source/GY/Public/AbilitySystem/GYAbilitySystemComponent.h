@@ -13,6 +13,9 @@ class GY_API UGYAbilitySystemComponent : public UAbilitySystemComponent
 public:
 	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
 
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_SendGameplayEvent(FGameplayTag EventTag, FGameplayEventData Payload);
+
 	void RescheduleStaminaRegen();
 	void RescheduleStaggerRegen();
 	void RescheduleStunRegen();
@@ -26,6 +29,7 @@ public:
 
 private:
 	void OnCombatTagChanged(const FGameplayTag Tag, int32 NewCount);
+	void TryActivateAbilitiesOnSpawn();
 
 	void ScheduleEffect(TSubclassOf<UGYPeriodicAttributeEffect> EffectClass, FActiveGameplayEffectHandle& Handle, FTimerHandle& DelayHandle, void(UGYAbilitySystemComponent::* StartFunc)());
 	void ApplyEffect(TSubclassOf<UGYPeriodicAttributeEffect> EffectClass, FActiveGameplayEffectHandle& Handle);

@@ -40,4 +40,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Party_MemberLeft);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Party_MemberDied);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Chat_Received);
+
+	// 상호작용
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Interaction_OptionsChanged)
 }

@@ -21,6 +21,8 @@ public class GYUI : ModuleRules
 			"GameplayTags",
 			"GameplayAbilities",
 			"GameplayTasks",
+			"DeveloperSettings",
+			"GY",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

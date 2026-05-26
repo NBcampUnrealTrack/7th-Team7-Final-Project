@@ -32,4 +32,6 @@ namespace GYGameplayTags
     UE_DEFINE_GAMEPLAY_TAG(Message_Party_MemberLeft, "GY.Message.Party.MemberLeft");
     UE_DEFINE_GAMEPLAY_TAG(Message_Party_MemberDied, "GY.Message.Party.MemberDied");
     UE_DEFINE_GAMEPLAY_TAG(Message_Chat_Received, "GY.Message.Chat.Received");
+
+	UE_DEFINE_GAMEPLAY_TAG(Message_Interaction_OptionsChanged, "GY.Message.Interaction.OptionsChanged");
 }
