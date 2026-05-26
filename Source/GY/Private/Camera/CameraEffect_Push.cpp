@@ -24,5 +24,5 @@ void UCameraEffect_Push::UpdateEffect(float DeltaTime, FGYCameraView& InOutView)
 		* PushAlpha;
 
 	InOutView.SocketOffset += Offset;
-	GY_WARN(Player, CYS, "Offset = %s", *Offset.ToString());
+	GY_WARN(Player, CYS, "Push Offset = %s", *Offset.ToString());
 }
