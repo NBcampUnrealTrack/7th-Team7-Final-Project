@@ -11,6 +11,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "Core/GameplayTags/AbilityTags.h"
+#include "Abilities/GameplayAbility.h"
 
 AGYTestCharacter::AGYTestCharacter()
 {
@@ -84,6 +86,7 @@ void AGYTestCharacter::InitGAS()
 	{
 		TestAbilitySet->GiveToAbilitySystem(ASC, &AbilitySetHandles);
 	}
+
 }
 
 void AGYTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -99,6 +102,7 @@ void AGYTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		if (AttackAction)
 		{
 			EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &AGYTestCharacter::OnAttack);
+			EIC->BindAction(AttackAction, ETriggerEvent::Completed, this, &AGYTestCharacter::OnAttackReleased);
 		}
 	}
 }
@@ -116,8 +120,53 @@ void AGYTestCharacter::OnMove(const FInputActionValue& Value)
 
 void AGYTestCharacter::OnAttack(const FInputActionValue& Value)
 {
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+	{
+		if (Spec.IsActive() && Spec.Ability &&
+			Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Charge))
+		{
+			return;
+		}
+	}
+
+	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Combo));
+
 	FGameplayEventData Payload;
 	Payload.EventTag = GYGameplayTags::Event_Input_Attack;
 	Payload.Instigator = this;
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, GYGameplayTags::Event_Input_Attack, Payload);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		HoldToChargeTimer,
+		this,
+		&AGYTestCharacter::OnHoldToChargeThreshold,
+		HoldToChargeTime,
+		false
+	);
+}
+
+void AGYTestCharacter::OnAttackReleased(const FInputActionValue& Value)
+{
+	GetWorld()->GetTimerManager().ClearTimer(HoldToChargeTimer);
+
+	FGameplayEventData Payload;
+	Payload.EventTag = GYGameplayTags::Event_Input_AttackRelease;
+	Payload.Instigator = this;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, GYGameplayTags::Event_Input_AttackRelease, Payload);
+}
+
+void AGYTestCharacter::OnHoldToChargeThreshold()
+{
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	FGameplayEventData CancelPayload;
+	CancelPayload.EventTag = GYGameplayTags::Event_Input_AttackCharge;
+	CancelPayload.Instigator = this;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, GYGameplayTags::Event_Input_AttackCharge, CancelPayload);
+
+	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Charge));
 }

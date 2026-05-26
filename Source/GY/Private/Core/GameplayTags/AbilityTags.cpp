@@ -12,9 +12,8 @@ namespace GYGameplayTags
 	// Fragment Type
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Charge, "Ability.Fragment.Charge");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Attack, "Ability.Fragment.Attack");
-
-
-
-
-
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ComboMontage, "Ability.Fragment.ComboMontage");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ChargeMontage, "Ability.Fragment.ChargeMontage");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Collision, "Ability.Fragment.Collision");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Cancel, "Ability.Fragment.Cancel");
 }

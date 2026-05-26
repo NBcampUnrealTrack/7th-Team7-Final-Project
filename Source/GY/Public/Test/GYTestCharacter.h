@@ -39,6 +39,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Test|Stats")
 	float InitialHealth = 100.f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Test|Attack")
+	float HoldToChargeTime = 1.0f;
+
 protected:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
@@ -48,6 +51,8 @@ private:
 	void InitGAS();
 	void OnMove(const FInputActionValue& Value);
 	void OnAttack(const FInputActionValue& Value);
+	void OnAttackReleased(const FInputActionValue& Value);
+	void OnHoldToChargeThreshold();
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArm;
@@ -56,4 +61,5 @@ private:
 	TObjectPtr<UCameraComponent> Camera;
 
 	FAbilitySetGrantedHandles AbilitySetHandles;
+	FTimerHandle HoldToChargeTimer;
 };

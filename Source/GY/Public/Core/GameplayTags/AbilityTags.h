@@ -14,5 +14,9 @@ namespace GYGameplayTags
 	// Fragment Type
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Charge)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Attack)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_ComboMontage)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_ChargeMontage)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Collision)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Cancel)
 
 }

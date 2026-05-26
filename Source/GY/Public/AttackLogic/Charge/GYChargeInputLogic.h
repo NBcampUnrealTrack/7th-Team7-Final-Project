@@ -2,14 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Logic/AbilityLogicBase.h"
-#include "GameplayTagContainer.h"
-#include "GYComboInputLogic.generated.h"
+#include "GYChargeInputLogic.generated.h"
 
-class UAnimMontage;
-struct FGYCollisionShapeData;
+struct FGYChargeMontageSet;
 
 UCLASS()
-class GY_API UGYComboInputLogic : public UAbilityLogicBase
+class GY_API UGYChargeInputLogic : public UAbilityLogicBase
 {
 	GENERATED_BODY()
 
@@ -20,19 +18,13 @@ public:
 	virtual void OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload) override;
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 
-	const FGYCollisionShapeData* GetCurrentCollisionData() const;
-
 private:
-	void PlayCurrentMontage();
-	void AdvanceCombo();
+	void ExecuteAttack();
 
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
-	int32 ComboIndex = 0;
-	int32 MaxComboCount = 0;
-	int32 ComboIndexAtWindowOpen = 0;
-	bool bWindowOpen = false;
-	bool bPendingCombo = false;
-	bool bReady = false;
-	const TArray<TObjectPtr<UAnimMontage>>* CachedMontages = nullptr;
-	const TArray<FGYCollisionShapeData>* CachedCollisions = nullptr;
+	float ChargeStartTime = 0.f;
+	bool bCharging = false;
+	FTimerHandle MaxChargeTimer;
+	FTimerHandle MontageEndTimer;
+	const FGYChargeMontageSet* CachedMontageSet = nullptr;
 };

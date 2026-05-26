@@ -25,6 +25,13 @@ class GY_API UGYPlayerGameplayAbility : public UGYGameplayAbility
 public:
 	UGYPlayerGameplayAbility();
 
+	virtual bool CanActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayTagContainer* SourceTags = nullptr,
+		const FGameplayTagContainer* TargetTags = nullptr,
+		OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
+
 	virtual void ActivateAbility(
 		const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,
@@ -105,6 +112,12 @@ protected:
 
 #pragma endregion
 public:
+	UPROPERTY(EditDefaultsOnly, Category = "Ability")
+	FGameplayTag DefaultWeaponTypeTag;
+
+	float GetDamageMultiplier() const { return CurrentDamageMultiplier; }
+	void SetDamageMultiplier(float Multiplier) { CurrentDamageMultiplier = Multiplier; }
+
 	AGYCharacter* GetGYCharacter() const;
 	UEquipmentInstance* GetCurrentWeapon() const;
 	float PlayMontageForLogic(UAnimMontage* Montage, float PlayRate = 1.f);
@@ -113,6 +126,9 @@ public:
 	{
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, bWasCancelled);
 	}
+private:
+	float CurrentDamageMultiplier = 1.f;
+
 protected:
 
 #if WITH_EDITOR
