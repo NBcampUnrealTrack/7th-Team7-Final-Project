@@ -54,29 +54,31 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 
 	CachedOwnerComp = &OwnerComp;
 	ActiveAbility = BestAbility;
+	CachedAbilityHandle = BestHandle;
+	CachedASC = ASC;
 
-	BestAbility->OnGameplayAbilityEnded.AddUObject(
-		this, &UBTTask_ExecuteAttack::OnAbilityEnded);
+	ASC->OnAbilityEnded.AddUObject(this, &UBTTask_ExecuteAttack::OnASCAbilityEnded);
 
 	if (!ASC->TryActivateAbility(BestHandle))
 	{
-		BestAbility->OnGameplayAbilityEnded.RemoveAll(this);
+		ASC->OnAbilityEnded.RemoveAll(this);
 		ActiveAbility = nullptr;
 		CachedOwnerComp = nullptr;
+		CachedASC = nullptr;
 		return EBTNodeResult::Failed;
 	}
-
 	return EBTNodeResult::InProgress;
 }
 
 void UBTTask_ExecuteAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
 	EBTNodeResult::Type TaskResult)
 {
-	if (ActiveAbility)
+	if (CachedASC)
 	{
-		ActiveAbility->OnGameplayAbilityEnded.RemoveAll(this);
-		ActiveAbility = nullptr;
+		CachedASC->OnAbilityEnded.RemoveAll(this);
+		CachedASC = nullptr;
 	}
+	ActiveAbility = nullptr;
 
 	if (TaskResult == EBTNodeResult::Aborted)
 	{
@@ -95,8 +97,20 @@ void UBTTask_ExecuteAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, ui
 	CachedOwnerComp = nullptr;
 }
 
-void UBTTask_ExecuteAttack::OnAbilityEnded(UGameplayAbility* Ability)
+void UBTTask_ExecuteAttack::OnASCAbilityEnded(const FAbilityEndedData& EndedData)
 {
-	if (!CachedOwnerComp) return;
+	if (EndedData.AbilitySpecHandle != CachedAbilityHandle) return;
+
+	if (CachedASC)
+	{
+		CachedASC->OnAbilityEnded.RemoveAll(this);
+	}
+
+	if (!CachedOwnerComp)
+	{
+		return;
+	}
+
 	FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
 }
+
