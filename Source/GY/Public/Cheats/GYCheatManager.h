@@ -78,4 +78,7 @@ public:
 	UFUNCTION(Exec)
 	void GY_SetEnemyBB(const FString& KeyName, bool bValue);
 
+	UFUNCTION(Exec)
+	void GY_AddXP(float Amount);
+
 };

@@ -50,6 +50,39 @@ public:
 	FGameplayAttributeData EvasionInvincibilityTime;
 	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, EvasionInvincibilityTime)
 
+#pragma region Level
+	//TODO SAVE
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_Level)
+	FGameplayAttributeData Level;
+	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, Level)
+
+	UFUNCTION()
+	virtual void OnRep_Level(const FGameplayAttributeData& OldLevel);
+
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_SkillPoint)
+	FGameplayAttributeData SkillPoint;
+	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, SkillPoint)
+
+	UFUNCTION()
+	virtual void OnRep_SkillPoint(const FGameplayAttributeData& OldSkillPoint);
+
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_XP)
+	FGameplayAttributeData XP;
+	GY_ATTRIBUTE_ACCESSORS(UGYPlayerAttribute, XP)
+
+	//TODO SAVE
+	UFUNCTION()
+	virtual void OnRep_XP(const FGameplayAttributeData& OldXP);
+
+	UPROPERTY(EditDefaultsOnly, Category="Attributes")
+	TObjectPtr<UCurveFloat> NextLevelXPCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category="Attributes")
+	TSubclassOf<UGameplayEffect> LevelUpEffect;
+
+#pragma endregion
+
+
 	UFUNCTION()
 	virtual void OnRep_EvasionInvincibilityTime(const FGameplayAttributeData& OldEvasionInvincibilityTime);
 
