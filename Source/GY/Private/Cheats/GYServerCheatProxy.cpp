@@ -1,5 +1,6 @@
 ﻿#include "Cheats/GYServerCheatProxy.h"
 
+#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
 #include "Core/GameplayTags/CurrencyTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
@@ -28,7 +29,29 @@ namespace
 AGYServerCheatProxy::AGYServerCheatProxy()
 {
 	bReplicates = true;
+	bAlwaysRelevant = true;
+	bNetUseOwnerRelevancy = true;
 	PrimaryActorTick.bCanEverTick = false;
+}
+
+void AGYServerCheatProxy::Server_AddXP_Implementation(float Amount)
+{
+	AGYPlayerState* PS = GetGYPlayerState(this);
+	if (!PS) return;
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	UGameplayEffect* Effect = NewObject<UGameplayEffect>(this, FName(TEXT("GE_Cheat_AddXP")));
+	Effect->DurationPolicy = EGameplayEffectDurationType::Instant;
+
+	FGameplayModifierInfo Modifier;
+	Modifier.Attribute = UGYPlayerAttribute::GetXPAttribute();
+	Modifier.ModifierOp = EGameplayModOp::Additive;
+	Modifier.ModifierMagnitude = FScalableFloat(Amount);
+	Effect->Modifiers.Add(Modifier);
+
+	FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+	ASC->ApplyGameplayEffectToSelf(Effect, 1.f, Context);
 }
 
 void AGYServerCheatProxy::Server_SpawnEnemy_Implementation(EEnemyType EnemyType)

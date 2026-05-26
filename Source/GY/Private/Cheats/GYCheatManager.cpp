@@ -557,4 +557,15 @@ void UGYCheatManager::GY_SetEnemyBB(const FString& KeyName, bool bValue)
 		}
 	}
 }
+UE_DISABLE_OPTIMIZATION
+void UGYCheatManager::GY_AddXP(float Amount)
+{
+
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_AddXP(Amount);
+}
+UE_ENABLE_OPTIMIZATION
 

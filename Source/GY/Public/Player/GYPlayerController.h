@@ -29,6 +29,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Cheat")
 	TSubclassOf<AGYServerCheatProxy> ServerCheatProxyClass;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing=OnRep_ServerCheatProxy)
 	TObjectPtr<AGYServerCheatProxy> ServerCheatProxy;
+
+	UFUNCTION()
+	void OnRep_ServerCheatProxy();
 };

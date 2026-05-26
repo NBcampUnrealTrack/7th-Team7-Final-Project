@@ -15,6 +15,9 @@ UGYPlayerAttribute::UGYPlayerAttribute()
 	InitStrength(0.f);
 	InitDexterity(0.f);
 	InitEvasionInvincibilityTime(0.2f);
+	InitLevel(1.f);
+	InitSkillPoint(0.f);
+	InitXP(0.f);
 }
 
 void UGYPlayerAttribute::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -26,6 +29,9 @@ void UGYPlayerAttribute::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME(UGYPlayerAttribute, Strength);
 	DOREPLIFETIME(UGYPlayerAttribute, Dexterity);
 	DOREPLIFETIME(UGYPlayerAttribute, EvasionInvincibilityTime);
+	DOREPLIFETIME(UGYPlayerAttribute, Level);
+	DOREPLIFETIME(UGYPlayerAttribute, SkillPoint);
+	DOREPLIFETIME(UGYPlayerAttribute, XP);
 }
 
 void UGYPlayerAttribute::OnRep_CurrentStamina(const FGameplayAttributeData& OldCurrentStamina)
@@ -48,6 +54,21 @@ void UGYPlayerAttribute::OnRep_Dexterity(const FGameplayAttributeData& OldDexter
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, Dexterity, OldDexterity);
 }
 
+void UGYPlayerAttribute::OnRep_Level(const FGameplayAttributeData& OldLevel)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, Level, OldLevel);
+}
+
+void UGYPlayerAttribute::OnRep_SkillPoint(const FGameplayAttributeData& OldSkillPoint)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, SkillPoint, OldSkillPoint);
+}
+
+void UGYPlayerAttribute::OnRep_XP(const FGameplayAttributeData& OldXP)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, XP, OldXP);
+}
+
 void UGYPlayerAttribute::OnRep_EvasionInvincibilityTime(const FGameplayAttributeData& OldEvasionInvincibilityTime)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerAttribute, EvasionInvincibilityTime, OldEvasionInvincibilityTime);
@@ -60,6 +81,18 @@ void UGYPlayerAttribute::PreAttributeChange(const FGameplayAttribute& Attribute,
 	if (Attribute == GetCurrentStaminaAttribute())
 	{
 		NewValue = FMath::Clamp(NewValue, -GetMaxStamina(), GetMaxStamina());
+	}
+	if (Attribute == GetXPAttribute())
+	{
+		NewValue = FMath::Max(0.f, NewValue);
+	}
+	else if (Attribute == GetLevelAttribute())
+	{
+		NewValue = FMath::Max(1.f, NewValue);
+	}
+	else if (Attribute == GetSkillPointAttribute())
+	{
+		NewValue = FMath::Max(0.f, NewValue);
 	}
 }
 
@@ -81,6 +114,47 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 		SetCurrentStamina(FMath::Clamp(GetCurrentStamina(), -GetMaxStamina(), GetMaxStamina()));
 		return;
 	}
+
+
+	if (Data.EvaluatedData.Attribute == GetXPAttribute())
+	{
+		if (NextLevelXPCurve && LevelUpEffect)
+		{
+			float MinTime, MaxTime;
+			NextLevelXPCurve->GetTimeRange(MinTime, MaxTime);
+
+			while (GetLevel() <= MaxTime && GetXP() >= NextLevelXPCurve->GetFloatValue(GetLevel()))
+			{
+				const float Threshold = NextLevelXPCurve->GetFloatValue(GetLevel());
+				SetXP(GetXP() - Threshold);
+
+				FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+				FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(LevelUpEffect, GetLevel(), Context);
+				if (SpecHandle.IsValid())
+				{
+					ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
+				}
+			}
+		}
+		return;
+	}
+
+	if (Data.EvaluatedData.Attribute == GetLevelAttribute())
+	{
+		// 레벨업시 전부 회복
+		if (Base)
+		{
+			Base->SetCurrentHealth(Base->GetMaxHealth());
+		}
+		if (Additional)
+		{
+			Additional->SetCurrentStagger(Additional->GetMaxStagger());
+			Additional->SetCurrentStun(Additional->GetMaxStun());
+		}
+		SetCurrentStamina(GetMaxStamina());
+		return;
+	}
+
 
 	if (Data.EvaluatedData.Attribute == GetStrengthAttribute())
 	{

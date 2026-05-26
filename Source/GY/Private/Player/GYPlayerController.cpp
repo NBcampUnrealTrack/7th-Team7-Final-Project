@@ -4,6 +4,7 @@
 #include "Character/GYPawnExtensionComponent.h"
 #include "Cheats/GYServerCheatProxy.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
 
@@ -25,7 +26,9 @@ void AGYPlayerController::BeginPlay()
 
 		if (ServerCheatProxy)
 		{
+			ServerCheatProxy->SetOwner(this);
 			ServerCheatProxy->OwnerController = this;
+			ForceNetUpdate();
 		}
 	}
 #endif
@@ -67,4 +70,9 @@ void AGYPlayerController::OnPossess(APawn* InPawn)
 	{
 		OnPlayerStateInitialized.Broadcast(this);
 	}
+}
+
+void AGYPlayerController::OnRep_ServerCheatProxy()
+{
+	GY_LOG(Player, JCM, "[OnRep] ServerCheatProxy=%s", *GetNameSafe(ServerCheatProxy));
 }
