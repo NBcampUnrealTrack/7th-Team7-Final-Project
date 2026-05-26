@@ -51,13 +51,20 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 	}
 
 	if (!BestAbility) return EBTNodeResult::Failed;
-	if (!ASC->TryActivateAbility(BestHandle)) return EBTNodeResult::Failed;
 
 	CachedOwnerComp = &OwnerComp;
 	ActiveAbility = BestAbility;
 
 	BestAbility->OnGameplayAbilityEnded.AddUObject(
 		this, &UBTTask_ExecuteAttack::OnAbilityEnded);
+
+	if (!ASC->TryActivateAbility(BestHandle))
+	{
+		BestAbility->OnGameplayAbilityEnded.RemoveAll(this);
+		ActiveAbility = nullptr;
+		CachedOwnerComp = nullptr;
+		return EBTNodeResult::Failed;
+	}
 
 	return EBTNodeResult::InProgress;
 }
