@@ -13,6 +13,20 @@ AGYPlayerController::AGYPlayerController()
 	CheatClass = UGYCheatManager::StaticClass();
 }
 
+void AGYPlayerController::ConnectToServer(const FString& Address)
+{
+	FString Target = Address.TrimStartAndEnd();
+	if (Target.IsEmpty()) return;
+
+	if (!Target.Contains(TEXT(":")))
+	{
+		Target += TEXT(":7777");
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("ConnectToServer: %s"), *Target);
+	ClientTravel(Target, TRAVEL_Absolute);
+}
+
 void AGYPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
