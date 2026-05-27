@@ -19,6 +19,10 @@ public:
 
 	FGYPlayerStateInitializedDelegate OnPlayerStateInitialized;
 
+	// 메뉴 위젯에서 호출 — 입력한 주소의 데디 서버로 ClientTravel. 포트 생략 시 7777.
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void ConnectToServer(const FString& Address);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
