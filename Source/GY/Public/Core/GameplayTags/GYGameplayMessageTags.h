@@ -43,4 +43,14 @@ namespace GYGameplayTags
 
 	// 상호작용
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Interaction_OptionsChanged)
+
+	// PlayerHUD
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_XPProgress);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_PotionSlot);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_EquipmentSlot);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_PlayerName);
+
+	// UI Attribute
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Health);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Stamina);
 }
