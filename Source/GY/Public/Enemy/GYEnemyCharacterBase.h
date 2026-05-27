@@ -5,6 +5,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
 #include "Config/EnemyDataAsset.h"
+#include "World/ActorManagement/WorldPartitionLevelPlacedActor.h"
 #include "GYEnemyCharacterBase.generated.h"
 
 class UGYEnemyAdditionalAttribute;
@@ -16,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDead, AGYEnemyCharacterBase*
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AGYEnemyCharacterBase*, Enemy, float, DamageAmount);
 
 UCLASS(Abstract, BlueprintType, Blueprintable)
-class GY_API AGYEnemyCharacterBase : public ACharacter, public IAbilitySystemInterface
+class GY_API AGYEnemyCharacterBase : public ACharacter, public IAbilitySystemInterface, public IWorldPartitionLevelPlacedActor
 {
 	GENERATED_BODY()
 
@@ -48,9 +49,15 @@ public:
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
+
+	virtual void Deactivate();
+	virtual void Activate();
+	virtual FGuid GetPersistentGuid() { return EnemyGuid; }
+	virtual void SetPersistentGuid(FGuid Guid) { EnemyGuid = Guid; }
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
+	void OnRep_IsActivate();
 	virtual void OnRep_Controller() override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
@@ -117,4 +124,10 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category ="Enemy|Anim")
 	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> MontageMap;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FGuid EnemyGuid;
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsActivate)
+	bool bIsActivate = false;
 };

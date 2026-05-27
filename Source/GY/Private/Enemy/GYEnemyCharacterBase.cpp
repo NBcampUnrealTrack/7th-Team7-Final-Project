@@ -18,6 +18,7 @@
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/DataTables/EnemyStatRow.h"
 #include "Net/UnrealNetwork.h"
+#include "World/ActorManagement/GYWorldResetSubsystem.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 {
@@ -304,14 +305,8 @@ void AGYEnemyCharacterBase::Die()
 	if (bIsDead) return;
 	bIsDead = true;
 
-	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
-	{
-		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
-		{
-			BB->SetValueAsBool(EnemyBBKeys::IsDead, true);
-		}
-		AIC->StopBehaviorTree();
-	}
+	Deactivate();
+
 	//TODO 은서 : RewardConfig에서 데이터 값을 가져와 Drop Actor나 보상 처리 연결 필요
 	//TODO 은서 : Interface 상속받아서 deActivate 처리 로직이 들어가야함.
 	OnEnemyDead.Broadcast(this);
@@ -353,6 +348,39 @@ void AGYEnemyCharacterBase::PostEditChangeProperty(struct FPropertyChangedEvent&
 	}
 }
 #endif
+
+void AGYEnemyCharacterBase::Deactivate()
+{
+	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(EnemyBBKeys::IsDead, true);
+		}
+		AIC->StopBehaviorTree();
+	}
+
+	//TODO 은서: 나중에 랙돌이나 Die 애니메이션 끝나고 죽을 수 있게 해주면 될덧
+	SetActorEnableCollision(false);
+	SetActorHiddenInGame(true);
+
+	//TODO 은서: 로드 중일 때 로드 취소 Handler 통해서 하면 되지 않을까??
+
+
+	GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorDeactivated(this);
+}
+
+
+void AGYEnemyCharacterBase::Activate()
+{
+	if (EnemyType != EEnemyType::None && !LoadedDataAsset)
+	{
+		SetActorEnableCollision(true);
+		SetActorHiddenInGame(false);
+		InitWithType(EnemyType);
+	}
+}
+
 void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -368,6 +396,14 @@ void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 		ApplyAIConfig(LoadedDataAsset->AIConfig);
 	}
 	InitGAS();
+}
+
+void AGYEnemyCharacterBase::OnRep_IsActivate()
+{
+	if (!bIsActivate)
+	{
+
+	}
 }
 
 UAnimMontage* AGYEnemyCharacterBase::GetMontageByTag(const FGameplayTag& Tag) const
@@ -402,5 +438,8 @@ void AGYEnemyCharacterBase::OnRep_EnemyType()
 void AGYEnemyCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bIsDead = false;
+	GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
 }
 
