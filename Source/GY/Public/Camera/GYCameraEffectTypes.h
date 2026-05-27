@@ -46,4 +46,8 @@ struct FGYCameraEffectContext
 	// Zoom 전용
 	UPROPERTY(BlueprintReadWrite)
 	float ZoomAmount = 0.f;
+
+	// Shake 전용
+	UPROPERTY(BlueprintReadWrite)
+	float Frequency = 40.f; // 빠르게
 };
