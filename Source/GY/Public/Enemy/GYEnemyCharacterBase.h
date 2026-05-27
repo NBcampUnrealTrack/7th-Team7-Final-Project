@@ -57,7 +57,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
-	void OnRep_IsActivate();
 	virtual void OnRep_Controller() override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
@@ -86,6 +85,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EnemyType();
+
+	UFUNCTION()
+	void OnRep_IsActivate();
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyDead OnEnemyDead;
@@ -128,6 +130,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FGuid EnemyGuid;
 
-	UPROPERTY(ReplicatedUsing = OnRep_IsActivate)
+	UPROPERTY(VisibleAnywhere,ReplicatedUsing = OnRep_IsActivate, BlueprintReadOnly, Category = "Enemy|Activate")
 	bool bIsActivate = false;
 };

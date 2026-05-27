@@ -366,7 +366,6 @@ void AGYEnemyCharacterBase::Deactivate()
 
 	//TODO 은서: 로드 중일 때 로드 취소 Handler 통해서 하면 되지 않을까??
 
-
 	GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorDeactivated(this);
 }
 
@@ -385,6 +384,7 @@ void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimePro
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGYEnemyCharacterBase, EnemyType);
+	DOREPLIFETIME(AGYEnemyCharacterBase, bIsActivate);
 }
 
 void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
@@ -398,13 +398,6 @@ void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 	InitGAS();
 }
 
-void AGYEnemyCharacterBase::OnRep_IsActivate()
-{
-	if (!bIsActivate)
-	{
-
-	}
-}
 
 UAnimMontage* AGYEnemyCharacterBase::GetMontageByTag(const FGameplayTag& Tag) const
 {
@@ -435,11 +428,27 @@ void AGYEnemyCharacterBase::OnRep_EnemyType()
 	}
 }
 
+void AGYEnemyCharacterBase::OnRep_IsActivate()
+{
+	if (!bIsActivate)
+	{
+		SetActorEnableCollision(false);
+	}
+	else
+	{
+		SetActorEnableCollision(true);
+	}
+}
+
 void AGYEnemyCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
 	bIsDead = false;
-	GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
+
+	if (HasAuthority())
+	{
+		bIsActivate = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
+	}
 }
 
