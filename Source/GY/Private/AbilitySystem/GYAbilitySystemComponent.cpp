@@ -40,21 +40,13 @@ void UGYAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Input
 {
 	if (!InputTag.IsValid()) return;
 
-	TArray<FGameplayAbilitySpecHandle> ToActivate;
+	for (const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
 	{
-		ABILITYLIST_SCOPE_LOCK();
-		for (const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+		if (Spec.Ability && Spec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 		{
-			if (Spec.Ability && Spec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
-			{
-				ToActivate.Add(Spec.Handle);
-			}
+			InputPressedSpecHandles.AddUnique(Spec.Handle);
+			InputHeldSpecHandles.AddUnique(Spec.Handle);
 		}
-	}
-
-	for (const FGameplayAbilitySpecHandle& Handle : ToActivate)
-	{
-		TryActivateAbility(Handle);
 	}
 }
 
@@ -62,14 +54,82 @@ void UGYAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inpu
 {
 	if (!InputTag.IsValid()) return;
 
-	ABILITYLIST_SCOPE_LOCK();
 	for (const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
 	{
 		if (Spec.Ability && Spec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 		{
-			AbilitySpecInputReleased(const_cast<FGameplayAbilitySpec&>(Spec));
+			InputReleasedSpecHandles.AddUnique(Spec.Handle);
+			InputHeldSpecHandles.Remove(Spec.Handle);
 		}
 	}
+}
+
+void UGYAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
+{
+	static TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
+	AbilitiesToActivate.Reset();
+
+	// Held: WhileInputActive 정책 어빌리티 활성화
+	for (const FGameplayAbilitySpecHandle& SpecHandle : InputHeldSpecHandles)
+	{
+		const FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(SpecHandle);
+		if (Spec == nullptr || Spec->Ability == nullptr || Spec->IsActive()) continue;
+
+		const UGYGameplayAbility* AbilityCDO = Cast<UGYGameplayAbility>(Spec->Ability);
+		if (AbilityCDO && AbilityCDO->GetActivationPolicy() == EGYAbilityActivationPolicy::WhileInputActive)
+		{
+			AbilitiesToActivate.AddUnique(SpecHandle);
+		}
+	}
+
+	// Pressed: 활성 어빌리티엔 InputPressed 전달(콤보 재입력), 비활성 OnInputTriggered는 활성화
+	for (const FGameplayAbilitySpecHandle& SpecHandle : InputPressedSpecHandles)
+	{
+		FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(SpecHandle);
+		if (Spec == nullptr || Spec->Ability == nullptr) continue;
+
+		Spec->InputPressed = true;
+		if (Spec->IsActive())
+		{
+			AbilitySpecInputPressed(*Spec);
+		}
+		else
+		{
+			const UGYGameplayAbility* AbilityCDO = Cast<UGYGameplayAbility>(Spec->Ability);
+			if (AbilityCDO && AbilityCDO->GetActivationPolicy() == EGYAbilityActivationPolicy::OnInputTriggered)
+			{
+				AbilitiesToActivate.AddUnique(SpecHandle);
+			}
+		}
+	}
+
+	for (const FGameplayAbilitySpecHandle& SpecHandle : AbilitiesToActivate)
+	{
+		TryActivateAbility(SpecHandle);
+	}
+
+	// Released: 활성 어빌리티에 InputReleased 전달
+	for (const FGameplayAbilitySpecHandle& SpecHandle : InputReleasedSpecHandles)
+	{
+		FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(SpecHandle);
+		if (Spec == nullptr || Spec->Ability == nullptr) continue;
+
+		Spec->InputPressed = false;
+		if (Spec->IsActive())
+		{
+			AbilitySpecInputReleased(*Spec);
+		}
+	}
+
+	InputPressedSpecHandles.Reset();
+	InputReleasedSpecHandles.Reset();
+}
+
+void UGYAbilitySystemComponent::ClearAbilityInput()
+{
+	InputPressedSpecHandles.Reset();
+	InputReleasedSpecHandles.Reset();
+	InputHeldSpecHandles.Reset();
 }
 
 void UGYAbilitySystemComponent::TryActivateAbilitiesOnSpawn()

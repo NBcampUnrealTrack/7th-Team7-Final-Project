@@ -13,9 +13,12 @@ class GY_API UGYAbilitySystemComponent : public UAbilitySystemComponent
 public:
 	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
 
-	// InputTag으로 매칭되는 어빌리티 활성화/입력해제 (Lyra 라우팅)
+	// InputTag으로 매칭되는 어빌리티 입력 (Lyra 라우팅)
+	// 누름/뗌은 SpecHandle 집합에 기록만 하고, 실제 처리는 PostProcessInput의 ProcessAbilityInput에서.
 	void AbilityInputTagPressed(const FGameplayTag& InputTag);
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
+	void ProcessAbilityInput(float DeltaTime, bool bGamePaused);
+	void ClearAbilityInput();
 
 	void RescheduleStaminaRegen();
 	void RescheduleStaggerRegen();
@@ -31,6 +34,10 @@ public:
 private:
 	void OnCombatTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void TryActivateAbilitiesOnSpawn();
+
+	TArray<FGameplayAbilitySpecHandle> InputPressedSpecHandles;
+	TArray<FGameplayAbilitySpecHandle> InputReleasedSpecHandles;
+	TArray<FGameplayAbilitySpecHandle> InputHeldSpecHandles;
 
 	void ScheduleEffect(TSubclassOf<UGYPeriodicAttributeEffect> EffectClass, FActiveGameplayEffectHandle& Handle, FTimerHandle& DelayHandle, void(UGYAbilitySystemComponent::* StartFunc)());
 	void ApplyEffect(TSubclassOf<UGYPeriodicAttributeEffect> EffectClass, FActiveGameplayEffectHandle& Handle);
