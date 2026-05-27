@@ -45,6 +45,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	virtual void Die();
 
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
@@ -84,7 +87,7 @@ public:
 	FOnEnemyHit OnEnemyHit;
 
 protected:
-	UPROPERTY(ReplicatedUsing = OnRep_EnemyType, BlueprintReadOnly, Category = "Enemy|Data")
+	UPROPERTY(EditAnywhere,ReplicatedUsing = OnRep_EnemyType, BlueprintReadOnly, Category = "Enemy|Data")
 	EEnemyType EnemyType;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Enemy|Data")
