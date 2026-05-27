@@ -111,6 +111,22 @@ void AGYPlayerState::InitTestGAS(APawn* Avatar)
 	}
 }
 
+void AGYPlayerState::SendGameplayEventLocal(FGameplayTag EventTag)
+{
+	APawn* Pawn = GetPawn();
+	if (!Pawn) return;
+
+	FGameplayEventData Payload;
+	Payload.EventTag = EventTag;
+	Payload.Instigator = Pawn;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Pawn, EventTag, Payload);
+}
+
+void AGYPlayerState::ServerSendGameplayEvent_Implementation(FGameplayTag EventTag)
+{
+	SendGameplayEventLocal(EventTag);
+}
+
 void AGYPlayerState::HandleAttackInput()
 {
 	if (!AbilitySystemComponent) return;
@@ -126,10 +142,11 @@ void AGYPlayerState::HandleAttackInput()
 
 	AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Combo));
 
-	FGameplayEventData Payload;
-	Payload.EventTag = GYGameplayTags::Event_Input_Attack;
-	Payload.Instigator = GetPawn();
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetPawn(), GYGameplayTags::Event_Input_Attack, Payload);
+	SendGameplayEventLocal(GYGameplayTags::Event_Input_Attack);
+	if (!HasAuthority())
+	{
+		ServerSendGameplayEvent(GYGameplayTags::Event_Input_Attack);
+	}
 
 	if (GetWorld() && HoldToChargeTime > 0.f)
 	{
@@ -150,20 +167,22 @@ void AGYPlayerState::HandleAttackReleasedInput()
 		GetWorld()->GetTimerManager().ClearTimer(HoldToChargeTimer);
 	}
 
-	FGameplayEventData Payload;
-	Payload.EventTag = GYGameplayTags::Event_Input_AttackRelease;
-	Payload.Instigator = GetPawn();
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetPawn(), GYGameplayTags::Event_Input_AttackRelease, Payload);
+	SendGameplayEventLocal(GYGameplayTags::Event_Input_AttackRelease);
+	if (!HasAuthority())
+	{
+		ServerSendGameplayEvent(GYGameplayTags::Event_Input_AttackRelease);
+	}
 }
 
 void AGYPlayerState::HandleParryInput()
 {
 	if (!AbilitySystemComponent) return;
 
-	FGameplayEventData Payload;
-	Payload.EventTag = GYGameplayTags::Event_Input_Parry;
-	Payload.Instigator = GetPawn();
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetPawn(), GYGameplayTags::Event_Input_Parry, Payload);
+	SendGameplayEventLocal(GYGameplayTags::Event_Input_Parry);
+	if (!HasAuthority())
+	{
+		ServerSendGameplayEvent(GYGameplayTags::Event_Input_Parry);
+	}
 
 	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
 	{
@@ -182,10 +201,11 @@ void AGYPlayerState::OnHoldToChargeThreshold()
 {
 	if (!AbilitySystemComponent) return;
 
-	FGameplayEventData Payload;
-	Payload.EventTag = GYGameplayTags::Event_Input_AttackCharge;
-	Payload.Instigator = GetPawn();
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetPawn(), GYGameplayTags::Event_Input_AttackCharge, Payload);
+	SendGameplayEventLocal(GYGameplayTags::Event_Input_AttackCharge);
+	if (!HasAuthority())
+	{
+		ServerSendGameplayEvent(GYGameplayTags::Event_Input_AttackCharge);
+	}
 
 	AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Charge));
 }

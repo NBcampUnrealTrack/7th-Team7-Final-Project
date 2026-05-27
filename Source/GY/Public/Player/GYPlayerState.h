@@ -98,6 +98,10 @@ protected:
 
 private:
 	void OnHoldToChargeThreshold();
+	void SendGameplayEventLocal(FGameplayTag EventTag);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSendGameplayEvent(FGameplayTag EventTag);
 
 	FTimerHandle HoldToChargeTimer;
 };
