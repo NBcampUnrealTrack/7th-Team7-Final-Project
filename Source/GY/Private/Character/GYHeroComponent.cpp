@@ -194,7 +194,7 @@ void UGYHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompone
 
 void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 {
-	GY_LOG(Player, KHB, "Input_Move 호출됨");
+	//GY_LOG(Player, KHB, "Input_Move 호출됨");
 	APawn* Pawn = GetPawn<APawn>();
 	AController* Controller = Pawn ? Pawn->GetController() : nullptr;
 
