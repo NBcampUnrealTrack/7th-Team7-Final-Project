@@ -6,7 +6,7 @@
 #include "Loot/LootTypes.h"
 #include "LootBoxActor.generated.h"
 
-class UDataTable;
+class URegionLootData;
 class UStaticMeshComponent;
 
 UCLASS()
@@ -24,10 +24,7 @@ public:
 	TObjectPtr<UStaticMeshComponent> Mesh;
 
 	UPROPERTY(EditAnywhere, Category = "Loot")
-	FName LootSourceId;
-
-	UPROPERTY(EditAnywhere, Category = "Loot")
-	TSoftObjectPtr<UDataTable> LootTable;
+	TSoftObjectPtr<URegionLootData> RegionData;
 
 	void OpenBox(APawn* Opener);
 

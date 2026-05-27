@@ -199,11 +199,13 @@ void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* In
 
 void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance, UItemDefinition* Def, const FInventoryEntry& Entry, UAbilitySystemComponent* ASC)
 {
-	if (Entry.EnchantOptionIds.IsEmpty()) return;
+	if (Entry.RolledOptions.IsEmpty()) return;
 
-	for (const FName& OptionId : Entry.EnchantOptionIds)
+	// TODO (combat 도메인): 조건부/프록 옵션(약공 한정·출혈·흡혈 등)은 GE 템플릿으로 표현 불가 → 부여 어빌리티로 분기 필요.
+	// 여기선 롤된 수치를 MagnitudeTag 키로 SetByCaller 주입하는 plumbing만 처리.
+	for (const FRolledEnchantOption& Option : Entry.RolledOptions)
 	{
-		const FEnchantOptionRow* Row = EnchantOptionResolver::FindRow(Def, OptionId);
+		const FEnchantOptionRow* Row = EnchantOptionResolver::FindRow(Def, Option.OptionId);
 		if (Row == nullptr) continue;
 		if (!IsValid(Row->TemplateGE)) continue;
 
@@ -213,9 +215,10 @@ void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance
 		FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(Row->TemplateGE, 1.f, Context);
 		if (!Spec.IsValid()) continue;
 
-		Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude1, Row->Magnitude1);
-		Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude2, Row->Magnitude2);
-		Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude3, Row->Magnitude3);
+		for (const FRolledMagnitude& Magnitude : Option.Magnitudes)
+		{
+			Spec.Data->SetSetByCallerMagnitude(Magnitude.MagnitudeTag, Magnitude.Value);
+		}
 
 		const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
 		Instance->GetMutableGrantedHandles().GameplayEffectHandles.Add(Handle);

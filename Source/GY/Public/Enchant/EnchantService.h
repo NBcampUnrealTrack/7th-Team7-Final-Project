@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Enchant/RolledEnchantOption.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "EnchantService.generated.h"
 
@@ -19,7 +20,7 @@ public:
 		UCurrencyComponent* Currency,
 		const FGuid& InstanceId,
 		const FRandomStream& Seed,
-		TArray<FName>& OutRolledIds);
+		TArray<FRolledEnchantOption>& OutRolledOptions);
 
 	FOnItemEnchanted OnItemEnchanted;
 };

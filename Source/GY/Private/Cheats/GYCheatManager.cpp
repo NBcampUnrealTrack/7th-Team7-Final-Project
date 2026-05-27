@@ -142,10 +142,18 @@ void UGYCheatManager::GY_PrintInventory()
 		const FName ItemId = IsValid(Def) ? Def->ItemId : NAME_None;
 
 		FString OptionList;
-		for (const FName& OptionId : Entry.EnchantOptionIds)
+		for (const FRolledEnchantOption& Option : Entry.RolledOptions)
 		{
 			if (!OptionList.IsEmpty()) OptionList += TEXT(",");
-			OptionList += OptionId.ToString();
+			OptionList += Option.OptionId.ToString();
+
+			FString MagList;
+			for (const FRolledMagnitude& Magnitude : Option.Magnitudes)
+			{
+				if (!MagList.IsEmpty()) MagList += TEXT(" ");
+				MagList += FString::Printf(TEXT("%s=%.2f"), *Magnitude.MagnitudeTag.ToString(), Magnitude.Value);
+			}
+			if (!MagList.IsEmpty()) OptionList += FString::Printf(TEXT("(%s)"), *MagList);
 		}
 		if (OptionList.IsEmpty()) OptionList = TEXT("-");
 
@@ -251,13 +259,13 @@ void UGYCheatManager::GY_Enchant(int32 InvIndex)
 // Loot / Interaction
 // ============================================================
 
-void UGYCheatManager::GY_SpawnLootBox(const FString& SourceId, const FString& LootTablePath)
+void UGYCheatManager::GY_SpawnLootBox(const FString& RegionDataPath)
 {
 	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
 	if (!AGYPlayerController) return;
 	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
 	if (!AGYServerCheatProxy) return;
-	AGYServerCheatProxy->Server_SpawnLootBox(SourceId, LootTablePath);
+	AGYServerCheatProxy->Server_SpawnLootBox(RegionDataPath);
 }
 
 void UGYCheatManager::GY_GetNearestInteractionOptions()

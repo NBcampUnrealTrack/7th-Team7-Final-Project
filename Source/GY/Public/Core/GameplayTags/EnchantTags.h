@@ -1,0 +1,30 @@
+#pragma once
+
+#include "NativeGameplayTags.h"
+
+namespace GYGameplayTags
+{
+	// 인챈트 옵션 효과 수치 (SetByCaller 키). 스탯/프록 구분 없이 "인챈트가 쓰는 magnitude".
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_LightAttackDamagePct)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_HeavyAttackDamagePct)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_StaggerReduction)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_BleedChancePct)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_BleedPerSec)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_LifestealPct)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_LifestealCap)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_DefShred)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_CritDmgPct)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_ParryStaggerPct)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_MoveSpeedPct)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_DamageTakenPct)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_MaxSP)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_StaggerResist)
+
+	// 방어구
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_NonCombatHPRegen)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_DamageTakenReductionPct)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_DodgeInvulnTime)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_ParryWindow)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_SPRegenRatePct)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_LowHPDamageReductionPct)
+}
