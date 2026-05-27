@@ -30,7 +30,7 @@ bool UGYGameplayCueNotify_Camera::OnExecute_Implementation(AActor* MyTarget,
 	Context.Intensity = Intensity;
 	Context.Duration = Duration;
 	Context.ZoomAmount = ZoomAmount;
-
+	Context.Frequency = Frequency;
 	// 방향 계산
 	switch (DirectionSource)
 	{

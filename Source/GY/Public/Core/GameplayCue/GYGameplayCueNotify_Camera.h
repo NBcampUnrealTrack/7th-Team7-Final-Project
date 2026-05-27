@@ -35,4 +35,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	EGYCameraDirectionSource DirectionSource =
 		EGYCameraDirectionSource::HitNormal;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float Frequency = 40.f;
 };
