@@ -1,6 +1,7 @@
 #include "AttackLogic/Combo/GYComboInputLogic.h"
 #include "AttackLogic/Combo/GYComboFragment.h"
-#include "AttackLogic/Combo/GYComboAnimDataAsset.h"
+#include "AttackLogic/Combo/GYComboMontageFragment.h"
+#include "AttackLogic/Shared/GYCollisionFragment.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/EventTags.h"
@@ -12,25 +13,59 @@ void UGYComboInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	ComboIndex = 0;
 	bWindowOpen = false;
 	bPendingCombo = false;
-	CachedAnimSet = nullptr;
+	CachedMontages = nullptr;
+	CachedCollisions = nullptr;
 
 	const UGYComboFragment* Fragment = Ability->GetFragment<UGYComboFragment>();
 	if (!Fragment) return;
 
 	MaxComboCount = FMath::Max(1, FMath::FloorToInt(Fragment->ComboCount));
 
-	if (AnimDataAsset)
+	FGameplayTagContainer OwnedTags;
+	if (UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo())
 	{
-		FGameplayTagContainer OwnedTags;
-		if (UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo())
+		ASC->GetOwnedGameplayTags(OwnedTags);
+	}
+
+	FGameplayTagContainer FallbackTags;
+	if (Ability->DefaultWeaponTypeTag.IsValid())
+	{
+		FallbackTags.AddTag(Ability->DefaultWeaponTypeTag);
+	}
+
+	if (const UGYComboMontageFragment* MF = Ability->GetFragment<UGYComboMontageFragment>())
+	{
+		CachedMontages = MF->GetBestMatchingMontages(OwnedTags);
+		if (!CachedMontages && !FallbackTags.IsEmpty())
 		{
-			ASC->GetOwnedGameplayTags(OwnedTags);
+			CachedMontages = MF->GetBestMatchingMontages(FallbackTags);
 		}
-		CachedAnimSet = AnimDataAsset->GetBestMatchingAnimSet(OwnedTags, DefaultAnimSetTag);
-		if (CachedAnimSet)
+		if (CachedMontages)
 		{
-			MaxComboCount = FMath::Min(MaxComboCount, CachedAnimSet->Hits.Num());
+			MaxComboCount = FMath::Min(MaxComboCount, CachedMontages->Num());
 		}
+	}
+
+	if (const UGYCollisionFragment* CF = Ability->GetFragment<UGYCollisionFragment>())
+	{
+		CachedCollisions = CF->GetBestMatchingShapes(OwnedTags);
+		if (!CachedCollisions && !FallbackTags.IsEmpty())
+		{
+			CachedCollisions = CF->GetBestMatchingShapes(FallbackTags);
+		}
+	}
+
+	if (!CachedMontages)
+	{
+		TWeakObjectPtr<UGYPlayerGameplayAbility> WeakAbility(Ability);
+		Ability->GetWorld()->GetTimerManager().SetTimerForNextTick([WeakAbility]()
+		{
+			if (UGYPlayerGameplayAbility* A = WeakAbility.Get())
+			{
+				A->RequestEnd(true);
+			}
+		});
+		return;
 	}
 
 	bReady = false;
@@ -53,7 +88,8 @@ void UGYComboInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bW
 		CachedAbility->GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 	}
 	CachedAbility.Reset();
-	CachedAnimSet = nullptr;
+	CachedMontages = nullptr;
+	CachedCollisions = nullptr;
 	bWindowOpen = false;
 	bPendingCombo = false;
 	bReady = false;
@@ -108,15 +144,55 @@ void UGYComboInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 
 TArray<FGameplayTag> UGYComboInputLogic::GetRequiredFragmentTags() const
 {
-	return { GYGameplayTags::Ability_Fragment_Attack };
+	return {
+		GYGameplayTags::Ability_Fragment_Attack,
+		GYGameplayTags::Ability_Fragment_ComboMontage,
+		GYGameplayTags::Ability_Fragment_Collision
+	};
 }
 
 void UGYComboInputLogic::PlayCurrentMontage()
 {
-	if (!CachedAbility.IsValid() || !CachedAnimSet) return;
-	if (!CachedAnimSet->Hits.IsValidIndex(ComboIndex)) return;
+	if (!CachedAbility.IsValid() || !CachedMontages) return;
+	if (!CachedMontages->IsValidIndex(ComboIndex)) return;
 
-	UAnimMontage* Montage = CachedAnimSet->Hits[ComboIndex].Montage.Get();
+	if (const UGYComboFragment* Fragment = CachedAbility->GetFragment<UGYComboFragment>())
+	{
+		FGameplayTagContainer OwnedTags;
+		if (UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo())
+		{
+			ASC->GetOwnedGameplayTags(OwnedTags);
+		}
+
+		FGameplayTagContainer FallbackTags;
+		if (CachedAbility->DefaultWeaponTypeTag.IsValid())
+		{
+			FallbackTags.AddTag(CachedAbility->DefaultWeaponTypeTag);
+		}
+
+		const TArray<FGYComboStepData>* Steps = Fragment->GetBestMatchingSteps(OwnedTags);
+		if (!Steps && !FallbackTags.IsEmpty())
+		{
+			Steps = Fragment->GetBestMatchingSteps(FallbackTags);
+		}
+
+		float Multiplier = 1.f;
+		if (Steps && Steps->IsValidIndex(ComboIndex))
+		{
+			const FGYComboStepData& Step = (*Steps)[ComboIndex];
+			Multiplier = Step.DamageMultiplier;
+
+			UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+			if (ASC && Step.StaminaCost.Attribute.IsValid() && Step.StaminaCost.Amount > 0.f)
+			{
+				const float Current = ASC->GetNumericAttributeBase(Step.StaminaCost.Attribute);
+				ASC->SetNumericAttributeBase(Step.StaminaCost.Attribute, FMath::Max(0.f, Current - Step.StaminaCost.Amount));
+			}
+		}
+		CachedAbility->SetDamageMultiplier(Multiplier);
+	}
+
+	UAnimMontage* Montage = (*CachedMontages)[ComboIndex].Get();
 	if (Montage)
 	{
 		CachedAbility->PlayMontageForLogic(Montage, 1.f);
@@ -134,8 +210,8 @@ void UGYComboInputLogic::AdvanceCombo()
 	}
 }
 
-const FComboHitData* UGYComboInputLogic::GetCurrentHitData() const
+const FGYCollisionShapeData* UGYComboInputLogic::GetCurrentCollisionData() const
 {
-	if (!CachedAnimSet || !CachedAnimSet->Hits.IsValidIndex(ComboIndex)) return nullptr;
-	return &CachedAnimSet->Hits[ComboIndex];
+	if (!CachedCollisions || !CachedCollisions->IsValidIndex(ComboIndex)) return nullptr;
+	return &(*CachedCollisions)[ComboIndex];
 }

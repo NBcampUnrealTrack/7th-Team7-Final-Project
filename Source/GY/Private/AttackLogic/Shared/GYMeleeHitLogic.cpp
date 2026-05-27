@@ -34,7 +34,7 @@ void UGYMeleeHitLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEve
 	{
 		if (const UGYBaseAttribute* Attrs = InstigatorASC->GetSet<UGYBaseAttribute>())
 		{
-			Damage = Attrs->GetAttack();
+			Damage = Attrs->GetAttack() * CachedAbility->GetDamageMultiplier();
 		}
 	}
 

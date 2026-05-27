@@ -1,6 +1,7 @@
 #include "AttackLogic/Notifies/GYANS_AttackTrace.h"
 #include "AttackLogic/Combo/GYComboInputLogic.h"
-#include "AttackLogic/Combo/GYComboAnimDataAsset.h"
+#include "AttackLogic/Charge/GYChargeInputLogic.h"
+#include "AttackLogic/Shared/GYCollisionFragment.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemInterface.h"
@@ -8,7 +9,7 @@
 #include "Core/GameplayTags/EventTags.h"
 #include "DrawDebugHelpers.h"
 
-static const FComboHitData* GetCurrentHitData(AActor* Owner)
+static const FGYCollisionShapeData* GetCurrentCollisionData(AActor* Owner)
 {
 	const IAbilitySystemInterface* I = Cast<IAbilitySystemInterface>(Owner);
 	if (!I) return nullptr;
@@ -21,9 +22,15 @@ static const FComboHitData* GetCurrentHitData(AActor* Owner)
 		if (!Spec.IsActive()) continue;
 		UGYPlayerGameplayAbility* Ability = Cast<UGYPlayerGameplayAbility>(Spec.GetPrimaryInstance());
 		if (!Ability) continue;
-		UGYComboInputLogic* Logic = Ability->GetLogic<UGYComboInputLogic>();
-		if (!Logic) continue;
-		return Logic->GetCurrentHitData();
+
+		if (UGYComboInputLogic* Logic = Ability->GetLogic<UGYComboInputLogic>())
+		{
+			return Logic->GetCurrentCollisionData();
+		}
+		if (UGYChargeInputLogic* Logic = Ability->GetLogic<UGYChargeInputLogic>())
+		{
+			return Logic->GetCurrentCollisionData();
+		}
 	}
 	return nullptr;
 }
@@ -46,12 +53,38 @@ void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeque
 	UWorld* World = Owner->GetWorld();
 	if (!World) return;
 
-	const FComboHitData* HitData = GetCurrentHitData(Owner);
-	const FName SocketName  = HitData ? HitData->TraceSocket  : TEXT("hand_r");
-	const float SphereRadius = HitData ? HitData->SphereRadius : 50.f;
-	const bool bShowDebug   = HitData ? HitData->bShowDebug   : false;
+	const FGYCollisionShapeData* CollisionData = GetCurrentCollisionData(Owner);
 
-	const FVector SocketLocation = MeshComp->GetSocketLocation(SocketName);
+	const FName BoneName = CollisionData ? CollisionData->BoneName : TEXT("hand_r");
+	const FVector BoneLocation = MeshComp->GetSocketLocation(BoneName);
+	const FQuat BoneQuat = MeshComp->GetSocketQuaternion(BoneName);
+
+	const FVector TraceOrigin = BoneLocation + BoneQuat.RotateVector(
+		CollisionData ? CollisionData->Offset : FVector::ZeroVector);
+	const FQuat TraceRot = CollisionData
+		? (BoneQuat * CollisionData->Rotation.Quaternion())
+		: FQuat::Identity;
+
+	FCollisionShape Shape;
+	if (CollisionData)
+	{
+		switch (CollisionData->ShapeType)
+		{
+		case EGYCollisionShapeType::Box:
+			Shape = FCollisionShape::MakeBox(CollisionData->BoxHalfExtent);
+			break;
+		case EGYCollisionShapeType::Capsule:
+			Shape = FCollisionShape::MakeCapsule(CollisionData->CapsuleRadius, CollisionData->CapsuleHalfHeight);
+			break;
+		default:
+			Shape = FCollisionShape::MakeSphere(CollisionData->SphereRadius);
+			break;
+		}
+	}
+	else
+	{
+		Shape = FCollisionShape::MakeSphere(50.f);
+	}
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(Owner);
@@ -59,11 +92,11 @@ void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeque
 	TArray<FHitResult> Hits;
 	World->SweepMultiByChannel(
 		Hits,
-		SocketLocation,
-		SocketLocation + FVector(0.f, 0.f, 0.1f),
-		FQuat::Identity,
+		TraceOrigin,
+		TraceOrigin + FVector(0.f, 0.f, 0.1f),
+		TraceRot,
 		ECC_Pawn,
-		FCollisionShape::MakeSphere(SphereRadius),
+		Shape,
 		QueryParams
 	);
 
@@ -86,11 +119,24 @@ void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeque
 	}
 
 #if ENABLE_DRAW_DEBUG
-	if (bShowDebug)
+	if (CollisionData && CollisionData->bShowDebug)
 	{
-		DrawDebugSphere(World, SocketLocation, SphereRadius, 12,
-			bHitAny ? FColor::Red : FColor::Green,
-			false, FrameDeltaTime * 2.f);
+		const FColor DebugColor = bHitAny ? FColor::Red : FColor::Green;
+		const float DebugDuration = FrameDeltaTime * 2.f;
+
+		switch (CollisionData->ShapeType)
+		{
+		case EGYCollisionShapeType::Box:
+			DrawDebugBox(World, TraceOrigin, CollisionData->BoxHalfExtent, TraceRot, DebugColor, false, DebugDuration);
+			break;
+		case EGYCollisionShapeType::Capsule:
+			DrawDebugCapsule(World, TraceOrigin, CollisionData->CapsuleHalfHeight, CollisionData->CapsuleRadius,
+				TraceRot, DebugColor, false, DebugDuration);
+			break;
+		default:
+			DrawDebugSphere(World, TraceOrigin, CollisionData->SphereRadius, 12, DebugColor, false, DebugDuration);
+			break;
+		}
 	}
 #endif
 }

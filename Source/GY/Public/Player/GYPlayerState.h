@@ -7,11 +7,13 @@
 #include "GameFramework/PlayerState.h"
 #include "GYPlayerState.generated.h"
 
+class UAbilitySet;
 class UAbilitySystemComponent;
 class UCurrencyComponent;
 class UEquipmentLoadoutComponent;
 class UGYAbilitySystemComponent;
 class UGYPawnData;
+class UGYPlayerInitData;
 class UInventoryComponent;
 class UGYPlayerBaseAttribute;
 class UGYPlayerAdditionalAttribute;
@@ -42,6 +44,21 @@ public:
 	UFUNCTION(BlueprintPure)
 	UCurrencyComponent* GetCurrencyComponent() const { return CurrencyComponent; }
 
+	void InitTestGAS(APawn* Avatar);
+
+	void HandleAttackInput();
+	void HandleAttackReleasedInput();
+	void HandleParryInput();
+
+	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
+	TObjectPtr<UAbilitySet> CombatAbilitySet;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
+	TObjectPtr<UGYPlayerInitData> InitData;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat", meta = (ClampMin = "0.0", Units = "s"))
+	float HoldToChargeTime = 1.0f;
+
 protected:
 	UFUNCTION()
 	void OnRep_PawnData();
@@ -64,15 +81,20 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCurrencyComponent> CurrencyComponent;
 
-	UPROPERTY(VisibleAnywhere, Category="GAS")
+	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UGYPlayerBaseAttribute> BaseAttribute;
 
-	UPROPERTY(VisibleAnywhere, Category="GAS")
+	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UGYPlayerAdditionalAttribute> AdditionalAttribute;
 
-	UPROPERTY(VisibleAnywhere, Category="GAS")
+	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UGYPlayerAttribute> PlayerAttribute;
 
-	UPROPERTY(VisibleAnywhere, Category="GAS")
+	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UGYWeaponAttribute> WeaponAttribute;
+
+private:
+	void OnHoldToChargeThreshold();
+
+	FTimerHandle HoldToChargeTimer;
 };

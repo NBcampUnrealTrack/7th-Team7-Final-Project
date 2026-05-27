@@ -1,8 +1,6 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "AbilitySystem/GYPeriodicAttributeEffect.h"
-#include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
 
 void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
 {
@@ -114,21 +112,15 @@ void UGYAbilitySystemComponent::StopEffect(FActiveGameplayEffectHandle& Handle, 
 void UGYAbilitySystemComponent::StartStaminaRegen()
 {
 	if (StaminaRegenGEHandle.IsValid()) return;
-	const UGYPlayerAttribute* PlayerAttr = GetSet<UGYPlayerAttribute>();
-	if (PlayerAttr && GetNumericAttributeBase(UGYPlayerAttribute::GetCurrentStaminaAttribute()) >= PlayerAttr->GetMaxStamina()) return;
 	ApplyEffect(StaminaRegenEffect, StaminaRegenGEHandle);
 }
 void UGYAbilitySystemComponent::StartStaggerRegen()
 {
 	if (StaggerRegenGEHandle.IsValid()) return;
-	const UGYAdditionalAttribute* AdditionalAttr = GetSet<UGYAdditionalAttribute>();
-	if (AdditionalAttr && GetNumericAttributeBase(UGYAdditionalAttribute::GetCurrentStaggerAttribute()) >= AdditionalAttr->GetMaxStagger()) return;
 	ApplyEffect(StaggerRegenEffect, StaggerRegenGEHandle);
 }
 void UGYAbilitySystemComponent::StartStunRegen()
 {
 	if (StunRegenGEHandle.IsValid()) return;
-	const UGYAdditionalAttribute* AdditionalAttr = GetSet<UGYAdditionalAttribute>();
-	if (AdditionalAttr && GetNumericAttributeBase(UGYAdditionalAttribute::GetCurrentStunAttribute()) >= AdditionalAttr->GetMaxStun()) return;
 	ApplyEffect(StunRegenEffect, StunRegenGEHandle);
 }

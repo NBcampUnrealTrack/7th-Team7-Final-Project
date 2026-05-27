@@ -23,6 +23,17 @@ UGYPlayerGameplayAbility::UGYPlayerGameplayAbility()
 }
 
 
+bool UGYPlayerGameplayAbility::CanActivateAbility(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayTagContainer* SourceTags,
+	const FGameplayTagContainer* TargetTags,
+	FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (IsActive()) return false;
+	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
+}
+
 void UGYPlayerGameplayAbility::ActivateAbility(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo,
@@ -54,6 +65,8 @@ void UGYPlayerGameplayAbility::ActivateAbility(
 		}
 	}
 
+	if (!IsActive()) return;
+
 	SetupEventListeners();
 }
 
@@ -81,6 +94,7 @@ void UGYPlayerGameplayAbility::EndAbility(
 	InjectedLogics.Empty();
 	RuntimeFragments.Empty();
 	EventListenerTasks.Empty();
+	CurrentDamageMultiplier = 1.f;
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }

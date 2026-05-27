@@ -5,9 +5,8 @@
 #include "GameplayTagContainer.h"
 #include "GYComboInputLogic.generated.h"
 
-class UGYComboAnimDataAsset;
-struct FComboAnimSet;
-struct FComboHitData;
+class UAnimMontage;
+struct FGYCollisionShapeData;
 
 UCLASS()
 class GY_API UGYComboInputLogic : public UAbilityLogicBase
@@ -15,19 +14,13 @@ class GY_API UGYComboInputLogic : public UAbilityLogicBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly, Category = "Combo")
-	TObjectPtr<UGYComboAnimDataAsset> AnimDataAsset;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Combo")
-	FGameplayTag DefaultAnimSetTag;
-
 	virtual void OnExecute(UGYPlayerGameplayAbility* Ability) override;
 	virtual void OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled) override;
 	virtual TArray<FGameplayTag> GetSubscribedEventTags() const override;
 	virtual void OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload) override;
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 
-	const FComboHitData* GetCurrentHitData() const;
+	const FGYCollisionShapeData* GetCurrentCollisionData() const;
 
 private:
 	void PlayCurrentMontage();
@@ -40,5 +33,6 @@ private:
 	bool bWindowOpen = false;
 	bool bPendingCombo = false;
 	bool bReady = false;
-	const FComboAnimSet* CachedAnimSet = nullptr;
+	const TArray<TObjectPtr<UAnimMontage>>* CachedMontages = nullptr;
+	const TArray<FGYCollisionShapeData>* CachedCollisions = nullptr;
 };
