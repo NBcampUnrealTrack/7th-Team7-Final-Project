@@ -23,8 +23,10 @@ void UGYWorldResetSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UGYWorldResetSubsystem::OnActorDeactivated(IWorldPartitionLevelPlacedActor* Actor)
 {
-	checkf(GetWorld() && GetWorld()->GetAuthGameMode(), TEXT("Has Not Authority"));
-
+	if (!GetWorld() || !GetWorld()->GetAuthGameMode())
+	{
+		return;
+	}
 	FGuid TargetActorGuid = Actor->GetPersistentGuid();
 
 	if (!ActorGuids.Contains(TargetActorGuid)) return;
@@ -32,15 +34,19 @@ void UGYWorldResetSubsystem::OnActorDeactivated(IWorldPartitionLevelPlacedActor*
 	DeactivatedActors.Add(TargetActorGuid);
 }
 
-void UGYWorldResetSubsystem::OnActorBeginPlay(IWorldPartitionLevelPlacedActor* Actor)
+bool UGYWorldResetSubsystem::OnActorBeginPlay(IWorldPartitionLevelPlacedActor* Actor)
 {
-	checkf(GetWorld() && GetWorld()->GetAuthGameMode(), TEXT("Has Not Authority"));
-
+	if (!GetWorld() || !GetWorld()->GetAuthGameMode())
+	{
+		return false;
+	}
 	FGuid TargetActorGuid = Actor->GetPersistentGuid();
 	if (DeactivatedActors.Find(TargetActorGuid))
 	{
 		Actor->Deactivate();
+		return false;
 	}
+	return true;
 }
 
 void UGYWorldResetSubsystem::ResetWorld()

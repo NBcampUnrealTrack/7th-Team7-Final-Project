@@ -18,7 +18,8 @@ class GY_API UGYWorldResetSubsystem : public UGameInstanceSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	void OnActorDeactivated(IWorldPartitionLevelPlacedActor* Actor);
-	void OnActorBeginPlay(IWorldPartitionLevelPlacedActor* Actor);
+	//true일 경우 살아있는 액터 false일 경우 죽은 액터(deactivate처리해야함)
+	bool OnActorBeginPlay(IWorldPartitionLevelPlacedActor* Actor);
 	void ResetWorld();
 
 	//SaveLoad
