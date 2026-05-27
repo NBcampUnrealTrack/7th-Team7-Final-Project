@@ -28,6 +28,7 @@ protected:
 	virtual void SetupInputComponent() override;
 	virtual void OnRep_PlayerState() override;
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Cheat")

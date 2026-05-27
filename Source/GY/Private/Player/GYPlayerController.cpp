@@ -1,9 +1,7 @@
 #include "Player/GYPlayerController.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Cheats/GYCheatManager.h"
-#include "Character/GYHeroComponent.h"
-#include "Character/GYPawnExtensionComponent.h"
 #include "Cheats/GYServerCheatProxy.h"
-#include "Core/GameplayTags/StateTags.h"
 #include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
@@ -84,6 +82,19 @@ void AGYPlayerController::OnPossess(APawn* InPawn)
 	{
 		OnPlayerStateInitialized.Broadcast(this);
 	}
+}
+
+void AGYPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
+{
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
+	{
+		if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
+		{
+			ASC->ProcessAbilityInput(DeltaTime, bGamePaused);
+		}
+	}
+
+	Super::PostProcessInput(DeltaTime, bGamePaused);
 }
 
 void AGYPlayerController::OnRep_ServerCheatProxy()

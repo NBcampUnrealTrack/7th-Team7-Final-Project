@@ -8,6 +8,7 @@
 class UGYPawnExtensionComponent;
 class UAbilitySystemComponent;
 class UActiveEquipmentComponent;
+class UInteractionComponent;
 
 UCLASS()
 class GY_API AGYCharacter : public ACharacter, public IAbilitySystemInterface
@@ -30,6 +31,8 @@ public:
 	UFUNCTION(BlueprintPure)
 	UActiveEquipmentComponent* GetActiveEquipmentComponent() const { return ActiveEquipmentComponent; }
 
+	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
+
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 protected:
@@ -41,6 +44,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UActiveEquipmentComponent> ActiveEquipmentComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UInteractionComponent> InteractionComponent;
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HB|Character", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UGYPawnExtensionComponent> PawnExtComponent;

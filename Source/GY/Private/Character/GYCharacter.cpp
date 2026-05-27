@@ -7,12 +7,14 @@
 #include "Components/GameFrameworkComponentManager.h"
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
+#include "Interaction/InteractionComponent.h"
 #include "Player/GYPlayerState.h"
 
 AGYCharacter::AGYCharacter()
 {
 	ActiveEquipmentComponent = CreateDefaultSubobject<UActiveEquipmentComponent>(TEXT("ActiveEquipmentComponent"));
 	PawnExtComponent = CreateDefaultSubobject<UGYPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
+	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 
 }
 
