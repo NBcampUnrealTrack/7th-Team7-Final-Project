@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Enchant/RolledEnchantOption.h"
 #include "GameplayTagContainer.h"
 #include "LootTypes.generated.h"
 
@@ -27,7 +28,7 @@ struct GY_API FLootDrop
 	FGameplayTag GradeTag;
 
 	UPROPERTY(BlueprintReadOnly)
-	TArray<FName> RolledOptionIds;
+	TArray<FRolledEnchantOption> RolledOptions;
 
 	UPROPERTY(BlueprintReadOnly)
 	float StatDeviation = 0.f;

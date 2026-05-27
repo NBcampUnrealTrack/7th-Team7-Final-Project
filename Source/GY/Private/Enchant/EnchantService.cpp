@@ -15,9 +15,9 @@ bool UEnchantService::TryEnchant(UInventoryComponent* Inventory,
 	UCurrencyComponent* Currency,
 	const FGuid& InstanceId,
 	const FRandomStream& Seed,
-	TArray<FName>& OutRolledIds)
+	TArray<FRolledEnchantOption>& OutRolledOptions)
 {
-	OutRolledIds.Reset();
+	OutRolledOptions.Reset();
 
 	if (!IsValid(Inventory)) return false;
 	if (!IsValid(Currency)) return false;
@@ -61,16 +61,16 @@ bool UEnchantService::TryEnchant(UInventoryComponent* Inventory,
 	}
 
 	FRandomStream Stream = Seed;
-	TArray<FName> Rolled = EnchantOptionRoller::RollAllOptions(Def, Entry->GradeTag, Stream);
+	TArray<FRolledEnchantOption> Rolled = EnchantOptionRoller::RollAllOptions(Def, Entry->GradeTag, Stream);
 
 	if (Rolled.IsEmpty()) return false;
 
 	Inventory->MutateEntry(InstanceId, [&Rolled](FInventoryEntry& E)
 	{
-		E.EnchantOptionIds = Rolled;
+		E.RolledOptions = Rolled;
 	});
 
-	OutRolledIds = Rolled;
+	OutRolledOptions = Rolled;
 	OnItemEnchanted.Broadcast(InstanceId);
 	return true;
 }

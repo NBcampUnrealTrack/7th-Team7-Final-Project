@@ -142,10 +142,18 @@ void UGYCheatManager::GY_PrintInventory()
 		const FName ItemId = IsValid(Def) ? Def->ItemId : NAME_None;
 
 		FString OptionList;
-		for (const FName& OptionId : Entry.EnchantOptionIds)
+		for (const FRolledEnchantOption& Option : Entry.RolledOptions)
 		{
 			if (!OptionList.IsEmpty()) OptionList += TEXT(",");
-			OptionList += OptionId.ToString();
+			OptionList += Option.OptionId.ToString();
+
+			FString MagList;
+			for (const FRolledMagnitude& Magnitude : Option.Magnitudes)
+			{
+				if (!MagList.IsEmpty()) MagList += TEXT(" ");
+				MagList += FString::Printf(TEXT("%s=%.2f"), *Magnitude.MagnitudeTag.ToString(), Magnitude.Value);
+			}
+			if (!MagList.IsEmpty()) OptionList += FString::Printf(TEXT("(%s)"), *MagList);
 		}
 		if (OptionList.IsEmpty()) OptionList = TEXT("-");
 

@@ -93,7 +93,7 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 		Entry.GradeTag = Drop.GradeTag;
 		Entry.Level = Drop.Level;
 		Entry.StatDeviation = Drop.StatDeviation;
-		Entry.EnchantOptionIds = Drop.RolledOptionIds;
+		Entry.RolledOptions = Drop.RolledOptions;
 		Entry.EnhancementLevel = Drop.EnhancementLevel;
 		Entry.RandomSeed = Drop.UsedSeed;
 	});

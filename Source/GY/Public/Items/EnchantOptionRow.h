@@ -20,15 +20,6 @@ struct GY_API FEnchantOptionRow : public FTableRowBase
 	TSubclassOf<UGameplayEffect> TemplateGE;
 
 	UPROPERTY(EditAnywhere)
-	float Magnitude1 = 0.f;
-
-	UPROPERTY(EditAnywhere)
-	float Magnitude2 = 0.f;
-
-	UPROPERTY(EditAnywhere)
-	float Magnitude3 = 0.f;
-
-	UPROPERTY(EditAnywhere)
 	FGameplayTag AffinityTag;
 
 	UPROPERTY(EditAnywhere)

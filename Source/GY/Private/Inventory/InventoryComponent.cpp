@@ -129,7 +129,7 @@ void UInventoryComponent::Server_RequestEnchant_Implementation(const FGuid& Inst
 	FRandomStream Seed;
 	Seed.GenerateNewSeed();
 
-	TArray<FName> Rolled;
+	TArray<FRolledEnchantOption> Rolled;
 	Enchant->TryEnchant(this, Currency, InstanceId, Seed, Rolled);
 }
 

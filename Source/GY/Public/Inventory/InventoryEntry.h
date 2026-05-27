@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Enchant/RolledEnchantOption.h"
 #include "GameplayTagContainer.h"
 #include "Net/Serialization/FastArraySerializer.h"
 #include "InventoryEntry.generated.h"
@@ -32,7 +33,7 @@ struct GY_API FInventoryEntry : public FFastArraySerializerItem
 	FGameplayTag GradeTag;
 
 	UPROPERTY(VisibleAnywhere)
-	TArray<FName> EnchantOptionIds;
+	TArray<FRolledEnchantOption> RolledOptions;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<FGuid> SocketedGemInstanceIds;

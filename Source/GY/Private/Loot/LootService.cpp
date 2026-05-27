@@ -63,7 +63,7 @@ FLootResult ULootService::RollLoot(const URegionLootData* Region, const FLootCon
 	Drop.Level = LevelRow->Level;
 	Drop.StatDeviation = RollStatDeviation(Stream);
 	Drop.UsedSeed = Seed.GetInitialSeed();
-	Drop.RolledOptionIds = EnchantOptionRoller::RollAllOptions(Drop.Definition.LoadSynchronous(), Drop.GradeTag, Stream);
+	Drop.RolledOptions = EnchantOptionRoller::RollAllOptions(Drop.Definition.LoadSynchronous(), Drop.GradeTag, Stream);
 
 	// TODO: PartySize 보정
 
