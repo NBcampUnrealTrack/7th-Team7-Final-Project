@@ -5,7 +5,6 @@
 #include "GYDodgeInputLogic.generated.h"
 
 struct FGYDodgeData;
-struct FGYDodgeMontageSet;
 
 UCLASS()
 class GY_API UGYDodgeInputLogic : public UAbilityLogicBase
@@ -19,11 +18,11 @@ public:
 
 private:
 	void OnTagWindowExpired();
-	void OnMontageExpired();
+	void OnAnimationExpired();
 	void RemoveAppliedTag();
+	void RemoveAnimationTag();
 
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
-	const FGYDodgeMontageSet* CachedMontageSet = nullptr;
 	const FGYDodgeData* CachedDodgeData = nullptr;
 	FTimerHandle TagTimer;
 	FTimerHandle EndTimer;

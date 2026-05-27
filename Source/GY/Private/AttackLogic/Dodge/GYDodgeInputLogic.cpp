@@ -1,39 +1,16 @@
 #include "AttackLogic/Dodge/GYDodgeInputLogic.h"
 #include "AttackLogic/Dodge/GYDodgeFragment.h"
-#include "AttackLogic/Dodge/GYDodgeMontageFragment.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystemComponent.h"
+#include "Character/GYCharacter.h"
+#include "Character/GYAnimInterface.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimInstance.h"
 #include "Core/GameplayTags/AbilityTags.h"
-#include "Core/GameplayTags/DirectionTags.h"
-
-namespace
-{
-	FGameplayTag QuantizeAngleToDirectionTag(float AngleDegrees)
-	{
-		while (AngleDegrees >  180.f) AngleDegrees -= 360.f;
-		while (AngleDegrees < -180.f) AngleDegrees += 360.f;
-
-		const int32 Step = FMath::RoundToInt(AngleDegrees / 45.f);
-
-		switch ((Step % 8 + 8) % 8)
-		{
-		case 0: return GYGameplayTags::Direction_Forward;
-		case 1: return GYGameplayTags::Direction_ForwardRight;
-		case 2: return GYGameplayTags::Direction_Right;
-		case 3: return GYGameplayTags::Direction_BackRight;
-		case 4: return GYGameplayTags::Direction_Back;
-		case 5: return GYGameplayTags::Direction_BackLeft;
-		case 6: return GYGameplayTags::Direction_Left;
-		case 7: return GYGameplayTags::Direction_ForwardLeft;
-		default: return GYGameplayTags::Direction_Forward;
-		}
-	}
-}
 
 void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
 	CachedAbility = Ability;
-	CachedMontageSet = nullptr;
 	CachedDodgeData = nullptr;
 
 	FGameplayTagContainer OwnedTags;
@@ -49,17 +26,6 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		FallbackTags.AddTag(Ability->DefaultWeaponTypeTag);
 	}
 
-	const FGameplayTag DirectionTag = QuantizeAngleToDirectionTag(0.f);
-
-	if (const UGYDodgeMontageFragment* MF = Ability->GetFragment<UGYDodgeMontageFragment>())
-	{
-		CachedMontageSet = MF->GetMontageForWeaponAndDirection(OwnedTags, DirectionTag);
-		if (!CachedMontageSet && !FallbackTags.IsEmpty())
-		{
-			CachedMontageSet = MF->GetMontageForWeaponAndDirection(FallbackTags, DirectionTag);
-		}
-	}
-
 	if (const UGYDodgeFragment* DF = Ability->GetFragment<UGYDodgeFragment>())
 	{
 		CachedDodgeData = DF->GetBestMatchingData(OwnedTags);
@@ -69,7 +35,7 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		}
 	}
 
-	if (!CachedMontageSet || !CachedDodgeData)
+	if (!CachedDodgeData)
 	{
 		TWeakObjectPtr<UGYPlayerGameplayAbility> WeakAbility(Ability);
 		Ability->GetWorld()->GetTimerManager().SetTimerForNextTick([WeakAbility]()
@@ -82,21 +48,34 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		return;
 	}
 
-	float MontageDuration = 0.f;
-	if (CachedMontageSet->DodgeMontage)
+	if (AGYCharacter* Character = Ability->GetGYCharacter())
 	{
-		MontageDuration = Ability->PlayMontageForLogic(CachedMontageSet->DodgeMontage, 1.f);
+		if (USkeletalMeshComponent* Mesh = Character->GetMesh())
+		{
+			if (UAnimInstance* Anim = Mesh->GetAnimInstance())
+			{
+				if (Anim->GetClass()->ImplementsInterface(UGYAnimInterface::StaticClass()))
+				{
+					IGYAnimInterface::Execute_SetDodgeDirection(Anim, 0.f);
+				}
+			}
+		}
 	}
 
-	if (CachedDodgeData->AppliedTag.IsValid() && ASC)
+	if (ASC)
 	{
-		ASC->AddLooseGameplayTag(CachedDodgeData->AppliedTag);
+		if (CachedDodgeData->AnimationTag.IsValid())
+		{
+			ASC->AddLooseGameplayTag(CachedDodgeData->AnimationTag);
+		}
+		if (CachedDodgeData->AppliedTag.IsValid())
+		{
+			ASC->AddLooseGameplayTag(CachedDodgeData->AppliedTag);
+		}
 	}
 
-	const float Ceiling = MontageDuration > 0.f
-		? FMath::Min(CachedDodgeData->MaxDodgeTime, MontageDuration)
-		: CachedDodgeData->MaxDodgeTime;
-	const float EffectiveApplyTime = FMath::Clamp(CachedDodgeData->DodgeApplyTime, 0.f, Ceiling);
+	const float EffectiveApplyTime = FMath::Clamp(
+		CachedDodgeData->DodgeApplyTime, 0.f, CachedDodgeData->MaxDodgeTime);
 
 	TWeakObjectPtr<UGYDodgeInputLogic> WeakThis(this);
 
@@ -116,32 +95,18 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		);
 	}
 
-	if (MontageDuration > 0.f)
-	{
-		Ability->GetWorld()->GetTimerManager().SetTimer(
-			EndTimer,
-			[WeakThis]()
-			{
-				if (UGYDodgeInputLogic* Self = WeakThis.Get())
-				{
-					Self->OnMontageExpired();
-				}
-			},
-			MontageDuration,
-			false
-		);
-	}
-	else
-	{
-		TWeakObjectPtr<UGYPlayerGameplayAbility> WeakAbility(Ability);
-		Ability->GetWorld()->GetTimerManager().SetTimerForNextTick([WeakAbility]()
+	Ability->GetWorld()->GetTimerManager().SetTimer(
+		EndTimer,
+		[WeakThis]()
 		{
-			if (UGYPlayerGameplayAbility* A = WeakAbility.Get())
+			if (UGYDodgeInputLogic* Self = WeakThis.Get())
 			{
-				A->RequestEnd(false);
+				Self->OnAnimationExpired();
 			}
-		});
-	}
+		},
+		FMath::Max(CachedDodgeData->MaxDodgeTime, KINDA_SMALL_NUMBER),
+		false
+	);
 }
 
 void UGYDodgeInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
@@ -151,17 +116,14 @@ void UGYDodgeInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bW
 		CachedAbility->GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 	}
 	RemoveAppliedTag();
+	RemoveAnimationTag();
 	CachedAbility.Reset();
-	CachedMontageSet = nullptr;
 	CachedDodgeData = nullptr;
 }
 
 TArray<FGameplayTag> UGYDodgeInputLogic::GetRequiredFragmentTags() const
 {
-	return {
-		GYGameplayTags::Ability_Fragment_Dodge,
-		GYGameplayTags::Ability_Fragment_DodgeMontage
-	};
+	return { GYGameplayTags::Ability_Fragment_Dodge };
 }
 
 void UGYDodgeInputLogic::OnTagWindowExpired()
@@ -169,8 +131,9 @@ void UGYDodgeInputLogic::OnTagWindowExpired()
 	RemoveAppliedTag();
 }
 
-void UGYDodgeInputLogic::OnMontageExpired()
+void UGYDodgeInputLogic::OnAnimationExpired()
 {
+	RemoveAnimationTag();
 	if (CachedAbility.IsValid())
 	{
 		CachedAbility->RequestEnd(false);
@@ -185,5 +148,16 @@ void UGYDodgeInputLogic::RemoveAppliedTag()
 	if (ASC && ASC->HasMatchingGameplayTag(CachedDodgeData->AppliedTag))
 	{
 		ASC->RemoveLooseGameplayTag(CachedDodgeData->AppliedTag);
+	}
+}
+
+void UGYDodgeInputLogic::RemoveAnimationTag()
+{
+	if (!CachedAbility.IsValid() || !CachedDodgeData) return;
+	if (!CachedDodgeData->AnimationTag.IsValid()) return;
+	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+	if (ASC && ASC->HasMatchingGameplayTag(CachedDodgeData->AnimationTag))
+	{
+		ASC->RemoveLooseGameplayTag(CachedDodgeData->AnimationTag);
 	}
 }

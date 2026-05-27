@@ -118,7 +118,7 @@ void AGYPlayerState::HandleAttackInput()
 	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
 	{
 		if (Spec.IsActive() && Spec.Ability &&
-			Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Charge))
+			Spec.Ability->GetAssetTags().HasTag(GYGameplayTags::Ability_Attack_Charge))
 		{
 			return;
 		}
@@ -167,15 +167,28 @@ void AGYPlayerState::HandleParryInput()
 
 	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
 	{
-		if (Spec.IsActive() && Spec.Ability &&
-			(Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Combo) ||
-			 Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Charge)))
+		if (Spec.IsActive())
 		{
 			return;
 		}
 	}
 
 	AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Parry));
+}
+
+void AGYPlayerState::HandleDodgeInput()
+{
+	if (!AbilitySystemComponent) return;
+
+	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
+	{
+		if (Spec.IsActive())
+		{
+			return;
+		}
+	}
+
+	AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Dodge));
 }
 
 void AGYPlayerState::OnHoldToChargeThreshold()

@@ -49,6 +49,7 @@ public:
 	void HandleAttackInput();
 	void HandleAttackReleasedInput();
 	void HandleParryInput();
+	void HandleDodgeInput();
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
 	TObjectPtr<UAbilitySet> CombatAbilitySet;
