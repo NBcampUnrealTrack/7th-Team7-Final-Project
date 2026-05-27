@@ -13,6 +13,9 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Equipment_Slot_Accessory3)
 
 	// Weapon Type
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_Sword)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_Greatsword)
+	// TODO: Weapon Type -> Combat Style 이나 다른 용어로 변경
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_Unarmed)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_SwordAndShield)
 }
