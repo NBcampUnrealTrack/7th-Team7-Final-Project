@@ -37,19 +37,19 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bHasAcceleration = !MovementComponent->GetCurrentAcceleration().IsNearlyZero();
 
 		bShouldMove = (GroundSpeed > MinSpeedThreshold) && bHasAcceleration;
+
 		if (GroundSpeed > MinSpeedThreshold)
 		{
 			Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, OwnerCharacter->GetActorRotation());
+		}
+
+		if (bHasAcceleration)
+		{
+			bIsRunning = FMath::IsNearlyEqual(GroundSpeed, RunningSpeed);
 		}
 
 		bIsFalling = MovementComponent->IsFalling();
 
-		bIsRunning = FMath::IsNearlyEqual(GroundSpeed, RunningSpeed);
-
-		if (GroundSpeed > MinSpeedThreshold)
-		{
-			Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, OwnerCharacter->GetActorRotation());
-		}
 
 
 	}
