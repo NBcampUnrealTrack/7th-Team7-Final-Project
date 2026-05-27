@@ -1,9 +1,12 @@
 #include "Enemy/Test/ANS_EnemyMeleeTrace.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Actor.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Logging/GYLogManager.h"
 
 void UANS_EnemyMeleeTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                                        float TotalDuration, const FAnimNotifyEventReference& EventReference)
@@ -49,6 +52,17 @@ void UANS_EnemyMeleeTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeq
 			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Target))
 		{
 			UGYCombatStatics::ApplyDamage(TargetASC, Damage);
+
+			if (HitCueTag.IsValid())
+			{
+				FGameplayCueParameters CueParams;
+				CueParams.Normal = (Target->GetActorLocation() - Owner->GetActorLocation()).GetSafeNormal();
+				CueParams.Location = H.ImpactPoint;
+				CueParams.RawMagnitude = Damage;
+				CueParams.SourceObject = Owner;
+				GY_LOG(Combat, ESK, "[EnemyMeleeTrace] Cue 실행 - Tag: %s, Normal: %s", *HitCueTag.ToString(), *CueParams.Normal.ToString());
+				TargetASC->ExecuteGameplayCue(HitCueTag, CueParams);
+			}
 		}
 	}
 }
