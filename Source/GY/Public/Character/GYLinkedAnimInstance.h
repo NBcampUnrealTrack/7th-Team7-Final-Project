@@ -18,12 +18,12 @@ class GY_API UGYLinkedAnimInstance : public UAnimInstance
 public:
 	virtual void NativeInitializeAnimation() override;
 
-	// 워커 스레드에서 락 없이 메모리 주소를 반환할 핵심 함수 (프로퍼티 액세스용)
+
 	UFUNCTION(BlueprintPure, Category = "Animation", meta = (BlueprintThreadSafe))
 	UGYCharacterAnimInstance* GetMainAnimBPThreadSafe() const;
 
 protected:
-	// 형변환(Cast) 연산 비용을 아끼기 위해 저장해두는 포인터
+	
 	UPROPERTY(Transient)
 	UGYCharacterAnimInstance* MainAnimInstance;
 };
