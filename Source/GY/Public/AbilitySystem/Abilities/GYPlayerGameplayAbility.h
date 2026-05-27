@@ -44,6 +44,17 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		bool bReplicateEndAbility,
 		bool bWasCancelled) override;
+
+	// 활성 중 입력 → Logic으로 포워딩 (콤보 재입력/차지 떼기 등)
+	virtual void InputPressed(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo) override;
+
+	virtual void InputReleased(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo) override;
 protected:
 	//LogicInjector, AbilityFragmentModifier 적용
 	void ScanAndApplyGEModifiers();
@@ -59,7 +70,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Fragment")
 	TArray<TObjectPtr<UAbilityFragment>> Fragments;
 
-	//런타임에 실제 가지고 있는 Fragment
+	//런타임에 실제 가지고 있는 Fragment (DuplicateObject로 생성 — GC 루팅 위해 UPROPERTY 필수)
+	UPROPERTY()
 	TMap<FGameplayTag, TObjectPtr<UAbilityFragment>> RuntimeFragments;
 
 	//Fragment 요구사항 체크

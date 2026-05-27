@@ -99,6 +99,36 @@ void UGYPlayerGameplayAbility::EndAbility(
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
+void UGYPlayerGameplayAbility::InputPressed(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo)
+{
+	for (UAbilityLogicBase* Logic : LogicList)
+	{
+		if (Logic) Logic->OnInputPressed();
+	}
+	for (UAbilityLogicBase* Logic : InjectedLogics)
+	{
+		if (Logic) Logic->OnInputPressed();
+	}
+}
+
+void UGYPlayerGameplayAbility::InputReleased(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo)
+{
+	for (UAbilityLogicBase* Logic : LogicList)
+	{
+		if (Logic) Logic->OnInputReleased();
+	}
+	for (UAbilityLogicBase* Logic : InjectedLogics)
+	{
+		if (Logic) Logic->OnInputReleased();
+	}
+}
+
 void UGYPlayerGameplayAbility::ScanAndApplyGEModifiers()
 {
 	//로직 리셋, Fragment build

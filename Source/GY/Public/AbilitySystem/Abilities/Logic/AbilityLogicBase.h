@@ -47,4 +47,14 @@ public:
 	 */
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const { return {}; }
 
+	/**
+	 * 어빌리티 입력이 활성 중 다시 눌렸을 때 (AbilitySpecInputPressed → Ability::InputPressed 경유)
+	 */
+	virtual void OnInputPressed() {}
+
+	/**
+	 * 어빌리티 입력이 떼졌을 때 (AbilitySpecInputReleased → Ability::InputReleased 경유)
+	 */
+	virtual void OnInputReleased() {}
+
 };
