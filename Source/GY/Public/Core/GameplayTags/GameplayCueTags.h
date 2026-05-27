@@ -24,9 +24,6 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Burn);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Frozen);
 	/* 카메라 이펙트 */
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_HitLight);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_HitHeavy);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_ZoomIn);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_BossSlam);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_Execution);
 }

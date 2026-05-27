@@ -24,9 +24,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Frozen, "GameplayCue.Status.Frozen");
 
 	// 카메라 이펙트
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_HitLight, "GameplayCue.Camera.HitLight");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_HitHeavy, "GameplayCue.Camera.HitHeavy");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_ZoomIn, "GameplayCue.Camera.ZoomIn");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_BossSlam, "GameplayCue.Camera.BossSlam");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_Execution, "GameplayCue.Camera.Execution");
 }
