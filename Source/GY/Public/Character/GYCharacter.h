@@ -45,6 +45,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HB|Character", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UGYPawnExtensionComponent> PawnExtComponent;
 
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> CachedASC;
+
 public:
 	UPROPERTY()
 	TWeakObjectPtr<AActor> Target;

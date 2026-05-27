@@ -20,15 +20,10 @@ void AGYCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	if (HasAuthority())
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
-		{
-			if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
-			{
-				ASC->InitAbilityActorInfo(PS, this);
-			}
-		}
+		PS->InitTestGAS(this);
+		CachedASC = PS->GetAbilitySystemComponent();
 	}
 
 	if (PawnExtComponent)
@@ -61,10 +56,8 @@ void AGYCharacter::OnRep_Controller()
 
 	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
-		{
-			ASC->InitAbilityActorInfo(PS, this);
-		}
+		PS->InitTestGAS(this);
+		CachedASC = PS->GetAbilitySystemComponent();
 	}
 
 	if (PawnExtComponent)
@@ -85,16 +78,18 @@ void AGYCharacter::OnRep_PlayerState()
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!IsValid(PS)) return;
 
-	if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
-	{
-		ASC->InitAbilityActorInfo(PS, this);
-	}
+	PS->InitTestGAS(this);
+	CachedASC = PS->GetAbilitySystemComponent();
 }
 
 
 
 UAbilitySystemComponent* AGYCharacter::GetAbilitySystemComponent() const
 {
+	if (CachedASC)
+	{
+		return CachedASC;
+	}
 	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
 		return PS->GetAbilitySystemComponent();

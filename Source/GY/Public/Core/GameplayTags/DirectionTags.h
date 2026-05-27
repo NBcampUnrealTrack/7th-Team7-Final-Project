@@ -1,0 +1,15 @@
+#pragma once
+
+#include "NativeGameplayTags.h"
+
+namespace GYGameplayTags
+{
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Direction_Forward)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Direction_ForwardRight)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Direction_Right)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Direction_BackRight)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Direction_Back)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Direction_BackLeft)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Direction_Left)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Direction_ForwardLeft)
+}

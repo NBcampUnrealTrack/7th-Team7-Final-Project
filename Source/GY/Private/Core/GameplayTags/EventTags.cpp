@@ -21,4 +21,5 @@ namespace GYGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Parry_Hit, "Event.Parry.Hit");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Input_Parry, "Event.Input.Parry");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Input_Dodge, "Event.Input.Dodge");
 }

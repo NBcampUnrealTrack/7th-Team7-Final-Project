@@ -80,9 +80,9 @@ void UGYParryInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		Ability->PlayMontageForLogic(CachedMontageSet->ParryMontage, 1.f);
 	}
 
-	if (ASC)
+	if (ASC && CachedParryData->AppliedTag.IsValid())
 	{
-		ASC->AddLooseGameplayTag(GYGameplayTags::Ability_State_Parrying);
+		ASC->AddLooseGameplayTag(CachedParryData->AppliedTag);
 	}
 
 	TWeakObjectPtr<UGYParryInputLogic> WeakThis(this);
@@ -201,10 +201,11 @@ void UGYParryInputLogic::PlayEndMontage()
 
 void UGYParryInputLogic::RemoveParryTag()
 {
-	if (!CachedAbility.IsValid()) return;
+	if (!CachedAbility.IsValid() || !CachedParryData) return;
+	if (!CachedParryData->AppliedTag.IsValid()) return;
 	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
-	if (ASC && ASC->HasMatchingGameplayTag(GYGameplayTags::Ability_State_Parrying))
+	if (ASC && ASC->HasMatchingGameplayTag(CachedParryData->AppliedTag))
 	{
-		ASC->RemoveLooseGameplayTag(GYGameplayTags::Ability_State_Parrying);
+		ASC->RemoveLooseGameplayTag(CachedParryData->AppliedTag);
 	}
 }

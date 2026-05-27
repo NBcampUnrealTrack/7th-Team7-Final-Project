@@ -11,6 +11,9 @@ struct GY_API FGYParryData
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTag AppliedTag;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0", Units = "s"))
 	float ParryTime = 0.5f;
 

@@ -31,6 +31,18 @@ bool UGYPlayerGameplayAbility::CanActivateAbility(
 	FGameplayTagContainer* OptionalRelevantTags) const
 {
 	if (IsActive()) return false;
+
+	if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
+	{
+		for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+		{
+			if (Spec.IsActive() && Spec.Ability && Spec.Ability->IsA<UGYPlayerGameplayAbility>())
+			{
+				return false;
+			}
+		}
+	}
+
 	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 }
 
