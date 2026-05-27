@@ -1,6 +1,7 @@
 #include "AttackLogic/Charge/GYChargeInputLogic.h"
 #include "AttackLogic/Charge/GYChargeFragment.h"
 #include "AttackLogic/Charge/GYChargeMontageFragment.h"
+#include "AttackLogic/Shared/GYCollisionFragment.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/EventTags.h"
@@ -11,6 +12,7 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	CachedAbility = Ability;
 	bCharging = false;
 	CachedMontageSet = nullptr;
+	CachedCollisions = nullptr;
 	ChargeStartTime = 0.f;
 
 	FGameplayTagContainer OwnedTags;
@@ -32,6 +34,15 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		if (!CachedMontageSet && !FallbackTags.IsEmpty())
 		{
 			CachedMontageSet = MF->GetBestMatchingSet(FallbackTags);
+		}
+	}
+
+	if (const UGYCollisionFragment* CF = Ability->GetFragment<UGYCollisionFragment>())
+	{
+		CachedCollisions = CF->GetBestMatchingShapes(OwnedTags);
+		if (!CachedCollisions && !FallbackTags.IsEmpty())
+		{
+			CachedCollisions = CF->GetBestMatchingShapes(FallbackTags);
 		}
 	}
 
@@ -87,6 +98,13 @@ void UGYChargeInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool b
 	bCharging = false;
 	CachedAbility.Reset();
 	CachedMontageSet = nullptr;
+	CachedCollisions = nullptr;
+}
+
+const FGYCollisionShapeData* UGYChargeInputLogic::GetCurrentCollisionData() const
+{
+	if (!CachedCollisions || CachedCollisions->IsEmpty()) return nullptr;
+	return &(*CachedCollisions)[0];
 }
 
 TArray<FGameplayTag> UGYChargeInputLogic::GetSubscribedEventTags() const

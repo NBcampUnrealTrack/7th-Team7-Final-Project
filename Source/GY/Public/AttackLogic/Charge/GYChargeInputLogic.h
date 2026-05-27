@@ -5,6 +5,7 @@
 #include "GYChargeInputLogic.generated.h"
 
 struct FGYChargeMontageSet;
+struct FGYCollisionShapeData;
 
 UCLASS()
 class GY_API UGYChargeInputLogic : public UAbilityLogicBase
@@ -18,6 +19,9 @@ public:
 	virtual void OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload) override;
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 
+public:
+	const FGYCollisionShapeData* GetCurrentCollisionData() const;
+
 private:
 	void ExecuteAttack();
 
@@ -27,4 +31,5 @@ private:
 	FTimerHandle MaxChargeTimer;
 	FTimerHandle MontageEndTimer;
 	const FGYChargeMontageSet* CachedMontageSet = nullptr;
+	const TArray<FGYCollisionShapeData>* CachedCollisions = nullptr;
 };

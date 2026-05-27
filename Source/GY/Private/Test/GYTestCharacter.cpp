@@ -1,18 +1,12 @@
 #include "Test/GYTestCharacter.h"
-#include "Player/GYPlayerState.h"
-#include "AbilitySystemComponent.h"
-#include "AbilitySystemBlueprintLibrary.h"
-#include "AbilitySystem/AbilitySet.h"
-#include "AbilitySystem/Attributes/GYBaseAttribute.h"
+
 #include "Camera/CameraComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "InputMappingContext.h"
-#include "Core/GameplayTags/EventTags.h"
-#include "Core/GameplayTags/AbilityTags.h"
-#include "Abilities/GameplayAbility.h"
+#include "Player/GYPlayerState.h"
 
 AGYTestCharacter::AGYTestCharacter()
 {
@@ -46,7 +40,10 @@ void AGYTestCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	InitGAS();
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
+	{
+		PS->InitTestGAS(this);
+	}
 
 	if (APlayerController* PC = Cast<APlayerController>(NewController))
 	{
@@ -65,28 +62,10 @@ void AGYTestCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	if (const AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		PS->GetAbilitySystemComponent()->InitAbilityActorInfo(const_cast<AGYPlayerState*>(PS), this);
+		PS->InitTestGAS(this);
 	}
-}
-
-void AGYTestCharacter::InitGAS()
-{
-	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
-	if (!PS) return;
-
-	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
-	ASC->InitAbilityActorInfo(PS, this);
-
-	ASC->SetNumericAttributeBase(UGYBaseAttribute::GetCurrentHealthAttribute(), InitialHealth);
-	ASC->SetNumericAttributeBase(UGYBaseAttribute::GetMaxHealthAttribute(), InitialHealth);
-
-	if (TestAbilitySet)
-	{
-		TestAbilitySet->GiveToAbilitySystem(ASC, &AbilitySetHandles);
-	}
-
 }
 
 void AGYTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -101,7 +80,7 @@ void AGYTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		}
 		if (AttackAction)
 		{
-			EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &AGYTestCharacter::OnAttack);
+			EIC->BindAction(AttackAction, ETriggerEvent::Started,   this, &AGYTestCharacter::OnAttack);
 			EIC->BindAction(AttackAction, ETriggerEvent::Completed, this, &AGYTestCharacter::OnAttackReleased);
 		}
 		if (ParryAction)
@@ -124,76 +103,24 @@ void AGYTestCharacter::OnMove(const FInputActionValue& Value)
 
 void AGYTestCharacter::OnAttack(const FInputActionValue& Value)
 {
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
-	if (!ASC) return;
-
-	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		if (Spec.IsActive() && Spec.Ability &&
-			Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Charge))
-		{
-			return;
-		}
+		PS->HandleAttackInput();
 	}
-
-	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Combo));
-
-	FGameplayEventData Payload;
-	Payload.EventTag = GYGameplayTags::Event_Input_Attack;
-	Payload.Instigator = this;
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, GYGameplayTags::Event_Input_Attack, Payload);
-
-	GetWorld()->GetTimerManager().SetTimer(
-		HoldToChargeTimer,
-		this,
-		&AGYTestCharacter::OnHoldToChargeThreshold,
-		HoldToChargeTime,
-		false
-	);
 }
 
 void AGYTestCharacter::OnAttackReleased(const FInputActionValue& Value)
 {
-	GetWorld()->GetTimerManager().ClearTimer(HoldToChargeTimer);
-
-	FGameplayEventData Payload;
-	Payload.EventTag = GYGameplayTags::Event_Input_AttackRelease;
-	Payload.Instigator = this;
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, GYGameplayTags::Event_Input_AttackRelease, Payload);
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
+	{
+		PS->HandleAttackReleasedInput();
+	}
 }
 
 void AGYTestCharacter::OnParry(const FInputActionValue& Value)
 {
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
-	if (!ASC) return;
-
-	FGameplayEventData Payload;
-	Payload.EventTag = GYGameplayTags::Event_Input_Parry;
-	Payload.Instigator = this;
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, GYGameplayTags::Event_Input_Parry, Payload);
-
-	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		if (Spec.IsActive() && Spec.Ability &&
-			(Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Combo) ||
-			 Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Charge)))
-		{
-			return;
-		}
+		PS->HandleParryInput();
 	}
-
-	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Parry));
-}
-
-void AGYTestCharacter::OnHoldToChargeThreshold()
-{
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
-	if (!ASC) return;
-
-	FGameplayEventData CancelPayload;
-	CancelPayload.EventTag = GYGameplayTags::Event_Input_AttackCharge;
-	CancelPayload.Instigator = this;
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, GYGameplayTags::Event_Input_AttackCharge, CancelPayload);
-
-	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Charge));
 }
