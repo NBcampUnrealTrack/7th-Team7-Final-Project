@@ -26,6 +26,6 @@ public class GY : ModuleRules
 			"GameFeatures",
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime" });
 	}
 }
