@@ -36,6 +36,11 @@ void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 	TryActivateAbilitiesOnSpawn();
 }
 
+void UGYAbilitySystemComponent::Server_SendGameplayEvent_Implementation(FGameplayTag EventTag, FGameplayEventData Payload)
+{
+	HandleGameplayEvent(EventTag, &Payload);
+}
+
 void UGYAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid()) return;

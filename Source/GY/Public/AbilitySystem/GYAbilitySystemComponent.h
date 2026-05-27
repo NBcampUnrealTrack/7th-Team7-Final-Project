@@ -20,6 +20,10 @@ public:
 	void ProcessAbilityInput(float DeltaTime, bool bGamePaused);
 	void ClearAbilityInput();
 
+	// 클라(UI 등)에서 서버 ASC로 임의 GameplayEvent 전달 (예: 상호작용 중 휴식 어빌리티 종료)
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_SendGameplayEvent(FGameplayTag EventTag, FGameplayEventData Payload);
+
 	void RescheduleStaminaRegen();
 	void RescheduleStaggerRegen();
 	void RescheduleStunRegen();
