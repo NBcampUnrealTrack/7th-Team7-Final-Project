@@ -436,6 +436,7 @@ void AGYEnemyCharacterBase::OnRep_IsActivate()
 	}
 	else
 	{
+		LoadDataAssetAndApply();
 		SetActorEnableCollision(true);
 	}
 }
@@ -449,6 +450,13 @@ void AGYEnemyCharacterBase::BeginPlay()
 	if (HasAuthority())
 	{
 		bIsActivate = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
+	}
+	else
+	{
+		if (EnemyType != EEnemyType::None && !LoadedDataAsset)
+		{
+			//LoadDataAssetAndApply();
+		}
 	}
 }
 
