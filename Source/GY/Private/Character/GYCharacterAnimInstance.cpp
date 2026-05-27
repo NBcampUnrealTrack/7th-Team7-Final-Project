@@ -16,6 +16,8 @@ void UGYCharacterAnimInstance::NativeInitializeAnimation()
 	if (OwnerCharacter != nullptr)
 	{
 		MovementComponent = OwnerCharacter->GetCharacterMovement();
+
+		RunningSpeed = MovementComponent->MaxWalkSpeed;
 	}
 
 }
@@ -23,11 +25,6 @@ void UGYCharacterAnimInstance::NativeInitializeAnimation()
 void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
-}
-
-void UGYCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
-{
-	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
 	if (OwnerCharacter && MovementComponent)
 	{
 
@@ -41,10 +38,25 @@ void UGYCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecond
 
 		bShouldMove = (GroundSpeed > MinSpeedThreshold) && bHasAcceleration;
 
+		if (GroundSpeed > MinSpeedThreshold)
+		{
+			Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, OwnerCharacter->GetActorRotation());
+		}
+
+		if (bHasAcceleration)
+		{
+			bIsRunning = FMath::IsNearlyEqual(GroundSpeed, RunningSpeed);
+		}
 
 		bIsFalling = MovementComponent->IsFalling();
 
 
-		Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, OwnerCharacter->GetActorRotation());
+
 	}
+}
+
+void UGYCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
+
 }

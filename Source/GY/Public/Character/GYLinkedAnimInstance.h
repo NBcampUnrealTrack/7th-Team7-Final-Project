@@ -23,7 +23,29 @@ public:
 	UGYCharacterAnimInstance* GetMainAnimBPThreadSafe() const;
 
 protected:
-	
+
 	UPROPERTY(Transient)
 	UGYCharacterAnimInstance* MainAnimInstance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UBlendSpace* MoveBlendSpace;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UAnimSequence* IdleSequence;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UAnimSequence* RunStartSequence;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UAnimSequence* RunStopSequence;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UAnimSequence* WalkStartSequence;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UAnimSequence* WalkStopSequence;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UBlendSpace* WalkStartBlendSpace;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UBlendSpace* RunStartBlendSpace;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UBlendSpace* WalkStopBlendSpace;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UBlendSpace* RunStopBlendSpace;
 };
