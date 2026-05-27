@@ -113,3 +113,56 @@ struct GY_API FGYInteractionOptionsMessage
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FInteractionOption> Options;
 };
+
+/** 스탯 정보 */
+USTRUCT(BlueprintType)
+struct GY_API FGYAttributeValueMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) float CurrentValue = 0.f;
+	UPROPERTY(BlueprintReadWrite) float MaxValue = 1.f;
+};
+
+/** 레벨, EXP 묶음 */
+USTRUCT(BlueprintType)
+struct GY_API FGYXPProgressMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) int32 Level = 1;
+	UPROPERTY(BlueprintReadWrite) float CurrentXP = 0.f;
+	UPROPERTY(BlueprintReadWrite) float MaxXP = 1.f;
+};
+
+/** 포션 슬롯 상태 */
+USTRUCT(BlueprintType)
+struct GY_API FGYPotionSlotMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) FGameplayTag ChargePoolTag;
+	UPROPERTY(BlueprintReadWrite) TSoftObjectPtr<UTexture2D> Icon;
+	UPROPERTY(BlueprintReadWrite) int32 StackCount = 0;
+	UPROPERTY(BlueprintReadWrite) bool bIsEmpty = true;
+};
+
+/** 장비 슬롯 상태 */
+USTRUCT(BlueprintType)
+struct GY_API FGYEquipSlotMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) FGameplayTag SlotTag;
+	UPROPERTY(BlueprintReadWrite) TSoftObjectPtr<UTexture2D> Icon;
+	UPROPERTY(BlueprintReadWrite) bool bIsEmpty = true;
+};
+
+/** 플레이어 이름 상태 */
+USTRUCT(BlueprintType)
+struct GY_API FGYPlayerNameMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) FString PlayerName;
+};
