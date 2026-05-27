@@ -46,7 +46,11 @@ bool UGYWorldResetSubsystem::OnActorBeginPlay(IWorldPartitionLevelPlacedActor* A
 		Actor->Deactivate();
 		return false;
 	}
-	return true;
+	else
+	{
+		Actor->Activate();
+		return true;
+	}
 }
 
 void UGYWorldResetSubsystem::ResetWorld()

@@ -5,6 +5,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
 #include "Config/EnemyDataAsset.h"
+#include "World/ActorManagement/WorldPartitionLevelPlacedActor.h"
 #include "GYEnemyCharacterBase.generated.h"
 
 class UGYEnemyAdditionalAttribute;
@@ -16,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDead, AGYEnemyCharacterBase*
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AGYEnemyCharacterBase*, Enemy, float, DamageAmount);
 
 UCLASS(Abstract, BlueprintType, Blueprintable)
-class GY_API AGYEnemyCharacterBase : public ACharacter, public IAbilitySystemInterface
+class GY_API AGYEnemyCharacterBase : public ACharacter, public IAbilitySystemInterface, public IWorldPartitionLevelPlacedActor
 {
 	GENERATED_BODY()
 
@@ -45,6 +46,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	virtual void Die();
 
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
+	virtual void Deactivate();
+	virtual void Activate();
+	virtual FGuid GetPersistentGuid() { return EnemyGuid; }
+	virtual void SetPersistentGuid(FGuid Guid) { EnemyGuid = Guid; }
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
@@ -76,6 +85,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EnemyType();
+
+	UFUNCTION()
+	void OnRep_IsActivate();
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyDead OnEnemyDead;
@@ -84,7 +96,7 @@ public:
 	FOnEnemyHit OnEnemyHit;
 
 protected:
-	UPROPERTY(ReplicatedUsing = OnRep_EnemyType, BlueprintReadOnly, Category = "Enemy|Data")
+	UPROPERTY(EditAnywhere,ReplicatedUsing = OnRep_EnemyType, BlueprintReadOnly, Category = "Enemy|Data")
 	EEnemyType EnemyType;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Enemy|Data")
@@ -114,4 +126,10 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category ="Enemy|Anim")
 	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> MontageMap;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FGuid EnemyGuid;
+
+	UPROPERTY(VisibleAnywhere,ReplicatedUsing = OnRep_IsActivate, BlueprintReadOnly, Category = "Enemy|Activate")
+	bool bIsActivate = false;
 };

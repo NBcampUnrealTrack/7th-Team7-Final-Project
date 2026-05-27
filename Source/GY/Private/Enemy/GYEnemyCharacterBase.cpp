@@ -18,6 +18,7 @@
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/DataTables/EnemyStatRow.h"
 #include "Net/UnrealNetwork.h"
+#include "World/ActorManagement/GYWorldResetSubsystem.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 {
@@ -304,6 +305,52 @@ void AGYEnemyCharacterBase::Die()
 	if (bIsDead) return;
 	bIsDead = true;
 
+	Deactivate();
+
+	//TODO 은서 : RewardConfig에서 데이터 값을 가져와 Drop Actor나 보상 처리 연결 필요
+	//TODO 은서 : Interface 상속받아서 deActivate 처리 로직이 들어가야함.
+	OnEnemyDead.Broadcast(this);
+}
+
+#if WITH_EDITOR
+void AGYEnemyCharacterBase::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	if (PropertyChangedEvent.GetPropertyName() != GET_MEMBER_NAME_CHECKED(AGYEnemyCharacterBase, EnemyType)) return;
+
+	if (EnemyType == EEnemyType::None)
+	{
+		GetMesh()->SetSkeletalMesh(nullptr);
+		return;
+	}
+	UDataTable* TypeTable = EnemyTypeTable.LoadSynchronous();
+	if (!TypeTable) return;
+
+	FName RowKey = *UEnum::GetDisplayValueAsText(EnemyType).ToString();
+	const FEnemyTypeTableRow* TypeRow = TypeTable->FindRow<FEnemyTypeTableRow>(
+		RowKey, TEXT("PostEditChangeProperty"));
+	if (!TypeRow) return;
+
+	UEnemyDataAsset* DataAsset = TypeRow->DataAsset.LoadSynchronous();
+	if (!DataAsset) return;
+
+	if (USkeletalMesh* SkeletalMesh = DataAsset->VisualConfig.SkeletalMesh.LoadSynchronous())
+	{
+		GetMesh()->SetSkeletalMesh(SkeletalMesh);
+	}
+
+	for (int32 i = 0; i < DataAsset->VisualConfig.Materials.Num(); ++i)
+	{
+		if (UMaterialInterface* Mat = DataAsset->VisualConfig.Materials[i].LoadSynchronous())
+		{
+			GetMesh()->SetMaterial(i, Mat);
+		}
+	}
+}
+#endif
+
+void AGYEnemyCharacterBase::Deactivate()
+{
 	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
@@ -312,15 +359,32 @@ void AGYEnemyCharacterBase::Die()
 		}
 		AIC->StopBehaviorTree();
 	}
-	//TODO 은서 : RewardConfig에서 데이터 값을 가져와 Drop Actor나 보상 처리 연결 필요
-	//TODO 은서 : Interface 상속받아서 deActivate 처리 로직이 들어가야함.
-	OnEnemyDead.Broadcast(this);
+
+	//TODO 은서: 나중에 랙돌이나 Die 애니메이션 끝나고 죽을 수 있게 해주면 될덧
+	SetActorEnableCollision(false);
+	SetActorHiddenInGame(true);
+
+	//TODO 은서: 로드 중일 때 로드 취소 Handler 통해서 하면 되지 않을까??
+
+	GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorDeactivated(this);
+}
+
+
+void AGYEnemyCharacterBase::Activate()
+{
+	if (EnemyType != EEnemyType::None && !LoadedDataAsset)
+	{
+		SetActorEnableCollision(true);
+		SetActorHiddenInGame(false);
+		InitWithType(EnemyType);
+	}
 }
 
 void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGYEnemyCharacterBase, EnemyType);
+	DOREPLIFETIME(AGYEnemyCharacterBase, bIsActivate);
 }
 
 void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
@@ -333,6 +397,7 @@ void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 	}
 	InitGAS();
 }
+
 
 UAnimMontage* AGYEnemyCharacterBase::GetMontageByTag(const FGameplayTag& Tag) const
 {
@@ -363,8 +428,27 @@ void AGYEnemyCharacterBase::OnRep_EnemyType()
 	}
 }
 
+void AGYEnemyCharacterBase::OnRep_IsActivate()
+{
+	if (!bIsActivate)
+	{
+		SetActorEnableCollision(false);
+	}
+	else
+	{
+		SetActorEnableCollision(true);
+	}
+}
+
 void AGYEnemyCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bIsDead = false;
+
+	if (HasAuthority())
+	{
+		bIsActivate = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
+	}
 }
 

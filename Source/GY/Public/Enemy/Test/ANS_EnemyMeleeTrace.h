@@ -1,8 +1,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
 #include "ANS_EnemyMeleeTrace.generated.h"
+
 
 UCLASS()
 class GY_API UANS_EnemyMeleeTrace : public UAnimNotifyState
@@ -26,6 +28,9 @@ public:
 		float FrameDeltaTime, const FAnimNotifyEventReference& EventReference) override;
 	virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 		const FAnimNotifyEventReference& EventReference) override;
+
+	UPROPERTY(EditAnywhere, Category = "Trace", meta = (Categories = "GameplayCue"))
+	FGameplayTag HitCueTag;
 
 private:
 	TSet<TWeakObjectPtr<AActor>> AlreadyHit;
