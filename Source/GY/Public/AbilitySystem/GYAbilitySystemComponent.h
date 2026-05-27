@@ -16,6 +16,10 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_SendGameplayEvent(FGameplayTag EventTag, FGameplayEventData Payload);
 
+	// InputTag으로 매칭되는 어빌리티 활성화/입력해제 (Lyra 라우팅)
+	void AbilityInputTagPressed(const FGameplayTag& InputTag);
+	void AbilityInputTagReleased(const FGameplayTag& InputTag);
+
 	void RescheduleStaminaRegen();
 	void RescheduleStaggerRegen();
 	void RescheduleStunRegen();

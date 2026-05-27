@@ -42,6 +42,42 @@ void UGYAbilitySystemComponent::Server_SendGameplayEvent_Implementation(FGamepla
 	HandleGameplayEvent(EventTag, &Payload);
 }
 
+void UGYAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
+{
+	if (!InputTag.IsValid()) return;
+
+	TArray<FGameplayAbilitySpecHandle> ToActivate;
+	{
+		ABILITYLIST_SCOPE_LOCK();
+		for (const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+		{
+			if (Spec.Ability && Spec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
+			{
+				ToActivate.Add(Spec.Handle);
+			}
+		}
+	}
+
+	for (const FGameplayAbilitySpecHandle& Handle : ToActivate)
+	{
+		TryActivateAbility(Handle);
+	}
+}
+
+void UGYAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& InputTag)
+{
+	if (!InputTag.IsValid()) return;
+
+	ABILITYLIST_SCOPE_LOCK();
+	for (const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+	{
+		if (Spec.Ability && Spec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
+		{
+			AbilitySpecInputReleased(const_cast<FGameplayAbilitySpec&>(Spec));
+		}
+	}
+}
+
 void UGYAbilitySystemComponent::TryActivateAbilitiesOnSpawn()
 {
 	ABILITYLIST_SCOPE_LOCK();
