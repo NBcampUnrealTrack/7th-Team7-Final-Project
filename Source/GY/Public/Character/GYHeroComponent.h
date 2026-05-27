@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/GameFrameworkInitStateInterface.h"
 #include "Components/PawnComponent.h"
+#include "GameplayTagContainer.h"
 #include "GYHeroComponent.generated.h"
 
 
@@ -32,7 +33,9 @@ public:
 	void InitializePlayerInput(UInputComponent* PlayerInputComponent);
 
 	void Input_Move(const FInputActionValue& InputActionValue);
-	void Input_Interact(const FInputActionValue& InputActionValue);
+
+	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
+	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
 protected:
 	//생명 주기 함수
 	virtual void OnRegister() override;

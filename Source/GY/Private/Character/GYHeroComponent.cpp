@@ -8,10 +8,10 @@
 #include "Character/GYPawnData.h"
 #include "Character/GYPawnExtensionComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Core/GameplayTags/InputTag.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
 #include "GameFramework/PlayerState.h"
-#include "Interaction/GYGameplayAbility_Interact.h"
 #include "Logging/GYLogManager.h"
 #include "Player/GYPlayerState.h"
 
@@ -182,8 +182,10 @@ void UGYHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompone
 
 		InputComponent->BindNativeAction(PawnData->InputConfig, GYGameplayTags::InputTag_Move, ETriggerEvent::Triggered,
 										 this, &ThisClass::Input_Move, true);
-		InputComponent->BindNativeAction(PawnData->InputConfig, GYGameplayTags::InputTag_Interact, ETriggerEvent::Triggered,
-										this, &ThisClass::Input_Interact, true);
+
+		// 어빌리티 입력(Interact 등)은 InputTag → ASC 라우팅으로 일괄 처리
+		InputComponent->BindAbilityActions(PawnData->InputConfig, this,
+			&ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased);
 	}
 	else
 	{
@@ -217,24 +219,25 @@ void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 	}
 }
 
-void UGYHeroComponent::Input_Interact(const FInputActionValue& InputActionValue)
+void UGYHeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
 {
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!PS) return;
 
-	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
-	if (!ASC) return;
-
-	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromClass(UGYGameplayAbility_Interact::StaticClass());
-	if (!Spec) return;
-
-	for (UGameplayAbility* Instance : Spec->GetAbilityInstances())
+	if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
 	{
-		if (UGYGameplayAbility_Interact* InteractAbility = Cast<UGYGameplayAbility_Interact>(Instance))
-		{
-			InteractAbility->TriggerInteraction();
-			return;
-		}
+		ASC->AbilityInputTagPressed(InputTag);
+	}
+}
+
+void UGYHeroComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
+{
+	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
+	if (!PS) return;
+
+	if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
+	{
+		ASC->AbilityInputTagReleased(InputTag);
 	}
 }
 
