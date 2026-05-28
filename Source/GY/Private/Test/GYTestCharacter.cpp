@@ -42,7 +42,7 @@ void AGYTestCharacter::PossessedBy(AController* NewController)
 
 	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		PS->InitTestGAS(this);
+		PS->InitGAS(this);
 	}
 
 	if (APlayerController* PC = Cast<APlayerController>(NewController))
@@ -64,7 +64,7 @@ void AGYTestCharacter::OnRep_PlayerState()
 
 	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		PS->InitTestGAS(this);
+		PS->InitGAS(this);
 	}
 }
 
@@ -78,15 +78,6 @@ void AGYTestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		{
 			EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGYTestCharacter::OnMove);
 		}
-		if (AttackAction)
-		{
-			EIC->BindAction(AttackAction, ETriggerEvent::Started,   this, &AGYTestCharacter::OnAttack);
-			EIC->BindAction(AttackAction, ETriggerEvent::Completed, this, &AGYTestCharacter::OnAttackReleased);
-		}
-		if (ParryAction)
-		{
-			EIC->BindAction(ParryAction, ETriggerEvent::Started, this, &AGYTestCharacter::OnParry);
-		}
 	}
 }
 
@@ -98,29 +89,5 @@ void AGYTestCharacter::OnMove(const FInputActionValue& Value)
 		const FRotator YawRot(0.f, Controller->GetControlRotation().Yaw, 0.f);
 		AddMovementInput(FRotationMatrix(YawRot).GetUnitAxis(EAxis::X), Axis.Y);
 		AddMovementInput(FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y), Axis.X);
-	}
-}
-
-void AGYTestCharacter::OnAttack(const FInputActionValue& Value)
-{
-	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
-	{
-		PS->HandleAttackInput();
-	}
-}
-
-void AGYTestCharacter::OnAttackReleased(const FInputActionValue& Value)
-{
-	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
-	{
-		PS->HandleAttackReleasedInput();
-	}
-}
-
-void AGYTestCharacter::OnParry(const FInputActionValue& Value)
-{
-	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
-	{
-		PS->HandleParryInput();
 	}
 }
