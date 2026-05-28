@@ -24,7 +24,7 @@ void AGYCharacter::PossessedBy(AController* NewController)
 
 	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		PS->InitTestGAS(this);
+		PS->InitGAS(this);
 	}
 
 	if (PawnExtComponent)
@@ -57,7 +57,7 @@ void AGYCharacter::OnRep_Controller()
 
 	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		PS->InitTestGAS(this);
+		PS->InitGAS(this);
 	}
 
 	if (PawnExtComponent)
@@ -78,7 +78,7 @@ void AGYCharacter::OnRep_PlayerState()
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!IsValid(PS)) return;
 
-	PS->InitTestGAS(this);
+	PS->InitGAS(this);
 }
 
 

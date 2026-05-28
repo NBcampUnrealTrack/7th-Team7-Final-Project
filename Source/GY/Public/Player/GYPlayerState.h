@@ -44,23 +44,10 @@ public:
 	UFUNCTION(BlueprintPure)
 	UCurrencyComponent* GetCurrencyComponent() const { return CurrencyComponent; }
 
-	void InitTestGAS(APawn* Avatar);
-
-	UFUNCTION(BlueprintCallable)
-	void HandleAttackInput();
-	UFUNCTION(BlueprintCallable)
-	void HandleAttackReleasedInput();
-	UFUNCTION(BlueprintCallable)
-	void HandleParryInput();
-
-	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
-	TObjectPtr<UAbilitySet> CombatAbilitySet;
+	void InitGAS(APawn* Avatar);
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
 	TObjectPtr<UGYPlayerInitData> InitData;
-
-	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat", meta = (ClampMin = "0.0", Units = "s"))
-	float HoldToChargeTime = 1.0f;
 
 protected:
 	UFUNCTION()
@@ -96,12 +83,4 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UGYWeaponAttribute> WeaponAttribute;
 
-private:
-	void OnHoldToChargeThreshold();
-	void SendGameplayEventLocal(FGameplayTag EventTag);
-
-	UFUNCTION(Server, Reliable)
-	void ServerSendGameplayEvent(FGameplayTag EventTag);
-
-	FTimerHandle HoldToChargeTimer;
 };

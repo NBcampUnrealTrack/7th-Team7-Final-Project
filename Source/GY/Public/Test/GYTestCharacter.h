@@ -27,12 +27,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> MoveAction;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TObjectPtr<UInputAction> AttackAction;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TObjectPtr<UInputAction> ParryAction;
-
 protected:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
@@ -40,9 +34,6 @@ protected:
 
 private:
 	void OnMove(const FInputActionValue& Value);
-	void OnAttack(const FInputActionValue& Value);
-	void OnAttackReleased(const FInputActionValue& Value);
-	void OnParry(const FInputActionValue& Value);
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArm;

@@ -1,5 +1,4 @@
 #include "AttackLogic/Notifies/GYANS_AttackTrace.h"
-#include "AttackLogic/Attack/GYAttackInputLogic.h"
 #include "AttackLogic/Combo/GYComboInputLogic.h"
 #include "AttackLogic/Charge/GYChargeInputLogic.h"
 #include "AttackLogic/Shared/GYCollisionFragment.h"
@@ -24,10 +23,6 @@ static const FGYCollisionShapeData* GetCurrentCollisionData(AActor* Owner)
 		UGYPlayerGameplayAbility* Ability = Cast<UGYPlayerGameplayAbility>(Spec.GetPrimaryInstance());
 		if (!Ability) continue;
 
-		if (UGYAttackInputLogic* Logic = Ability->GetLogic<UGYAttackInputLogic>())
-		{
-			return Logic->GetCurrentCollisionData();
-		}
 		if (UGYComboInputLogic* Logic = Ability->GetLogic<UGYComboInputLogic>())
 		{
 			return Logic->GetCurrentCollisionData();

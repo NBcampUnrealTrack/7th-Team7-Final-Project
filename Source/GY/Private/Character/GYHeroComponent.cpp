@@ -3,17 +3,21 @@
 
 #include "Character/GYHeroComponent.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "EnhancedInputSubsystems.h"
 #include "Character/GYInputComponent.h"
 #include "Character/GYPawnData.h"
 #include "Character/GYPawnExtensionComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "Core/GameplayTags/AbilityTags.h"
+#include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/InputTag.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
 #include "GameFramework/PlayerState.h"
 #include "Logging/GYLogManager.h"
 #include "Player/GYPlayerState.h"
+#include "TimerManager.h"
 
 // 이 컴포넌트의 이름표는 "Hero"로 지정합니다.
 const FName UGYHeroComponent::NAME_ActorFeatureName("Hero");
@@ -221,6 +225,12 @@ void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 
 void UGYHeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
 {
+	if (InputTag == GYGameplayTags::InputTag_Attack)
+	{
+		OnAttackPressed();
+		return;
+	}
+
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!PS) return;
 
@@ -232,6 +242,12 @@ void UGYHeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
 
 void UGYHeroComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 {
+	if (InputTag == GYGameplayTags::InputTag_Attack)
+	{
+		OnAttackReleased();
+		return;
+	}
+
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!PS) return;
 
@@ -239,6 +255,86 @@ void UGYHeroComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 	{
 		ASC->AbilityInputTagReleased(InputTag);
 	}
+}
+
+void UGYHeroComponent::OnAttackPressed()
+{
+	// 누름 엣지에서만 1회 처리 (Triggered가 매 프레임 발화)
+	if (bAttackHeld) return;
+	bAttackHeld = true;
+
+	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
+	if (!PS) return;
+
+	UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
+	if (!ASC) return;
+
+	// 차지 이미 활성 중이면 새 입력 무시
+	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+	{
+		if (Spec.IsActive() && Spec.Ability &&
+			Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Charge))
+		{
+			return;
+		}
+	}
+
+	// 첫 press면 콤보 활성화 시도. 이미 active면 다음 줄의 이벤트로 콤보 체이닝.
+	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Combo));
+
+	SendGameplayEventLocal(GYGameplayTags::Event_Input_Attack);
+	APawn* Pawn = GetPawn<APawn>();
+	if (Pawn && !Pawn->HasAuthority())
+	{
+		ServerSendGameplayEvent(GYGameplayTags::Event_Input_Attack);
+	}
+
+	if (HoldToChargeTime > 0.f)
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			ChargeThresholdTimer, this, &UGYHeroComponent::OnChargeThreshold, HoldToChargeTime, false);
+	}
+}
+
+void UGYHeroComponent::OnAttackReleased()
+{
+	bAttackHeld = false;
+
+	GetWorld()->GetTimerManager().ClearTimer(ChargeThresholdTimer);
+
+	SendGameplayEventLocal(GYGameplayTags::Event_Input_AttackRelease);
+	APawn* Pawn = GetPawn<APawn>();
+	if (Pawn && !Pawn->HasAuthority())
+	{
+		ServerSendGameplayEvent(GYGameplayTags::Event_Input_AttackRelease);
+	}
+}
+
+void UGYHeroComponent::OnChargeThreshold()
+{
+	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
+	if (!PS) return;
+
+	UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
+	if (!ASC) return;
+
+	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Charge));
+}
+
+void UGYHeroComponent::SendGameplayEventLocal(FGameplayTag EventTag)
+{
+	APawn* Pawn = GetPawn<APawn>();
+	if (!Pawn) return;
+
+	FGameplayEventData Payload;
+	Payload.EventTag = EventTag;
+	Payload.Instigator = Pawn;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Pawn, EventTag, Payload);
+}
+
+void UGYHeroComponent::ServerSendGameplayEvent_Implementation(FGameplayTag EventTag)
+{
+	SendGameplayEventLocal(EventTag);
 }
 
 void UGYHeroComponent::OnRegister()

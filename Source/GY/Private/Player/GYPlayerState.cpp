@@ -1,6 +1,5 @@
 #include "Player/GYPlayerState.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystem/Attributes/CombatAttributeSet.h"
 #include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
@@ -10,8 +9,6 @@
 #include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Character/GYPawnData.h"
-#include "Core/GameplayTags/AbilityTags.h"
-#include "Core/GameplayTags/EventTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Inventory/InventoryComponent.h"
@@ -79,7 +76,7 @@ void AGYPlayerState::OnRep_PawnData()
 {
 }
 
-void AGYPlayerState::InitTestGAS(APawn* Avatar)
+void AGYPlayerState::InitGAS(APawn* Avatar)
 {
 	if (!AbilitySystemComponent || !Avatar) return;
 
@@ -104,108 +101,5 @@ void AGYPlayerState::InitTestGAS(APawn* Avatar)
 		AbilitySystemComponent->SetNumericAttributeBase(UGYAdditionalAttribute::GetMaxStunAttribute(),        InitData->MaxStun);
 		AbilitySystemComponent->SetNumericAttributeBase(UGYAdditionalAttribute::GetCurrentStunAttribute(),    InitData->MaxStun);
 	}
-
-	if (CombatAbilitySet)
-	{
-		CombatAbilitySet->GiveToAbilitySystem(AbilitySystemComponent, &GrantedHandles);
-	}
 }
 
-void AGYPlayerState::SendGameplayEventLocal(FGameplayTag EventTag)
-{
-	APawn* Pawn = GetPawn();
-	if (!Pawn) return;
-
-	FGameplayEventData Payload;
-	Payload.EventTag = EventTag;
-	Payload.Instigator = Pawn;
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Pawn, EventTag, Payload);
-}
-
-void AGYPlayerState::ServerSendGameplayEvent_Implementation(FGameplayTag EventTag)
-{
-	SendGameplayEventLocal(EventTag);
-}
-
-void AGYPlayerState::HandleAttackInput()
-{
-	if (!AbilitySystemComponent) return;
-
-	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
-	{
-		if (Spec.IsActive() && Spec.Ability &&
-			Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Charge))
-		{
-			return;
-		}
-	}
-
-	AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Combo));
-
-	SendGameplayEventLocal(GYGameplayTags::Event_Input_Attack);
-	if (!HasAuthority())
-	{
-		ServerSendGameplayEvent(GYGameplayTags::Event_Input_Attack);
-	}
-
-	if (GetWorld() && HoldToChargeTime > 0.f)
-	{
-		GetWorld()->GetTimerManager().SetTimer(
-			HoldToChargeTimer,
-			this,
-			&AGYPlayerState::OnHoldToChargeThreshold,
-			HoldToChargeTime,
-			false
-		);
-	}
-}
-
-void AGYPlayerState::HandleAttackReleasedInput()
-{
-	if (GetWorld())
-	{
-		GetWorld()->GetTimerManager().ClearTimer(HoldToChargeTimer);
-	}
-
-	SendGameplayEventLocal(GYGameplayTags::Event_Input_AttackRelease);
-	if (!HasAuthority())
-	{
-		ServerSendGameplayEvent(GYGameplayTags::Event_Input_AttackRelease);
-	}
-}
-
-void AGYPlayerState::HandleParryInput()
-{
-	if (!AbilitySystemComponent) return;
-
-	SendGameplayEventLocal(GYGameplayTags::Event_Input_Parry);
-	if (!HasAuthority())
-	{
-		ServerSendGameplayEvent(GYGameplayTags::Event_Input_Parry);
-	}
-
-	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
-	{
-		if (Spec.IsActive() && Spec.Ability &&
-			(Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Combo) ||
-			 Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Charge)))
-		{
-			return;
-		}
-	}
-
-	AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Parry));
-}
-
-void AGYPlayerState::OnHoldToChargeThreshold()
-{
-	if (!AbilitySystemComponent) return;
-
-	SendGameplayEventLocal(GYGameplayTags::Event_Input_AttackCharge);
-	if (!HasAuthority())
-	{
-		ServerSendGameplayEvent(GYGameplayTags::Event_Input_AttackCharge);
-	}
-
-	AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Charge));
-}
