@@ -26,6 +26,7 @@ const FName UGYHeroComponent::NAME_ActorFeatureName("Hero");
 UGYHeroComponent::UGYHeroComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	SetIsReplicatedByDefault(true);
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
