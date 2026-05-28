@@ -29,6 +29,7 @@ EBTNodeResult::Type UBTTask_MoveToNextPatrolPoint::ExecuteTask(UBehaviorTreeComp
 	}
 
 	CachedOwnerComp = &OwnerComp;
+	AIC->ReceiveMoveCompleted.RemoveDynamic(this, &UBTTask_MoveToNextPatrolPoint::OnMoveCompleted);
 	AIC->ReceiveMoveCompleted.AddDynamic(this, &UBTTask_MoveToNextPatrolPoint::OnMoveCompleted);
 
 	return EBTNodeResult::InProgress;
