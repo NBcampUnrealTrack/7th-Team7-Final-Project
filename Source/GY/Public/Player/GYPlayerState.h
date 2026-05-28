@@ -46,8 +46,11 @@ public:
 
 	void InitTestGAS(APawn* Avatar);
 
+	UFUNCTION(BlueprintCallable)
 	void HandleAttackInput();
+	UFUNCTION(BlueprintCallable)
 	void HandleAttackReleasedInput();
+	UFUNCTION(BlueprintCallable)
 	void HandleParryInput();
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
@@ -95,6 +98,10 @@ protected:
 
 private:
 	void OnHoldToChargeThreshold();
+	void SendGameplayEventLocal(FGameplayTag EventTag);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSendGameplayEvent(FGameplayTag EventTag);
 
 	FTimerHandle HoldToChargeTimer;
 };
