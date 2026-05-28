@@ -36,13 +36,28 @@ public:
 
 	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
 	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
+
+	// 임계 시간 미만 = 콤보, 이상 = 차지. 클라 단독 결정 (서버는 결과 RPC만 받음 — RTT race 없음)
+	UPROPERTY(EditDefaultsOnly, Category = "Attack", meta = (ClampMin = "0.0", Units = "s"))
+	float HoldToChargeTime = 0.3f;
+
 protected:
 	//생명 주기 함수
 	virtual void OnRegister() override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-public:
-	// Called every frame
+private:
+	void OnAttackPressed();
+	void OnAttackReleased();
+	void OnChargeThreshold();
 
+	void SendGameplayEventLocal(FGameplayTag EventTag);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSendGameplayEvent(FGameplayTag EventTag);
+
+	FTimerHandle ChargeThresholdTimer;
+	// IA가 ETriggerEvent::Triggered로 바인딩돼 매 프레임 발화하므로, 누름 엣지만 처리하기 위한 가드
+	bool bAttackHeld = false;
 };
