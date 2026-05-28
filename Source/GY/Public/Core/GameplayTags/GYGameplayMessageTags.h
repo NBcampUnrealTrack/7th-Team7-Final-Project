@@ -53,4 +53,5 @@ namespace GYGameplayTags
 	// UI Attribute
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Health);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Stamina);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Poise);
 }
