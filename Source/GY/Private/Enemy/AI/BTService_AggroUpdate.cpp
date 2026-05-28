@@ -37,13 +37,13 @@ void UBTService_AggroUpdate::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* 
 
 	for (const FPerceivedActorInfo& Info : Perceived)
 	{
-		if (!IsValid(Info.Actor)) continue;
+		if (!Info.Actor.IsValid()) continue;
 
 		float Score = CalculateThreatScore(EnemyLocation, Info);
 		if (Score > TopScore)
 		{
 			TopScore = Score;
-			TopThreat = Info.Actor;
+			TopThreat = Info.Actor.Get();
 		}
 	}
 
@@ -56,7 +56,7 @@ void UBTService_AggroUpdate::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* 
 
 float UBTService_AggroUpdate::CalculateThreatScore(const FVector& EnemyLocation, const FPerceivedActorInfo& Info) const
 {
-	if (!IsValid(Info.Actor)) return -1.f;
+	if (!Info.Actor.IsValid()) return -1.f;
 
 	const float Distance = FVector::Dist(EnemyLocation, Info.Actor->GetActorLocation());
 	return BaseScore - (Distance * DistanceWeight);
