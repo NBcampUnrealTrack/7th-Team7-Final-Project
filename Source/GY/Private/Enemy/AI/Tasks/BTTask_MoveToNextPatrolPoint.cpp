@@ -37,7 +37,7 @@ EBTNodeResult::Type UBTTask_MoveToNextPatrolPoint::ExecuteTask(UBehaviorTreeComp
 void UBTTask_MoveToNextPatrolPoint::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
 	EBTNodeResult::Type TaskResult)
 {
-	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetOwner());
+	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetAIOwner());
 	if (AIC)
 	{
 		AIC->ReceiveMoveCompleted.RemoveDynamic(this,
