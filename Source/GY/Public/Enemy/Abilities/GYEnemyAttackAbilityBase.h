@@ -10,6 +10,23 @@ class GY_API UGYEnemyAttackAbilityBase : public UGYGameplayAbility
 	GENERATED_BODY()
 public:
 	UGYEnemyAttackAbilityBase();
+
+	bool CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const;
+
+	float GetRemainingCooldown(const UAbilitySystemComponent* ASC) const;
+
+	virtual void FaceTarget();
+protected:
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData* TriggerEventData) override;
+
+	UFUNCTION()
+	void OnMontageFinished();
+	UFUNCTION()
+	void OnMontageInterrupted();
+public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
 	float AttackRange = 200.f;
 
@@ -24,18 +41,4 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Montage")
 	float PlayRate = 1.f;
-
-	bool CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const;
-
-	float GetRemainingCooldown(const UAbilitySystemComponent* ASC) const;
-protected:
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-		const FGameplayAbilityActorInfo* ActorInfo,
-		const FGameplayAbilityActivationInfo ActivationInfo,
-		const FGameplayEventData* TriggerEventData) override;
-
-	UFUNCTION()
-	void OnMontageFinished();
-	UFUNCTION()
-	void OnMontageInterrupted();
 };
