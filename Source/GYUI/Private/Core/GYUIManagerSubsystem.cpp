@@ -9,6 +9,14 @@
 #include "Blueprint/UserWidget.h"
 #include "GY/Public/Player/GYPlayerController.h"
 #include "GY/Public/Player/GYPlayerState.h"
+#include "AbilitySystem/Attributes/GYBaseAttribute.h"
+#include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "UI/GYUIMessages.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
+#include "Curves/CurveFloat.h"
+
 
 void UGYUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -71,6 +79,117 @@ void UGYUIManagerSubsystem::HandlePlayerStateInitialized(AGYPlayerController* PC
 	}
 }
 
+void UGYUIManagerSubsystem::RegisterStatBroadcast(UAbilitySystemComponent* ASC)
+{
+	StatBroadcastEntries.Reset();
+
+	auto Add = [&](FGameplayTag Channel, const FGameplayAttribute& Cur, const FGameplayAttribute& Max)
+	{
+		FStatBroadcastEntry Entry;
+		Entry.Channel = Channel;
+		Entry.CurrentAttribute = Cur;
+		Entry.MaxAttribute = Max;
+
+		// Attribute 변동 시 함수 호출 요청
+		Entry.CurrentHandle = ASC->GetGameplayAttributeValueChangeDelegate(Cur).AddUObject(
+			this, &UGYUIManagerSubsystem::OnStatAttributeChanged);
+		Entry.MaxHandle = ASC->GetGameplayAttributeValueChangeDelegate(Max).AddUObject(
+			this, &UGYUIManagerSubsystem::OnStatAttributeChanged);
+
+		StatBroadcastEntries.Add(MoveTemp(Entry));
+	};
+
+	// 속성 매핑해서 등록
+	Add(GYGameplayTags::Message_Stat_Health, UGYBaseAttribute::GetCurrentHealthAttribute(), UGYBaseAttribute::GetMaxHealthAttribute());
+	Add(GYGameplayTags::Message_Stat_Stamina, UGYPlayerAttribute::GetCurrentStaminaAttribute(), UGYPlayerAttribute::GetMaxStaminaAttribute());
+	Add(GYGameplayTags::Message_Stat_Poise, UGYAdditionalAttribute::GetCurrentStunAttribute(), UGYAdditionalAttribute::GetMaxStunAttribute());
+
+	LevelHandle = ASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetLevelAttribute()).AddUObject(this, &UGYUIManagerSubsystem::OnXPRelatedChanged);
+	XPHandle = ASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetXPAttribute()).AddUObject(this, &UGYUIManagerSubsystem::OnXPRelatedChanged);
+
+	// 연동 후 현재 값들 바로 전달
+	for (const FStatBroadcastEntry& Entry : StatBroadcastEntries)
+	{
+		BroadcastStat(ASC, Entry);
+	}
+	BroadcastXP();
+	BroadcastPlayerName(ASC);
+}
+
+void UGYUIManagerSubsystem::UnregisterStatBroadcast()
+{
+	if (BoundASC.IsValid())
+	{
+		for (const FStatBroadcastEntry& Entry : StatBroadcastEntries)
+		{
+			BoundASC->GetGameplayAttributeValueChangeDelegate(Entry.CurrentAttribute).Remove(Entry.CurrentHandle);
+			BoundASC->GetGameplayAttributeValueChangeDelegate(Entry.MaxAttribute).Remove(Entry.MaxHandle);
+		}
+		BoundASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetLevelAttribute()).Remove(LevelHandle);
+		BoundASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetXPAttribute()).Remove(XPHandle);
+	}
+	StatBroadcastEntries.Reset();
+}
+
+void UGYUIManagerSubsystem::OnStatAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	if (!BoundASC.IsValid()) return;
+
+	// 바뀐 스탯 찾아서 해당 채널로 방송
+	for (const FStatBroadcastEntry& Entry : StatBroadcastEntries)
+	{
+		if (Data.Attribute == Entry.CurrentAttribute || Data.Attribute == Entry.MaxAttribute)
+		{
+			BroadcastStat(BoundASC.Get(), Entry);
+			return;
+		}
+	}
+}
+
+void UGYUIManagerSubsystem::BroadcastStat(UAbilitySystemComponent* ASC, const FStatBroadcastEntry& Entry)
+{
+	if (!ASC || !GetWorld()) return;
+
+	FGYAttributeValueMessage Msg;
+	Msg.CurrentValue = ASC->GetNumericAttribute(Entry.CurrentAttribute);
+	Msg.MaxValue = ASC->GetNumericAttribute(Entry.MaxAttribute);
+
+	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(Entry.Channel, Msg);
+}
+
+void UGYUIManagerSubsystem::BroadcastXP()
+{
+	if (!BoundASC.IsValid() || !GetWorld()) return;
+
+	const UGYPlayerAttribute* PA = BoundASC->GetSet<UGYPlayerAttribute>();
+	if (!PA) return;
+
+	FGYXPProgressMessage Msg;
+	Msg.Level = FMath::RoundToInt(PA->GetLevel());
+	Msg.CurrentXP = PA->GetXP();
+
+	Msg.MaxXP = PA->NextLevelXPCurve ? PA->NextLevelXPCurve->GetFloatValue(PA->GetLevel()) : 1.f;
+
+	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_UI_XPProgress, Msg);
+}
+
+void UGYUIManagerSubsystem::OnXPRelatedChanged(const FOnAttributeChangeData& Data)
+{
+	BroadcastXP();
+}
+
+void UGYUIManagerSubsystem::BroadcastPlayerName(UAbilitySystemComponent* ASC)
+{
+	if (!ASC || !GetWorld()) return;
+
+	if (const APlayerState* PS = Cast<APlayerState>(ASC->GetOwnerActor()))
+	{
+		FGYPlayerNameMessage Msg;
+		Msg.PlayerName = PS->GetPlayerName();
+		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_UI_PlayerName, Msg);
+	}
+}
+
 void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 {
 	if (!InASC || BoundASC == InASC)
@@ -87,6 +206,7 @@ void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 				Pair.Key,
 				EGameplayTagEventType::NewOrRemoved);
 		}
+		UnregisterStatBroadcast();
 	}
 
 	BoundASC = InASC;
@@ -98,6 +218,7 @@ void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 			InASC->RegisterGameplayTagEvent(Pair.Key, EGameplayTagEventType::NewOrRemoved)
 			     .AddUObject(this, &UGYUIManagerSubsystem::OnTagChanged);
 	}
+	RegisterStatBroadcast(InASC);
 }
 
 void UGYUIManagerSubsystem::RegisterTagDrivenWidget(
@@ -143,7 +264,7 @@ void UGYUIManagerSubsystem::OnTagChanged(const FGameplayTag Tag, int32 NewCount)
 			}
 		}
 	}
-	else//위젯 pop
+	else //위젯 pop
 	{
 		if (Entry->ActiveWidget.IsValid())
 		{

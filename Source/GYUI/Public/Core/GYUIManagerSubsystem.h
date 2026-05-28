@@ -72,4 +72,28 @@ private:
 	void OnTagChanged(const FGameplayTag Tag, int32 NewCount);
 
 	void HandlePlayerStateInitialized(AGYPlayerController* PC);
+
+	/** 스탯 브로드캐스트 정보 묶어서 관리 */
+	struct FStatBroadcastEntry
+	{
+		FGameplayTag Channel;
+		FGameplayAttribute CurrentAttribute;
+		FGameplayAttribute MaxAttribute;
+		FDelegateHandle CurrentHandle;
+		FDelegateHandle MaxHandle;
+	};
+	TArray<FStatBroadcastEntry> StatBroadcastEntries;
+
+	/** 스탯 정보 송신 */
+	void RegisterStatBroadcast(UAbilitySystemComponent* ASC);
+	void UnregisterStatBroadcast();
+	void OnStatAttributeChanged(const FOnAttributeChangeData& Data);
+	void BroadcastStat(UAbilitySystemComponent* ASC, const FStatBroadcastEntry& Entry);
+	/** 경험치, 레벨 정보 송신 */
+	void BroadcastXP();
+	void OnXPRelatedChanged(const FOnAttributeChangeData& Data);
+	FDelegateHandle LevelHandle;
+	FDelegateHandle XPHandle;
+	/** 플레이어 송신 */
+	void BroadcastPlayerName(UAbilitySystemComponent* ASC);
 };
