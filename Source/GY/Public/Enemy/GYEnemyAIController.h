@@ -31,7 +31,7 @@ struct FPerceivedActorInfo
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TObjectPtr<AActor> Actor = nullptr;
+	TWeakObjectPtr<AActor> Actor = nullptr;
 
 	FAIStimulus LastStimulus;
 	float LastPerceivedTime = 0.f;
