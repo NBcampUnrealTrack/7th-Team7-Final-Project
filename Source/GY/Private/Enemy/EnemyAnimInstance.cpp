@@ -125,7 +125,7 @@ void UEnemyAnimInstance::UpdateStateEnum()
 	}
 	if (bIsMoving)
 	{
-		CurrentState = bIsRunning ? EEnemyState::Run : EEnemyState::Walk;
+		CurrentState = (Speed > WalkSpeedThreshold) ? EEnemyState::Run : EEnemyState::Walk;
 		return;
 	}
 

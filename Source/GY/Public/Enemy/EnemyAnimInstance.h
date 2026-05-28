@@ -110,6 +110,9 @@ private:
 		meta = (AllowPrivateAccess = "true"))
 	bool bHasTarget = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AnimInstance|State", meta = (AllowPrivateAccess = "true"))
+	float WalkSpeedThreshold = 10.f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AnimInstance|Assets",
 		meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UBlendSpace> LocomotionBlendSpace;
