@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "Components/GameFrameworkInitStateInterface.h"
 #include "Components/PawnComponent.h"
 #include "GameplayTagContainer.h"
@@ -41,6 +42,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Attack", meta = (ClampMin = "0.0", Units = "s"))
 	float HoldToChargeTime = 0.3f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Attack")
+	FGameplayTagContainer ChargeThresholdEventTags;
+
 protected:
 	//생명 주기 함수
 	virtual void OnRegister() override;
@@ -57,6 +61,7 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerSendGameplayEvent(FGameplayTag EventTag);
 
+	FAbilitySetGrantedHandles GrantedHandles;
 	FTimerHandle ChargeThresholdTimer;
 	// IA가 ETriggerEvent::Triggered로 바인딩돼 매 프레임 발화하므로, 누름 엣지만 처리하기 위한 가드
 	bool bAttackHeld = false;

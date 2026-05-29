@@ -3,6 +3,7 @@
 
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystemComponent.h"
 #include "Animation/AnimMontage.h"
 #include "AbilitySystem/Abilities/Fragment/AbilityFragment.h"
@@ -32,6 +33,19 @@ bool UGYPlayerGameplayAbility::CanActivateAbility(
 	FGameplayTagContainer* OptionalRelevantTags) const
 {
 	if (IsActive()) return false;
+
+	if (const UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
+	{
+		for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+		{
+			if (Spec.Handle == Handle) continue;
+			if (Spec.IsActive() && Cast<UGYPlayerGameplayAbility>(Spec.Ability))
+			{
+				return false;
+			}
+		}
+	}
+
 	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 }
 
@@ -334,6 +348,15 @@ float UGYPlayerGameplayAbility::PlayMontageForLogic(UAnimMontage* Montage, float
 {
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	if (!ASC) return 0.f;
+
+	if (ASC->IsOwnerActorAuthoritative())
+	{
+		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
+		{
+			GYASC->RecordMontageStart();
+		}
+	}
+
 	return ASC->PlayMontage(this, CurrentActivationInfo, Montage, PlayRate);
 }
 

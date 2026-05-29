@@ -2,7 +2,6 @@
 
 #include "AbilitySystemInterface.h"
 #include "CoreMinimal.h"
-#include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "AbilitySystem/Attributes/Player/GYWeaponAttribute.h"
 #include "GameFramework/PlayerState.h"
 #include "GYPlayerState.generated.h"
@@ -55,9 +54,6 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_PawnData)
 	TObjectPtr<const UGYPawnData> PawnData;
-
-	UPROPERTY()
-	FAbilitySetGrantedHandles GrantedHandles;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UGYAbilitySystemComponent> AbilitySystemComponent;

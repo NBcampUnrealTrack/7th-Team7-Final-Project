@@ -39,3 +39,4 @@ const UInputAction* UGYInputConfig::FindAbilityInputActionForTag(const FGameplay
 
 	return nullptr;
 }
+
