@@ -15,7 +15,7 @@ const UInputAction* UGYInputConfig::FindNativeInputActionForTag(const FGameplayT
 
 	if (bLogNotFound)
 	{
-		GY_ERROR(Player, KHB, "태그에 해당되는 액션 없음")
+		GY_ERROR(Player, KHB, "[ %s ]태그에 해당되는 액션 없음", *InputTag.ToString())
 	}
 
 	return nullptr;
@@ -34,7 +34,7 @@ const UInputAction* UGYInputConfig::FindAbilityInputActionForTag(const FGameplay
 
 	if (bLogNotFound)
 	{
-		GY_ERROR(Player, KHB, "태그에 해당되는 어빌리티 액션 없음")
+		GY_ERROR(Player, KHB, "[ %s ]태그에 해당되는 액션 없음", *InputTag.ToString())
 	}
 
 	return nullptr;
