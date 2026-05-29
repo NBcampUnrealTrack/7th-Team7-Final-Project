@@ -1,4 +1,4 @@
-#include "Widget/GYPlayerHUDWidget.h"
+#include "Widget/PlayerHUD/GYPlayerHUDWidget.h"
 #include "CommonRichTextBlock.h"
 #include "CommonTextBlock.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
