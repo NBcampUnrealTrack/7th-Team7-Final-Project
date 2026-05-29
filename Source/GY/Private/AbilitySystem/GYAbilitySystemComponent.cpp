@@ -1,6 +1,11 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "AbilitySystem/GYPeriodicAttributeEffect.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/GameStateBase.h"
+#include "Net/UnrealNetwork.h"
 
 void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
 {
@@ -36,9 +41,90 @@ void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 	TryActivateAbilitiesOnSpawn();
 }
 
+void UGYAbilitySystemComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UGYAbilitySystemComponent, MontageServerStartTime);
+}
+
+void UGYAbilitySystemComponent::RecordMontageStart()
+{
+	MontageServerStartTime = GetWorld()->GetTimeSeconds();
+}
+
+void UGYAbilitySystemComponent::OnRep_ReplicatedAnimMontage()
+{
+	if (GetOwnerRole() == ROLE_AutonomousProxy)
+	{
+		Super::OnRep_ReplicatedAnimMontage();
+		return;
+	}
+
+	ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActor());
+	UAnimInstance* AnimInst = OwnerCharacter && OwnerCharacter->GetMesh()
+		? OwnerCharacter->GetMesh()->GetAnimInstance()
+		: nullptr;
+
+	if (!AnimInst)
+	{
+		Super::OnRep_ReplicatedAnimMontage();
+		return;
+	}
+
+	Super::OnRep_ReplicatedAnimMontage();
+
+	UAnimMontage* PostRepMontage = AnimInst->GetCurrentActiveMontage();
+	if (!PostRepMontage || MontageServerStartTime <= 0.f) return;
+
+	const AGameStateBase* GS = GetWorld()->GetGameState<AGameStateBase>();
+	if (!GS) return;
+
+	const float PlayRate = AnimInst->Montage_GetPlayRate(PostRepMontage);
+	const float Elapsed = GS->GetServerWorldTimeSeconds() - MontageServerStartTime;
+	const float MontageLength = PostRepMontage->GetPlayLength();
+	const float CorrectedPos = FMath::Clamp(Elapsed * FMath::Max(PlayRate, KINDA_SMALL_NUMBER), 0.f, MontageLength - KINDA_SMALL_NUMBER);
+	AnimInst->Montage_SetPosition(PostRepMontage, CorrectedPos);
+}
+
 void UGYAbilitySystemComponent::Server_SendGameplayEvent_Implementation(FGameplayTag EventTag, FGameplayEventData Payload)
 {
 	HandleGameplayEvent(EventTag, &Payload);
+}
+
+void UGYAbilitySystemComponent::HandleAbilityInputPressed(const FGameplayTag& InputTag)
+{
+	FGameplayAbilitySpecHandle FoundHandle;
+
+	for (FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+	{
+		if (!Spec.Ability || !Spec.GetDynamicSpecSourceTags().HasTagExact(InputTag)) continue;
+
+		Spec.InputPressed = true;
+		if (Spec.IsActive())
+		{
+			AbilitySpecInputPressed(Spec);
+			return;
+		}
+		FoundHandle = Spec.Handle;
+		break;
+	}
+
+	if (FoundHandle.IsValid())
+	{
+		TryActivateAbility(FoundHandle);
+	}
+}
+
+void UGYAbilitySystemComponent::HandleAbilityInputReleased(const FGameplayTag& InputTag)
+{
+	for (FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+	{
+		if (!Spec.Ability || !Spec.GetDynamicSpecSourceTags().HasTagExact(InputTag)) continue;
+
+		Spec.InputPressed = false;
+		if (Spec.IsActive()) AbilitySpecInputReleased(Spec);
+		break;
+	}
 }
 
 void UGYAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)

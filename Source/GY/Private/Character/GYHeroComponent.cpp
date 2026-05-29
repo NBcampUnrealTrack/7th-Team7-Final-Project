@@ -9,6 +9,7 @@
 #include "Character/GYPawnData.h"
 #include "Character/GYPawnExtensionComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
+#include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/EventTags.h"
@@ -28,6 +29,8 @@ UGYHeroComponent::UGYHeroComponent(const FObjectInitializer& ObjectInitializer)
 {
 	SetIsReplicatedByDefault(true);
 	PrimaryComponentTick.bCanEverTick = false;
+	SetIsReplicatedByDefault(true);
+	ChargeThresholdEventTags.AddTag(GYGameplayTags::InputTag_Charge);
 }
 
 bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
@@ -110,7 +113,25 @@ void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 		APawn* Pawn = GetPawn<APawn>();
 		AGYPlayerState* GYPlayerState = GetPlayerState<AGYPlayerState>();
 		if (!Pawn || !GYPlayerState) return;
-		// 서버가 보는 원격 클라 폰에는 InputComponent가 없는 게 정상이므로 시도 자체를 막는다.
+
+		if (Pawn->HasAuthority())
+		{
+			if (UGYAbilitySystemComponent* ASC = GYPlayerState->GetGYAbilitySystemComponent())
+			{
+				UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
+				if (ExtComp && ExtComp->PawnData)
+				{
+					for (const UAbilitySet* AbilitySet : ExtComp->PawnData->AbilitySets)
+					{
+						if (AbilitySet)
+						{
+							AbilitySet->GiveToAbilitySystem(ASC, &GrantedHandles);
+						}
+					}
+				}
+			}
+		}
+
 		if (!Pawn->IsLocallyControlled()) return;
 
 		if (UInputComponent* PlayerInputComponent = Pawn->InputComponent)
@@ -226,6 +247,15 @@ void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 
 void UGYHeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
 {
+	APawn* Pawn = GetPawn<APawn>();
+
+	// Send InputTag as event first so cancel logic on any running ability can react before activation
+	SendGameplayEventLocal(InputTag);
+	if (Pawn && !Pawn->HasAuthority())
+	{
+		ServerSendGameplayEvent(InputTag);
+	}
+
 	if (InputTag == GYGameplayTags::InputTag_Attack)
 	{
 		OnAttackPressed();
@@ -237,7 +267,7 @@ void UGYHeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
 
 	if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
 	{
-		ASC->AbilityInputTagPressed(InputTag);
+		ASC->HandleAbilityInputPressed(InputTag);
 	}
 }
 
@@ -254,7 +284,7 @@ void UGYHeroComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 
 	if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
 	{
-		ASC->AbilityInputTagReleased(InputTag);
+		ASC->HandleAbilityInputReleased(InputTag);
 	}
 }
 
@@ -274,7 +304,7 @@ void UGYHeroComponent::OnAttackPressed()
 	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
 	{
 		if (Spec.IsActive() && Spec.Ability &&
-			Spec.Ability->AbilityTags.HasTag(GYGameplayTags::Ability_Attack_Charge))
+			Spec.Ability->GetAssetTags().HasTag(GYGameplayTags::Ability_Attack_Charge))
 		{
 			return;
 		}
@@ -313,13 +343,28 @@ void UGYHeroComponent::OnAttackReleased()
 
 void UGYHeroComponent::OnChargeThreshold()
 {
+	GY_LOG(Player, KHB, "OnChargeThreshold fired. ChargeThresholdEventTags: %s", *ChargeThresholdEventTags.ToString());
+
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!PS) return;
 
 	UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
 	if (!ASC) return;
 
-	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Charge));
+	APawn* Pawn = GetPawn<APawn>();
+	for (const FGameplayTag& Tag : ChargeThresholdEventTags)
+	{
+		SendGameplayEventLocal(Tag);
+		if (Pawn && !Pawn->HasAuthority())
+		{
+			ServerSendGameplayEvent(Tag);
+		}
+	}
+
+	for (const FGameplayTag& Tag : ChargeThresholdEventTags)
+	{
+		ASC->HandleAbilityInputPressed(Tag);
+	}
 }
 
 void UGYHeroComponent::SendGameplayEventLocal(FGameplayTag EventTag)

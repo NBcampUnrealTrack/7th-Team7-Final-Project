@@ -1,6 +1,5 @@
 #include "Player/GYPlayerState.h"
 
-#include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystem/Attributes/CombatAttributeSet.h"
 #include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
 #include "AbilitySystem/Attributes/GYBaseAttribute.h"
@@ -57,18 +56,6 @@ void AGYPlayerState::SetPawnData(const UGYPawnData* InPawnData)
 	if (PawnData) return;
 
 	PawnData = InPawnData;
-
-	if (AbilitySystemComponent)
-	{
-		for (const UAbilitySet* AbilitySet : PawnData->AbilitySets)
-		{
-			if (AbilitySet)
-			{
-				AbilitySet->GiveToAbilitySystem(AbilitySystemComponent, &GrantedHandles);
-			}
-		}
-	}
-
 	ForceNetUpdate();
 }
 
