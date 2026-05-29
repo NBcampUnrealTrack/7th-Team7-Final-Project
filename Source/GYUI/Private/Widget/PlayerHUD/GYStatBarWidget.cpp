@@ -1,4 +1,4 @@
-#include "Widget/GYStatBarWidget.h"
+#include "Widget/PlayerHUD/GYStatBarWidget.h"
 #include "CommonRichTextBlock.h"
 #include "Components/ProgressBar.h"
 #include "UI/GYUIMessages.h"

@@ -1,4 +1,4 @@
-#include "Widget/GYPotionSlotWidget.h"
+#include "Widget/PlayerHUD/GYPotionSlotWidget.h"
 #include "CommonTextBlock.h"
 #include "Components/Image.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"

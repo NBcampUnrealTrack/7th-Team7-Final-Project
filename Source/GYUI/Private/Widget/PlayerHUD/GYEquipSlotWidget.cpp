@@ -1,4 +1,4 @@
-#include "Widget/GYEquipSlotWidget.h"
+#include "Widget/PlayerHUD/GYEquipSlotWidget.h"
 #include "Components/Image.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "UI/GYUIMessages.h"
