@@ -1,6 +1,8 @@
 #include "Character/GYCharacter.h"
 
 #include "AbilitySystemComponent.h"
+#include "Components/WidgetComponent.h"
+#include "Blueprint/UserWidget.h"
 #include "Logging/GYLogManager.h"
 
 #include "Character/GYPawnExtensionComponent.h"
@@ -10,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interaction/InteractionComponent.h"
 #include "Player/GYPlayerState.h"
+#include "UI/GYCharacterBoundUIInterface.h"
 
 AGYCharacter::AGYCharacter()
 {
@@ -33,6 +36,8 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	{
 		PawnExtComponent->CheckDefaultInitialization();
 	}
+
+	InitCharacterAttachedUI(); // 캐릭터에 부착된 위젯들 바인딩
 
 	if (!HasAuthority()) return;
 
@@ -81,6 +86,8 @@ void AGYCharacter::OnRep_PlayerState()
 	if (!IsValid(PS)) return;
 
 	PS->InitGAS(this);
+
+	InitCharacterAttachedUI();
 }
 
 
@@ -127,4 +134,27 @@ void AGYCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	// 3. 액터가 파괴될 때 매니저에서 리시버 등록을 해제합니다.
 	UGameFrameworkComponentManager::RemoveGameFrameworkComponentReceiver(this);
 	Super::EndPlay(EndPlayReason);
+}
+
+void AGYCharacter::InitCharacterAttachedUI()
+{
+	if (!GetAbilitySystemComponent()) return;
+
+	TArray<UWidgetComponent*> WidgetComps;
+	GetComponents<UWidgetComponent>(WidgetComps);
+
+	for (UWidgetComponent* WC : WidgetComps)
+	{
+		if (!WC) continue;
+		WC->InitWidget();
+
+		UUserWidget* W = WC->GetUserWidgetObject();
+		if (!W) continue;
+
+		// 인터페이스 구현하는 위젯은 캐릭터 전달, 위젯이 알아서 필요한 것 꺼내씀
+		if (W->Implements<UGYCharacterBoundUI>())
+		{
+			Cast<IGYCharacterBoundUI>(W)->BindToOwnerCharacter(this);
+		}
+	}
 }

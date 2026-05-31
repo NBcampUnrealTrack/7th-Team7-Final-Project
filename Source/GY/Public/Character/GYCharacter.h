@@ -47,6 +47,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UInteractionComponent> InteractionComponent;
+
+	/** 캐릭터에 부착된 UWidgetComponent 위젯들 바인딩 */
+	void InitCharacterAttachedUI();
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HB|Character", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UGYPawnExtensionComponent> PawnExtComponent;
