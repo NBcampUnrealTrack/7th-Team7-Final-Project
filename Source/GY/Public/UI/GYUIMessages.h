@@ -164,5 +164,7 @@ struct GY_API FGYPlayerNameMessage
 {
 	GENERATED_BODY()
 
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<APlayerState> PlayerState; // 이름 주인
 	UPROPERTY(BlueprintReadWrite) FString PlayerName;
+	UPROPERTY(BlueprintReadWrite) bool bIsLocalPlayer = false; // PlayerHUD에서 본인 값만 고를 때 사용
 };

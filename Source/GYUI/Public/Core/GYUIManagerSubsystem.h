@@ -3,6 +3,7 @@
 #include "AbilitySystemComponent.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "GameplayTagContainer.h"
+#include "GameFramework/PlayerState.h"
 #include "GYUIManagerSubsystem.generated.h"
 
 class AGYPlayerController;
@@ -53,9 +54,24 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GY|UI")
 	UGYPrimaryGameLayout* GetPrimaryGameLayout() const { return PrimaryGameLayout; }
 
+	/** 어디서든 호출 가능한 정적 접근자 */
+	UFUNCTION(BlueprintCallable, Category = "GY|UI", meta = (WorldContext = "WorldContextObject"))
+	static UGYUIManagerSubsystem* Get(const UObject* WorldContextObject);
+
+	/** 캐시된 이름 반환 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GY|UI")
+	FString GetPlayerName(APlayerState* PS) const;
+
+	UFUNCTION(BlueprintCallable, Category = "GY|UI")
+	TArray<APlayerState*> GetKnownPlayerStates() const;
+
 protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UGYPrimaryGameLayout> PrimaryGameLayout;
+
+	/** 플레이어 명단 동기화 주기 */
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI", meta = (ClampMin = "0.1"))
+	float RosterSyncInterval = 0.5f;
 
 private:
 	struct FTagWidgetEntry
@@ -94,6 +110,11 @@ private:
 	void OnXPRelatedChanged(const FOnAttributeChangeData& Data);
 	FDelegateHandle LevelHandle;
 	FDelegateHandle XPHandle;
-	/** 플레이어 송신 */
-	void BroadcastPlayerName(UAbilitySystemComponent* ASC);
+
+	/** 알려진 PlayerState별 마지막 이름 */
+	TMap<TWeakObjectPtr<APlayerState>, FString> KnownPlayerNames;
+	FTimerHandle RosterSyncHandle;
+
+	void SyncPlayerRoster();
+	APlayerState* GetLocalPlayerState() const;
 };
