@@ -21,6 +21,8 @@ protected:
 	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
 
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> Bar_Progress;
 
@@ -39,6 +41,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "GY|StatBar")
 	FLinearColor BarColor = FLinearColor::White;
 
+	UPROPERTY(EditDefaultsOnly, Category = "GY|StatBar")
+	float InterpSpeed = 5.f;
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "GY|StatBar")
 	void OnStatUpdated(float OldCurrent, float NewCurrent, float NewMax);
 
@@ -49,4 +54,9 @@ private:
 
 	float CachedCurrent = 0.f;
 	float CachedMax = 1.f;
+
+	/** 보간 */
+	float TargetPercent = 0.f;
+	float CurrentPercent = 0.f;
+	bool bIsFirstUpdate = true;
 };

@@ -48,11 +48,16 @@ void UGYStatBarWidget::HandleAttributeMessage(FGameplayTag, const FGYAttributeVa
 void UGYStatBarWidget::UpdateVisuals()
 {
 	const float SafeMax = FMath::Max(CachedMax, KINDA_SMALL_NUMBER);
-	const float Percent = FMath::Clamp(CachedCurrent / SafeMax, 0.f, 1.f);
+	TargetPercent = FMath::Clamp(CachedCurrent / SafeMax, 0.f, 1.f);
 
-	if (Bar_Progress)
+	if (bIsFirstUpdate)
 	{
-		Bar_Progress->SetPercent(Percent);
+		CurrentPercent = TargetPercent;
+		if (Bar_Progress)
+		{
+			Bar_Progress->SetPercent(CurrentPercent);
+		}
+		bIsFirstUpdate = false;
 	}
 
 	if (Text_Value)
@@ -62,6 +67,17 @@ void UGYStatBarWidget::UpdateVisuals()
 		Opts.MaximumFractionalDigits = NumberPrecision;
 
 		Text_Value->SetText(FText::Format(ValueFormat, FText::AsNumber(CachedCurrent, &Opts),
-		                                  FText::AsNumber(CachedMax, &Opts)));
+										  FText::AsNumber(CachedMax, &Opts)));
+	}
+}
+
+void UGYStatBarWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	if (Bar_Progress && !FMath::IsNearlyEqual(CurrentPercent, TargetPercent, 0.001f))
+	{
+		CurrentPercent = FMath::FInterpTo(CurrentPercent, TargetPercent, InDeltaTime, InterpSpeed);
+		Bar_Progress->SetPercent(CurrentPercent);
 	}
 }
