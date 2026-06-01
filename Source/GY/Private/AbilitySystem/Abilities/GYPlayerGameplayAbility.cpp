@@ -349,15 +349,18 @@ float UGYPlayerGameplayAbility::PlayMontageForLogic(UAnimMontage* Montage, float
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	if (!ASC) return 0.f;
 
+	const float ServerTimestamp = GetWorld()->GetTimeSeconds();
+	const float Result = ASC->PlayMontage(this, CurrentActivationInfo, Montage, PlayRate);
+
 	if (ASC->IsOwnerActorAuthoritative())
 	{
 		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
 		{
-			GYASC->RecordMontageStart();
+			GYASC->Multicast_NotifyMontageStart(Montage, ServerTimestamp);
 		}
 	}
 
-	return ASC->PlayMontage(this, CurrentActivationInfo, Montage, PlayRate);
+	return Result;
 }
 
 AGYCharacter* UGYPlayerGameplayAbility::GetGYCharacter() const

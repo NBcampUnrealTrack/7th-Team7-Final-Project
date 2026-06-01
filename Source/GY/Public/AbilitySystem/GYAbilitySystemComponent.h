@@ -4,6 +4,8 @@
 #include "GYAbilitySystemComponent.generated.h"
 
 class UGYPeriodicAttributeEffect;
+class UAnimInstance;
+class UAnimMontage;
 
 UCLASS()
 class GY_API UGYAbilitySystemComponent : public UAbilitySystemComponent
@@ -12,9 +14,9 @@ class GY_API UGYAbilitySystemComponent : public UAbilitySystemComponent
 
 public:
 	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	void RecordMontageStart();
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_NotifyMontageStart(UAnimMontage* Montage, float ServerTimestamp);
 
 	// InputTag으로 매칭되는 어빌리티 입력 (Lyra 라우팅)
 	// 누름/뗌은 SpecHandle 집합에 기록만 하고, 실제 처리는 PostProcessInput의 ProcessAbilityInput에서.
@@ -45,9 +47,10 @@ protected:
 	virtual void OnRep_ReplicatedAnimMontage() override;
 
 private:
-	UPROPERTY(Replicated)
-	float MontageServerStartTime = 0.f;
+	TMap<UAnimMontage*, float> MontageStartCache;
+	FTimerHandle CatchUpTimerHandle;
 
+	void ApplyMontageCorrection(UAnimInstance* AnimInst, UAnimMontage* Montage, float StartTime);
 	void OnCombatTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void TryActivateAbilitiesOnSpawn();
 

@@ -5,7 +5,6 @@
 #include "Animation/AnimMontage.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/GameStateBase.h"
-#include "Net/UnrealNetwork.h"
 
 void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
 {
@@ -41,15 +40,21 @@ void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 	TryActivateAbilitiesOnSpawn();
 }
 
-void UGYAbilitySystemComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void UGYAbilitySystemComponent::Multicast_NotifyMontageStart_Implementation(UAnimMontage* Montage, float ServerTimestamp)
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(UGYAbilitySystemComponent, MontageServerStartTime);
-}
+	if (!Montage || GetOwnerRole() == ROLE_Authority || GetOwnerRole() == ROLE_AutonomousProxy) return;
 
-void UGYAbilitySystemComponent::RecordMontageStart()
-{
-	MontageServerStartTime = GetWorld()->GetTimeSeconds();
+	MontageStartCache.Add(Montage, ServerTimestamp);
+
+	ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActor());
+	UAnimInstance* AnimInst = OwnerCharacter && OwnerCharacter->GetMesh()
+		? OwnerCharacter->GetMesh()->GetAnimInstance()
+		: nullptr;
+
+	if (AnimInst && AnimInst->GetCurrentActiveMontage() == Montage)
+	{
+		ApplyMontageCorrection(AnimInst, Montage, ServerTimestamp);
+	}
 }
 
 void UGYAbilitySystemComponent::OnRep_ReplicatedAnimMontage()
@@ -73,17 +78,50 @@ void UGYAbilitySystemComponent::OnRep_ReplicatedAnimMontage()
 
 	Super::OnRep_ReplicatedAnimMontage();
 
-	UAnimMontage* PostRepMontage = AnimInst->GetCurrentActiveMontage();
-	if (!PostRepMontage || MontageServerStartTime <= 0.f) return;
+	UAnimMontage* CurrentMontage = AnimInst->GetCurrentActiveMontage();
+	if (!CurrentMontage) return;
 
+	const float* StartTime = MontageStartCache.Find(CurrentMontage);
+	if (!StartTime) return;
+
+	ApplyMontageCorrection(AnimInst, CurrentMontage, *StartTime);
+}
+
+void UGYAbilitySystemComponent::ApplyMontageCorrection(UAnimInstance* AnimInst, UAnimMontage* Montage, float StartTime)
+{
 	const AGameStateBase* GS = GetWorld()->GetGameState<AGameStateBase>();
 	if (!GS) return;
 
-	const float PlayRate = AnimInst->Montage_GetPlayRate(PostRepMontage);
-	const float Elapsed = GS->GetServerWorldTimeSeconds() - MontageServerStartTime;
-	const float MontageLength = PostRepMontage->GetPlayLength();
-	const float CorrectedPos = FMath::Clamp(Elapsed * FMath::Max(PlayRate, KINDA_SMALL_NUMBER), 0.f, MontageLength - KINDA_SMALL_NUMBER);
-	AnimInst->Montage_SetPosition(PostRepMontage, CorrectedPos);
+	const float ActualPlayRate = FMath::Max(AnimInst->Montage_GetPlayRate(Montage), KINDA_SMALL_NUMBER);
+	const float Elapsed = GS->GetServerWorldTimeSeconds() - StartTime;
+	const float TargetPos = FMath::Clamp(Elapsed * ActualPlayRate, 0.f, Montage->GetPlayLength() - KINDA_SMALL_NUMBER);
+	const float Delta = TargetPos - AnimInst->Montage_GetPosition(Montage);
+
+	static constexpr float HardSeekThreshold = 0.5f;
+	static constexpr float CatchUpDuration = 0.15f;
+
+	if (Delta >= HardSeekThreshold)
+	{
+		AnimInst->Montage_SetPosition(Montage, TargetPos);
+		return;
+	}
+
+	if (Delta > 0.f)
+	{
+		AnimInst->Montage_SetPlayRate(Montage, ActualPlayRate + Delta / CatchUpDuration);
+
+		TWeakObjectPtr<UGYAbilitySystemComponent> WeakThis(this);
+		TWeakObjectPtr<UAnimMontage> WeakMontage(Montage);
+		GetWorld()->GetTimerManager().SetTimer(CatchUpTimerHandle,
+			[WeakThis, WeakMontage, ActualPlayRate]()
+			{
+				if (!WeakThis.IsValid()) return;
+				ACharacter* Char = Cast<ACharacter>(WeakThis->GetAvatarActor());
+				UAnimInstance* AI = Char && Char->GetMesh() ? Char->GetMesh()->GetAnimInstance() : nullptr;
+				if (AI && WeakMontage.IsValid())
+					AI->Montage_SetPlayRate(WeakMontage.Get(), ActualPlayRate);
+			}, CatchUpDuration, false);
+	}
 }
 
 void UGYAbilitySystemComponent::Server_SendGameplayEvent_Implementation(FGameplayTag EventTag, FGameplayEventData Payload)
