@@ -5,11 +5,14 @@
 
 #include "Character/GYPawnExtensionComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interaction/InteractionComponent.h"
 #include "Player/GYPlayerState.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
+#include "UI/GYUIMessages.h"
 
 AGYCharacter::AGYCharacter()
 {
@@ -33,6 +36,8 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	{
 		PawnExtComponent->CheckDefaultInitialization();
 	}
+
+	BroadcastCharacterReady();
 
 	if (!HasAuthority()) return;
 
@@ -66,6 +71,8 @@ void AGYCharacter::OnRep_Controller()
 	{
 		PawnExtComponent->CheckDefaultInitialization();
 	}
+
+	BroadcastCharacterReady(); // 컨트롤러가 늦게 복제될 때도 알림
 }
 
 void AGYCharacter::OnRep_PlayerState()
@@ -81,6 +88,8 @@ void AGYCharacter::OnRep_PlayerState()
 	if (!IsValid(PS)) return;
 
 	PS->InitGAS(this);
+
+	BroadcastCharacterReady();
 }
 
 
@@ -127,4 +136,17 @@ void AGYCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	// 3. 액터가 파괴될 때 매니저에서 리시버 등록을 해제합니다.
 	UGameFrameworkComponentManager::RemoveGameFrameworkComponentReceiver(this);
 	Super::EndPlay(EndPlayReason);
+}
+
+void AGYCharacter::BroadcastCharacterReady()
+{
+	if (!GetAbilitySystemComponent()) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	FGYCharacterReadyMessage Msg;
+	Msg.OwnerActor = this;
+
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Character_Ready,Msg);
 }

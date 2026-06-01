@@ -4,6 +4,7 @@
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "UI/GYUIMessages.h"
 #include "Components/ProgressBar.h"
+#include "Core/GYUIManagerSubsystem.h"
 
 void UGYPlayerHUDWidget::NativeConstruct()
 {
@@ -25,10 +26,24 @@ void UGYPlayerHUDWidget::NativeConstruct()
 	ListenForMessage<UGYPlayerHUDWidget, FGYXPProgressMessage>(
 		GYGameplayTags::Message_UI_XPProgress,
 		this, &UGYPlayerHUDWidget::HandleXPProgressMessage);
+
+	// 위젯 생성 시점에 이미 이름이 캐시돼 있다면 즉시 적용
+	if (UGYUIManagerSubsystem* UI = UGYUIManagerSubsystem::Get(this))
+	{
+		if (APlayerState* LocalPS = GetOwningPlayerState())
+		{
+			const FString Snap = UI->GetPlayerName(LocalPS);
+			if (!Snap.IsEmpty() && Text_PlayerName)
+			{
+				Text_PlayerName->SetText(FText::FromString(Snap));
+			}
+		}
+	}
 }
 
 void UGYPlayerHUDWidget::HandlePlayerNameMessage(FGameplayTag, const FGYPlayerNameMessage& Message)
 {
+	if (!Message.bIsLocalPlayer) return; // 본인 이름만 반영
 	if (Text_PlayerName)
 	{
 		Text_PlayerName->SetText(FText::FromString(Message.PlayerName));

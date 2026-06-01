@@ -54,4 +54,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Health);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Stamina);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Poise);
+
+	// 캐릭터 컴포넌트 초기화
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Character_Ready);
 }

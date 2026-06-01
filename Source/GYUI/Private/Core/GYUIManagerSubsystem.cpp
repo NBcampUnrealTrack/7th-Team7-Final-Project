@@ -16,6 +16,7 @@
 #include "UI/GYUIMessages.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Curves/CurveFloat.h"
+#include "GameFramework/GameStateBase.h"
 
 
 void UGYUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -25,6 +26,10 @@ void UGYUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UGYUIManagerSubsystem::Deinitialize()
 {
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(RosterSyncHandle);
+	}
 	RemovePrimaryGameLayout();
 	Super::Deinitialize();
 }
@@ -66,6 +71,17 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 	{
 		GYPC->OnPlayerStateInitialized.AddUObject(this, &UGYUIManagerSubsystem::HandlePlayerStateInitialized);
 	}
+
+	// 플레이어 명단 동기화
+	if (UWorld* World = GetWorld())
+	{
+		if (!World->GetTimerManager().IsTimerActive(RosterSyncHandle))
+		{
+			World->GetTimerManager().SetTimer(RosterSyncHandle, FTimerDelegate::CreateUObject(
+				this, &UGYUIManagerSubsystem::SyncPlayerRoster), RosterSyncInterval, true);
+		}
+		SyncPlayerRoster();
+	}
 }
 
 void UGYUIManagerSubsystem::HandlePlayerStateInitialized(AGYPlayerController* PC)
@@ -100,12 +116,17 @@ void UGYUIManagerSubsystem::RegisterStatBroadcast(UAbilitySystemComponent* ASC)
 	};
 
 	// 속성 매핑해서 등록
-	Add(GYGameplayTags::Message_Stat_Health, UGYBaseAttribute::GetCurrentHealthAttribute(), UGYBaseAttribute::GetMaxHealthAttribute());
-	Add(GYGameplayTags::Message_Stat_Stamina, UGYPlayerAttribute::GetCurrentStaminaAttribute(), UGYPlayerAttribute::GetMaxStaminaAttribute());
-	Add(GYGameplayTags::Message_Stat_Poise, UGYAdditionalAttribute::GetCurrentStunAttribute(), UGYAdditionalAttribute::GetMaxStunAttribute());
+	Add(GYGameplayTags::Message_Stat_Health, UGYBaseAttribute::GetCurrentHealthAttribute(),
+	    UGYBaseAttribute::GetMaxHealthAttribute());
+	Add(GYGameplayTags::Message_Stat_Stamina, UGYPlayerAttribute::GetCurrentStaminaAttribute(),
+	    UGYPlayerAttribute::GetMaxStaminaAttribute());
+	Add(GYGameplayTags::Message_Stat_Poise, UGYAdditionalAttribute::GetCurrentStunAttribute(),
+	    UGYAdditionalAttribute::GetMaxStunAttribute());
 
-	LevelHandle = ASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetLevelAttribute()).AddUObject(this, &UGYUIManagerSubsystem::OnXPRelatedChanged);
-	XPHandle = ASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetXPAttribute()).AddUObject(this, &UGYUIManagerSubsystem::OnXPRelatedChanged);
+	LevelHandle = ASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetLevelAttribute()).AddUObject(
+		this, &UGYUIManagerSubsystem::OnXPRelatedChanged);
+	XPHandle = ASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetXPAttribute()).AddUObject(
+		this, &UGYUIManagerSubsystem::OnXPRelatedChanged);
 
 	// 연동 후 현재 값들 바로 전달
 	for (const FStatBroadcastEntry& Entry : StatBroadcastEntries)
@@ -113,7 +134,6 @@ void UGYUIManagerSubsystem::RegisterStatBroadcast(UAbilitySystemComponent* ASC)
 		BroadcastStat(ASC, Entry);
 	}
 	BroadcastXP();
-	BroadcastPlayerName(ASC);
 }
 
 void UGYUIManagerSubsystem::UnregisterStatBroadcast()
@@ -176,18 +196,6 @@ void UGYUIManagerSubsystem::BroadcastXP()
 void UGYUIManagerSubsystem::OnXPRelatedChanged(const FOnAttributeChangeData& Data)
 {
 	BroadcastXP();
-}
-
-void UGYUIManagerSubsystem::BroadcastPlayerName(UAbilitySystemComponent* ASC)
-{
-	if (!ASC || !GetWorld()) return;
-
-	if (const APlayerState* PS = Cast<APlayerState>(ASC->GetOwnerActor()))
-	{
-		FGYPlayerNameMessage Msg;
-		Msg.PlayerName = PS->GetPlayerName();
-		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_UI_PlayerName, Msg);
-	}
 }
 
 void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
@@ -315,5 +323,106 @@ void UGYUIManagerSubsystem::PopWidget(UCommonActivatableWidget* Widget)
 	if (PrimaryGameLayout && Widget)
 	{
 		PrimaryGameLayout->RemoveWidgetFromLayer(Widget);
+	}
+}
+
+UGYUIManagerSubsystem* UGYUIManagerSubsystem::Get(const UObject* WorldContextObject)
+{
+	if (!WorldContextObject) return nullptr;
+
+	const UWorld* World = WorldContextObject->GetWorld();
+	if (!World) return nullptr;
+
+	// 첫 번째 로컬 플레이어 기준
+	const ULocalPlayer* LP = World->GetFirstLocalPlayerFromController();
+	return LP ? LP->GetSubsystem<UGYUIManagerSubsystem>() : nullptr;
+}
+
+FString UGYUIManagerSubsystem::GetPlayerName(APlayerState* PS) const
+{
+	if (!PS) return FString();
+
+	if (const FString* Cached = KnownPlayerNames.Find(TWeakObjectPtr<APlayerState>(PS)))
+	{
+		return *Cached;
+	}
+	return PS->GetPlayerName(); // 아직 동기화 안 된 시점에 호출된 경우 - 캐시 미스 시 폴백
+}
+
+TArray<APlayerState*> UGYUIManagerSubsystem::GetKnownPlayerStates() const
+{
+	TArray<APlayerState*> Result;
+	Result.Reserve(KnownPlayerNames.Num());
+	for (const auto& Pair : KnownPlayerNames)
+	{
+		if (APlayerState* PS = Pair.Key.Get())
+		{
+			Result.Add(PS);
+		}
+	}
+	return Result;
+}
+
+APlayerState* UGYUIManagerSubsystem::GetLocalPlayerState() const
+{
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP) return nullptr;
+	APlayerController* PC = LP->GetPlayerController(LP->GetWorld());
+	return PC ? PC->PlayerState : nullptr;
+}
+
+void UGYUIManagerSubsystem::SyncPlayerRoster()
+{
+	AGameStateBase* GS = GetWorld() ? GetWorld()->GetGameState() : nullptr;
+	if (!GS) return;
+
+	APlayerState* LocalPS = GetLocalPlayerState();
+	UGameplayMessageSubsystem& Msg = UGameplayMessageSubsystem::Get(GetWorld());
+
+	TSet<TWeakObjectPtr<APlayerState>> CurrentSet;
+	for (APlayerState* PS : GS->PlayerArray)
+	{
+		if (!PS || PS->IsInactive()) continue;
+
+		const TWeakObjectPtr<APlayerState> Key(PS);
+		CurrentSet.Add(Key);
+
+		const FString CurrentName = PS->GetPlayerName();
+		const FString* Existing = KnownPlayerNames.Find(Key);
+		const bool bIsNew = (Existing == nullptr);
+
+		if (bIsNew || *Existing != CurrentName)
+		{
+			KnownPlayerNames.Add(Key, CurrentName);
+
+			FGYPlayerNameMessage NamePayload;
+			NamePayload.PlayerState = PS;
+			NamePayload.PlayerName = CurrentName;
+			NamePayload.bIsLocalPlayer = (PS == LocalPS);
+			Msg.BroadcastMessage(GYGameplayTags::Message_UI_PlayerName, NamePayload);
+		}
+
+		// 신규 입장 브로드캐스트
+		if (bIsNew)
+		{
+			FGYPartyMemberMessage JoinPayload;
+			JoinPayload.Member = PS;
+			JoinPayload.EventTag = GYGameplayTags::Message_Party_MemberJoined;
+			Msg.BroadcastMessage(GYGameplayTags::Message_Party_MemberJoined, JoinPayload);
+		}
+	}
+
+	// 퇴장 브로드캐스트, 캐시 정리
+	for (auto It = KnownPlayerNames.CreateIterator(); It; ++It)
+	{
+		if (!CurrentSet.Contains(It.Key()))
+		{
+			FGYPartyMemberMessage LeavePayload;
+			LeavePayload.Member = It.Key();
+			LeavePayload.EventTag = GYGameplayTags::Message_Party_MemberLeft;
+			Msg.BroadcastMessage(GYGameplayTags::Message_Party_MemberLeft, LeavePayload);
+
+			It.RemoveCurrent();
+		}
 	}
 }
