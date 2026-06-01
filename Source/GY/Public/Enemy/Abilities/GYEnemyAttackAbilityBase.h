@@ -19,6 +19,11 @@ public:
 	virtual void FaceTarget();
 
 	float GetTotalDamageScore() const;
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+	void RecalculateAttackDataFromMontage();
+#endif
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,
@@ -34,6 +39,12 @@ protected:
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
 	float AttackRange = 200.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
+	float AttackAngle = 360.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Selection")
+	FName CalcSocket = TEXT("weapon_tip");
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
 	float BaseDamageScore = 10.f;

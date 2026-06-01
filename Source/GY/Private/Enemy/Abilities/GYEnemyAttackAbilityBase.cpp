@@ -2,7 +2,11 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Animation/AnimSequence.h"
+#include "Editor/AnimationBlueprintLibrary/Public/AnimationBlueprintLibrary.h"
 #include "Enemy/GYEnemyAIController.h"
+#include "Enemy/AnimNotify/EnemyWeaponTrace.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 {
@@ -75,7 +79,108 @@ float UGYEnemyAttackAbilityBase::GetTotalDamageScore() const
 	}
 	return FMath::Max(BaseDamageScore, Total);
 }
+#if WITH_EDITOR
+void UGYEnemyAttackAbilityBase::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
 
+	if (PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UGYEnemyAttackAbilityBase, AttackMontage))
+	{
+		RecalculateAttackDataFromMontage();
+	}
+}
+
+static FTransform GetBoneComponentSpaceTransform(UAnimSequence* Seq, int32 BoneIndex, float Time)
+{
+	const FReferenceSkeleton& RefSkel = Seq->GetSkeleton()->GetReferenceSkeleton();
+
+	TArray<int32> Chain;
+	int32 Current = BoneIndex;
+	while (Current != INDEX_NONE)
+	{
+		Chain.Insert(Current, 0);
+		Current = RefSkel.GetParentIndex(Current);
+	}
+
+	FTransform CSTransform = FTransform::Identity;
+	for (int32 Bone : Chain)
+	{
+		FTransform LocalTransform;
+		Seq->GetBoneTransform(LocalTransform, FSkeletonPoseBoneIndex(Bone), (double)Time, false);
+		CSTransform = LocalTransform * CSTransform;
+	}
+
+	return CSTransform;
+}
+
+void UGYEnemyAttackAbilityBase::RecalculateAttackDataFromMontage()
+{
+	if (!AttackMontage) return;
+
+	for (const FAnimNotifyEvent& NotifyEvent : AttackMontage->Notifies)
+	{
+		UEnemyWeaponTrace* WeaponTrace = Cast<UEnemyWeaponTrace>(NotifyEvent.NotifyStateClass);
+		if (!WeaponTrace) continue;
+
+		UAnimSequence* Seq = nullptr;
+		for (const FSlotAnimationTrack& Track : AttackMontage->SlotAnimTracks)
+		{
+			for (const FAnimSegment& Seg : Track.AnimTrack.AnimSegments)
+			{
+				Seq = Cast<UAnimSequence>(Seg.GetAnimReference());
+				if (Seq) break;
+			}
+			if (Seq) break;
+		}
+		if (!Seq) continue;
+
+		USkeletalMesh* SkelMesh = Seq->GetPreviewMesh();
+		if (!SkelMesh) continue;
+
+		USkeletalMeshSocket* Socket = SkelMesh->FindSocket(CalcSocket);
+		if (!Socket) continue;
+
+		const USkeleton* Skeleton = Seq->GetSkeleton();
+		int32 BoneIndex = Skeleton->GetReferenceSkeleton().FindBoneIndex(Socket->BoneName);
+		if (BoneIndex == INDEX_NONE) continue;
+
+		const float StartTime  = NotifyEvent.GetTime();
+		const float Duration   = NotifyEvent.GetDuration();
+		const int32 SampleCount = 20;
+
+		float MinAngle = FLT_MAX, MaxAngle = -FLT_MAX, MaxRange = 0.f;
+
+		for (int32 i = 0; i <= SampleCount; i++)
+		{
+			float Time = StartTime + (Duration * i / SampleCount);
+
+			FTransform BoneTransform = GetBoneComponentSpaceTransform(Seq, BoneIndex, Time);
+
+			FTransform SocketLocal(Socket->RelativeRotation, Socket->RelativeLocation);
+			FTransform SocketTransform = SocketLocal * BoneTransform;
+
+			FVector Pos  = SocketTransform.GetLocation();
+			FVector Flat = FVector(Pos.X, Pos.Y, 0.f);
+
+			if (!Flat.IsNearlyZero())
+			{
+				float Angle = FMath::RadiansToDegrees(FMath::Atan2(Flat.Y, Flat.X));
+				MinAngle = FMath::Min(MinAngle, Angle);
+				MaxAngle = FMath::Max(MaxAngle, Angle);
+			}
+
+			MaxRange = FMath::Max(MaxRange, Flat.Size());
+		}
+
+		if (MinAngle != FLT_MAX)
+		{
+			AttackAngle = MaxAngle - MinAngle;
+			AttackRange = MaxRange;
+		}
+		break;
+	}
+}
+#endif
 void UGYEnemyAttackAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                                 const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
                                                 const FGameplayEventData* TriggerEventData)
