@@ -18,12 +18,6 @@
 #include "Curves/CurveFloat.h"
 #include "GameFramework/GameStateBase.h"
 
-
-void UGYUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-}
-
 void UGYUIManagerSubsystem::Deinitialize()
 {
 	if (UWorld* World = GetWorld())
@@ -380,7 +374,8 @@ void UGYUIManagerSubsystem::SyncPlayerRoster()
 	UGameplayMessageSubsystem& Msg = UGameplayMessageSubsystem::Get(GetWorld());
 
 	TSet<TWeakObjectPtr<APlayerState>> CurrentSet;
-	for (APlayerState* PS : GS->PlayerArray)
+
+	for (APlayerState* PS : GS->PlayerArray) // 게임 내 모든 플레이어 순회
 	{
 		if (!PS || PS->IsInactive()) continue;
 
@@ -389,9 +384,9 @@ void UGYUIManagerSubsystem::SyncPlayerRoster()
 
 		const FString CurrentName = PS->GetPlayerName();
 		const FString* Existing = KnownPlayerNames.Find(Key);
-		const bool bIsNew = (Existing == nullptr);
+		const bool bIsNew = (Existing == nullptr); // 캐시에 없으면 신규 유저
 
-		if (bIsNew || *Existing != CurrentName)
+		if (bIsNew || *Existing != CurrentName) // 캐시에 없음, 이름 변경된 경우 브로드캐스트
 		{
 			KnownPlayerNames.Add(Key, CurrentName);
 
@@ -399,7 +394,7 @@ void UGYUIManagerSubsystem::SyncPlayerRoster()
 			NamePayload.PlayerState = PS;
 			NamePayload.PlayerName = CurrentName;
 			NamePayload.bIsLocalPlayer = (PS == LocalPS);
-			Msg.BroadcastMessage(GYGameplayTags::Message_UI_PlayerName, NamePayload);
+			Msg.BroadcastMessage(GYGameplayTags::Message_UI_PlayerName, NamePayload); // 이름 업뎃
 		}
 
 		// 신규 입장 브로드캐스트

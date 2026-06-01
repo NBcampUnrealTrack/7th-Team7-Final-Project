@@ -19,7 +19,6 @@ class GYUI_API UGYUIManagerSubsystem : public ULocalPlayerSubsystem
 	GENERATED_BODY()
 
 public:
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
@@ -115,6 +114,7 @@ private:
 	TMap<TWeakObjectPtr<APlayerState>, FString> KnownPlayerNames;
 	FTimerHandle RosterSyncHandle;
 
+	/** 플레이어 명단 동기화 */
 	void SyncPlayerRoster();
 	APlayerState* GetLocalPlayerState() const;
 };
