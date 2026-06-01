@@ -43,18 +43,27 @@ void UGYSprintLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		Character->GetCharacterMovement()->MaxWalkSpeed = CachedFragment->SprintSpeed;
 	}
 
-	// 스태미너 소모 GE 적용
-	if (CachedFragment->DrainGameplayEffect)
-	{
-		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
-		FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(
-			CachedFragment->DrainGameplayEffect, 1, Context);
 
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	const bool bIsMoving = Character->GetVelocity().Size2D() > 1.f;
+	if (bIsMoving && CachedFragment->DrainGameplayEffect && !DrainHandle.IsValid())
+	{
+		// 움직이면 이펙트 적용
+		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+		FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(CachedFragment->DrainGameplayEffect, 1, Context);
 		if (Spec.IsValid())
-		{
 			DrainHandle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
-		}
 	}
+	else if (!bIsMoving && DrainHandle.IsValid())
+	{
+		// 멈추면 제거
+		ASC->RemoveActiveGameplayEffect(DrainHandle);
+		DrainHandle = FActiveGameplayEffectHandle();
+	}
+
+
+
+
 
 	// 0.2초 주기로 스태미너 감시
 	if (UWorld* World = Ability->GetWorld())
@@ -130,7 +139,13 @@ void UGYSprintLogic::CheckStamina()
 
 	if (CurrentStamina <= 0.f)
 	{
-		// 탈진 GE 적용
+
+		if (UWorld* World = CachedAbility->GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(StaminaCheckTimer);
+		}
+
+		// 탈진 GE 적용 (한 번만)
 		if (CachedFragment && CachedFragment->ExhaustionGameplayEffect)
 		{
 			FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
@@ -142,7 +157,6 @@ void UGYSprintLogic::CheckStamina()
 				ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
 			}
 		}
-
 
 		CachedAbility->RequestEnd(false);
 	}
