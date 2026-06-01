@@ -48,8 +48,8 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UInteractionComponent> InteractionComponent;
 
-	/** 캐릭터에 부착된 UWidgetComponent 위젯들 바인딩 */
-	void InitCharacterAttachedUI();
+	/** 캐릭터 초기화 완료 방송 */
+	void BroadcastCharacterReady();
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HB|Character", Meta = (AllowPrivateAccess = "true"))

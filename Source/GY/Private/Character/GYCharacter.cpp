@@ -1,18 +1,18 @@
 #include "Character/GYCharacter.h"
 
 #include "AbilitySystemComponent.h"
-#include "Components/WidgetComponent.h"
-#include "Blueprint/UserWidget.h"
 #include "Logging/GYLogManager.h"
 
 #include "Character/GYPawnExtensionComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interaction/InteractionComponent.h"
 #include "Player/GYPlayerState.h"
-#include "UI/GYCharacterBoundUIInterface.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
+#include "UI/GYUIMessages.h"
 
 AGYCharacter::AGYCharacter()
 {
@@ -37,7 +37,7 @@ void AGYCharacter::PossessedBy(AController* NewController)
 		PawnExtComponent->CheckDefaultInitialization();
 	}
 
-	InitCharacterAttachedUI(); // 캐릭터에 부착된 위젯들 바인딩
+	BroadcastCharacterReady();
 
 	if (!HasAuthority()) return;
 
@@ -71,6 +71,8 @@ void AGYCharacter::OnRep_Controller()
 	{
 		PawnExtComponent->CheckDefaultInitialization();
 	}
+
+	BroadcastCharacterReady(); // 컨트롤러가 늦게 복제될 때도 알림
 }
 
 void AGYCharacter::OnRep_PlayerState()
@@ -87,7 +89,7 @@ void AGYCharacter::OnRep_PlayerState()
 
 	PS->InitGAS(this);
 
-	InitCharacterAttachedUI();
+	BroadcastCharacterReady();
 }
 
 
@@ -136,25 +138,15 @@ void AGYCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void AGYCharacter::InitCharacterAttachedUI()
+void AGYCharacter::BroadcastCharacterReady()
 {
 	if (!GetAbilitySystemComponent()) return;
 
-	TArray<UWidgetComponent*> WidgetComps;
-	GetComponents<UWidgetComponent>(WidgetComps);
+	UWorld* World = GetWorld();
+	if (!World) return;
 
-	for (UWidgetComponent* WC : WidgetComps)
-	{
-		if (!WC) continue;
-		WC->InitWidget();
+	FGYCharacterReadyMessage Msg;
+	Msg.OwnerActor = this;
 
-		UUserWidget* W = WC->GetUserWidgetObject();
-		if (!W) continue;
-
-		// 인터페이스 구현하는 위젯은 캐릭터 전달, 위젯이 알아서 필요한 것 꺼내씀
-		if (W->Implements<UGYCharacterBoundUI>())
-		{
-			Cast<IGYCharacterBoundUI>(W)->BindToOwnerCharacter(this);
-		}
-	}
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Character_Ready,Msg);
 }
