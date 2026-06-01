@@ -60,6 +60,3 @@ void UGA_TimeRiftRest::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
-void UGA_TimeRiftRest::OnExitEventReceived(FGameplayEventData Payload)
-{
-}

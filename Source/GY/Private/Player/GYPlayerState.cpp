@@ -13,11 +13,12 @@
 #include "Inventory/InventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerInitData.h"
+#include "SkillTree/SkillTreeComponent.h"
 
 AGYPlayerState::AGYPlayerState()
 {
 	SetNetUpdateFrequency(100.f);
-	
+
 	AbilitySystemComponent = CreateDefaultSubobject<UGYAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
@@ -37,6 +38,7 @@ AGYPlayerState::AGYPlayerState()
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	EquipmentLoadoutComponent = CreateDefaultSubobject<UEquipmentLoadoutComponent>(TEXT("EquipmentLoadoutComponent"));
 	CurrencyComponent = CreateDefaultSubobject<UCurrencyComponent>(TEXT("CurrencyComponent"));
+	SkillTreeComponent = CreateDefaultSubobject<USkillTreeComponent>(TEXT("SkillTreeComponent"));
 }
 
 UAbilitySystemComponent* AGYPlayerState::GetAbilitySystemComponent() const

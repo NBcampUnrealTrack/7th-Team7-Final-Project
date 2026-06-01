@@ -29,6 +29,10 @@ void UGYTimeRiftWidget::NativeConstruct()
 	{
 		RerollButton->OnClicked.AddDynamic(this, &UGYTimeRiftWidget::OnRerollButtonClicked);
 	}
+	if (SkillTreeButton != nullptr)
+	{
+		SkillTreeButton->OnClicked.AddDynamic(this, &UGYTimeRiftWidget::SkillTreeButtonClicked);
+	}
 }
 
 void UGYTimeRiftWidget::OnExitButtonClicked()
@@ -67,4 +71,13 @@ void UGYTimeRiftWidget::OnRerollButtonClicked()
 	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
 	if (!ASC) return;
 	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_Reroll, FGameplayEventData());
+}
+
+void UGYTimeRiftWidget::SkillTreeButtonClicked()
+{
+	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState());
+	if (!PS) return;
+	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
+	if (!ASC) return;
+	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_SkillTree, FGameplayEventData());
 }

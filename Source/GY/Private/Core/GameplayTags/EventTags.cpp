@@ -26,7 +26,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Rest, "Event.TimeRift.Rest");
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Exit, "Event.TimeRift.Exit");
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Reroll, "Event.TimeRift.Reroll");
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_SkillTree, "Event.TimeRift.SkillTree");
 
-
+	UE_DEFINE_GAMEPLAY_TAG(Event_SkillTree_Unlock, "Event.SkillTree.Unlock");
 
 }

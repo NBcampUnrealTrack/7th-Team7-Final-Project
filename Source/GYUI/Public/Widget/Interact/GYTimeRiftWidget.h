@@ -30,6 +30,9 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> RerollButton;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> SkillTreeButton;
+
 private:
 	UFUNCTION()
 	void  OnExitButtonClicked();
@@ -39,7 +42,7 @@ private:
 	void  OnAltarButtonClicked();
 	UFUNCTION()
 	void  OnRerollButtonClicked();
-
-
+	UFUNCTION()
+	void  SkillTreeButtonClicked();
 
 };

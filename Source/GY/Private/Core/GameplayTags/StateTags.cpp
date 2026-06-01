@@ -22,6 +22,6 @@ namespace GYStateTags
 	UE_DEFINE_GAMEPLAY_TAG(State_Interaction_TimeRift, "State.Interaction.TimeRift");
 	UE_DEFINE_GAMEPLAY_TAG(State_Interaction_TimeRift_Altar, "State.Interaction.TimeRift.Altar");
 	UE_DEFINE_GAMEPLAY_TAG(State_Interaction_TimeRift_Reroll, "State.Interaction.TimeRift.Reroll");
-
+	UE_DEFINE_GAMEPLAY_TAG(State_Interaction_TimeRift_SkillTree, "State.Interaction.TimeRift.SkillTree");
 
 }

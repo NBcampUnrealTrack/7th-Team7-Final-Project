@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerState.h"
 #include "GYPlayerState.generated.h"
 
+class USkillTreeComponent;
 class UAbilitySet;
 class UAbilitySystemComponent;
 class UCurrencyComponent;
@@ -43,6 +44,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	UCurrencyComponent* GetCurrencyComponent() const { return CurrencyComponent; }
 
+	UFUNCTION(BlueprintPure)
+	USkillTreeComponent* GetSkillTreeComponent() const { return SkillTreeComponent; }
+
 	void InitGAS(APawn* Avatar);
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
@@ -66,6 +70,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCurrencyComponent> CurrencyComponent;
+
+	UPROPERTY(VisibleAnywhere, Category="SkillTree")
+	TObjectPtr<USkillTreeComponent> SkillTreeComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UGYPlayerBaseAttribute> BaseAttribute;

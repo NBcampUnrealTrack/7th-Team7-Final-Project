@@ -4,17 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
-#include "GA_TimeRiftRest.generated.h"
+#include "GA_SkillUnlock.generated.h"
 
 /**
  *
  */
 UCLASS()
-class GY_API UGA_TimeRiftRest : public UGYGameplayAbility
+class GY_API UGA_SkillUnlock : public UGYGameplayAbility
 {
 	GENERATED_BODY()
+
 public:
-	UGA_TimeRiftRest(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	UGA_SkillUnlock(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	virtual void ActivateAbility(
 		const FGameplayAbilitySpecHandle Handle,
@@ -23,8 +24,6 @@ public:
 		const FGameplayEventData* TriggerEventData) override;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Rest")
-	TSubclassOf<UGameplayEffect> RecoveryEffect;
-	UPROPERTY(EditDefaultsOnly, Category = "Rest")
-	float RestAdvanceHour;
+	UPROPERTY(EditDefaultsOnly, Category="SkillTree")
+	TSubclassOf<UGameplayEffect> CostEffect;
 };
