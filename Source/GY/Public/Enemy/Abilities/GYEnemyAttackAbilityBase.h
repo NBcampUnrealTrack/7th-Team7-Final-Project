@@ -16,8 +16,6 @@ public:
 
 	float GetRemainingCooldown(const UAbilitySystemComponent* ASC) const;
 
-	virtual void FaceTarget();
-
 	float GetTotalDamageScore() const;
 
 	static float CalcAbilityScore(UGYEnemyAttackAbilityBase* Ability, const UAbilitySystemComponent* ASC,

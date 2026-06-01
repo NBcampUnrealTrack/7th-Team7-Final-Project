@@ -64,6 +64,8 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 
 	if (!BestAbility) return EBTNodeResult::Failed;
 
+	Enemy->FaceToTarget(Target);
+
 	CachedOwnerComp = &OwnerComp;
 	ActiveAbility = BestAbility;
 	CachedAbilityHandle = BestHandle;

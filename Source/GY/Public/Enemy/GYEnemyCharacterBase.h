@@ -54,6 +54,9 @@ public:
 	virtual void Activate();
 	virtual FGuid GetPersistentGuid() { return EnemyGuid; }
 	virtual void SetPersistentGuid(FGuid Guid) { EnemyGuid = Guid; }
+
+	void FaceToTarget(AActor* Target);
+	void SetOrientToMovement(bool bEnable);
 protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;

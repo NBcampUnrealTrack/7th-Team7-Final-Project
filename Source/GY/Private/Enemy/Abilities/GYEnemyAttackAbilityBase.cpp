@@ -51,25 +51,6 @@ float UGYEnemyAttackAbilityBase::GetRemainingCooldown(const UAbilitySystemCompon
 	return FMath::Max(0.f, Durations[0]);
 }
 
-void UGYEnemyAttackAbilityBase::FaceTarget()
-{
-	if (!CurrentActorInfo) return;
-
-	AActor* AvatarActor = CurrentActorInfo->AvatarActor.Get();
-	if (!AvatarActor) return;
-
-	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(Cast<APawn>(AvatarActor)->GetController());
-	if (!AIC) return;
-
-	AActor* Target = AIC->GetTargetActor();
-	if (!Target) return;
-
-	const FVector ToTarget = (Target->GetActorLocation() - AvatarActor->GetActorLocation());
-	const FRotator LookRot = FRotationMatrix::MakeFromX(ToTarget).Rotator();
-
-	AvatarActor->SetActorRotation(FRotator(0.f, LookRot.Yaw, 0.f));
-}
-
 float UGYEnemyAttackAbilityBase::GetTotalDamageScore() const
 {
 	float Total = 0.f;
@@ -213,7 +194,6 @@ void UGYEnemyAttackAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle
 		return;
 	}
 
-	FaceTarget();
 }
 
 void UGYEnemyAttackAbilityBase::PlayAttackMontage()
