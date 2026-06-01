@@ -37,9 +37,9 @@ void UGA_TimeRiftSkillTree::ActivateAbility(const FGameplayAbilitySpecHandle Han
 			Task->ReadyForActivation();
 		}
 		{
-			// UAbilityTask_WaitGameplayEvent* Task =  UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, GYGameplayTags::Event_TimeRift_SkillTree);
-			// Task->EventReceived.AddDynamic(this, &ThisClass::OnExitEventReceived);
-			// Task->ReadyForActivation();
+			UAbilityTask_WaitGameplayEvent* Task =  UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, GYGameplayTags::Event_TimeRift_SkillTree_Exit);
+			Task->EventReceived.AddDynamic(this, &ThisClass::OnExitEventReceived);
+			Task->ReadyForActivation();
 		}
 	}else
 	{

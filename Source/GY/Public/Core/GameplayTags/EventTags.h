@@ -35,6 +35,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_TimeRift_Altar)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_TimeRift_Reroll)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_TimeRift_SkillTree)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_TimeRift_SkillTree_Exit)
 
 	//SkillTree
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_SkillTree_Unlock)

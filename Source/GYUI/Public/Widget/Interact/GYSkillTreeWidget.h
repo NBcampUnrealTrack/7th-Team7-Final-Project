@@ -66,6 +66,12 @@ protected:
 	float MaxZoom = 3.0f;
 
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UButton> CloseButton;
+
+	UFUNCTION()
+	void OnCloseButtonClicked();
+
 	UGYAbilitySystemComponent* GetOwnerASC() const;
 
 	UPROPERTY(meta = (BindWidget))

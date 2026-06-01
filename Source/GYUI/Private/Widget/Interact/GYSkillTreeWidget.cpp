@@ -5,6 +5,7 @@
 
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Core/GameplayTags/EventTags.h"
@@ -47,6 +48,11 @@ void UGYSkillTreeWidget::NativeConstruct()
 			{
 				Refresh();
 			});
+	}
+
+	if (CloseButton && !CloseButton->OnClicked.IsAlreadyBound(this, &ThisClass::OnCloseButtonClicked))
+	{
+		CloseButton->OnClicked.AddDynamic(this, &ThisClass::OnCloseButtonClicked);
 	}
 }
 
@@ -244,6 +250,16 @@ void UGYSkillTreeWidget::HandleNodeClicked(USkillNodeDataAsset* Node)
 
 		ASC->Server_SendGameplayEvent(GYGameplayTags::Event_SkillTree_Unlock, Payload);
 	}
+}
+
+void UGYSkillTreeWidget::OnCloseButtonClicked()
+{
+	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState());
+	if (!PS) return;
+	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
+	if (!ASC) return;
+
+	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_SkillTree_Exit, FGameplayEventData());
 }
 
 UGYAbilitySystemComponent* UGYSkillTreeWidget::GetOwnerASC() const

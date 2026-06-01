@@ -245,10 +245,8 @@ void UGYUIManagerSubsystem::RegisterTagDrivenWidget(
 void UGYUIManagerSubsystem::OnTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
 	FTagWidgetEntry* Entry = TagWidgetMap.Find(Tag);
-	if (!Entry)
-	{
-		return;
-	}
+	if (!Entry)	return;
+
 	//위젯push
 	if (NewCount > 0)
 	{
@@ -257,13 +255,6 @@ void UGYUIManagerSubsystem::OnTagChanged(const FGameplayTag Tag, int32 NewCount)
 			UCommonActivatableWidget* Widget = PushWidgetToLayer(Entry->LayerTag, Entry->WidgetClass);
 			Entry->ActiveWidget = Widget;
 
-			if (Widget)
-			{
-				Widget->OnDeactivated().AddLambda([Entry]()
-				{
-					Entry->ActiveWidget = nullptr;
-				});
-			}
 		}
 	}
 	else //위젯 pop
