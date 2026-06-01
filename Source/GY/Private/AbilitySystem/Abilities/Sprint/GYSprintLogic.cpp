@@ -43,9 +43,10 @@ void UGYSprintLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		Character->GetCharacterMovement()->MaxWalkSpeed = CachedFragment->SprintSpeed;
 	}
 
-
+	//CMC = CharacterMovementComponent
 	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
-	const bool bIsMoving = Character->GetVelocity().Size2D() > 1.f;
+	UCharacterMovementComponent* CMC = Character ? Character->GetCharacterMovement() : nullptr;
+	const bool bIsMoving = CMC && CMC->GetCurrentAcceleration().SizeSquared() > 0.f;
 	if (bIsMoving && CachedFragment->DrainGameplayEffect && !DrainHandle.IsValid())
 	{
 		// 움직이면 이펙트 적용
@@ -86,10 +87,11 @@ void UGYSprintLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCa
 		World->GetTimerManager().ClearTimer(StaminaCheckTimer);
 	}
 
-	// 스태미나 소모 이펙트 제거
+	// 스태미나 소모 이펙트 제거, 태그제거
 	if (UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo())
 	{
 		ASC->RemoveActiveGameplayEffect(DrainHandle);
+		ASC->RemoveLooseGameplayTag(GYGameplayTags::Ability_State_Sprint);
 	}
 
 	// 이동속도 복원
@@ -136,6 +138,45 @@ void UGYSprintLogic::CheckStamina()
 	if (!ASC) return;
 
 	const float CurrentStamina = ASC->GetNumericAttribute(UGYPlayerAttribute::GetCurrentStaminaAttribute());
+
+
+	//CMC = CharacterMovementComponent
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	UCharacterMovementComponent* CMC = Character ? Character->GetCharacterMovement() : nullptr;
+	const bool bIsMoving = CMC && CMC->GetCurrentAcceleration().SizeSquared() > 0.f;
+
+	if (bIsMoving)
+	{
+		// 달리기 태그 부여
+		if (!ASC->HasMatchingGameplayTag(GYGameplayTags::Ability_State_Sprint))
+		{
+			ASC->AddLooseGameplayTag(GYGameplayTags::Ability_State_Sprint);
+		}
+
+
+		if (CachedFragment->DrainGameplayEffect && !DrainHandle.IsValid())
+		{
+			// 움직이면 이펙트 적용
+			FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+			FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(CachedFragment->DrainGameplayEffect, 1, Context);
+			if (Spec.IsValid())
+				DrainHandle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+		}
+
+	}
+	else
+	{
+		// 달리기 태그 제거
+		ASC->RemoveLooseGameplayTag(GYGameplayTags::Ability_State_Sprint);
+
+		// DrainGE 제거
+		if (DrainHandle.IsValid())
+		{
+			ASC->RemoveActiveGameplayEffect(DrainHandle);
+			DrainHandle = FActiveGameplayEffectHandle();
+		}
+	}
+
 
 	if (CurrentStamina <= 0.f)
 	{
