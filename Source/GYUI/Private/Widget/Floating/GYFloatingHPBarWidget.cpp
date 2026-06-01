@@ -154,6 +154,11 @@ void UGYFloatingHPBarWidget::TryBindToOwner(AActor* InCharacter)
 		CurrentAlpha = 1.f;
 		SetRenderOpacity(1.f);
 
+ 		if (HealthBar) // 플레이어 전용 색상으로 변경
+ 		{
+ 			HealthBar->SetFillColorAndOpacity(PlayerHPColor);
+ 		}
+
 		if (NameText)
 		{
 			if (UGYUIManagerSubsystem* UI = UGYUIManagerSubsystem::Get(this))
@@ -171,6 +176,11 @@ void UGYFloatingHPBarWidget::TryBindToOwner(AActor* InCharacter)
 		SetVisibility(ESlateVisibility::HitTestInvisible);
 		CurrentAlpha = 0.f;
 		SetRenderOpacity(0.f);
+
+		if (HealthBar) // 적 전용 색상으로 변경
+		{
+			HealthBar->SetFillColorAndOpacity(EnemyHPColor);
+		}
 
 		if (NameText) NameText->SetText(FText::GetEmpty());
 	}

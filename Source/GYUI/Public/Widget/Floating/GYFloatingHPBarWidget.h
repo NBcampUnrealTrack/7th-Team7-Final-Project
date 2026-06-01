@@ -51,6 +51,14 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "GY|UI")
 	void OnHealthUpdated(float Current, float Max);
 
+	/** 다른 플레이어 체력바 색상 */
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI|Color")
+	FLinearColor PlayerHPColor = FLinearColor::Blue;
+
+	/** 적 체력바 색상 */
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI|Color")
+	FLinearColor EnemyHPColor = FLinearColor::Red;
+
 private:
 	enum class EBarMode : uint8
 	{
