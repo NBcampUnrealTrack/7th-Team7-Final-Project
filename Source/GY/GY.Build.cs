@@ -24,7 +24,6 @@ public class GY : ModuleRules
 			"GameplayMessageRuntime",
 			"ModularGameplay",
 			"GameFeatures",
-			"UMG",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime" });
