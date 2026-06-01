@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayEffect.h"
 #include "AbilitySystem/Abilities/Fragment/AbilityFragment.h"
+#include "Core/GameplayTags/AbilityTags.h"
 #include "GYSprintFragment.generated.h"
 
 /**
@@ -16,6 +17,7 @@ class GY_API UGYSprintFragment : public UAbilityFragment
 	GENERATED_BODY()
 
 public:
+	UGYSprintFragment() { FragmentTag = GYGameplayTags::Ability_Fragment_Sprint; };
 
 	UPROPERTY(EditDefaultsOnly, Category = "Speed", meta = (ClampMin = "0.0", Units = "cm/s"))
 	float SprintSpeed = 600.f;

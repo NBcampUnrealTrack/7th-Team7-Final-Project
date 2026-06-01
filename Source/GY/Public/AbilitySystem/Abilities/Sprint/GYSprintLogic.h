@@ -18,7 +18,10 @@ class GY_API UGYSprintLogic : public UAbilityLogicBase
 public:
 	virtual void OnExecute(UGYPlayerGameplayAbility* Ability) override;
 	virtual void OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled) override;
+	virtual void OnInputPressed() override;
+	virtual void OnInputReleased() override;
 
+	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 private:
 
 	void CheckStamina();
