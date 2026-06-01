@@ -46,6 +46,8 @@ public:
 
 	virtual void NativeDestruct() override;
 
+	virtual void SetWidgetOwnerActor(AActor* InOwner);
+
 	/** GMS 수신용 */
 	template<typename FMessageStructType>
 	FGameplayMessageListenerHandle ListenForMessage(
@@ -80,6 +82,8 @@ protected:
 
 	UPROPERTY(Transient)
 	TArray<FGYTagListenerEntry> TagListeners;
+
+	TWeakObjectPtr<AActor> OwnerActorPtr;
 };
 
 /** 템플릿 구현부 */

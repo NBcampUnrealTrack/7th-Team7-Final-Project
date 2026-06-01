@@ -48,6 +48,11 @@ void UGYUserWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
+void UGYUserWidget::SetWidgetOwnerActor(AActor* InOwner)
+{
+	OwnerActorPtr = InOwner;
+}
+
 FDelegateHandle UGYUserWidget::ListenForAttributeChange(UAbilitySystemComponent* ASC, FGameplayAttribute Attribute,
                                                         TFunction<void(const FOnAttributeChangeData&)>&& Callback)
 {
