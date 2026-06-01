@@ -17,7 +17,7 @@ void UGYCharacterAnimInstance::NativeInitializeAnimation()
 	{
 		MovementComponent = OwnerCharacter->GetCharacterMovement();
 
-		RunningSpeed = MovementComponent->MaxWalkSpeed;
+		RunningSpeed = 600.f;
 	}
 
 }
