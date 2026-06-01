@@ -3,6 +3,7 @@
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/DataBridgeSubsystem.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
+#include "Kismet/GameplayStatics.h"
 
 void UGYGameInstance::Init()
 {
@@ -22,6 +23,11 @@ void UGYGameInstance::Init()
 
 	DataBridge->OnAllSourcesCompleted.AddDynamic(this, &UGYGameInstance::OnDataBridgeAllSourcesCompleted);
 	DataBridge->FetchAllSources();
+}
+
+UGYGameInstance* UGYGameInstance::Get(const UObject* WorldContext)
+{
+	return Cast<UGYGameInstance>(UGameplayStatics::GetGameInstance(WorldContext));
 }
 
 void UGYGameInstance::OnDataBridgeAllSourcesCompleted(bool bAllSuccess, int32 FailedCount)
