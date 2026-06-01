@@ -12,4 +12,5 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Attack, "InputTag.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Charge, "InputTag.Charge");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Parry, "InputTag.Parry");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Sprint, "InputTag.Sprint");
 }

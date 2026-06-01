@@ -8,6 +8,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Guard, "Ability.Guard");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Parry, "Ability.Parry");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Dodge, "Ability.Dodge");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Sprint, "Ability.Sprint");
 
 	// Fragment Type
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Charge, "Ability.Fragment.Charge");
@@ -18,8 +19,9 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Cancel, "Ability.Fragment.Cancel");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Parry, "Ability.Fragment.Parry");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ParryMontage, "Ability.Fragment.ParryMontage");
-
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Sprint, "Ability.Fragment.Sprint");
 	// State
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Parrying, "Ability.State.Parrying");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow, "Ability.State.CancelWindow");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Sprint, "Ability.State.Sprint");
 }

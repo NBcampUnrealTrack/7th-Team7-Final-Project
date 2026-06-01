@@ -54,6 +54,7 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 
 		if (!GetPlayerState<AGYPlayerState>())
 		{
+			GY_LOG(Player, KHB, "HeroComp [%s] : 플레이어스테이트 없음.", *CurrentState.ToString());
 			return false;
 		}
 		//If we're authority or autonomous, we need to wait for a controller with registered ownership of the player state.
@@ -69,6 +70,7 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 
 			if (!bHasControllerPairedWithPS)
 			{
+				GY_LOG(Player, KHB, "HeroComp [%s] : 컨트롤러 업슴.", *CurrentState.ToString());
 				return false;
 			}
 		}
@@ -84,6 +86,7 @@ bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manage
 
 		if (Pawn->IsLocallyControlled() && !Pawn->InputComponent)
 		{
+			GY_LOG(Player, KHB, "HeroComp [%s] : 인풋컴포넌트없음.", *CurrentState.ToString());
 			return false;
 		}
 		return GYPlayerState &&
