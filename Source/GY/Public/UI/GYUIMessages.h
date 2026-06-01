@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "Core/Types/ItemEnums.h"
 #include "GameplayTagContainer.h"
 #include "Interaction/InteractionOption.h"
 #include "GYUIMessages.generated.h"
@@ -177,4 +178,14 @@ struct GY_API FGYCharacterReadyMessage
 
 	UPROPERTY(BlueprintReadWrite)
 	TWeakObjectPtr<AActor> OwnerActor;
+};
+
+/** 인벤 엔트리 단건 변동 — 위젯이 InstanceId로 InventoryComponent.FindEntry 조회 */
+USTRUCT(BlueprintType)
+struct GY_API FGYInventoryEntryMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) FGuid InstanceId;
+	UPROPERTY(BlueprintReadWrite) EInventoryEventType EventType = EInventoryEventType::Added;
 };

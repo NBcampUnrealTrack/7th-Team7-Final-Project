@@ -25,6 +25,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Inventory_PotionUsed);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Inventory_PotionRecharged);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Inventory_PotionSlotChanged);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Inventory_EntryChanged);
 
 	// 장비
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Equipment_LoadoutSlotChanged);

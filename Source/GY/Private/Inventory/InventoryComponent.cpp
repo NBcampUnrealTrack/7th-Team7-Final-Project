@@ -7,6 +7,7 @@
 #include "Engine/GameInstance.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Items/Fragments/ItemFragment_Consumable.h"
+#include "Items/Fragments/ItemFragment_Stackable.h"
 #include "Items/ItemDefinition.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "Net/UnrealNetwork.h"
@@ -35,19 +36,62 @@ bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 
 	if (Count <= 0) return false;
 	if (Def.IsNull()) return false;
 
-	FInventoryEntry NewEntry;
-	NewEntry.InstanceId = FGuid::NewGuid();
-	NewEntry.Definition = Def;
-	NewEntry.StackCount = Count;
+	UItemDefinition* DefPtr = Def.LoadSynchronous();
+	if (!IsValid(DefPtr)) return false;
 
-	FInventoryEntry& AddedEntry = Inventory.Entries.Add_GetRef(NewEntry);
-	Inventory.MarkItemDirty(AddedEntry);
+	const UItemFragment_Stackable* StackableFragment = DefPtr->FindFragment<UItemFragment_Stackable>();
+	const int32 MaxStack = StackableFragment != nullptr ? StackableFragment->MaxStackSize : 1;
+
+	int32 Remaining = Count;
+	OutInstanceId = FGuid();
+
+	// 1) 같은 Definition의 기존 스택에 채우기
+	if (MaxStack > 1)
+	{
+		for (FInventoryEntry& Entry : Inventory.Entries)
+		{
+			if (Remaining <= 0) break;
+			if (Entry.Definition != Def) continue;
+			if (Entry.StackCount >= MaxStack) continue;
+
+			const int32 Space = MaxStack - Entry.StackCount;
+			const int32 ToAdd = FMath::Min(Space, Remaining);
+			Entry.StackCount += ToAdd;
+			Remaining -= ToAdd;
+
+			Inventory.MarkItemDirty(Entry);
+			NotifyInventoryChanged(Entry.InstanceId, EInventoryEventType::StackCountChanged);
+
+			if (!OutInstanceId.IsValid())
+			{
+				OutInstanceId = Entry.InstanceId;
+			}
+		}
+	}
+
+	// 2) 남은 수량은 새 엔트리에 (MaxStack 초과면 여러 엔트리로 분배)
+	while (Remaining > 0)
+	{
+		const int32 ToAdd = FMath::Min(MaxStack, Remaining);
+
+		FInventoryEntry NewEntry;
+		NewEntry.InstanceId = FGuid::NewGuid();
+		NewEntry.Definition = Def;
+		NewEntry.StackCount = ToAdd;
+
+		FInventoryEntry& AddedEntry = Inventory.Entries.Add_GetRef(NewEntry);
+		Inventory.MarkItemDirty(AddedEntry);
+		Remaining -= ToAdd;
+
+		if (!OutInstanceId.IsValid())
+		{
+			OutInstanceId = AddedEntry.InstanceId;
+		}
+
+		NotifyInventoryChanged(AddedEntry.InstanceId, EInventoryEventType::Added);
+	}
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
-
-	OutInstanceId = AddedEntry.InstanceId;
-
-	NotifyInventoryChanged(AddedEntry.InstanceId, EInventoryEventType::Added);
 
 	return true;
 }
@@ -157,6 +201,16 @@ void UInventoryComponent::Server_RequestDisassemble_Implementation(const FGuid& 
 void UInventoryComponent::NotifyInventoryChanged(const FGuid& InstanceId, EInventoryEventType EventType)
 {
 	OnInventoryChanged.Broadcast(InstanceId, EventType);
+
+	UWorld* World = GetWorld();
+	if (World != nullptr && !World->IsNetMode(NM_DedicatedServer))
+	{
+		FGYInventoryEntryMessage Msg;
+		Msg.InstanceId = InstanceId;
+		Msg.EventType = EventType;
+		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Inventory_EntryChanged, Msg);
+	}
+
 	BroadcastPotionSnapshots();
 }
 
