@@ -19,6 +19,16 @@ UGYSoundManager* UGYSoundManager::Get(const UObject* WorldContext)
 	return GameInstance->GetSubsystem<UGYSoundManager>();
 }
 
+bool UGYSoundManager::ShouldCreateSubsystem(UObject* Outer) const
+{
+	// 서버에서 사운드 매니저 생성 건너뜀.
+	if (!Super::ShouldCreateSubsystem(Outer))
+	{
+		return false;
+	}
+	return !IsRunningDedicatedServer();
+}
+
 void UGYSoundManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);

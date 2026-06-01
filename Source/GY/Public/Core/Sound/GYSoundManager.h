@@ -16,6 +16,7 @@ class GY_API UGYSoundManager : public UGameInstanceSubsystem
 public:
 	static UGYSoundManager* Get(const UObject* WorldContext);
 
+	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
