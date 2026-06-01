@@ -19,6 +19,10 @@ namespace GYGameplayTags
     UE_DEFINE_GAMEPLAY_TAG(Message_Inventory_ItemEquipped, "GY.Message.Inventory.ItemEquipped");
     UE_DEFINE_GAMEPLAY_TAG(Message_Inventory_PotionUsed, "GY.Message.Inventory.PotionUsed");
     UE_DEFINE_GAMEPLAY_TAG(Message_Inventory_PotionRecharged, "GY.Message.Inventory.PotionRecharged");
+    UE_DEFINE_GAMEPLAY_TAG(Message_Inventory_PotionSlotChanged, "GY.Message.Inventory.PotionSlotChanged");
+    UE_DEFINE_GAMEPLAY_TAG(Message_Inventory_EntryChanged, "GY.Message.Inventory.EntryChanged");
+
+    UE_DEFINE_GAMEPLAY_TAG(Message_Equipment_LoadoutSlotChanged, "GY.Message.Equipment.LoadoutSlotChanged");
 
     UE_DEFINE_GAMEPLAY_TAG(Message_Build_NodeUnlocked, "GY.Message.Build.NodeUnlocked");
     UE_DEFINE_GAMEPLAY_TAG(Message_Build_ActionToggled, "GY.Message.Build.ActionToggled");
@@ -36,8 +40,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Message_Interaction_OptionsChanged, "GY.Message.Interaction.OptionsChanged");
 
 	UE_DEFINE_GAMEPLAY_TAG(Message_UI_XPProgress, "Message.UI.XPProgress");
-	UE_DEFINE_GAMEPLAY_TAG(Message_UI_PotionSlot, "Message.UI.PotionSlot");
-	UE_DEFINE_GAMEPLAY_TAG(Message_UI_EquipmentSlot, "Message.UI.EquipmentSlot");
 	UE_DEFINE_GAMEPLAY_TAG(Message_UI_PlayerName, "Message.UI.PlayerName");
 
 	UE_DEFINE_GAMEPLAY_TAG(Message_Stat_Health, "Message.Stat.Health");

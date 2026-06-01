@@ -12,7 +12,7 @@ void UGYEquipSlotWidget::NativeConstruct()
 
 	if (!SlotTag.IsValid()) return;
 
-	ListenForMessage<UGYEquipSlotWidget, FGYEquipSlotMessage>(GYGameplayTags::Message_UI_EquipmentSlot, this,
+	ListenForMessage<UGYEquipSlotWidget, FGYEquipSlotMessage>(GYGameplayTags::Message_Equipment_LoadoutSlotChanged, this,
 	                                                          &UGYEquipSlotWidget::HandleEquipMessage);
 }
 

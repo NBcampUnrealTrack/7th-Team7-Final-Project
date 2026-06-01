@@ -24,6 +24,11 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Inventory_ItemEquipped);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Inventory_PotionUsed);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Inventory_PotionRecharged);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Inventory_PotionSlotChanged);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Inventory_EntryChanged);
+
+	// 장비
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Equipment_LoadoutSlotChanged);
 
 	// 무기 숙련도 빌드, 노드 관련 - 임시
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Build_NodeUnlocked);
@@ -46,8 +51,6 @@ namespace GYGameplayTags
 
 	// PlayerHUD
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_XPProgress);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_PotionSlot);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_EquipmentSlot);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_PlayerName);
 
 	// UI Attribute

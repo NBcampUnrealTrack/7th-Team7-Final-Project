@@ -1,5 +1,7 @@
 #include "Equipment/EquipmentLoadoutComponent.h"
 
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
 #include "Items/Fragments/ItemFragment_Equippable.h"
@@ -7,6 +9,7 @@
 #include "Net/Core/PushModel/PushModel.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
+#include "UI/GYUIMessages.h"
 
 UEquipmentLoadoutComponent::UEquipmentLoadoutComponent()
 {
@@ -73,7 +76,7 @@ bool UEquipmentLoadoutComponent::SetSlot(FGameplayTag SlotTag, const FGuid& Inst
 	}
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(UEquipmentLoadoutComponent, LoadoutEntries, this);
-	OnLoadoutSlotChanged.Broadcast(SlotTag, InstanceId);
+	BroadcastSlotChanged(SlotTag, InstanceId);
 
 	return true;
 }
@@ -93,7 +96,7 @@ bool UEquipmentLoadoutComponent::ClearSlot(FGameplayTag SlotTag)
 	LoadoutEntries.RemoveAt(Index);
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(UEquipmentLoadoutComponent, LoadoutEntries, this);
-	OnLoadoutSlotChanged.Broadcast(SlotTag, FGuid());
+	BroadcastSlotChanged(SlotTag, FGuid());
 
 	return true;
 }
@@ -111,6 +114,36 @@ bool UEquipmentLoadoutComponent::GetSlot(FGameplayTag SlotTag, FGuid& OutInstanc
 	return true;
 }
 
+void UEquipmentLoadoutComponent::BroadcastSlotChanged(FGameplayTag SlotTag, const FGuid& InstanceId)
+{
+	OnLoadoutSlotChanged.Broadcast(SlotTag, InstanceId);
+
+	UWorld* World = GetWorld();
+	if (World == nullptr || World->IsNetMode(NM_DedicatedServer)) return;
+
+	FGYEquipSlotMessage Msg;
+	Msg.SlotTag = SlotTag;
+	Msg.bIsEmpty = true;
+
+	if (InstanceId.IsValid())
+	{
+		AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwner());
+		UInventoryComponent* Inv = IsValid(PS) ? PS->GetInventoryComponent() : nullptr;
+		const FInventoryEntry* Entry = IsValid(Inv) ? Inv->FindEntry(InstanceId) : nullptr;
+
+		if (Entry != nullptr)
+		{
+			if (UItemDefinition* Def = Entry->Definition.LoadSynchronous())
+			{
+				Msg.Icon = Def->Icon;
+				Msg.bIsEmpty = false;
+			}
+		}
+	}
+
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Equipment_LoadoutSlotChanged, Msg);
+}
+
 void UEquipmentLoadoutComponent::OnRep_LoadoutEntries(const TArray<FEquipmentLoadoutEntry>& OldEntries)
 {
 	for (const FEquipmentLoadoutEntry& OldEntry : OldEntries)
@@ -122,11 +155,11 @@ void UEquipmentLoadoutComponent::OnRep_LoadoutEntries(const TArray<FEquipmentLoa
 
 		if (NewEntry == nullptr)
 		{
-			OnLoadoutSlotChanged.Broadcast(OldEntry.SlotTag, FGuid());
+			BroadcastSlotChanged(OldEntry.SlotTag, FGuid());
 		}
 		else if (NewEntry->InstanceId != OldEntry.InstanceId)
 		{
-			OnLoadoutSlotChanged.Broadcast(NewEntry->SlotTag, NewEntry->InstanceId);
+			BroadcastSlotChanged(NewEntry->SlotTag, NewEntry->InstanceId);
 		}
 	}
 
@@ -139,7 +172,7 @@ void UEquipmentLoadoutComponent::OnRep_LoadoutEntries(const TArray<FEquipmentLoa
 
 		if (!bWasInOld)
 		{
-			OnLoadoutSlotChanged.Broadcast(NewEntry.SlotTag, NewEntry.InstanceId);
+			BroadcastSlotChanged(NewEntry.SlotTag, NewEntry.InstanceId);
 		}
 	}
 }

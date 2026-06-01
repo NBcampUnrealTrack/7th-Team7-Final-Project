@@ -11,7 +11,7 @@ void UGYPotionSlotWidget::NativeConstruct()
 
 	if (!ChargePoolTag.IsValid()) return;
 
-	ListenForMessage<UGYPotionSlotWidget, FGYPotionSlotMessage>(GYGameplayTags::Message_UI_PotionSlot, this,
+	ListenForMessage<UGYPotionSlotWidget, FGYPotionSlotMessage>(GYGameplayTags::Message_Inventory_PotionSlotChanged, this,
 	                                                            &UGYPotionSlotWidget::HandlePotionMessage);
 }
 

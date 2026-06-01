@@ -49,6 +49,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GY|UI")
 	void PopWidget(UCommonActivatableWidget* Widget);
 
+	/** 클래스 단위 토글 — 이미 떠 있으면 pop, 아니면 push */
+	UFUNCTION(BlueprintCallable, Category = "GY|UI", meta = (DeterminesOutputType = "WidgetClass"))
+	UCommonActivatableWidget* ToggleWidgetInLayer(FGameplayTag LayerTag, TSubclassOf<UCommonActivatableWidget> WidgetClass);
+
 	/** 현재 활성화된 PrimaryGameLayout 참조 반환 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GY|UI")
 	UGYPrimaryGameLayout* GetPrimaryGameLayout() const { return PrimaryGameLayout; }
@@ -83,6 +87,9 @@ private:
 
 	TMap<FGameplayTag, FTagWidgetEntry> TagWidgetMap;
 	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
+
+	/** 클래스 단위 토글 위젯 활성 상태 추적 */
+	TMap<TSubclassOf<UCommonActivatableWidget>, TWeakObjectPtr<UCommonActivatableWidget>> ToggleWidgetMap;
 
 	void OnTagChanged(const FGameplayTag Tag, int32 NewCount);
 
