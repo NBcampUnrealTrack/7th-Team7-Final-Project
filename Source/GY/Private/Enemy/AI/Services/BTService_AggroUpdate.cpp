@@ -31,7 +31,6 @@ void UBTService_AggroUpdate::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* 
 	{
 		BB->ClearValue(EnemyBBKeys::TargetActor);
 		BB->ClearValue(EnemyBBKeys::AttackPosition);
-		BB->ClearValue(EnemyBBKeys::SelectedAbilityRange);
 
 		EnemyAIC->ClearFocus(EAIFocusPriority::Gameplay);
 		return;

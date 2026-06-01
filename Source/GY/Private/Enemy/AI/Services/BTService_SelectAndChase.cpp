@@ -66,9 +66,6 @@ void UBTService_SelectAndChase::TickNode(UBehaviorTreeComponent& OwnerComp, uint
 
 	if (!BestAbility) return;
 
-	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(
-		EnemyBBKeys::SelectedAbilityRange, BestAbility->AttackRange);
-
 	if (!EQSAsset) return;
 
 	UEnvQueryManager* EQSManager = UEnvQueryManager::GetCurrent(Enemy->GetWorld());
@@ -78,6 +75,8 @@ void UBTService_SelectAndChase::TickNode(UBehaviorTreeComponent& OwnerComp, uint
 	bQueryInProgress = true;
 
 	FEnvQueryRequest QueryRequest(EQSAsset, Enemy);
+	QueryRequest.SetFloatParam(TEXT("AttackRange"), BestAbility->AttackRange * 0.9f);
+	QueryRequest.SetFloatParam(TEXT("AttackRangeMin"), BestAbility->AttackRange * 0.7f);
 	QueryRequest.Execute(EEnvQueryRunMode::SingleResult, this, &UBTService_SelectAndChase::OnEQSFinished);
 }
 

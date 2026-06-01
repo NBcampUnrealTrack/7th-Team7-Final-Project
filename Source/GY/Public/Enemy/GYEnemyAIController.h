@@ -23,7 +23,6 @@ namespace  EnemyBBKeys
 	static const FName AttackRadius			= TEXT("AttackRadius");
 	static const FName InvestigateLocation	= TEXT("InvestigateLocation");
 	static const FName HasPatrol			= TEXT("HasPatrol");
-	static const FName SelectedAbilityRange	= TEXT("SelectAbilityRange");
 	static const FName LastUsedAbility		= TEXT("LastUsedAbility");
 	static const FName AttackPosition		= TEXT("AttackPosition");
 }
