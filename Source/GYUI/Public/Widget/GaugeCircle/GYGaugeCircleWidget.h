@@ -8,7 +8,6 @@
 class UImage;
 class UMaterialInstanceDynamic;
 class UAbilitySystemComponent;
-struct FGYAttributeValueMessage;
 struct FGYCharacterReadyMessage;
 /**
  * 원형 게이지바 위젯
@@ -25,7 +24,6 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UImage> Image_HP;
@@ -63,8 +61,17 @@ private:
 
 	void SetPercent(UImage* Image, float Percent, bool bFromGameplay);
 	void NotifyActivity();
-	void SetWidgetOwnerActor(AActor* InOwner);
+	virtual void SetWidgetOwnerActor(AActor* InOwner) override;
 	bool IsLocalPlayerPawn() const;
+
+	/** 타이머 관리용 */
+	void ProcessBindRetry();
+	void ProcessVisualInterpolation();
+	void StartFadeOutTimer();
+
+	FTimerHandle BindRetryTimerHandle;
+	FTimerHandle InterpolationTimerHandle;
+	FTimerHandle HoldDelayTimerHandle;
 
 	struct FAttrBinding
 	{
@@ -76,28 +83,22 @@ private:
 	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
 
 	float  CurrentAlpha = 0.f;
-	double LastActivityTime = -1000.0;
+	float  TargetAlpha = 0.f;
 	double BindTime = -1000.0;
 
 	UPROPERTY(Transient)
 	TMap<TObjectPtr<UImage>, TObjectPtr<UMaterialInstanceDynamic>> MIDCache;
 
 	UPROPERTY(Transient)
-	TMap<TObjectPtr<UImage>, float> LastPercent;
-
-	UPROPERTY(Transient)
 	TMap<TObjectPtr<UImage>, float> TargetPercents;
 	UPROPERTY(Transient)
 	TMap<TObjectPtr<UImage>, float> CurrentPercents;
 
-	/** 바인딩 재시도 */
+	/** 바인딩 재시도 설정 */
 	UPROPERTY(EditDefaultsOnly, Category="GY|Radial")
 	float BindRetryInterval = 0.25f;
-	UPROPERTY(EditDefaultsOnly, Category="GY|Radial")
-	float BindRetryTimeout = 5.f;
 
-	bool  bTryingToBind = true;
-	float BindRetryAccum = 0.f;
-	float BindRetryElapsed = 0.f;
+	int32 BindRetryCount = 0;
+	const int32 MaxBindRetries = 20;
 };
 
