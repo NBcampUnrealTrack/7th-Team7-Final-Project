@@ -9,6 +9,8 @@
 #include "Core/GYUIManagerSubsystem.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "UI/GYUIMessages.h"
+#include "Components/WidgetComponent.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 
 UGYFloatingHPBarWidget::UGYFloatingHPBarWidget(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -16,59 +18,18 @@ UGYFloatingHPBarWidget::UGYFloatingHPBarWidget(const FObjectInitializer& ObjectI
 	SetVisibility(ESlateVisibility::Collapsed);
 }
 
-void UGYFloatingHPBarWidget::BindToOwnerCharacter(AActor* InCharacter)
+void UGYFloatingHPBarWidget::NativeConstruct()
 {
-	if (!InCharacter) return;
-	StoredOwner = InCharacter;
+	Super::NativeConstruct();
 
-	const APawn* Pawn = Cast<APawn>(InCharacter);
-
-	// 본인 캐릭터는 표시 안 함
-	if (Pawn && Pawn->IsLocallyControlled())
+	ListenForMessage<UGYFloatingHPBarWidget, FGYCharacterReadyMessage>(
+		GYGameplayTags::Message_Character_Ready,
+		this, &UGYFloatingHPBarWidget::HandleCharacterReadyMessage
+	);
+	// 초기화 타이밍 이슈 방어 코드 - 바인딩
+	if (AActor* MyOwner = GetOwningActor())
 	{
-		Mode = EBarMode::Hidden;
-		SetVisibility(ESlateVisibility::Collapsed);
-		return;
-	}
-
-	// 다른 플레이어는 항상 표시, 이름
-	APlayerState* PS = Pawn ? Pawn->GetPlayerState() : nullptr;
-	if (PS && !PS->IsABot())
-	{
-		Mode = EBarMode::PlayerAlways;
-		TargetPS = PS;
-
-		SetVisibility(ESlateVisibility::HitTestInvisible);
-		CurrentAlpha = 1.f;
-		SetRenderOpacity(1.f);
-
-		// 현재값 스냅샷 + GMS 변경 구독
-		if (NameText)
-		{
-			if (UGYUIManagerSubsystem* UI = UGYUIManagerSubsystem::Get(this))
-			{
-				NameText->SetText(FText::FromString(UI->GetPlayerName(PS)));
-			}
-			ListenForMessage<UGYFloatingHPBarWidget, FGYPlayerNameMessage>(
-				GYGameplayTags::Message_UI_PlayerName,
-				this, &UGYFloatingHPBarWidget::HandlePlayerNameMessage);
-		}
-	}
-	// 적은 페이드 모드, 초기엔 안 보이게
-	else
-	{
-		Mode = EBarMode::EnemyFade;
-		SetVisibility(ESlateVisibility::HitTestInvisible);
-		CurrentAlpha = 0.f;
-		SetRenderOpacity(0.f);
-
-		if (NameText) NameText->SetText(FText::GetEmpty());
-	}
-
-	// ASC 바인딩
-	if (IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(InCharacter))
-	{
-		BindToASC(ASI->GetAbilitySystemComponent());
+		TryBindToOwner(MyOwner);
 	}
 }
 
@@ -121,6 +82,25 @@ void UGYFloatingHPBarWidget::NativeTick(const FGeometry& MyGeometry, float InDel
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
+	if (bTryingToBind && !TargetASC.IsValid()) // 바인딩 시도 중인 경우
+	{
+		BindRetryElapsed += InDeltaTime;
+		BindRetryAccum   += InDeltaTime;
+
+		if (BindRetryAccum >= BindRetryInterval)
+		{
+			BindRetryAccum = 0.f;
+			if (AActor* MyOwner = GetOwningActor())
+			{
+				TryBindToOwner(MyOwner);
+			}
+		}
+		if (TargetASC.IsValid() || BindRetryElapsed >= BindRetryTimeout)
+		{
+			bTryingToBind = false;
+		}
+	}
+
 	if (Mode != EBarMode::EnemyFade) return;
 
 	const UWorld* World = GetWorld();
@@ -151,4 +131,96 @@ void UGYFloatingHPBarWidget::HandlePlayerNameMessage(
 	{
 		NameText->SetText(FText::FromString(Message.PlayerName));
 	}
+}
+
+void UGYFloatingHPBarWidget::TryBindToOwner(AActor* InCharacter)
+{
+	if (TargetASC.IsValid()) return;
+
+	IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(InCharacter);
+	if (!ASI || !ASI->GetAbilitySystemComponent()) return;
+
+	StoredOwner = InCharacter;
+	const APawn* Pawn = Cast<APawn>(InCharacter);
+
+	const bool bIsLocalPlayerPawn =
+		Pawn && (Pawn->IsLocallyControlled() || Pawn->GetLocalRole() == ROLE_AutonomousProxy);
+
+	if (bIsLocalPlayerPawn) // 본인은 표시 x
+	{
+		Mode = EBarMode::Hidden;
+		SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+
+	// 다른 플레이어는 표시 o, 이름도
+	APlayerState* PS = Pawn ? Pawn->GetPlayerState() : nullptr;
+ 	if (PS && !PS->IsABot())
+	{
+		Mode = EBarMode::PlayerAlways;
+		TargetPS = PS;
+
+		SetVisibility(ESlateVisibility::HitTestInvisible);
+		CurrentAlpha = 1.f;
+		SetRenderOpacity(1.f);
+
+		if (NameText)
+		{
+			if (UGYUIManagerSubsystem* UI = UGYUIManagerSubsystem::Get(this))
+			{
+				NameText->SetText(FText::FromString(UI->GetPlayerName(PS)));
+			}
+			ListenForMessage<UGYFloatingHPBarWidget, FGYPlayerNameMessage>(
+				GYGameplayTags::Message_UI_PlayerName,
+				this, &UGYFloatingHPBarWidget::HandlePlayerNameMessage);
+		}
+	}
+	else // 적은 처음엔 안보이게
+	{
+		Mode = EBarMode::EnemyFade;
+		SetVisibility(ESlateVisibility::HitTestInvisible);
+		CurrentAlpha = 0.f;
+		SetRenderOpacity(0.f);
+
+		if (NameText) NameText->SetText(FText::GetEmpty());
+	}
+	// ASC 바인딩
+	BindToASC(ASI->GetAbilitySystemComponent());
+}
+
+void UGYFloatingHPBarWidget::HandleCharacterReadyMessage(FGameplayTag Channel, const FGYCharacterReadyMessage& Message)
+{
+	// 방송을 보낸 주체가 내 owner인지 확인
+	AActor* MyOwner = GetOwningActor();
+
+	if (MyOwner && Message.OwnerActor.Get() == MyOwner)
+	{
+		TryBindToOwner(MyOwner);
+	}
+}
+
+AActor* UGYFloatingHPBarWidget::GetOwningActor() const
+{
+	if (AActor* Stored = OwnerActorPtr.Get())
+	{
+		return Stored;
+	}
+
+	UObject* CurrentOuter = GetOuter();
+	while (CurrentOuter)
+	{
+		if (UWidgetComponent* WidgetComp = Cast<UWidgetComponent>(CurrentOuter))
+		{
+			return WidgetComp->GetOwner();
+		}
+		CurrentOuter = CurrentOuter->GetOuter();
+	}
+	return nullptr;
+}
+
+void UGYFloatingHPBarWidget::SetWidgetOwnerActor(AActor* InOwner)
+{
+	Super::SetWidgetOwnerActor(InOwner);
+	bTryingToBind = true; BindRetryAccum = 0.f; BindRetryElapsed = 0.f;
+	TryBindToOwner(InOwner);
 }
