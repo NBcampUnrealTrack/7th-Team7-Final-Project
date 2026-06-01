@@ -6,11 +6,16 @@
 bool UGYGameplayCueNotify_Camera::OnExecute_Implementation(AActor* MyTarget,
                                                            const FGameplayCueParameters& Parameters) const
 {
-	GY_WARN(Player,CYS,"카메라 게임플레이큐 실행");
+	GY_WARN(Player, CYS, "카메라 게임플레이큐 실행");
 	APawn* Pawn =
 		Cast<APawn>(MyTarget);
 
 	if (!Pawn)
+	{
+		return false;
+	}
+
+	if (!Pawn->IsLocallyControlled())
 	{
 		return false;
 	}
@@ -43,8 +48,13 @@ bool UGYGameplayCueNotify_Camera::OnExecute_Implementation(AActor* MyTarget,
 			Context.Direction =
 				Parameters.Instigator->GetActorForwardVector();
 		}
+		else
+		{
+			Context.Direction = FVector::ZeroVector;
+		}
 		break;
 	default:
+		Context.Direction = FVector::ZeroVector;
 		break;
 	}
 
