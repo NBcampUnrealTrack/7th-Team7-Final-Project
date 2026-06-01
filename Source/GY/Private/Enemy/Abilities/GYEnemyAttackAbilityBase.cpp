@@ -66,6 +66,16 @@ void UGYEnemyAttackAbilityBase::FaceTarget()
 	AvatarActor->SetActorRotation(FRotator(0.f, LookRot.Yaw, 0.f));
 }
 
+float UGYEnemyAttackAbilityBase::GetTotalDamageScore() const
+{
+	float Total = 0.f;
+	for (const FHitDamageWeight& W : HitDamageWeights)
+	{
+		Total += (BaseDamageScore + W.Additive) * W.Multiplicative;
+	}
+	return FMath::Max(BaseDamageScore, Total);
+}
+
 void UGYEnemyAttackAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                                 const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
                                                 const FGameplayEventData* TriggerEventData)
@@ -77,7 +87,10 @@ void UGYEnemyAttackAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle
 	}
 
 	FaceTarget();
+}
 
+void UGYEnemyAttackAbilityBase::PlayAttackMontage()
+{
 	UAbilityTask_PlayMontageAndWait* Task =
 		UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 			this, NAME_None, AttackMontage, PlayRate, NAME_None, true);

@@ -23,6 +23,9 @@ namespace  EnemyBBKeys
 	static const FName AttackRadius			= TEXT("AttackRadius");
 	static const FName InvestigateLocation	= TEXT("InvestigateLocation");
 	static const FName HasPatrol			= TEXT("HasPatrol");
+	static const FName SelectedAbilityRange	= TEXT("SelectAbilityRange");
+	static const FName LastUsedAbility		= TEXT("LastUsedAbility");
+	static const FName AttackPosition		= TEXT("AttackPosition");
 }
 
 USTRUCT()
@@ -45,7 +48,7 @@ class GY_API AGYEnemyAIController : public AAIController
 
 public:
 	AGYEnemyAIController();
-public:
+
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	void StartBehaviorTree(UBehaviorTree* BT);
 
@@ -66,6 +69,8 @@ public:
 	FVector GetCurrentPatrolPoints() const;
 	void AdvancePatrolIndex();
 
+	float GetLoseSightRadius() const;
+	void RemoveOutOfRangeActors(const FVector& EnemyLocation, float LoseSightDist);
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;

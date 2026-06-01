@@ -34,6 +34,9 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 	FGameplayAbilitySpecHandle BestHandle;
 	float BestScore = -1.f;
 
+	UObject* LastUsed = OwnerComp.GetBlackboardComponent()
+	->GetValueAsObject(EnemyBBKeys::LastUsedAbility);
+
 	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
 	{
 		UGYEnemyAttackAbilityBase* AttackAbility =
@@ -42,9 +45,14 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 
 		if (!AttackAbility->CanBeSelectedByAI(ASC, DistToTarget)) continue;
 
-		if (AttackAbility->BaseDamageScore > BestScore)
+		float Score = AttackAbility->GetTotalDamageScore();
+
+		if (AttackAbility == LastUsed)
+			Score *= 0.3f;
+
+		if (Score > BestScore)
 		{
-			BestScore = AttackAbility->BaseDamageScore;
+			BestScore = Score;
 			BestAbility = AttackAbility;
 			BestHandle = Spec.Handle;
 		}
@@ -67,6 +75,10 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 		CachedASC = nullptr;
 		return EBTNodeResult::Failed;
 	}
+
+	OwnerComp.GetBlackboardComponent()->SetValueAsObject(
+		EnemyBBKeys::LastUsedAbility, BestAbility);
+
 	return EBTNodeResult::InProgress;
 }
 

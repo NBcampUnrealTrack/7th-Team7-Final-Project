@@ -88,6 +88,8 @@ protected:
 
 	UFUNCTION()
 	void OnRep_IsActivate();
+private:
+	void CachedWeaponTraceSockets();
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyDead OnEnemyDead;
@@ -95,6 +97,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyHit OnEnemyHit;
 
+public:
+	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
+	TArray<FName> WeaponTraceSockets;
+
+	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
+	float WeaponTraceRadius = 10.f;
 protected:
 	UPROPERTY(EditAnywhere,ReplicatedUsing = OnRep_EnemyType, BlueprintReadOnly, Category = "Enemy|Data")
 	EEnemyType EnemyType;
@@ -132,4 +140,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere,ReplicatedUsing = OnRep_IsActivate, BlueprintReadOnly, Category = "Enemy|Activate")
 	bool bIsActivate = false;
+private:
+	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
+	FString WeaponTraceBonePrefix = TEXT("WeaponTrace_");
 };

@@ -25,4 +25,7 @@ namespace GYGameplayTags
 
 	// Parry events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Parry_Hit)
+
+	// Enemy Attack events
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_WeaponTrace_Hit)
 }
