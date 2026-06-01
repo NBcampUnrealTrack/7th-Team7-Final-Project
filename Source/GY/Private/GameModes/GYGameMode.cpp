@@ -1,7 +1,9 @@
 #include "GameModes/GYGameMode.h"
 
+#include "SkeletalMeshTypes.h"
 #include "Character/GYCharacter.h"
 #include "GameStates/GYGameState.h"
+#include "Misc/TrackedActivity.h"
 #include "Player/GYPlayerController.h"
 #include "Player/GYPlayerState.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
@@ -28,28 +30,46 @@ void AGYGameMode::Tick(float DeltaSeconds)
 
 }
 
-void AGYGameMode::UpdateWorldTime(float DeltaTime)
+bool AGYGameMode::AdvanceSecond(float Amount, AGYGameState* GYGameState)
 {
-	if (false == HasAuthority()) return;
-
-	AGYGameState* GYGameState = GetGameState<AGYGameState>();
-	if (false == IsValid(GYGameState)) return;
-
 	const UGYWorldDataSettings* ActorGuidDataSettings = GetDefault<UGYWorldDataSettings>();
-	if (!ActorGuidDataSettings) return;
+	if (!ActorGuidDataSettings) return true;
 
+	bool ret = false;
 	float CurrentTime = GYGameState->GetCurrentTime();
 
-	CurrentTime += DeltaTime * GYGameState->GetTimeScale();
+	CurrentTime += Amount * GYGameState->GetTimeScale();
 	if (CurrentTime > GYGameState->GetMidnight())
 	{
 		UGYWorldResetSubsystem* WorldResetSubsystem = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>();
 		if (WorldResetSubsystem)
 		{
 			WorldResetSubsystem->ResetWorld();
+			ret = true;
 		}
 		CurrentTime = ActorGuidDataSettings->StartOfDayHour * 60.f * 60.f;
 	}
 	GYGameState->SetCurrentTime(CurrentTime);
 
+	return ret;
+}
+
+bool AGYGameMode::UpdateWorldTime(float DeltaTime)
+{
+	AGYGameState* GYGameState = GetGameState<AGYGameState>();
+	if (false == IsValid(GYGameState)) return false;
+
+	float Amount = DeltaTime * GYGameState->GetTimeScale();
+
+
+	return AdvanceSecond(Amount, GYGameState);
+
+}
+
+bool AGYGameMode::AdvanceHour(float Hour)
+{
+	AGYGameState* GYGameState = GetGameState<AGYGameState>();
+	if (false == IsValid(GYGameState)) return false;
+	float Amount = Hour*60.f*60.f;
+	return AdvanceSecond(Amount, GYGameState);
 }

@@ -21,5 +21,7 @@ namespace GYStateTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_Reviving)
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift_Altar)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift_Reroll)
 
 }

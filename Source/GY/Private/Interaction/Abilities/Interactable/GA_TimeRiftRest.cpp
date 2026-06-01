@@ -1,16 +1,28 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
 #include "Interaction/Abilities/Interactable/GA_TimeRiftRest.h"
 
 #include "AbilitySystemComponent.h"
-#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "Core/GameplayTags/InputTag.h"
+#include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "GameModes/GYGameMode.h"
+#include "World/ActorManagement/GYWorldResetSubsystem.h"
 
 UGA_TimeRiftRest::UGA_TimeRiftRest(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
 {
+	ActivationPolicy = EGYAbilityActivationPolicy::OnInputTriggered;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerInitiated;
-	ActivationOwnedTags.AddTag(GYStateTags::State_Interaction_TimeRift);
+
+	ActivationRequiredTags.AddTag(GYStateTags::State_Interaction_TimeRift);
+
+	FAbilityTriggerData RestTrigger;
+	RestTrigger.TriggerTag = GYGameplayTags::Event_TimeRift_Rest;
+	RestTrigger.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
+	AbilityTriggers.Add(RestTrigger);
+
+	RestAdvanceHour = 4.f;
 }
 
 void UGA_TimeRiftRest::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -19,25 +31,35 @@ void UGA_TimeRiftRest::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	if (!ASC) return;
-
-	if (RecoveryEffect && ActorInfo->IsNetAuthority())
+	if (ActorInfo->IsNetAuthority())
 	{
-		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
-		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(RecoveryEffect, GetAbilityLevel(), Context);
-		if (SpecHandle.IsValid())
+		if (RecoveryEffect)
 		{
-			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
+			UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+			if (ASC)
+			{
+				FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+				FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(RecoveryEffect, GetAbilityLevel(), Context);
+				if (SpecHandle.IsValid())
+				{
+					ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
+				}
+			}
 		}
+		if (UWorld* World = GetWorld())
+		{
+			if (AGYGameMode* GameMove = Cast<AGYGameMode>(World->GetAuthGameMode()))
+			{
+				GameMove->AdvanceHour(RestAdvanceHour);
+			}
+		}
+
 	}
 
-	UAbilityTask_WaitGameplayEvent* Task =  UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, GYGameplayTags::InputTag_Exit);
-	Task->EventReceived.AddDynamic(this, &ThisClass::OnExitEventReceived);
-	Task->ReadyForActivation();
+
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
 void UGA_TimeRiftRest::OnExitEventReceived(FGameplayEventData Payload)
 {
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

@@ -1,17 +1,18 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/GameplayAbility.h"
+#include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "GA_TimeRiftRest.generated.h"
 
 /**
  *
  */
 UCLASS()
-class GY_API UGA_TimeRiftRest : public UGameplayAbility
+class GY_API UGA_TimeRiftRest : public UGYGameplayAbility
 {
 	GENERATED_BODY()
-
 public:
 	UGA_TimeRiftRest(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
@@ -24,7 +25,10 @@ public:
 	UFUNCTION()
 	void OnExitEventReceived(FGameplayEventData Payload);
 
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Rest")
 	TSubclassOf<UGameplayEffect> RecoveryEffect;
+	UPROPERTY(EditDefaultsOnly, Category = "Rest")
+	float RestAdvanceHour;
 };

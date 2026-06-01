@@ -1,14 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "WorldGimmick/TimeRift.h"
-
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Player/GYPlayerState.h"
 
 
-// Sets default values
 ATimeRift::ATimeRift()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -19,7 +14,6 @@ ATimeRift::ATimeRift()
 	InteractTag = GYGameplayTags::Interaction_TimeRift_Sit;
 }
 
-// Called when the game starts or when spawned
 void ATimeRift::BeginPlay()
 {
 	Super::BeginPlay();
