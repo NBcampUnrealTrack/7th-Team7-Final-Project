@@ -22,6 +22,8 @@ public:
 	bool OnActorBeginPlay(IWorldPartitionLevelPlacedActor* Actor);
 	void ResetWorld();
 
+
+
 	//SaveLoad
 	FORCEINLINE const TSet<FGuid>& GetDeactivatedActors() const { return DeactivatedActors; }
 	FORCEINLINE void SetDeactivatedActors(const TSet<FGuid>& InDeactivatedActors){DeactivatedActors = InDeactivatedActors;};

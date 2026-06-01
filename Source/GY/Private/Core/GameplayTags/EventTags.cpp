@@ -21,4 +21,14 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Parry_Hit, "Event.Parry.Hit");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_WeaponTrace_Hit, "Event.Enemy.WeaponTrace.Hit");
+
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Altar, "Event.TimeRift.Altar");
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Rest, "Event.TimeRift.Rest");
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Exit, "Event.TimeRift.Exit");
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Reroll, "Event.TimeRift.Reroll");
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_SkillTree, "Event.TimeRift.SkillTree");
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_SkillTree_Exit, "Event.TimeRift.SkillTree.Exit");
+
+	UE_DEFINE_GAMEPLAY_TAG(Event_SkillTree_Unlock, "Event.SkillTree.Unlock");
+
 }

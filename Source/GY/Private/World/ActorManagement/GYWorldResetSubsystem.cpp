@@ -63,7 +63,7 @@ void UGYWorldResetSubsystem::ResetWorld()
 	DeactivatedActors.Empty();
 
 	UDataLayerManager* DataLayerManager = UDataLayerManager::GetDataLayerManager(GetWorld());
-	checkf(DataLayerManager, TEXT("DataLayerManager is NULL"));
+	if (!DataLayerManager) return;
 
 	if (const UGYWorldDataSettings* ActorGuidDataSettings = GetDefault<UGYWorldDataSettings>())
 	{
@@ -86,3 +86,4 @@ void UGYWorldResetSubsystem::ResetWorld()
 	}, 0.5f, false);
 	//TODO 연출
 }
+

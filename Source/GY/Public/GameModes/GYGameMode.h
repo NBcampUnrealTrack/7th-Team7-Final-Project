@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "GameFramework/GameModeBase.h"
+#include "GameStates/GYGameState.h"
 #include "GYGameMode.generated.h"
 
 UCLASS()
@@ -13,10 +14,12 @@ class GY_API AGYGameMode : public AGameMode
 public:
 	AGYGameMode();
 	virtual bool AllowCheats(APlayerController* P) override;
+	bool AdvanceHour(float Hour);
 
 protected:
 	virtual void Tick(float DeltaSeconds) override;
+	bool AdvanceSecond(float Amount, AGYGameState* GYGameState);
 
 private:
-	void UpdateWorldTime(float DeltaTime);
+	bool UpdateWorldTime(float DeltaTime);
 };
