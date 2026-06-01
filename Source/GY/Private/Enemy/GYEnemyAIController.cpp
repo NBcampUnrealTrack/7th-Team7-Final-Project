@@ -132,6 +132,13 @@ void AGYEnemyAIController::AdvancePatrolIndex()
 	}
 }
 
+float AGYEnemyAIController::GetLoseSightRadius() const
+{
+	if (!SightConfig) return 0.f;
+	FAISenseAffiliationFilter Filter;
+	return SightConfig->LoseSightRadius;
+}
+
 void AGYEnemyAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -213,6 +220,15 @@ void AGYEnemyAIController::RemovePerceivedActor(AActor* Actor)
 	PerceivedActors.RemoveAll([Actor](const FPerceivedActorInfo& Info)
 	{
 		return Info.Actor == Actor;
+	});
+}
+
+void AGYEnemyAIController::RemoveOutOfRangeActors(const FVector& EnemyLocation, float LoseSightDist)
+{
+	PerceivedActors.RemoveAll([&](const FPerceivedActorInfo& Info)
+	{
+		if (!Info.Actor.IsValid()) return true;
+		return FVector::Dist(EnemyLocation, Info.Actor->GetActorLocation()) > LoseSightDist;
 	});
 }
 

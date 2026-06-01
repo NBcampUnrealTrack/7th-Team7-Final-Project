@@ -1,4 +1,4 @@
-#include "Enemy/AI/BTService_AggroUpdate.h"
+#include "Enemy/AI/Services/BTService_AggroUpdate.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
@@ -23,11 +23,17 @@ void UBTService_AggroUpdate::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* 
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 	if (!BB) return;
 
+	EnemyAIC->RemoveOutOfRangeActors(ControlledPawn->GetActorLocation(), EnemyAIC->GetLoseSightRadius());
+
 	const TArray<FPerceivedActorInfo>& Perceived = EnemyAIC->GetPerceivedActors();
 
 	if (Perceived.IsEmpty())
 	{
 		BB->ClearValue(EnemyBBKeys::TargetActor);
+		BB->ClearValue(EnemyBBKeys::AttackPosition);
+		BB->ClearValue(EnemyBBKeys::SelectedAbilityRange);
+
+		EnemyAIC->ClearFocus(EAIFocusPriority::Gameplay);
 		return;
 	}
 

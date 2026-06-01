@@ -17,6 +17,7 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/DataTables/EnemyStatRow.h"
+#include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
 
@@ -37,6 +38,10 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 
 	AIControllerClass = AGYEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 }
 
 UAbilitySystemComponent* AGYEnemyCharacterBase::GetAbilitySystemComponent() const
@@ -114,6 +119,8 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 	BuildMontageMap(LoadedDataAsset->AnimationConfig);
 	ApplyAIConfig(LoadedDataAsset->AIConfig);
 	InitStatsFromDataTable();
+
+	CachedWeaponTraceSockets();
 
 	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
@@ -444,6 +451,37 @@ void AGYEnemyCharacterBase::OnRep_IsActivate()
 		LoadDataAssetAndApply();
 		SetActorEnableCollision(true);
 	}
+}
+
+void AGYEnemyCharacterBase::CachedWeaponTraceSockets()
+{
+	WeaponTraceSockets.Empty();
+
+	USkeletalMeshComponent* SkeletalMesh = GetMesh();
+	if (!SkeletalMesh) return;
+
+	TArray<FName> AllSockets = SkeletalMesh->GetAllSocketNames();
+	TArray<FName> Found;
+	for (const FName& SocketName : AllSockets)
+	{
+		if (SocketName.ToString().StartsWith(WeaponTraceBonePrefix))
+		{
+			Found.Add(SocketName);
+		}
+	}
+
+	Found.Sort([](const FName& A, const FName& B)
+	{
+		return A.ToString() < B.ToString();
+	});
+
+	WeaponTraceSockets = Found;
+
+	for (const FName& Bone : WeaponTraceSockets)
+	{
+		GY_LOG(AI,ESK, " - %s", *Bone.ToString());
+	}
+
 }
 
 void AGYEnemyCharacterBase::BeginPlay()

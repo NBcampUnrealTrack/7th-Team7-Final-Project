@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
+#include "Enemy/DataTables/EnemyAbilityWeightRow.h"
 #include "GYEnemyAttackAbilityBase.generated.h"
 
 UCLASS()
@@ -16,12 +17,16 @@ public:
 	float GetRemainingCooldown(const UAbilitySystemComponent* ASC) const;
 
 	virtual void FaceTarget();
+
+	float GetTotalDamageScore() const;
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
 
+	UFUNCTION()
+	void PlayAttackMontage();
 	UFUNCTION()
 	void OnMontageFinished();
 	UFUNCTION()
@@ -41,4 +46,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Montage")
 	float PlayRate = 1.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Damage")
+	TArray<FHitDamageWeight> HitDamageWeights;
 };
