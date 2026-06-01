@@ -25,6 +25,8 @@ namespace  EnemyBBKeys
 	static const FName HasPatrol			= TEXT("HasPatrol");
 	static const FName LastUsedAbility		= TEXT("LastUsedAbility");
 	static const FName AttackPosition		= TEXT("AttackPosition");
+	static const FName SelectedAbility		= TEXT("SelectedAbility");
+	static const FName PatrolPosition		= TEXT("PatrolPosition");
 }
 
 USTRUCT()
