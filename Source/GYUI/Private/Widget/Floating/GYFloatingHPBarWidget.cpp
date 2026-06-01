@@ -11,6 +11,7 @@
 #include "UI/GYUIMessages.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
+#include "TimerManager.h"
 
 UGYFloatingHPBarWidget::UGYFloatingHPBarWidget(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -38,21 +39,30 @@ void UGYFloatingHPBarWidget::BindToASC(UAbilitySystemComponent* InASC)
 	if (!InASC || TargetASC.Get() == InASC) return;
 	TargetASC = InASC;
 
-	if (const UWorld* W = GetWorld())
+	if (UWorld* World = GetWorld())
 	{
-		BindTime = W->GetTimeSeconds();
+		World->GetTimerManager().ClearTimer(BindRetryTimerHandle);
+		BindTime = World->GetTimeSeconds();
 	}
 
+	// 델리게이트에서 값 변경 폭을 체크하여 데미지인지 판별
 	ListenForAttributeChange(InASC, UGYBaseAttribute::GetCurrentHealthAttribute(),
-		[this](const FOnAttributeChangeData&) { RefreshHealth(); });
+		[this](const FOnAttributeChangeData& Data)
+		{
+			const bool bDamaged = Data.NewValue < (Data.OldValue - KINDA_SMALL_NUMBER);
+			RefreshHealth(bDamaged);
+		});
 
 	ListenForAttributeChange(InASC, UGYBaseAttribute::GetMaxHealthAttribute(),
-		[this](const FOnAttributeChangeData&) { RefreshHealth(); });
+		[this](const FOnAttributeChangeData&)
+		{
+			RefreshHealth(false);
+		});
 
-	RefreshHealth();
+	RefreshHealth(false);
 }
 
-void UGYFloatingHPBarWidget::RefreshHealth()
+void UGYFloatingHPBarWidget::RefreshHealth(bool bShowBar)
 {
 	UAbilitySystemComponent* ASC = TargetASC.Get();
 	if (!ASC) return;
@@ -67,58 +77,32 @@ void UGYFloatingHPBarWidget::RefreshHealth()
 
 	OnHealthUpdated(Cur, Max);
 
-	if (Mode == EBarMode::EnemyFade)
+	// 적 모드, 데미지를 입었을 때만 작동
+	if (Mode == EBarMode::EnemyFade && bShowBar)
 	{
-		const UWorld* World = GetWorld();
-		const bool bWithinGrace = World && (World->TimeSince(BindTime) < BindGracePeriod);
-		if (!bWithinGrace && World)
+		if (const UWorld* World = GetWorld())
 		{
-			LastActivityTime = World->GetTimeSeconds();
+			// 즉시 보이게 처리
+			CurrentAlpha = 1.f;
+			SetRenderOpacity(1.f);
+
+			// 페이드아웃 타이머 취소
+			World->GetTimerManager().ClearTimer(FadeOutTimerHandle);
+
+			// 지정된 시간 대기 후 StartFadeOutTimer 실행
+			World->GetTimerManager().SetTimer(
+				FadeDelayTimerHandle, this, &UGYFloatingHPBarWidget::StartFadeOutTimer, HoldDuration, false);
 		}
 	}
-}
-
-void UGYFloatingHPBarWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-	Super::NativeTick(MyGeometry, InDeltaTime);
-
-	if (bTryingToBind && !TargetASC.IsValid()) // 바인딩 시도 중인 경우
-	{
-		BindRetryElapsed += InDeltaTime;
-		BindRetryAccum   += InDeltaTime;
-
-		if (BindRetryAccum >= BindRetryInterval)
-		{
-			BindRetryAccum = 0.f;
-			if (AActor* MyOwner = GetOwningActor())
-			{
-				TryBindToOwner(MyOwner);
-			}
-		}
-		if (TargetASC.IsValid() || BindRetryElapsed >= BindRetryTimeout)
-		{
-			bTryingToBind = false;
-		}
-	}
-
-	if (Mode != EBarMode::EnemyFade) return;
-
-	const UWorld* World = GetWorld();
-	const float Target = (World && World->TimeSince(LastActivityTime) <= HoldDuration) ? 1.f : 0.f;
-
-	if (Target == 1.f)
-	{
-		CurrentAlpha = 1.f;
-	}
-	else
-	{
-		CurrentAlpha = FMath::FInterpTo(CurrentAlpha, Target, InDeltaTime, FadeSpeed);
-	}
-	SetRenderOpacity(CurrentAlpha);
 }
 
 void UGYFloatingHPBarWidget::NativeDestruct()
 {
+	// 메모리 누수 방지
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearAllTimersForObject(this);
+	}
 	Super::NativeDestruct();
 }
 
@@ -150,6 +134,12 @@ void UGYFloatingHPBarWidget::TryBindToOwner(AActor* InCharacter)
 	{
 		Mode = EBarMode::Hidden;
 		SetVisibility(ESlateVisibility::Collapsed);
+
+		// 로컬 플레이어면 타이머 종료
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(BindRetryTimerHandle);
+		}
 		return;
 	}
 
@@ -221,6 +211,74 @@ AActor* UGYFloatingHPBarWidget::GetOwningActor() const
 void UGYFloatingHPBarWidget::SetWidgetOwnerActor(AActor* InOwner)
 {
 	Super::SetWidgetOwnerActor(InOwner);
-	bTryingToBind = true; BindRetryAccum = 0.f; BindRetryElapsed = 0.f;
+	BindRetryCount = 0;
+	// 바인딩 재시도 타이머 가동
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			BindRetryTimerHandle, this, &UGYFloatingHPBarWidget::ProcessBindRetry, BindRetryInterval, true);
+	}
 	TryBindToOwner(InOwner);
+}
+
+void UGYFloatingHPBarWidget::ProcessBindRetry()
+{
+	if (TargetASC.IsValid())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(BindRetryTimerHandle);
+		return;
+	}
+
+	BindRetryCount++;
+
+	if (AActor* MyOwner = GetOwningActor())
+	{
+		TryBindToOwner(MyOwner);
+	}
+
+	if (BindRetryCount >= MaxBindRetries)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(BindRetryTimerHandle);
+	}
+}
+
+void UGYFloatingHPBarWidget::StartFadeOutTimer()
+{
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		// 보간 타이머 실행
+		World->GetTimerManager().SetTimer(
+			FadeOutTimerHandle, this, &UGYFloatingHPBarWidget::ProcessFadeOut, 0.016f, true);
+	}
+}
+
+void UGYFloatingHPBarWidget::ProcessFadeOut()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	float DeltaTime = World->GetDeltaSeconds();
+
+	CurrentAlpha = FMath::FInterpTo(CurrentAlpha, 0.f, DeltaTime, FadeSpeed);
+	SetRenderOpacity(CurrentAlpha);
+
+	if (CurrentAlpha <= KINDA_SMALL_NUMBER)
+	{
+		CurrentAlpha = 0.f;
+		SetRenderOpacity(0.f);
+		World->GetTimerManager().ClearTimer(FadeOutTimerHandle);
+	}
+}
+
+void UGYFloatingHPBarWidget::ResetWidgetState()
+{
+	CurrentAlpha = 0.f;
+	SetRenderOpacity(0.f);
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(FadeDelayTimerHandle);
+		World->GetTimerManager().ClearTimer(FadeOutTimerHandle);
+	}
 }

@@ -24,10 +24,12 @@ class GYUI_API UGYFloatingHPBarWidget : public UGYUserWidget
 public:
 	UGYFloatingHPBarWidget(const FObjectInitializer& ObjectInitializer);
 
+	UFUNCTION(BlueprintCallable, Category = "GY|UI")
+	void ResetWidgetState();
+
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UProgressBar> HealthBar;
@@ -58,7 +60,7 @@ private:
 	};
 
 	void BindToASC(UAbilitySystemComponent* InASC);
-	void RefreshHealth();
+	void RefreshHealth(bool bShowBar = false);
 	void HandlePlayerNameMessage(FGameplayTag Channel, const FGYPlayerNameMessage& Message);
 
 	void TryBindToOwner(AActor* InCharacter);
@@ -66,7 +68,16 @@ private:
 	void HandleCharacterReadyMessage(FGameplayTag Channel, const FGYCharacterReadyMessage& Message);
 	/** 소유하고 있는 액터 찾아오는 함수 */
 	AActor* GetOwningActor() const;
-	void SetWidgetOwnerActor(AActor* InOwner);
+	virtual void SetWidgetOwnerActor(AActor* InOwner) override;
+
+	/** 타이머 관리용 */
+	void ProcessBindRetry();
+	void ProcessFadeOut();
+	void StartFadeOutTimer();
+
+	FTimerHandle BindRetryTimerHandle;
+	FTimerHandle FadeDelayTimerHandle;
+	FTimerHandle FadeOutTimerHandle;
 
 	EBarMode Mode = EBarMode::Hidden;
 
@@ -74,15 +85,13 @@ private:
 	TWeakObjectPtr<UAbilitySystemComponent> TargetASC;
 	TWeakObjectPtr<APlayerState> TargetPS;
 
-	float  CurrentAlpha = 0.f;
-	double LastActivityTime = -1000.0;
+	float CurrentAlpha = 0.f;
 	double BindTime = -1000.0;
 
 	/** 바인딩 재시도 */
+	UPROPERTY(EditDefaultsOnly, Category="GY|UI")
 	float BindRetryInterval = 0.25f;
-	float BindRetryTimeout  = 5.f;
 
-	bool  bTryingToBind = true;
-	float BindRetryAccum = 0.f;
-	float BindRetryElapsed = 0.f;
+	int32 BindRetryCount = 0;
+	const int32 MaxBindRetries = 20;
 };
