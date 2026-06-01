@@ -421,3 +421,32 @@ void UGYUIManagerSubsystem::SyncPlayerRoster()
 		}
 	}
 }
+
+UCommonActivatableWidget* UGYUIManagerSubsystem::ToggleWidgetInLayer(
+	FGameplayTag LayerTag,
+	TSubclassOf<UCommonActivatableWidget> WidgetClass)
+{
+	if (WidgetClass == nullptr) return nullptr;
+
+	TWeakObjectPtr<UCommonActivatableWidget>& Existing = ToggleWidgetMap.FindOrAdd(WidgetClass);
+	if (Existing.IsValid())
+	{
+		PopWidget(Existing.Get());
+		Existing = nullptr;
+		return nullptr;
+	}
+
+	UCommonActivatableWidget* Widget = PushWidgetToLayer(LayerTag, WidgetClass);
+	if (Widget != nullptr)
+	{
+		Existing = Widget;
+		Widget->OnDeactivated().AddLambda([WeakThis = MakeWeakObjectPtr(this), WidgetClass]()
+		{
+			if (WeakThis.IsValid())
+			{
+				WeakThis->ToggleWidgetMap.Remove(WidgetClass);
+			}
+		});
+	}
+	return Widget;
+}
