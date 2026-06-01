@@ -16,6 +16,8 @@
 
 AGYPlayerState::AGYPlayerState()
 {
+	SetNetUpdateFrequency(100.f);
+	
 	AbilitySystemComponent = CreateDefaultSubobject<UGYAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
