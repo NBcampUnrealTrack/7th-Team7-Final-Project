@@ -3,25 +3,22 @@
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
 #include "Core/GYUserWidget.h"
-#include "UI/GYCharacterBoundUIInterface.h"
 #include "GYGaugeCircleWidget.generated.h"
 
 class UImage;
 class UMaterialInstanceDynamic;
 class UAbilitySystemComponent;
 struct FGYAttributeValueMessage;
+struct FGYCharacterReadyMessage;
 /**
  * 원형 게이지바 위젯
  */
 UCLASS()
-class GYUI_API UGYGaugeCircleWidget : public UGYUserWidget, public IGYCharacterBoundUI
+class GYUI_API UGYGaugeCircleWidget : public UGYUserWidget
 {
 	GENERATED_BODY()
 
 public:
-	/** Owner가 로컬 플레이어일 때만 ASC 바인딩 */
-	virtual void BindToOwnerCharacter(AActor* InCharacter) override;
-
 	void BindToASC(UAbilitySystemComponent* InASC);
 	void UnbindFromASC();
 
@@ -51,16 +48,23 @@ protected:
 	float InterpSpeed = 5.f;
 
 private:
+	/** GMS 메세지 기반 바인딩 */
+	void TryBindToOwner(AActor* InCharacter);
+	void HandleCharacterReadyMessage(FGameplayTag Channel, const FGYCharacterReadyMessage& Message);
+	AActor* GetOwningActor() const;
+
 	void OnHealthChanged(const FOnAttributeChangeData& Data);
 	void OnPoiseChanged(const FOnAttributeChangeData& Data);
 	void OnStaminaChanged(const FOnAttributeChangeData& Data);
 
-	void RefreshHP();
-	void RefreshPoise();
-	void RefreshStamina();
+	void RefreshHP(bool bFromGameplay = false);
+	void RefreshPoise(bool bFromGameplay = false);
+	void RefreshStamina(bool bFromGameplay = false);
 
-	void SetPercent(UImage* Image, float Percent);
+	void SetPercent(UImage* Image, float Percent, bool bFromGameplay);
 	void NotifyActivity();
+	void SetWidgetOwnerActor(AActor* InOwner);
+	bool IsLocalPlayerPawn() const;
 
 	struct FAttrBinding
 	{
@@ -85,5 +89,15 @@ private:
 	TMap<TObjectPtr<UImage>, float> TargetPercents;
 	UPROPERTY(Transient)
 	TMap<TObjectPtr<UImage>, float> CurrentPercents;
+
+	/** 바인딩 재시도 */
+	UPROPERTY(EditDefaultsOnly, Category="GY|Radial")
+	float BindRetryInterval = 0.25f;
+	UPROPERTY(EditDefaultsOnly, Category="GY|Radial")
+	float BindRetryTimeout = 5.f;
+
+	bool  bTryingToBind = true;
+	float BindRetryAccum = 0.f;
+	float BindRetryElapsed = 0.f;
 };
 
