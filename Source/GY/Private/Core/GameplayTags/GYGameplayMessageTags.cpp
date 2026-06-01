@@ -43,4 +43,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Message_Stat_Health, "Message.Stat.Health");
 	UE_DEFINE_GAMEPLAY_TAG(Message_Stat_Stamina, "Message.Stat.Stamina");
 	UE_DEFINE_GAMEPLAY_TAG(Message_Stat_Poise, "Message.Stat.Poise");
+
+	UE_DEFINE_GAMEPLAY_TAG(Message_Character_Ready, "Message.Character.Ready");
 }

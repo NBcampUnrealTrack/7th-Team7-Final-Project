@@ -168,3 +168,13 @@ struct GY_API FGYPlayerNameMessage
 	UPROPERTY(BlueprintReadWrite) FString PlayerName;
 	UPROPERTY(BlueprintReadWrite) bool bIsLocalPlayer = false; // PlayerHUD에서 본인 값만 고를 때 사용
 };
+
+/** 캐릭터 컴포넌트 초기화 완료 알림 */
+USTRUCT(BlueprintType)
+struct GY_API FGYCharacterReadyMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	TWeakObjectPtr<AActor> OwnerActor;
+};
