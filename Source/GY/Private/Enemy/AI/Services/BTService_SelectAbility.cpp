@@ -33,6 +33,9 @@ void UBTService_SelectAbility::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 
 	const float DistToTarget = FVector::Dist(Enemy->GetActorLocation(), Target->GetActorLocation());
 	UObject* LastUsed = BB->GetValueAsObject(EnemyBBKeys::LastUsedAbility);
+	FVector ToTarget = (Target->GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
+	float DotResult = FVector::DotProduct(Enemy->GetActorForwardVector(), ToTarget);
+	float AngleDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(DotResult, -1.f, 1.f)));
 
 	UGYEnemyAttackAbilityBase* BestAbility = nullptr;
 	float BestScore = -1.f;
@@ -41,17 +44,12 @@ void UBTService_SelectAbility::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 	{
 		UGYEnemyAttackAbilityBase* Ability = Cast<UGYEnemyAttackAbilityBase>(Spec.Ability);
 		if (!Ability) continue;
-		if (Ability->bHasCooldown && Ability->GetRemainingCooldown(ASC) > 0.f) continue;
+		float Score = UGYEnemyAttackAbilityBase::CalcAbilityScore(
+			Ability, ASC, DistToTarget, AngleDeg, LastUsed);
 
-		float Score = Ability->GetTotalDamageScore();
-		float ExtraMove = FMath::Max(0.f, DistToTarget - Ability->AttackRange);
-		float EffectiveScore = Score / (1.f + ExtraMove * 0.01f);
-
-		if (Ability == LastUsed) EffectiveScore *= 0.3f;
-
-		if (EffectiveScore > BestScore)
+		if (Score > BestScore)
 		{
-			BestScore = EffectiveScore;
+			BestScore = Score;
 			BestAbility = Ability;
 		}
 	}

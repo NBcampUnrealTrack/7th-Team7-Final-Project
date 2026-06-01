@@ -20,6 +20,9 @@ public:
 
 	float GetTotalDamageScore() const;
 
+	static float CalcAbilityScore(UGYEnemyAttackAbilityBase* Ability, const UAbilitySystemComponent* ASC,
+		float DistToTarget, float AngleDeg, const UObject* LastUsed);
+
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 	void RecalculateAttackDataFromMontage();

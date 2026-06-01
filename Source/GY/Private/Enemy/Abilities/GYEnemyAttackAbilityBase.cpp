@@ -79,6 +79,28 @@ float UGYEnemyAttackAbilityBase::GetTotalDamageScore() const
 	}
 	return FMath::Max(BaseDamageScore, Total);
 }
+
+float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Ability,
+	const UAbilitySystemComponent* ASC, float DistToTarget, float AngleDeg, const UObject* LastUsed)
+{
+	if (!Ability || !ASC) return -1.f;
+
+	if (Ability->bHasCooldown && Ability->GetRemainingCooldown(ASC) > 0.f) return -1.f;
+
+	float DamageScore = Ability->GetTotalDamageScore();
+	float ExtraMove = FMath::Max(0.f, DistToTarget - Ability->AttackRange);
+	float DistScore = DamageScore / (1.f + ExtraMove * 0.01f);
+
+	float HalfAngle = Ability->AttackAngle * 0.5f;
+	float AngleScore = (HalfAngle > 0.f) ? FMath::Clamp(1.f - (AngleDeg / HalfAngle), 0.f, 1.f) : 1.f;
+
+	float EffectiveScore = DistScore * (0.5f + AngleScore * 0.5f);
+
+	if (Ability == LastUsed) EffectiveScore *= 0.3f;
+
+	return EffectiveScore;
+}
+
 #if WITH_EDITOR
 void UGYEnemyAttackAbilityBase::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
