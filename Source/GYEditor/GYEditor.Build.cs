@@ -33,6 +33,8 @@ public class GYEditor : ModuleRules
 				"GraphEditor",
 				"BlueprintGraph",
 				"ToolMenus",
+				"PropertyEditor",
+				"DetailCustomizations",
 
 
             }
