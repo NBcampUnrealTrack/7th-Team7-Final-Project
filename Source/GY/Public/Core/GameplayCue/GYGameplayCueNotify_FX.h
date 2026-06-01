@@ -4,6 +4,8 @@
 #include "GameplayCueNotify_Static.h"
 #include "GYGameplayCueNotify_FX.generated.h"
 
+class UNiagaraSystem;
+
 UCLASS()
 class GY_API UGYGameplayCueNotify_FX : public UGameplayCueNotify_Static
 {
