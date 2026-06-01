@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Core/Types/ItemEnums.h"
+#include "GameplayTagContainer.h"
 #include "Inventory/InventoryEntry.h"
 #include "Templates/Function.h"
 #include "InventoryComponent.generated.h"
@@ -37,9 +38,18 @@ public:
 
 	FOnInventoryChanged OnInventoryChanged;
 
+	/** 인벤 변동 단일 진입점 — 델리게이트 발화 + 포션 슬롯 GMS publish */
+	void NotifyInventoryChanged(const FGuid& InstanceId, EInventoryEventType EventType);
+
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Inventory")
 	FInventoryList Inventory;
+
+private:
+	/** 인벤 전체 스캔 후 ChargePool 별 스택 집계 → GMS publish. 빈슬롯 전환 위해 이전 publish 셋 캐시 */
+	void BroadcastPotionSnapshots();
+
+	TSet<FGameplayTag> LastPublishedPotionTags;
 };

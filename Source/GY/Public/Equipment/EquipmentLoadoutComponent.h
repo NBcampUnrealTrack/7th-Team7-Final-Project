@@ -51,4 +51,8 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_LoadoutEntries, VisibleInstanceOnly, Category = "Equipment")
 	TArray<FEquipmentLoadoutEntry> LoadoutEntries;
+
+private:
+	/** 게임플레이 델리게이트(ActiveEquipment용) + GMS 메시지(위젯용) 동시 발화 */
+	void BroadcastSlotChanged(FGameplayTag SlotTag, const FGuid& InstanceId);
 };
