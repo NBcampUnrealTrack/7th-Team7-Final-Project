@@ -1,6 +1,7 @@
 #include "Widget/Loot/GYLootBoxScreenWidget.h"
 
 #include "Blueprint/WidgetTree.h"
+#include "Components/Button.h"
 #include "Components/PanelWidget.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Loot/LootBoxActor.h"
@@ -15,23 +16,31 @@ void UGYLootBoxScreenWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	// 갱신은 BindToBox 이후의 메시지/콜백에서만. 여기서 Refresh 하면 미바인딩 상태로 자동 닫힘
-	if (UWorld* World = GetWorld())
+	// 프리뷰/썸네일 등 GameInstance 없는 월드에서는 서브시스템이 없으므로 Get() 어설션 회피
+	UWorld* World = GetWorld();
+	if (World != nullptr && UGameplayMessageSubsystem::HasInstance(World))
 	{
 		ListenerHandle = UGameplayMessageSubsystem::Get(World).RegisterListener(
 			GYGameplayTags::Message_Loot_BoxStateChanged,
 			this,
 			&UGYLootBoxScreenWidget::HandleBoxStateChanged);
 	}
+
+	if (Btn_Close)
+	{
+		Btn_Close->OnClicked.AddUniqueDynamic(this, &UGYLootBoxScreenWidget::HandleCloseClicked);
+	}
 }
 
 void UGYLootBoxScreenWidget::NativeDestruct()
 {
-	ReleaseOccupancy();
-
+	// 점유 해제 시 빈 상자가 동기 파괴될 수 있으므로 콜백부터 끊고 해제
 	if (BoundBox.IsValid())
 	{
 		BoundBox->OnDestroyed.RemoveDynamic(this, &UGYLootBoxScreenWidget::HandleBoxDestroyed);
 	}
+
+	ReleaseOccupancy();
 
 	if (ListenerHandle.IsValid())
 	{
@@ -73,11 +82,8 @@ void UGYLootBoxScreenWidget::Refresh()
 	if (SlotContainer == nullptr) return;
 
 	ALootBoxActor* Box = BoundBox.Get();
-	const bool bGone = !IsValid(Box);
-	// 모두 줍거나 박스가 사라진 경우에만 닫음. 갓 열려 아직 복제 안 된 상태는 빈 채로 대기
-	const bool bLootedEmpty = !bGone && Box->IsOpened() && Box->GetPendingDrops().IsEmpty();
-
-	if (bGone || bLootedEmpty)
+	// 상자가 파괴된 경우에만 자동으로 닫음. 전부 주워 비어도 직접 닫기 전까지 빈 그리드로 유지
+	if (!IsValid(Box))
 	{
 		SlotContainer->ClearChildren();
 		SlotWidgets.Reset();
@@ -86,25 +92,50 @@ void UGYLootBoxScreenWidget::Refresh()
 		return;
 	}
 
+	EnsureSlots();
+
 	const TArray<FLootDrop>& Drops = Box->GetPendingDrops();
 
-	SlotContainer->ClearChildren();
-	SlotWidgets.Reset(Drops.Num());
-
-	if (DropSlotWidgetClass != nullptr)
+	for (int32 i = 0; i < SlotWidgets.Num(); ++i)
 	{
-		for (int32 i = 0; i < Drops.Num(); ++i)
-		{
-			UGYLootDropSlotWidget* SlotWidget = WidgetTree->ConstructWidget<UGYLootDropSlotWidget>(DropSlotWidgetClass);
-			if (SlotWidget == nullptr) continue;
+		UGYLootDropSlotWidget* SlotWidget = SlotWidgets[i];
+		if (!IsValid(SlotWidget)) continue;
 
-			SlotContainer->AddChild(SlotWidget);
+		if (Drops.IsValidIndex(i))
+		{
 			SlotWidget->SetDrop(Box, i, Drops[i]);
-			SlotWidgets.Add(SlotWidget);
+		}
+		else
+		{
+			SlotWidget->SetEmpty();
 		}
 	}
 
 	OnBoxRefreshed(Drops.Num());
+}
+
+void UGYLootBoxScreenWidget::EnsureSlots()
+{
+	if (SlotContainer == nullptr || DropSlotWidgetClass == nullptr) return;
+
+	ALootBoxActor* Box = BoundBox.Get();
+	const int32 DropCount = IsValid(Box) ? Box->GetPendingDrops().Num() : 0;
+	const int32 DesiredCount = FMath::Max(GridSlotCount, DropCount);
+
+	// 한 번 만든 뒤로는 늘리기만 — 줍는 도중 그리드가 줄어 깜빡이지 않도록
+	if (SlotWidgets.Num() >= DesiredCount) return;
+
+	SlotContainer->ClearChildren();
+	SlotWidgets.Reset(DesiredCount);
+
+	for (int32 i = 0; i < DesiredCount; ++i)
+	{
+		UGYLootDropSlotWidget* SlotWidget = WidgetTree->ConstructWidget<UGYLootDropSlotWidget>(DropSlotWidgetClass);
+		if (SlotWidget == nullptr) continue;
+
+		SlotContainer->AddChild(SlotWidget);
+		SlotWidgets.Add(SlotWidget);
+	}
 }
 
 void UGYLootBoxScreenWidget::ReleaseOccupancy()
@@ -128,4 +159,9 @@ void UGYLootBoxScreenWidget::HandleBoxStateChanged(FGameplayTag, const FGYLootBo
 void UGYLootBoxScreenWidget::HandleBoxDestroyed(AActor*)
 {
 	Refresh();
+}
+
+void UGYLootBoxScreenWidget::HandleCloseClicked()
+{
+	DeactivateWidget();
 }

@@ -43,6 +43,25 @@ void UGYLootDropSlotWidget::SetDrop(ALootBoxActor* InBox, int32 InDropIndex, con
 	OnDropUpdated(Drop.GradeTag, Drop.Count);
 }
 
+void UGYLootDropSlotWidget::SetEmpty()
+{
+	BoundBox = nullptr;
+	DropIndex = INDEX_NONE;
+
+	if (Image_Icon)
+	{
+		Image_Icon->SetOpacity(0.f);
+	}
+
+	if (Text_Count)
+	{
+		Text_Count->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	// 빈 태그 → 그래프 Switch Default → Border_Grade 숨김 (이전 등급색 리셋 포함)
+	OnDropUpdated(FGameplayTag(), 0);
+}
+
 void UGYLootDropSlotWidget::RequestTake()
 {
 	if (!BoundBox.IsValid()) return;

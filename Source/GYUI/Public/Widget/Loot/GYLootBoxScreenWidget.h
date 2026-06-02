@@ -8,6 +8,7 @@
 
 class UGYLootDropSlotWidget;
 class UPanelWidget;
+class UButton;
 class ALootBoxActor;
 struct FGYLootBoxStateMessage;
 
@@ -28,19 +29,30 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "GY|Loot")
 	TSubclassOf<UGYLootDropSlotWidget> DropSlotWidgetClass;
 
+	// 고정 그리드 칸 수. 드롭이 적으면 나머지는 빈 칸, 더 많으면 이 값 이상으로 늘려 숨기지 않음
+	UPROPERTY(EditDefaultsOnly, Category = "GY|Loot", meta = (ClampMin = 1))
+	int32 GridSlotCount = 8;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPanelWidget> SlotContainer;
+
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
+	TObjectPtr<UButton> Btn_Close;
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "GY|Loot")
 	void OnBoxRefreshed(int32 RemainingDrops);
 
 private:
+	void EnsureSlots();
 	void Refresh();
 	void ReleaseOccupancy();
 	void HandleBoxStateChanged(FGameplayTag Channel, const FGYLootBoxStateMessage& Msg);
 
 	UFUNCTION()
 	void HandleBoxDestroyed(AActor* DestroyedActor);
+
+	UFUNCTION()
+	void HandleCloseClicked();
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UGYLootDropSlotWidget>> SlotWidgets;
