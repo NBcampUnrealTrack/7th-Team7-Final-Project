@@ -35,6 +35,9 @@ public:
 
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetFacingYaw(float Yaw);
 protected:
 	// 컴포넌트 매니저 통신을 위한 생명주기 함수 오버라이드
 	virtual void PreInitializeComponents() override;

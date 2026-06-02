@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 #include "NativeGameplayTags.h"
@@ -12,5 +12,6 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Attack)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Charge)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Parry)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Dodge)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Sprint)
 }
