@@ -38,7 +38,7 @@ void UBTService_AggroUpdate::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* 
 
 	const FVector EnemyLocation = ControlledPawn->GetActorLocation();
 	AActor* TopThreat = nullptr;
-	float TopScore = -1.f;
+	float TopScore = -FLT_MAX;
 
 	for (const FPerceivedActorInfo& Info : Perceived)
 	{
@@ -52,7 +52,8 @@ void UBTService_AggroUpdate::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* 
 		}
 	}
 
-	BB->SetValueAsObject(EnemyBBKeys::TargetActor, TopThreat);
+	if (TopThreat)
+		BB->SetValueAsObject(EnemyBBKeys::TargetActor, TopThreat);
 
 	//TODO 은서 : 강강술래 메타 삭제 시켜야함. 어그로 대상 지정 몇 초 동안 공격을 못하고
 	//Chase 상태이면 그 Actor를 제외한 Actor를 선택하게
