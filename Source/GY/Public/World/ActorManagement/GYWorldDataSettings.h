@@ -31,6 +31,6 @@ public:
 	float EndOfDayHour = 24.f;
 	UPROPERTY(EditAnywhere, Config, Category = "WorldTime")
 	float RealMinutesPerGameDay = 20.f;
-
-
+	UPROPERTY(EditAnywhere, Config, Category = "Region", meta = (ClampMin = 1))
+	int32 DefaultRegionLevel = 1; // Region 레벨 추가
 };
