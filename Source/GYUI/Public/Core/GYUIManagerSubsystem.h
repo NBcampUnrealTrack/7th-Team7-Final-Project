@@ -124,6 +124,4 @@ private:
 	/** 플레이어 명단 동기화 */
 	void SyncPlayerRoster();
 	APlayerState* GetLocalPlayerState() const;
-
-	int32 LastBroadcastedMinute = -1;
 };
