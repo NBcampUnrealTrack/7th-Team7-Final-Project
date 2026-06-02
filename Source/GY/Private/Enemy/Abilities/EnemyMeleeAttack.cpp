@@ -20,7 +20,7 @@ void UEnemyMeleeAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			this,
 			GYGameplayTags::Event_Enemy_WeaponTrace_Hit,
 			nullptr,
-			true);
+			false);
 	HitTask->EventReceived.AddDynamic(this, &UEnemyMeleeAttack::OnWeaponHit);
 	HitTask->ReadyForActivation();
 
