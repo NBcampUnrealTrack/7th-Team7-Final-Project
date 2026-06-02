@@ -16,6 +16,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (Categories = "Region"))
 	FGameplayTag RegionId;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Region")
+	FText RegionDisplayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Region")
+	TSoftObjectPtr<UTexture2D> RegionIcon;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (RowType = "/Script/GY.ItemPoolRow"))
 	TObjectPtr<UDataTable> ItemPool;
 
@@ -24,4 +30,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (RowType = "/Script/GY.LevelDistributionRow"))
 	TObjectPtr<UDataTable> LevelDistribution;
+
+
 };
