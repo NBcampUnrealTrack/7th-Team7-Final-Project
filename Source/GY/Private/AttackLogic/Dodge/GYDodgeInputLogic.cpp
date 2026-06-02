@@ -1,20 +1,12 @@
 #include "AttackLogic/Dodge/GYDodgeInputLogic.h"
 #include "AttackLogic/Dodge/GYDodgeFragment.h"
 #include "AttackLogic/Dodge/GYDodgeMontageFragment.h"
-#include "AttackLogic/Shared/GYAttributeCost.h"
+#include "AttackLogic/Shared/GYAttributeCostHelpers.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
 
-namespace
-{
-	void ApplyCost(UAbilitySystemComponent* ASC, const FGYAttributeCost& Cost)
-	{
-		if (!ASC || !Cost.Attribute.IsValid() || Cost.Amount <= 0.f) return;
-		const float Current = ASC->GetNumericAttributeBase(Cost.Attribute);
-		ASC->SetNumericAttributeBase(Cost.Attribute, FMath::Max(0.f, Current - Cost.Amount));
-	}
-}
+using GYAttributeCostHelpers::ApplyCost;
 
 void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
