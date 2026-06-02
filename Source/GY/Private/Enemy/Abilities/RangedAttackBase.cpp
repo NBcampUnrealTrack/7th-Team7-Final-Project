@@ -75,6 +75,11 @@ void URangedAttackBase::OnProjectileHit(FGameplayEventData Payload)
 		FinalDamage = (AttackValue + W.Additive) * W.Multiplicative;
 	}
 
+	if (bDistributeDamage && ProjectileCount > 1)
+	{
+		FinalDamage /= static_cast<float>(ProjectileCount);
+	}
+
 	UGYCombatStatics::ApplyDamage(TargetASC, FinalDamage);
 
 	if (HitCueTag.IsValid())
@@ -97,7 +102,7 @@ void URangedAttackBase::SpawnProjectile()
 	USkeletalMeshComponent* Mesh = Pawn->FindComponentByClass<USkeletalMeshComponent>();
 	if (!Mesh) return;
 
-	FVector LaunchPos = Mesh->GetSocketLocation(LaunchSocket);
+	const FVector LaunchPos = Mesh->GetSocketLocation(LaunchSocket);
 
 	AActor* Target = nullptr;
 	if (AAIController* AIC = Cast<AAIController>(Pawn->GetController()))
@@ -108,17 +113,30 @@ void URangedAttackBase::SpawnProjectile()
 		}
 	}
 
-	FVector Direction = Target
+	const FVector BaseDir = Target
 	? (Target->GetActorLocation() - LaunchPos).GetSafeNormal()
 	: Pawn->GetActorForwardVector();
 
-	FActorSpawnParameters Params;
-	Params.Owner = Pawn;
-	Params.Instigator = Pawn;
+	const int32 ShotCount = FMath::Max(1, ProjectileCount);
 
-	AProjectileBase* Projectile = GetWorld()->SpawnActor<AProjectileBase>
-		(ProjectileClass, LaunchPos, Direction.Rotation(), Params);
+	for (int32 i = 0; i < ShotCount; ++i)
+	{
+		const float Ratio = (ShotCount == 1)
+			? 0.f
+			: (static_cast<float>(i) / static_cast<float>(ShotCount - 1)) - 0.5f;
 
-	if (Projectile)
-		Projectile->Launch(Pawn, Direction, ProjectileSpeed);
+		const float YawOffset = Ratio * SpreadAngle;
+		const FRotator OffsetRot(0.f, YawOffset, 0.f);
+		const FVector ShotDir = OffsetRot.RotateVector(BaseDir);
+
+		FActorSpawnParameters Params;
+		Params.Owner = Pawn;
+		Params.Instigator = Pawn;
+
+		AProjectileBase* Projectile = GetWorld()->SpawnActor<AProjectileBase>(
+			ProjectileClass, LaunchPos, ShotDir.Rotation(), Params);
+
+		if (Projectile)
+			Projectile->Launch(Pawn, ShotDir, ProjectileSpeed);
+	}
 }

@@ -56,7 +56,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	void StopBehaviorTree();
 
-	void ApplyAIRangeConfig(float DetectRadius, float InAttackRadius, bool bInHasPatrol);
+	void ApplyAIRangeConfig(float DetectRadius, bool bInHasPatrol);
 
 	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
 	void SetTargetLocation(const FVector& Location);

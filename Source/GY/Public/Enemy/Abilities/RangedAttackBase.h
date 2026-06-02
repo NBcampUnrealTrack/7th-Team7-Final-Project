@@ -36,6 +36,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Projectile")
 	FName LaunchSocket = TEXT("weapon_tip");
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Projectile|Spread", meta = (ClampMin = "1"))
+	int32 ProjectileCount = 1;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Projectile|Spread", meta = (ClampMin = "0.0", ClampMax = "180.0"))
+	float SpreadAngle = 0.f;
+
+	// true면 각 탄 데미지를 1/ProjectileCount로 분산
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Projectile|Damage")
+	bool bDistributeDamage = true;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (Categories = "GameplayCue"))
 	FGameplayTag HitCueTag;
 };
