@@ -40,4 +40,8 @@ private:
 	float TimeScale;
 
 	const float Midnight = 24.f * 60.f * 60.f;
+
+	/** 시간 변경 시 GMS 브로드캐스트 */
+	void BroadcastTimeChanged();
+	int32 LastBroadcastedMinute = -1;
 };
