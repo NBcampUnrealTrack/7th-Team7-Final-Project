@@ -18,6 +18,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Input_Attack, "Event.Input.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Input_AttackRelease, "Event.Input.AttackRelease");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Combo_StepStart, "Event.Combo.StepStart");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Input_ParryRelease, "Event.Input.ParryRelease");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Parry_Hit, "Event.Parry.Hit");
 

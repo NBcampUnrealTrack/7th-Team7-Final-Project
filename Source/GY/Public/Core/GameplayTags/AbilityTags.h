@@ -11,6 +11,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Parry)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Dodge)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Sprint)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Block)
 	// Fragment Type
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Charge)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Attack)
@@ -24,11 +25,14 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_DodgeMontage)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Direction)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Sprint)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Block)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_BlockMontage)
 
 	// State
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Parrying)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_CancelWindow)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Dodging)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Sprint)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Blocking)
 
 }
