@@ -198,3 +198,14 @@ struct GY_API FGYInventoryEntryMessage
 	UPROPERTY(BlueprintReadWrite) FGuid InstanceId;
 	UPROPERTY(BlueprintReadWrite) EInventoryEventType EventType = EInventoryEventType::Added;
 };
+
+/** 룻박스 상태 — 위젯이 Box에서 PendingDrops를 직접 조회. ShowBox(열기 트리거)/BoxStateChanged(갱신) 공용 */
+USTRUCT(BlueprintType)
+struct GY_API FGYLootBoxStateMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<AActor> Box;
+	UPROPERTY(BlueprintReadWrite) bool bOpened = false;
+	UPROPERTY(BlueprintReadWrite) int32 RemainingDrops = 0;
+};

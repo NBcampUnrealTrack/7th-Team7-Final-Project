@@ -1,14 +1,18 @@
 #include "Loot/LootBoxActor.h"
 
 #include "Components/StaticMeshComponent.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Engine/GameInstance.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
 #include "Loot/LootService.h"
+#include "Loot/LootViewerComponent.h"
 #include "Loot/RegionLootData.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
+#include "UI/GYUIMessages.h"
 
 ALootBoxActor::ALootBoxActor()
 {
@@ -25,11 +29,15 @@ void ALootBoxActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 	DOREPLIFETIME(ALootBoxActor, PendingDrops);
 	DOREPLIFETIME(ALootBoxActor, bOpened);
+	DOREPLIFETIME(ALootBoxActor, CurrentViewer);
 }
 
 void ALootBoxActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const
 {
 	if (bOpened && PendingDrops.IsEmpty()) return;
+
+	// 다른 플레이어가 점유 중이면 열기 옵션 자체를 숨김
+	if (IsOccupiedByOther(Interactor)) return;
 
 	FInteractionOption Option;
 	Option.OptionTag = GYGameplayTags::Interaction_Open_LootBox;
@@ -41,11 +49,50 @@ void ALootBoxActor::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 {
 	if (!HasAuthority()) return;
 	if (OptionTag != GYGameplayTags::Interaction_Open_LootBox) return;
+	if (!IsValid(Interactor)) return;
+
+	// 점유 잠금 — 타인이 보고 있는 박스는 무시
+	if (IsOccupiedByOther(Interactor)) return;
 
 	if (!bOpened)
 	{
 		OpenBox(Interactor);
 	}
+
+	if (bOpened && !PendingDrops.IsEmpty())
+	{
+		CurrentViewer = Interactor->GetPlayerState();
+		ShowToInteractor(Interactor);
+	}
+}
+
+bool ALootBoxActor::IsOccupiedByOther(APawn* Interactor) const
+{
+	if (!IsValid(CurrentViewer)) return false;
+
+	APlayerState* InteractorPS = IsValid(Interactor) ? Interactor->GetPlayerState() : nullptr;
+	return CurrentViewer != InteractorPS;
+}
+
+void ALootBoxActor::ShowToInteractor(APawn* Interactor)
+{
+	if (!IsValid(Interactor)) return;
+
+	AGYPlayerState* PS = Interactor->GetPlayerState<AGYPlayerState>();
+	if (!IsValid(PS)) return;
+
+	ULootViewerComponent* Viewer = PS->GetLootViewerComponent();
+	if (!IsValid(Viewer)) return;
+
+	Viewer->Client_ShowLootBox(this);
+}
+
+void ALootBoxActor::ReleaseViewer(APlayerState* Viewer)
+{
+	if (!HasAuthority()) return;
+	if (CurrentViewer != Viewer) return;
+
+	CurrentViewer = nullptr;
 }
 
 void ALootBoxActor::OpenBox(APawn* Opener)
@@ -69,6 +116,7 @@ void ALootBoxActor::OpenBox(APawn* Opener)
 
 	PendingDrops = Result.Drops;
 	bOpened = true;
+	// 갱신 알림은 클라의 OnRep에서 처리 (데디 서버는 UI 없음)
 }
 
 void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
@@ -118,8 +166,22 @@ void ALootBoxActor::TakeAll(APawn* Taker)
 
 void ALootBoxActor::OnRep_PendingDrops()
 {
+	BroadcastStateChanged();
 }
 
 void ALootBoxActor::OnRep_Opened()
 {
+	BroadcastStateChanged();
+}
+
+void ALootBoxActor::BroadcastStateChanged()
+{
+	UWorld* World = GetWorld();
+	if (World == nullptr || World->IsNetMode(NM_DedicatedServer)) return;
+
+	FGYLootBoxStateMessage Msg;
+	Msg.Box = this;
+	Msg.bOpened = bOpened;
+	Msg.RemainingDrops = PendingDrops.Num();
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Loot_BoxStateChanged, Msg);
 }

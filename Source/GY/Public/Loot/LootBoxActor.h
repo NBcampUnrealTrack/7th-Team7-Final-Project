@@ -6,6 +6,7 @@
 #include "Loot/LootTypes.h"
 #include "LootBoxActor.generated.h"
 
+class APlayerState;
 class URegionLootData;
 class UStaticMeshComponent;
 
@@ -32,6 +33,9 @@ public:
 
 	void TakeAll(APawn* Taker);
 
+	// 점유 해제 — 점유자가 UI를 닫을 때 PC가 호출
+	void ReleaseViewer(APlayerState* Viewer);
+
 	const TArray<FLootDrop>& GetPendingDrops() const { return PendingDrops; }
 	bool IsOpened() const { return bOpened; }
 
@@ -49,4 +53,18 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Opened, VisibleInstanceOnly, Category = "Loot")
 	bool bOpened = false;
+
+	// 현재 UI로 박스를 점유한 플레이어. 유효하면 타인은 열기 불가
+	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Loot")
+	TObjectPtr<APlayerState> CurrentViewer;
+
+private:
+	// 점유자 본인이 아니면 true (열기 차단 조건)
+	bool IsOccupiedByOther(APawn* Interactor) const;
+
+	// opener 클라이언트로 UI 표시 요청
+	void ShowToInteractor(APawn* Interactor);
+
+	// 갱신 GMS 브로드캐스트 (데디 서버 제외)
+	void BroadcastStateChanged();
 };

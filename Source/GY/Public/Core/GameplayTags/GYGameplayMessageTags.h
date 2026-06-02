@@ -33,6 +33,10 @@ namespace GYGameplayTags
 	// 장비
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Equipment_LoadoutSlotChanged);
 
+	// 룻박스
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Loot_ShowBox);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Loot_BoxStateChanged);
+
 	// 무기 숙련도 빌드, 노드 관련 - 임시
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Build_NodeUnlocked);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Build_ActionToggled);

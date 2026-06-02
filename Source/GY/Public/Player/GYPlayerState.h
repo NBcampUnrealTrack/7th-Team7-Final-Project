@@ -16,6 +16,7 @@ class UGYAbilitySystemComponent;
 class UGYPawnData;
 class UGYPlayerInitData;
 class UInventoryComponent;
+class ULootViewerComponent;
 class UGYPlayerBaseAttribute;
 class UGYPlayerAdditionalAttribute;
 class UGYPlayerAttribute;
@@ -53,6 +54,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	USkillTreeComponent* GetSkillTreeComponent() const { return SkillTreeComponent; }
 
+	UFUNCTION(BlueprintPure)
+	ULootViewerComponent* GetLootViewerComponent() const { return LootViewerComponent; }
+
 	void InitGAS(APawn* Avatar);
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
@@ -79,6 +83,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCurrencyComponent> CurrencyComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<ULootViewerComponent> LootViewerComponent;
 
 	UPROPERTY(VisibleAnywhere, Category="SkillTree")
 	TObjectPtr<USkillTreeComponent> SkillTreeComponent;
