@@ -17,6 +17,7 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Curves/CurveFloat.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameStates/GYGameState.h"
 
 void UGYUIManagerSubsystem::Deinitialize()
 {
@@ -358,8 +359,24 @@ APlayerState* UGYUIManagerSubsystem::GetLocalPlayerState() const
 
 void UGYUIManagerSubsystem::SyncPlayerRoster()
 {
-	AGameStateBase* GS = GetWorld() ? GetWorld()->GetGameState() : nullptr;
+	AGYGameState* GS = Cast<AGYGameState>(GetWorld() ? GetWorld()->GetGameState() : nullptr);
 	if (!GS) return;
+
+	// 세계 시간 체크 및 GMS 브로드캐스트
+	const int32 TotalSeconds = FMath::FloorToInt(GS->GetCurrentTime());
+	const int32 MinuteOfDay = TotalSeconds / 60;
+
+	if (MinuteOfDay != LastBroadcastedMinute) // 분이 바뀌었을 때만 쏨
+	{
+		LastBroadcastedMinute = MinuteOfDay;
+
+		FGYWorldTimeMessage TimePayload;
+		TimePayload.Hours = (TotalSeconds / 3600) % 24;
+		TimePayload.Minutes = MinuteOfDay % 60;
+
+		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(
+			GYGameplayTags::Message_World_TimeChanged, TimePayload);
+	}
 
 	APlayerState* LocalPS = GetLocalPlayerState();
 	UGameplayMessageSubsystem& Msg = UGameplayMessageSubsystem::Get(GetWorld());
