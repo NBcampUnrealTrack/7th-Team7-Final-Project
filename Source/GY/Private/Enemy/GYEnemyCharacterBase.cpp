@@ -170,14 +170,14 @@ void AGYEnemyCharacterBase::ApplyAIConfig(const FEnemyAIConfig& Config)
 		UE_LOG(LogTemp, Warning, TEXT("[Enemy] ApplyAIConfig: BT 에셋 null"));
 		return;
 	}
-
-	AIC->StartBehaviorTree(BT);
-
-	AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.AttackRadius, Config.bHasPatrol);
 	if (Config.bHasPatrol && Config.PatrolOffsets.Num() > 0)
 	{
 		AIC->SetPatrolPoints(Config.PatrolOffsets, GetActorLocation());
 	}
+	AIC->StartBehaviorTree(BT);
+
+	AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.bHasPatrol);
+
 }
 
 void AGYEnemyCharacterBase::ApplyAnimConfig(const FEnemyAnimationConfig& Config)

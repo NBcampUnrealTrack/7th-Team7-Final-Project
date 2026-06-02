@@ -42,19 +42,26 @@ EBTNodeResult::Type UBTTask_UpdateAttackPos::ExecuteTask(UBehaviorTreeComponent&
 	}
 	else
 	{
-		//TODO 은서: Range 범위 설정
+		QueryRequest.SetFloatParam(TEXT("AttackRange"), SelectedAbility->AttackRange * 0.95f);
+		QueryRequest.SetFloatParam(TEXT("AttackRangeMin"), SelectedAbility->AttackRange * 0.5f);
 	}
 	QueryRequest.Execute(EEnvQueryRunMode::SingleResult, this, &UBTTask_UpdateAttackPos::OnEQSFinished);
 
 	return EBTNodeResult::InProgress;
 }
-
 void UBTTask_UpdateAttackPos::OnEQSFinished(TSharedPtr<FEnvQueryResult> Result)
 {
 	if (!Result.IsValid() || Result->IsAborted() || !CachedOwnerComp)
 	{
 		if (CachedOwnerComp)
 			FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Failed);
+		return;
+	}
+
+	if (Result->Items.Num() == 0)
+	{
+		FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Failed);
+		CachedOwnerComp = nullptr;
 		return;
 	}
 

@@ -26,9 +26,14 @@ UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 
 bool UGYEnemyAttackAbilityBase::CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const
 {
-	if (!ASC) return false;
-
-	if (DistToTarget > AttackRange + 20.f) return false;
+	if (AttackType == EGYEnemyAttackType::Ranged)
+	{
+		if (DistToTarget < 100.f) return false;
+	}
+	else
+	{
+		if (DistToTarget > AttackRange + 20.f) return false;
+	}
 
 	if (bHasCooldown && GetRemainingCooldown(ASC) > 0.f) return false;
 

@@ -66,9 +66,6 @@ struct FEnemyAIConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	float DetectRadius = 800.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
-	float AttackRadius = 150.f;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Patrol")
 	bool bHasPatrol = false;
 
