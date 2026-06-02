@@ -63,7 +63,7 @@ void AGYEnemyAIController::StopBehaviorTree()
 	}
 }
 
-void AGYEnemyAIController::ApplyAIRangeConfig(float DetectRadius, float InAttackRadius, bool bInHasPatrol)
+void AGYEnemyAIController::ApplyAIRangeConfig(float DetectRadius, bool bInHasPatrol)
 {
 	if (SightConfig)
 	{
@@ -74,7 +74,6 @@ void AGYEnemyAIController::ApplyAIRangeConfig(float DetectRadius, float InAttack
 
 	if (UBlackboardComponent* BB = GetBlackboardComponent())
 	{
-		BB->SetValueAsFloat(EnemyBBKeys::AttackRadius, InAttackRadius);
 		BB->SetValueAsBool(EnemyBBKeys::HasPatrol, bInHasPatrol);
 	}
 }
@@ -172,13 +171,41 @@ void AGYEnemyAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 	}
 	else
 	{
-		RemovePerceivedActor(Actor);
+		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
+		{
+			FVector LastVel = FVector::ZeroVector;
+			if (APawn* TargetPawn = Cast<APawn>(Actor))
+			{
+				LastVel = TargetPawn->GetVelocity();
+			}
+			const FVector Predicted = Stimulus.StimulusLocation + LastVel * 1.5f;
+			if (UBlackboardComponent* BB = GetBlackboardComponent())
+			{
+				BB->SetValueAsVector(EnemyBBKeys::InvestigateLocation, Predicted);
+			}
+		}
+
+		for (FPerceivedActorInfo& Info : PerceivedActors)
+		{
+			if (Info.Actor == Actor)
+			{
+				Info.LastPerceivedTime = GetWorld()->GetTimeSeconds();
+				break;
+			}
+		}
 	}
 }
 
 void AGYEnemyAIController::OnTargetPerceptionForgotten(AActor* Actor)
 {
-	RemovePerceivedActor(Actor);
+	for (FPerceivedActorInfo& Info : PerceivedActors)
+	{
+		if (Info.Actor == Actor)
+		{
+			Info.LastPerceivedTime = GetWorld()->GetTimeSeconds();
+			break;
+		}
+	}
 }
 
 void AGYEnemyAIController::SetupBlackboardDefaults()
@@ -195,6 +222,11 @@ void AGYEnemyAIController::SetupBlackboardDefaults()
 	BB->SetValueAsBool(EnemyBBKeys::IsStunned, false);
 	BB->SetValueAsBool(EnemyBBKeys::IsDead, false);
 	BB->SetValueAsBool(EnemyBBKeys::IsRunning, false);
+
+	if (!PatrolPoints.IsEmpty())
+	{
+		BB->SetValueAsVector(EnemyBBKeys::PatrolPosition, GetCurrentPatrolPoints());
+	}
 }
 
 void AGYEnemyAIController::AddPerceivedActor(AActor* Actor, const FAIStimulus& Stimulus)
@@ -225,10 +257,17 @@ void AGYEnemyAIController::RemovePerceivedActor(AActor* Actor)
 
 void AGYEnemyAIController::RemoveOutOfRangeActors(const FVector& EnemyLocation, float LoseSightDist)
 {
+	const float CurrentTime = GetWorld()->GetTimeSeconds();
+	const float LoseSightDelay = 5.f;
+
 	PerceivedActors.RemoveAll([&](const FPerceivedActorInfo& Info)
 	{
 		if (!Info.Actor.IsValid()) return true;
-		return FVector::Dist(EnemyLocation, Info.Actor->GetActorLocation()) > LoseSightDist;
+
+		bool bOutOfRange = FVector::Dist(EnemyLocation, Info.Actor->GetActorLocation()) > LoseSightDist;
+		bool bExpired = (CurrentTime - Info.LastPerceivedTime) > LoseSightDelay;
+
+		return bOutOfRange && bExpired;
 	});
 }
 

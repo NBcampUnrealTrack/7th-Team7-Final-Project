@@ -2,7 +2,11 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Animation/AnimSequence.h"
+#include "Editor/AnimationBlueprintLibrary/Public/AnimationBlueprintLibrary.h"
 #include "Enemy/GYEnemyAIController.h"
+#include "Enemy/AnimNotify/EnemyWeaponTrace.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 {
@@ -22,9 +26,14 @@ UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 
 bool UGYEnemyAttackAbilityBase::CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const
 {
-	if (!ASC) return false;
-
-	if (DistToTarget > AttackRange) return false;
+	if (AttackType == EGYEnemyAttackType::Ranged)
+	{
+		if (DistToTarget < 100.f) return false;
+	}
+	else
+	{
+		if (DistToTarget > AttackRange + 20.f) return false;
+	}
 
 	if (bHasCooldown && GetRemainingCooldown(ASC) > 0.f) return false;
 
@@ -47,25 +56,6 @@ float UGYEnemyAttackAbilityBase::GetRemainingCooldown(const UAbilitySystemCompon
 	return FMath::Max(0.f, Durations[0]);
 }
 
-void UGYEnemyAttackAbilityBase::FaceTarget()
-{
-	if (!CurrentActorInfo) return;
-
-	AActor* AvatarActor = CurrentActorInfo->AvatarActor.Get();
-	if (!AvatarActor) return;
-
-	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(Cast<APawn>(AvatarActor)->GetController());
-	if (!AIC) return;
-
-	AActor* Target = AIC->GetTargetActor();
-	if (!Target) return;
-
-	const FVector ToTarget = (Target->GetActorLocation() - AvatarActor->GetActorLocation());
-	const FRotator LookRot = FRotationMatrix::MakeFromX(ToTarget).Rotator();
-
-	AvatarActor->SetActorRotation(FRotator(0.f, LookRot.Yaw, 0.f));
-}
-
 float UGYEnemyAttackAbilityBase::GetTotalDamageScore() const
 {
 	float Total = 0.f;
@@ -76,6 +66,129 @@ float UGYEnemyAttackAbilityBase::GetTotalDamageScore() const
 	return FMath::Max(BaseDamageScore, Total);
 }
 
+float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Ability,
+	const UAbilitySystemComponent* ASC, float DistToTarget, float AngleDeg, const UObject* LastUsed)
+{
+	if (!Ability || !ASC) return -1.f;
+
+	if (Ability->bHasCooldown && Ability->GetRemainingCooldown(ASC) > 0.f) return -1.f;
+
+	float DamageScore = Ability->GetTotalDamageScore();
+	float ExtraMove = FMath::Max(0.f, DistToTarget - Ability->AttackRange);
+	float DistScore = DamageScore / (1.f + ExtraMove * 0.01f);
+
+	float HalfAngle = Ability->AttackAngle * 0.5f;
+	float AngleScore = (HalfAngle > 0.f) ? FMath::Clamp(1.f - (AngleDeg / HalfAngle), 0.f, 1.f) : 1.f;
+
+	float EffectiveScore = DistScore * (0.5f + AngleScore * 0.5f);
+
+	if (Ability == LastUsed) EffectiveScore *= 0.3f;
+
+	return EffectiveScore;
+}
+
+#if WITH_EDITOR
+void UGYEnemyAttackAbilityBase::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	if (PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UGYEnemyAttackAbilityBase, AttackMontage))
+	{
+		RecalculateAttackDataFromMontage();
+	}
+}
+
+static FTransform GetBoneComponentSpaceTransform(UAnimSequence* Seq, int32 BoneIndex, float Time)
+{
+	const FReferenceSkeleton& RefSkel = Seq->GetSkeleton()->GetReferenceSkeleton();
+
+	TArray<int32> Chain;
+	int32 Current = BoneIndex;
+	while (Current != INDEX_NONE)
+	{
+		Chain.Insert(Current, 0);
+		Current = RefSkel.GetParentIndex(Current);
+	}
+
+	FTransform CSTransform = FTransform::Identity;
+	for (int32 Bone : Chain)
+	{
+		FTransform LocalTransform;
+		Seq->GetBoneTransform(LocalTransform, FSkeletonPoseBoneIndex(Bone), (double)Time, false);
+		CSTransform = LocalTransform * CSTransform;
+	}
+
+	return CSTransform;
+}
+
+void UGYEnemyAttackAbilityBase::RecalculateAttackDataFromMontage()
+{
+	if (!AttackMontage) return;
+
+	for (const FAnimNotifyEvent& NotifyEvent : AttackMontage->Notifies)
+	{
+		UEnemyWeaponTrace* WeaponTrace = Cast<UEnemyWeaponTrace>(NotifyEvent.NotifyStateClass);
+		if (!WeaponTrace) continue;
+
+		UAnimSequence* Seq = nullptr;
+		for (const FSlotAnimationTrack& Track : AttackMontage->SlotAnimTracks)
+		{
+			for (const FAnimSegment& Seg : Track.AnimTrack.AnimSegments)
+			{
+				Seq = Cast<UAnimSequence>(Seg.GetAnimReference());
+				if (Seq) break;
+			}
+			if (Seq) break;
+		}
+		if (!Seq) continue;
+
+		USkeletalMesh* SkelMesh = Seq->GetPreviewMesh();
+		if (!SkelMesh) continue;
+
+		USkeletalMeshSocket* Socket = SkelMesh->FindSocket(CalcSocket);
+		if (!Socket) continue;
+
+		const USkeleton* Skeleton = Seq->GetSkeleton();
+		int32 BoneIndex = Skeleton->GetReferenceSkeleton().FindBoneIndex(Socket->BoneName);
+		if (BoneIndex == INDEX_NONE) continue;
+
+		const float StartTime  = NotifyEvent.GetTime();
+		const float Duration   = NotifyEvent.GetDuration();
+		const int32 SampleCount = 20;
+
+		float MinAngle = FLT_MAX, MaxAngle = -FLT_MAX, MaxRange = 0.f;
+
+		for (int32 i = 0; i <= SampleCount; i++)
+		{
+			float Time = StartTime + (Duration * i / SampleCount);
+
+			FTransform BoneTransform = GetBoneComponentSpaceTransform(Seq, BoneIndex, Time);
+
+			FTransform SocketLocal(Socket->RelativeRotation, Socket->RelativeLocation);
+			FTransform SocketTransform = SocketLocal * BoneTransform;
+
+			FVector Pos  = SocketTransform.GetLocation();
+			FVector Flat = FVector(Pos.X, Pos.Y, 0.f);
+
+			if (!Flat.IsNearlyZero())
+			{
+				float Angle = FMath::RadiansToDegrees(FMath::Atan2(Flat.Y, Flat.X));
+				MinAngle = FMath::Min(MinAngle, Angle);
+				MaxAngle = FMath::Max(MaxAngle, Angle);
+			}
+
+			MaxRange = FMath::Max(MaxRange, Flat.Size());
+		}
+
+		if (MinAngle != FLT_MAX)
+		{
+			AttackAngle = MaxAngle - MinAngle;
+			AttackRange = MaxRange;
+		}
+		break;
+	}
+}
+#endif
 void UGYEnemyAttackAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                                 const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
                                                 const FGameplayEventData* TriggerEventData)
@@ -86,7 +199,6 @@ void UGYEnemyAttackAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle
 		return;
 	}
 
-	FaceTarget();
 }
 
 void UGYEnemyAttackAbilityBase::PlayAttackMontage()

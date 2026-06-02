@@ -13,10 +13,12 @@ class UBlackboardData;
 UENUM(BlueprintType)
 enum class EEnemyType : uint8
 {
-	None	UMETA(DisplayName = "None"),
-	Melee	UMETA(DisplayName = "Melee"),
-	Ranged	UMETA(DisplayName = "Ranged"),
-	Boss	UMETA(DisplayName = "Boss"),
+	None		UMETA(DisplayName = "None"),
+	FengMao		UMETA(DisplayName = "FengMao"),
+	Sparrow		UMETA(DisplayName = "Sparrow"),
+	Melee		UMETA(DisplayName = "Melee"),
+	Ranged		UMETA(DisplayName = "Ranged"),
+	Boss		UMETA(DisplayName = "Boss"),
 };
 
 USTRUCT(BlueprintType)
@@ -63,9 +65,6 @@ struct FEnemyAIConfig
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	float DetectRadius = 800.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
-	float AttackRadius = 150.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Patrol")
 	bool bHasPatrol = false;

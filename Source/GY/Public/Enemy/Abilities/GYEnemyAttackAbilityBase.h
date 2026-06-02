@@ -5,6 +5,14 @@
 #include "Enemy/DataTables/EnemyAbilityWeightRow.h"
 #include "GYEnemyAttackAbilityBase.generated.h"
 
+UENUM(BlueprintType)
+enum class EGYEnemyAttackType : uint8
+{
+	None,
+	Melee,
+	Ranged,
+};
+
 UCLASS()
 class GY_API UGYEnemyAttackAbilityBase : public UGYGameplayAbility
 {
@@ -16,9 +24,15 @@ public:
 
 	float GetRemainingCooldown(const UAbilitySystemComponent* ASC) const;
 
-	virtual void FaceTarget();
-
 	float GetTotalDamageScore() const;
+
+	static float CalcAbilityScore(UGYEnemyAttackAbilityBase* Ability, const UAbilitySystemComponent* ASC,
+		float DistToTarget, float AngleDeg, const UObject* LastUsed);
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+	void RecalculateAttackDataFromMontage();
+#endif
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,
@@ -36,6 +50,15 @@ public:
 	float AttackRange = 200.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
+	float AttackAngle = 360.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
+	EGYEnemyAttackType AttackType = EGYEnemyAttackType::None;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Selection")
+	FName CalcSocket = TEXT("weapon_tip");
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
 	float BaseDamageScore = 10.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
@@ -47,6 +70,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Montage")
 	float PlayRate = 1.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Damage")
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Damage")
 	TArray<FHitDamageWeight> HitDamageWeights;
 };

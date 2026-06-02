@@ -34,6 +34,10 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 	FGameplayAbilitySpecHandle BestHandle;
 	float BestScore = -1.f;
 
+	FVector ToTarget = (Target->GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
+	float DotResult = FVector::DotProduct(Enemy->GetActorForwardVector(), ToTarget);
+	float AngleDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(DotResult, -1.f, 1.f)));
+
 	UObject* LastUsed = OwnerComp.GetBlackboardComponent()
 	->GetValueAsObject(EnemyBBKeys::LastUsedAbility);
 
@@ -43,12 +47,12 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 			Cast<UGYEnemyAttackAbilityBase>(Spec.Ability);
 		if (!AttackAbility) continue;
 
-		if (!AttackAbility->CanBeSelectedByAI(ASC, DistToTarget)) continue;
+		float Score = UGYEnemyAttackAbilityBase::CalcAbilityScore(
+			AttackAbility, ASC, DistToTarget, AngleDeg, LastUsed);
 
-		float Score = AttackAbility->GetTotalDamageScore();
+		if (Score < 0.f) continue;;
 
-		if (AttackAbility == LastUsed)
-			Score *= 0.3f;
+		if (DistToTarget > AttackAbility->AttackRange + 20.f) continue;
 
 		if (Score > BestScore)
 		{
@@ -59,6 +63,8 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 	}
 
 	if (!BestAbility) return EBTNodeResult::Failed;
+
+	Enemy->FaceToTarget(Target);
 
 	CachedOwnerComp = &OwnerComp;
 	ActiveAbility = BestAbility;

@@ -23,9 +23,10 @@ namespace  EnemyBBKeys
 	static const FName AttackRadius			= TEXT("AttackRadius");
 	static const FName InvestigateLocation	= TEXT("InvestigateLocation");
 	static const FName HasPatrol			= TEXT("HasPatrol");
-	static const FName SelectedAbilityRange	= TEXT("SelectAbilityRange");
 	static const FName LastUsedAbility		= TEXT("LastUsedAbility");
 	static const FName AttackPosition		= TEXT("AttackPosition");
+	static const FName SelectedAbility		= TEXT("SelectedAbility");
+	static const FName PatrolPosition		= TEXT("PatrolPosition");
 }
 
 USTRUCT()
@@ -55,7 +56,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	void StopBehaviorTree();
 
-	void ApplyAIRangeConfig(float DetectRadius, float InAttackRadius, bool bInHasPatrol);
+	void ApplyAIRangeConfig(float DetectRadius, bool bInHasPatrol);
 
 	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
 	void SetTargetLocation(const FVector& Location);

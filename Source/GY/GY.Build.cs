@@ -24,6 +24,7 @@ public class GY : ModuleRules
 			"GameplayMessageRuntime",
 			"ModularGameplay",
 			"GameFeatures",
+			"AnimationBlueprintLibrary",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "Niagara" });

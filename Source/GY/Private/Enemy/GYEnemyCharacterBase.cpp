@@ -34,14 +34,11 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 480.f, 0.f);
 
 	AIControllerClass = AGYEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-
-	bUseControllerRotationYaw = false;
-	GetCharacterMovement()->bOrientRotationToMovement = false;
-	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 }
 
 UAbilitySystemComponent* AGYEnemyCharacterBase::GetAbilitySystemComponent() const
@@ -173,14 +170,14 @@ void AGYEnemyCharacterBase::ApplyAIConfig(const FEnemyAIConfig& Config)
 		UE_LOG(LogTemp, Warning, TEXT("[Enemy] ApplyAIConfig: BT 에셋 null"));
 		return;
 	}
-
-	AIC->StartBehaviorTree(BT);
-
-	AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.AttackRadius, Config.bHasPatrol);
 	if (Config.bHasPatrol && Config.PatrolOffsets.Num() > 0)
 	{
 		AIC->SetPatrolPoints(Config.PatrolOffsets, GetActorLocation());
 	}
+	AIC->StartBehaviorTree(BT);
+
+	AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.bHasPatrol);
+
 }
 
 void AGYEnemyCharacterBase::ApplyAnimConfig(const FEnemyAnimationConfig& Config)
@@ -482,6 +479,21 @@ void AGYEnemyCharacterBase::CachedWeaponTraceSockets()
 		GY_LOG(AI,ESK, " - %s", *Bone.ToString());
 	}
 
+}
+
+void AGYEnemyCharacterBase::FaceToTarget(AActor* Target)
+{
+	if (!Target) return;
+
+	const FVector ToTarget = Target->GetActorLocation() - GetActorLocation();
+	const FRotator LookRot = FRotationMatrix::MakeFromX(ToTarget).Rotator();
+	SetActorRotation(FRotator(0.f, LookRot.Yaw, 0.f));
+}
+
+void AGYEnemyCharacterBase::SetOrientToMovement(bool bEnable)
+{
+	GetCharacterMovement()->bOrientRotationToMovement = bEnable;
+	GetCharacterMovement()->bUseControllerDesiredRotation = !bEnable;
 }
 
 void AGYEnemyCharacterBase::BeginPlay()
