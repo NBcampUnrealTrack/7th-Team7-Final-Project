@@ -16,7 +16,10 @@ private:
 	void OnEQSFinished(TSharedPtr<FEnvQueryResult> Result);
 
 	UPROPERTY(EditAnywhere, Category = "Config")
-	TObjectPtr<UEnvQuery> EQSAsset;
+	TObjectPtr<UEnvQuery> MeleeEQSAsset;
+
+	UPROPERTY(EditAnywhere, Category = "Config")
+	TObjectPtr<UEnvQuery> RangedEQSAsset;
 
 	UPROPERTY()
 	TObjectPtr<UBehaviorTreeComponent> CachedOwnerComp;

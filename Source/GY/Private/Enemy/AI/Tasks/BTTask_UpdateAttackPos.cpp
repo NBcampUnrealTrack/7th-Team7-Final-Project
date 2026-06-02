@@ -26,13 +26,24 @@ EBTNodeResult::Type UBTTask_UpdateAttackPos::ExecuteTask(UBehaviorTreeComponent&
 		BB->GetValueAsObject(EnemyBBKeys::SelectedAbility));
 	if (!SelectedAbility) return EBTNodeResult::Failed;
 
-	if (!EQSAsset) return EBTNodeResult::Failed;
+	UEnvQuery* SelectedEQS = (SelectedAbility->AttackType == EGYEnemyAttackType::Ranged)
+	? RangedEQSAsset
+	: MeleeEQSAsset;
+
+	if (!SelectedEQS) return EBTNodeResult::Failed;
 
 	CachedOwnerComp = &OwnerComp;
 
-	FEnvQueryRequest QueryRequest(EQSAsset, Enemy);
-	QueryRequest.SetFloatParam(TEXT("AttackRange"), SelectedAbility->AttackRange * 0.5f);
-	QueryRequest.SetFloatParam(TEXT("AttackRangeMin"), SelectedAbility->AttackRange * 0.3f);
+	FEnvQueryRequest QueryRequest(SelectedEQS, Enemy);
+	if (SelectedAbility->AttackType == EGYEnemyAttackType::Melee)
+	{
+		QueryRequest.SetFloatParam(TEXT("AttackRange"), SelectedAbility->AttackRange * 0.7f);
+		QueryRequest.SetFloatParam(TEXT("AttackRangeMin"), SelectedAbility->AttackRange * 0.3f);
+	}
+	else
+	{
+		//TODO 은서: Range 범위 설정
+	}
 	QueryRequest.Execute(EEnvQueryRunMode::SingleResult, this, &UBTTask_UpdateAttackPos::OnEQSFinished);
 
 	return EBTNodeResult::InProgress;
