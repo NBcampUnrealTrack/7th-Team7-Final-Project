@@ -20,7 +20,7 @@ public:
 
 
 	FORCEINLINE float GetCurrentTime() const { return CurrentTime; }
-	FORCEINLINE void SetCurrentTime(float InCurrentTime) { CurrentTime = InCurrentTime; }
+	FORCEINLINE void SetCurrentTime(float InCurrentTime);
 	FORCEINLINE float GetTimeScale() const { return TimeScale; }
 	FORCEINLINE void SetTimeScale(float InTimeScale) { TimeScale = InTimeScale; }
 	FORCEINLINE float GetMidnight() const { return Midnight; }
@@ -40,4 +40,8 @@ private:
 	float TimeScale;
 
 	const float Midnight = 24.f * 60.f * 60.f;
+
+	/** 시간 변경 시 GMS 브로드캐스트 */
+	void BroadcastTimeChanged();
+	int32 LastBroadcastedMinute = -1;
 };

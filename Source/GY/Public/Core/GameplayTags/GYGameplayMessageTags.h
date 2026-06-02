@@ -60,4 +60,7 @@ namespace GYGameplayTags
 
 	// 캐릭터 컴포넌트 초기화
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Character_Ready);
+
+	// 세계 시간
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_World_TimeChanged);
 }

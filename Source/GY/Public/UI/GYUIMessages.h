@@ -69,7 +69,7 @@ struct GY_API FGYQuestProgressMessage
 {
     GENERATED_BODY()
 
-    UPROPERTY(BlueprintReadWrite) FName QuestId;
+    UPROPERTY(BlueprintReadWrite) FGameplayTag QuestId;
     UPROPERTY(BlueprintReadWrite) int32 CurrentProgress = 0;
     UPROPERTY(BlueprintReadWrite) int32 TargetProgress = 0;
 };
@@ -80,9 +80,10 @@ struct GY_API FGYRegionEnteredMessage
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite) FName RegionId;
+	UPROPERTY(BlueprintReadWrite) FGameplayTag RegionId;
 	UPROPERTY(BlueprintReadWrite) FText RegionDisplayName;
 	UPROPERTY(BlueprintReadWrite) int32 RegionLevel = 1;
+	UPROPERTY(BlueprintReadWrite) TSoftObjectPtr<UTexture2D> RegionIcon;
 };
 
 /** 채팅 */
@@ -111,8 +112,7 @@ struct GY_API FGYInteractionOptionsMessage
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
-	TArray<FInteractionOption> Options;
+	UPROPERTY(BlueprintReadWrite) TArray<FInteractionOption> Options;
 };
 
 /** 스탯 정보 */
@@ -176,8 +176,17 @@ struct GY_API FGYCharacterReadyMessage
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
-	TWeakObjectPtr<AActor> OwnerActor;
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<AActor> OwnerActor;
+};
+
+/** 세계 시간 변경 알림 */
+USTRUCT(BlueprintType)
+struct GY_API FGYWorldTimeMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) int32 Hours = 0;
+	UPROPERTY(BlueprintReadWrite) int32 Minutes = 0;
 };
 
 /** 인벤 엔트리 단건 변동 — 위젯이 InstanceId로 InventoryComponent.FindEntry 조회 */
