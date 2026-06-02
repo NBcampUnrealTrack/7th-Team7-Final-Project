@@ -34,9 +34,7 @@ void ALootBoxActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void ALootBoxActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const
 {
-	if (bOpened && PendingDrops.IsEmpty()) return;
-
-	// 다른 플레이어가 점유 중이면 열기 옵션 자체를 숨김
+	// 다른 플레이어가 점유 중이면 열기 옵션 자체를 숨김 (빈 상자도 열어 확인 가능하므로 비었다고 숨기지 않음)
 	if (IsOccupiedByOther(Interactor)) return;
 
 	FInteractionOption Option;
@@ -59,7 +57,8 @@ void ALootBoxActor::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 		OpenBox(Interactor);
 	}
 
-	if (bOpened && !PendingDrops.IsEmpty())
+	// 비어 있어도 점유 + UI 표시 (빈 그리드 확인)
+	if (bOpened)
 	{
 		CurrentViewer = Interactor->GetPlayerState();
 		ShowToInteractor(Interactor);
@@ -93,6 +92,7 @@ void ALootBoxActor::ReleaseViewer(APlayerState* Viewer)
 	if (CurrentViewer != Viewer) return;
 
 	CurrentViewer = nullptr;
+	// 빈 상자도 파괴하지 않고 월드에 유지 — 다른 플레이어가 열면 빈 그리드를 봄
 }
 
 void ALootBoxActor::OpenBox(APawn* Opener)
@@ -148,10 +148,9 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 
 	PendingDrops.RemoveAt(DropIndex);
 
-	if (PendingDrops.IsEmpty())
-	{
-		Destroy();
-	}
+	// 빈 상자라도 파괴하지 않음 — 직접 닫기 전까지 유지, 다른 플레이어가 빈 것을 확인 가능
+	// authority(리슨서버/호스트)는 OnRep이 안 뜨므로 직접 통지. dedicated server는 self-guard로 no-op
+	BroadcastStateChanged();
 }
 
 void ALootBoxActor::TakeAll(APawn* Taker)
