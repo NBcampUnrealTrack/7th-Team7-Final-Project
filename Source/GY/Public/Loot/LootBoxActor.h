@@ -24,8 +24,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Loot")
 	TObjectPtr<UStaticMeshComponent> Mesh;
 
+	// 비워두면 BeginPlay에 자신이 속한 AGYRegionVolume의 RegionData를 자동 상속
 	UPROPERTY(EditAnywhere, Category = "Loot")
 	TSoftObjectPtr<URegionLootData> RegionData;
+
+	// 스폰 확률. 1 미만이면 서버 BeginPlay에서 굴려 실패 시 박스가 등장하지 않음
+	UPROPERTY(EditAnywhere, Category = "Loot", meta = (ClampMin = 0, ClampMax = 1))
+	float SpawnChance = 1.f;
 
 	void OpenBox(APawn* Opener);
 
@@ -40,6 +45,7 @@ public:
 	bool IsOpened() const { return bOpened; }
 
 protected:
+	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION()

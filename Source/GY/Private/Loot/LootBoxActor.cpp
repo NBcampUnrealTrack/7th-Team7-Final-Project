@@ -7,12 +7,14 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
+#include "Kismet/GameplayStatics.h"
 #include "Loot/LootService.h"
 #include "Loot/LootViewerComponent.h"
 #include "Loot/RegionLootData.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
+#include "World/VolumeActor/GYRegionVolume.h"
 
 ALootBoxActor::ALootBoxActor()
 {
@@ -21,6 +23,36 @@ ALootBoxActor::ALootBoxActor()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
+}
+
+void ALootBoxActor::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!HasAuthority()) return;
+
+	// 스폰 확률 — 실패하면 등장하지 않음
+	if (SpawnChance < 1.f && FMath::FRand() > SpawnChance)
+	{
+		Destroy();
+		return;
+	}
+
+	// 박스에 직접 RegionData를 지정하지 않았으면, 자신이 속한 지역 볼륨에서 상속
+	if (RegionData.IsNull())
+	{
+		TArray<AActor*> Volumes;
+		UGameplayStatics::GetAllActorsOfClass(this, AGYRegionVolume::StaticClass(), Volumes);
+		for (AActor* Actor : Volumes)
+		{
+			AGYRegionVolume* Volume = Cast<AGYRegionVolume>(Actor);
+			if (IsValid(Volume) && Volume->IsLocationInside(GetActorLocation()) && !Volume->GetRegionData().IsNull())
+			{
+				RegionData = Volume->GetRegionData();
+				break;
+			}
+		}
+	}
 }
 
 void ALootBoxActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
