@@ -23,6 +23,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Input_Attack)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Input_AttackRelease)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Combo_StepStart)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Input_ParryRelease)
 
 	// Parry events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Parry_Hit)

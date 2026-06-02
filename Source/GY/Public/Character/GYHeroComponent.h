@@ -45,6 +45,18 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Attack")
 	FGameplayTagContainer ChargeThresholdEventTags;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Attack")
+	FGameplayTagContainer ChargeAbilityTags;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Block")
+	FGameplayTagContainer BlockThresholdEventTags;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Block")
+	FGameplayTagContainer ParryAbilityTags;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Block")
+	FGameplayTagContainer BlockAbilityTags;
+
 protected:
 	//생명 주기 함수
 	virtual void OnRegister() override;
@@ -55,6 +67,13 @@ private:
 	void OnAttackPressed();
 	void OnAttackReleased();
 	void OnChargeThreshold();
+	bool HasChargeDataForCurrentWeapon() const;
+
+	void OnParryPressed();
+	void OnParryReleased();
+	void OnBlockThreshold();
+	bool HasBlockDataForCurrentWeapon() const;
+	float GetParryTimeForCurrentWeapon() const;
 
 	void SendGameplayEventLocal(FGameplayTag EventTag);
 
@@ -63,6 +82,7 @@ private:
 
 	FAbilitySetGrantedHandles GrantedHandles;
 	FTimerHandle ChargeThresholdTimer;
-	// IA가 ETriggerEvent::Triggered로 바인딩돼 매 프레임 발화하므로, 누름 엣지만 처리하기 위한 가드
+	FTimerHandle BlockThresholdTimer;
 	bool bAttackHeld = false;
+	bool bParryHeld = false;
 };
