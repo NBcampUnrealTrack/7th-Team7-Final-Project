@@ -20,7 +20,7 @@ public:
 
 
 	FORCEINLINE float GetCurrentTime() const { return CurrentTime; }
-	FORCEINLINE void SetCurrentTime(float InCurrentTime) { CurrentTime = InCurrentTime; }
+	FORCEINLINE void SetCurrentTime(float InCurrentTime);
 	FORCEINLINE float GetTimeScale() const { return TimeScale; }
 	FORCEINLINE void SetTimeScale(float InTimeScale) { TimeScale = InTimeScale; }
 	FORCEINLINE float GetMidnight() const { return Midnight; }

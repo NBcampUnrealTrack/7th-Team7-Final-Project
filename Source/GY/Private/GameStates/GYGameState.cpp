@@ -17,6 +17,11 @@ void AGYGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(AGYGameState, TimeScale);
 }
 
+void AGYGameState::SetCurrentTime(float InCurrentTime)
+{
+	BroadcastTimeChanged();
+}
+
 void AGYGameState::OnRep_CurrentTime()
 {
 	BroadcastTimeChanged();
