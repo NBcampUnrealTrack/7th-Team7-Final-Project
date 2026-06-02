@@ -1,13 +1,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ArcProjectile.h"
+#include "ProjectileBase.h"
 #include "BombProjectile.generated.h"
 
 class UDecalComponent;
 
 UCLASS()
-class GY_API ABombProjectile : public AArcProjectile
+class GY_API ABombProjectile : public AProjectileBase
 {
 	GENERATED_BODY()
 
@@ -17,6 +17,10 @@ public:
 protected:
 	virtual void OnHitTarget(AActor* HitActor, const FHitResult& HitResult) override;
 
+private:
+	void Explode();
+
+protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UDecalComponent> DangerDecal;
 
@@ -29,6 +33,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Cue", meta = (Categories = "GameplayCue"))
 	FGameplayTag ExplosionCueTag;
 
-private:
-	void Explode();
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	float GravityScale = 1.f;
 };

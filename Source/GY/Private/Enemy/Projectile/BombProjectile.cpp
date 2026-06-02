@@ -12,6 +12,7 @@ ABombProjectile::ABombProjectile()
 	DangerDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("DangerDecal"));
 	DangerDecal->SetupAttachment(RootComponent);
 	DangerDecal->SetVisibility(false);
+	ProjectileMovement->ProjectileGravityScale = GravityScale;
 }
 
 void ABombProjectile::OnHitTarget(AActor* HitActor, const FHitResult& HitResult)
