@@ -83,6 +83,7 @@ void UGYCameraComponent::HandleChangeInitState(UGameFrameworkComponentManager* M
 			SpringArmComponent->bUsePawnControlRotation = false; // 회전 연동 끄기
 
 			SpringArmComponent->SetUsingAbsoluteRotation(true);
+			SpringArmComponent->SetUsingAbsoluteLocation(true);
 			SpringArmComponent->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));
 			SpringArmComponent->bDoCollisionTest = false;
 

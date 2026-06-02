@@ -197,6 +197,13 @@ void UGYComboInputLogic::PlayCurrentMontage()
 	{
 		CachedAbility->PlayMontageForLogic(Montage, 1.f);
 	}
+
+	if (UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo())
+	{
+		FGameplayEventData Payload;
+		Payload.EventTag = GYGameplayTags::Event_Combo_StepStart;
+		ASC->HandleGameplayEvent(GYGameplayTags::Event_Combo_StepStart, &Payload);
+	}
 }
 
 void UGYComboInputLogic::AdvanceCombo()

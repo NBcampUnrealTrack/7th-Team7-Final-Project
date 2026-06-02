@@ -103,6 +103,13 @@ UAbilitySystemComponent* AGYCharacter::GetAbilitySystemComponent() const
 	return nullptr;
 }
 
+void AGYCharacter::Server_SetFacingYaw_Implementation(float Yaw)
+{
+	FRotator NewRot = GetActorRotation();
+	NewRot.Yaw = Yaw;
+	SetActorRotation(NewRot);
+}
+
 void AGYCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
