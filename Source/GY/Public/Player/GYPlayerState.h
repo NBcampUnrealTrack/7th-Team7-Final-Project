@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerState.h"
 #include "GYPlayerState.generated.h"
 
+class UAltarStorageComponent;
 class USkillTreeComponent;
 class UAbilitySet;
 class UAbilitySystemComponent;
@@ -39,6 +40,9 @@ public:
 	UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 	UFUNCTION(BlueprintPure)
+	UAltarStorageComponent* GetAltarStorageComponent() const { return AltarStorageComponent; }
+
+	UFUNCTION(BlueprintPure)
 	UEquipmentLoadoutComponent* GetEquipmentLoadoutComponent() const { return EquipmentLoadoutComponent; }
 
 	UFUNCTION(BlueprintPure)
@@ -64,6 +68,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UInventoryComponent> InventoryComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAltarStorageComponent> AltarStorageComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UEquipmentLoadoutComponent> EquipmentLoadoutComponent;

@@ -7,6 +7,7 @@
 #include "Disassemble/GYDisassembleSettings.h"
 #include "Engine/DataTable.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
+#include "Interaction/AltarStorageComponent.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
 #include "Items/ItemDefinition.h"
@@ -50,13 +51,13 @@ namespace
 	}
 }
 
-bool UDisassembleService::TryDisassemble(UInventoryComponent* Inventory, UCurrencyComponent* Currency, const FGuid& InstanceId)
+bool UDisassembleService::TryDisassemble(UAltarStorageComponent* Altar, UCurrencyComponent* Currency, const FGuid& InstanceId)
 {
-	if (!IsValid(Inventory)) return false;
+	if (!IsValid(Altar)) return false;
 	if (!IsValid(Currency)) return false;
-	if (!Inventory->GetOwner()->HasAuthority()) return false;
+	if (!Altar->GetOwner()->HasAuthority()) return false;
 
-	const FInventoryEntry* Entry = Inventory->FindEntry(InstanceId);
+	const FInventoryEntry* Entry = Altar->FindEntry(InstanceId);
 	if (Entry == nullptr) return false;
 
 	const UItemDefinition* Def = Entry->Definition.LoadSynchronous();
@@ -64,12 +65,6 @@ bool UDisassembleService::TryDisassemble(UInventoryComponent* Inventory, UCurren
 	if (!Def->CategoryTags.HasTag(GYGameplayTags::Item_Category_Equipment))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Disassemble: %s is not equipment"), *Def->ItemId.ToString());
-		return false;
-	}
-
-	if (IsInstanceEquipped(Inventory, InstanceId))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Disassemble: cannot disassemble equipped instance %s"), *InstanceId.ToString());
 		return false;
 	}
 
@@ -88,7 +83,7 @@ bool UDisassembleService::TryDisassemble(UInventoryComponent* Inventory, UCurren
 	const int32 StackCount = Entry->StackCount;
 	const int32 Reward = RewardPerItem * StackCount;
 
-	if (!Inventory->TryRemoveItem(InstanceId, StackCount)) return false;
+	if (!Altar->TryRemoveItem(InstanceId, StackCount)) return false;
 
 	Currency->TryAdd(RewardCurrency, Reward);
 

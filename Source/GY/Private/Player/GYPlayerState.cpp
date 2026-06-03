@@ -10,6 +10,7 @@
 #include "Character/GYPawnData.h"
 #include "Currency/CurrencyComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
+#include "Interaction/AltarStorageComponent.h"
 #include "Inventory/InventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerInitData.h"
@@ -36,6 +37,7 @@ AGYPlayerState::AGYPlayerState()
 	AbilitySystemComponent->AddAttributeSetSubobject(WeaponAttribute.Get());
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	AltarStorageComponent = CreateDefaultSubobject<UAltarStorageComponent>(TEXT("AltarStorageComponent"));
 	EquipmentLoadoutComponent = CreateDefaultSubobject<UEquipmentLoadoutComponent>(TEXT("EquipmentLoadoutComponent"));
 	CurrencyComponent = CreateDefaultSubobject<UCurrencyComponent>(TEXT("CurrencyComponent"));
 	SkillTreeComponent = CreateDefaultSubobject<USkillTreeComponent>(TEXT("SkillTreeComponent"));

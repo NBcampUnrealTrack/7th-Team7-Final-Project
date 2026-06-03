@@ -17,6 +17,8 @@ class GYUI_API UGYItemSlotWidget : public UCommonUserWidget
 public:
 	void SetEntry(const FInventoryEntry& Entry);
 	void SetEmpty();
+	FORCEINLINE void SetSlotIndex(int32 Index) { SlotIndex = Index; }
+	FORCEINLINE int32 GetSlotIndex() const { return SlotIndex; };
 
 protected:
 	virtual void NativeConstruct() override;
@@ -29,4 +31,6 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "GY|Inventory")
 	void OnSlotUpdated(bool bIsEmpty, FGameplayTag GradeTag, int32 StackCount);
+
+	int32 SlotIndex;
 };

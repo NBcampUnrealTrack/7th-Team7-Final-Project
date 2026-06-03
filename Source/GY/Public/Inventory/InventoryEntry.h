@@ -4,9 +4,9 @@
 #include "Enchant/RolledEnchantOption.h"
 #include "GameplayTagContainer.h"
 #include "Net/Serialization/FastArraySerializer.h"
+#include "Items/ItemContainer.h"
 #include "InventoryEntry.generated.h"
 
-class UInventoryComponent;
 class UItemDefinition;
 
 USTRUCT(BlueprintType)
@@ -58,7 +58,7 @@ struct GY_API FInventoryList : public FFastArraySerializer
 	TArray<FInventoryEntry> Entries;
 
 	UPROPERTY(NotReplicated)
-	TObjectPtr<UInventoryComponent> OwnerComponent;
+	TScriptInterface<IItemContainer> OwnerComponent;
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{

@@ -23,4 +23,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Consumable_ChargePool_HP, "Consumable.ChargePool.HP");
 	UE_DEFINE_GAMEPLAY_TAG(Consumable_ChargePool_SP, "Consumable.ChargePool.SP");
 	UE_DEFINE_GAMEPLAY_TAG(Consumable_ChargePool_FP, "Consumable.ChargePool.FP");
+
+	UE_DEFINE_GAMEPLAY_TAG(Container_Inventory, "Container.Inventory")
+	UE_DEFINE_GAMEPLAY_TAG(Container_Altar, "Container.Altar")
 }

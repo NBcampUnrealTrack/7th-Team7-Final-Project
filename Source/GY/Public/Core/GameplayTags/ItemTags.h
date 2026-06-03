@@ -30,4 +30,8 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Consumable_ChargePool_HP)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Consumable_ChargePool_SP)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Consumable_ChargePool_FP)
+
+	//ItemContainer
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Container_Inventory)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Container_Altar)
 }
