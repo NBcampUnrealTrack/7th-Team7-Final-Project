@@ -6,10 +6,12 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/PanelWidget.h"
+#include "Core/GYItemDragDropOperation.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Interaction/AltarStorageComponent.h"
+#include "Inventory/GA_TransferItem.h"
 #include "Items/ItemDefinition.h"
 #include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
@@ -24,6 +26,7 @@ void UGYAltarWidget::NativeConstruct()
 	UAltarStorageComponent* AltarStorageComponent = ResolveAltarStorage();
 	if (AltarStorageComponent)
 	{
+		Container = AltarStorageComponent;
 		GridSlotCount = AltarStorageComponent->GetCapacity();
 	}
 	EnsureSlots();
@@ -37,6 +40,46 @@ void UGYAltarWidget::NativeConstruct()
 	}
 
 	Refresh();
+}
+
+void UGYAltarWidget::NativeDestruct()
+{
+	if (ListenerHandle.IsValid())
+	{
+		if (UWorld* World = GetWorld())
+		{
+			UGameplayMessageSubsystem::Get(World).UnregisterListener(ListenerHandle);
+		}
+		ListenerHandle = FGameplayMessageListenerHandle();
+	}
+	Super::NativeDestruct();
+}
+
+bool UGYAltarWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent,
+                                  UDragDropOperation* InOperation)
+{
+	UGYItemDragDropOperation* DragOperation = Cast<UGYItemDragDropOperation>(InOperation);
+	if (!DragOperation || !DragOperation->FromContainer) return false;
+	if (!Container) return false;
+
+	DragOperation->OriginSlotWidget->SetRenderOpacity(1.0f);
+
+	UItemTransferPayload* Payload = NewObject<UItemTransferPayload>(this);
+	Payload->FromContainer = DragOperation->FromContainer;
+	Payload->FromInstanceId = DragOperation->FromInstanceId;
+	Payload->ToContainer = Container;
+
+	if (AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState()))
+	{
+		if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
+		{
+			FGameplayEventData EventData;
+			EventData.OptionalObject = Payload;
+			ASC->Server_SendGameplayEvent(GYGameplayTags::Event_ItemContainer_Transfer, EventData);
+		}
+	}
+
+	return true;
 }
 
 void UGYAltarWidget::OnCloseButtonClicked()
@@ -56,11 +99,12 @@ void UGYAltarWidget::EnsureSlots()
 
 	SlotContainer->ClearChildren();
 	SlotWidgets.Reset(GridSlotCount);
-
+	UAltarStorageComponent* AltarStorage = ResolveAltarStorage();
 	for (int32 i = 0; i < GridSlotCount; ++i)
 	{
 		UGYItemSlotWidget* SlotWidget = WidgetTree->ConstructWidget<UGYItemSlotWidget>(SlotWidgetClass);
-		SlotWidget->SetSlotIndex(i);
+		if (SlotWidget == nullptr) continue;
+		SlotWidget->SetContainer(AltarStorage);
 		if (SlotWidget == nullptr) continue;
 
 		SlotContainer->AddChild(SlotWidget);
@@ -74,6 +118,7 @@ void UGYAltarWidget::EnsureSlots()
 void UGYAltarWidget::Refresh()
 {
 	UAltarStorageComponent* AltarStorage = ResolveAltarStorage();
+	Container = AltarStorage;
 	if (AltarStorage == nullptr)
 	{
 		for (UGYItemSlotWidget* SlotWidget : SlotWidgets)

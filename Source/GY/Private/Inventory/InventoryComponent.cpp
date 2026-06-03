@@ -220,6 +220,25 @@ bool UInventoryComponent::InsertEntry(const FInventoryEntry& Entry)
 	return true;
 }
 
+bool UInventoryComponent::TakeEntry(const FGuid& InstanceId, FInventoryEntry& OutEntry)
+{
+	if (!GetOwner()->HasAuthority()) return false;
+
+	const int32 Index = Inventory.Entries.IndexOfByPredicate(
+		[&InstanceId](const FInventoryEntry& E){ return E.InstanceId == InstanceId; });
+	if (Index == INDEX_NONE) return false;
+
+	OutEntry = Inventory.Entries[Index];
+	const FGuid RemovedId = OutEntry.InstanceId;
+
+	Inventory.Entries.RemoveAt(Index);
+	Inventory.MarkArrayDirty();
+	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
+
+	NotifyContainerChanged(RemovedId, EInventoryEventType::Removed);
+	return true;
+}
+
 
 void UInventoryComponent::BroadcastPotionSnapshots()
 {

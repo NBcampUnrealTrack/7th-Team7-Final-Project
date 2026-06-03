@@ -193,6 +193,25 @@ bool UAltarStorageComponent::InsertEntry(const FInventoryEntry& Entry)
 	return true;
 }
 
+bool UAltarStorageComponent::TakeEntry(const FGuid& InstanceId, FInventoryEntry& OutEntry)
+{
+	if (!GetOwner()->HasAuthority()) return false;
+
+	const int32 Index = Storage.Entries.IndexOfByPredicate(
+		[&InstanceId](const FInventoryEntry& E){ return E.InstanceId == InstanceId; });
+	if (Index == INDEX_NONE) return false;
+
+	OutEntry = Storage.Entries[Index];
+	const FGuid RemovedId = OutEntry.InstanceId;
+
+	Storage.Entries.RemoveAt(Index);
+	Storage.MarkArrayDirty();
+	MARK_PROPERTY_DIRTY_FROM_NAME(UAltarStorageComponent, Storage, this);
+
+	NotifyContainerChanged(RemovedId, EInventoryEventType::Removed);
+	return true;
+}
+
 
 void UAltarStorageComponent::Server_RequestDisassemble_Implementation(const FGuid& InstanceId)
 {

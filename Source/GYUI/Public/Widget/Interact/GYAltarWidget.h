@@ -21,6 +21,8 @@ class GYUI_API UGYAltarWidget : public UGYActivatableWidget
 
 public:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GY|Inventory")
 	TSubclassOf<UGYItemSlotWidget> SlotWidgetClass;
@@ -46,6 +48,9 @@ private:
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UGYItemSlotWidget>> SlotWidgets;
+
+	UPROPERTY()
+	TScriptInterface<IItemContainer> Container;
 
 	FGameplayMessageListenerHandle ListenerHandle;
 };

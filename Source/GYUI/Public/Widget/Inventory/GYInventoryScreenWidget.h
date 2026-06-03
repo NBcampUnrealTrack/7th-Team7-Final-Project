@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "GYInventoryScreenWidget.generated.h"
 
+class IItemContainer;
 class UGYItemSlotWidget;
 class UInventoryComponent;
 class UPanelWidget;
@@ -27,6 +28,7 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GY|Inventory")
 	TSubclassOf<UGYItemSlotWidget> SlotWidgetClass;
@@ -51,6 +53,9 @@ private:
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UGYItemSlotWidget>> SlotWidgets;
+
+	UPROPERTY()
+	TScriptInterface<IItemContainer> Container;
 
 	FGameplayTag CurrentCategory;
 	FGameplayMessageListenerHandle ListenerHandle;

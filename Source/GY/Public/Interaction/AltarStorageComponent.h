@@ -21,6 +21,7 @@ public:
 	UAltarStorageComponent();
 	virtual void BeginPlay() override;
 
+	virtual int32 GetCapacity() const override;
 	virtual bool TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId) override;
 	virtual bool TryRemoveItem(const FGuid& InstanceId, int32 Count) override;
 	virtual bool MutateEntry(const FGuid& InstanceId, TFunctionRef<void(FInventoryEntry&)> Mutator) override;
@@ -28,6 +29,8 @@ public:
 	virtual const TArray<FInventoryEntry>& GetEntries() const override { return Storage.Entries; }
 	virtual void NotifyContainerChanged(const FGuid& InstanceId, EInventoryEventType EventType) override;
 	virtual bool InsertEntry(const FInventoryEntry& Entry) override;
+	virtual bool TakeEntry(const FGuid& InstanceId, FInventoryEntry& OutEntry) override;
+
 	UFUNCTION(Server, Reliable)
 	void Server_RequestDisassemble(const FGuid& InstanceId);
 
@@ -35,10 +38,6 @@ public:
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-public:
-	virtual int32 GetCapacity() const override;
-
 
 protected:
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Altar")

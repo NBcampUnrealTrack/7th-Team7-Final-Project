@@ -4,30 +4,29 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
-#include "GA_SwapSlot.generated.h"
+#include "GA_TransferItem.generated.h"
 
 class IItemContainer;
 
 UCLASS()
-class GY_API UItemSwapPayload : public UObject
+class GY_API UItemTransferPayload : public UObject
 {
 	GENERATED_BODY()
 public:
 	UPROPERTY() TScriptInterface<IItemContainer> FromContainer;;
-	UPROPERTY() FGuid FromSlot;
+	UPROPERTY() FGuid FromInstanceId;
 	UPROPERTY() TScriptInterface<IItemContainer> ToContainer;;
-	UPROPERTY() FGuid ToSlot;
 };
 
 /**
  *
  */
 UCLASS()
-class GY_API UGA_SwapSlot : public UGYGameplayAbility
+class GY_API UGA_TransferItem : public UGYGameplayAbility
 {
 	GENERATED_BODY()
 public:
-	UGA_SwapSlot(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	UGA_TransferItem(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	virtual void ActivateAbility(
 		const FGameplayAbilitySpecHandle Handle,

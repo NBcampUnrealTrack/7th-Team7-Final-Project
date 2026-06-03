@@ -29,4 +29,5 @@ public:
 	virtual int32 GetCapacity() const =0;
 
 	virtual bool InsertEntry(const FInventoryEntry& Entry) = 0;
+	virtual bool TakeEntry(const FGuid& InstanceId, FInventoryEntry& OutEntry) = 0;
 };

@@ -32,6 +32,7 @@ public:
 	virtual const TArray<FInventoryEntry>& GetEntries() const override { return Inventory.Entries; }
 	virtual void NotifyContainerChanged(const FGuid& InstanceId, EInventoryEventType EventType) override;
 	virtual bool InsertEntry(const FInventoryEntry& Entry) override;
+	virtual bool TakeEntry(const FGuid& InstanceId, FInventoryEntry& OutEntry) override;
 
 	TArray<FInventoryEntry> GetAllEntriesByCategory(FGameplayTag CategoryTag) const;
 
@@ -53,7 +54,6 @@ protected:
 private:
 	/** 인벤 전체 스캔 후 ChargePool 별 스택 집계 → GMS publish. 빈슬롯 전환 위해 이전 publish 셋 캐시 */
 	void BroadcastPotionSnapshots();
-
 
 
 private:
