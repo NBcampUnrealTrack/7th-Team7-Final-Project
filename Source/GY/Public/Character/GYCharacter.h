@@ -9,6 +9,7 @@ class UGYPawnExtensionComponent;
 class UAbilitySystemComponent;
 class UActiveEquipmentComponent;
 class UInteractionComponent;
+class UAIPerceptionStimuliSourceComponent;
 
 UCLASS()
 class GY_API AGYCharacter : public ACharacter, public IAbilitySystemInterface
@@ -23,9 +24,6 @@ public:
 	virtual void OnRep_Controller() override;
 	virtual void OnRep_PlayerState() override;
 
-
-
-
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintPure)
@@ -33,11 +31,16 @@ public:
 
 	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
 
-
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetFacingYaw(float Yaw);
+
+	UFUNCTION(BlueprintCallable, Category = "AI|Noise")
+	void MakeFootstepNoise();
+
+	UFUNCTION(BlueprintCallable, Category = "AI|Noise")
+	void MakeSkillNoise(float Loudness = 1.0f, float MaxRange = 2000.f);
 protected:
 	// 컴포넌트 매니저 통신을 위한 생명주기 함수 오버라이드
 	virtual void PreInitializeComponents() override;
@@ -50,6 +53,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UInteractionComponent> InteractionComponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "AI")
+	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSource;
 
 	/** 캐릭터 초기화 완료 방송 */
 	void BroadcastCharacterReady();
