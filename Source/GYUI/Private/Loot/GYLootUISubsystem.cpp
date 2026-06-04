@@ -54,7 +54,8 @@ void UGYLootUISubsystem::HandleShowBox(FGameplayTag, const FGYLootBoxStateMessag
 	ALootBoxActor* Box = Cast<ALootBoxActor>(Message.Box.Get());
 	if (!IsValid(Box)) return;
 
-	if (ActiveScreen.IsValid())
+	// 활성(화면에 떠 있는) 상태만 "열림"으로 판정. deactivate된 스테일 참조는 무시
+	if (ActiveScreen.IsValid() && ActiveScreen->IsActivated())
 	{
 		// 같은 박스에 다시 상호작용 → 토글로 닫기 (위젯 자체가 ReleaseOccupancy 처리)
 		if (ActiveBox.Get() == Box)
@@ -70,6 +71,10 @@ void UGYLootUISubsystem::HandleShowBox(FGameplayTag, const FGYLootBoxStateMessag
 		ActiveBox = Box;
 		return;
 	}
+
+	// 닫혀 있던 스테일 참조 정리 후 새로 push
+	ActiveScreen = nullptr;
+	ActiveBox = nullptr;
 
 	ULocalPlayer* LocalPlayer = GetLocalPlayer();
 	UGYUIManagerSubsystem* UIManager = IsValid(LocalPlayer) ? LocalPlayer->GetSubsystem<UGYUIManagerSubsystem>() : nullptr;
