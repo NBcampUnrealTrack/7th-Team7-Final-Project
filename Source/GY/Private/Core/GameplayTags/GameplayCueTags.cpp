@@ -18,12 +18,16 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Player_Parry, "GameplayCue.Combat.Player.Parry");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Player_Ultimate, "GameplayCue.Combat.Player.Ultimate");
 
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Run, "GameplayCue.Player.Run");
+
+
 	// 상태 이상
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Stun, "GameplayCue.Status.Stun");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Burn, "GameplayCue.Status.Burn");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Frozen, "GameplayCue.Status.Frozen");
 
 	// 카메라 이펙트
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_ZoomIn, "GameplayCue.Camera.ZoomIn");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_Execution, "GameplayCue.Camera.Execution");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_Zoom, "GameplayCue.Camera.Zoom");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_Shake, "GameplayCue.Camera.Shake");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_Push, "GameplayCue.Camera.Push");
 }
