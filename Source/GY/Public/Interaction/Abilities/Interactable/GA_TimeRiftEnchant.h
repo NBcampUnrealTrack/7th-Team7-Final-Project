@@ -2,18 +2,18 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
-#include "GA_TimeRiftReroll.generated.h"
+#include "GA_TimeRiftEnchant.generated.h"
 
 /**
  *
  */
 UCLASS()
-class GY_API UGA_TimeRiftReroll : public UGYGameplayAbility
+class GY_API UGA_TimeRiftEnchant : public UGYGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-	UGA_TimeRiftReroll(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	UGA_TimeRiftEnchant(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	virtual void ActivateAbility(
 		const FGameplayAbilitySpecHandle Handle,

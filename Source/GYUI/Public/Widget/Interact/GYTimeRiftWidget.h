@@ -28,7 +28,7 @@ protected:
 	TObjectPtr<UButton> AltarButton;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> RerollButton;
+	TObjectPtr<UButton> EnchantButton;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> SkillTreeButton;
@@ -41,7 +41,7 @@ private:
 	UFUNCTION()
 	void  OnAltarButtonClicked();
 	UFUNCTION()
-	void  OnRerollButtonClicked();
+	void  OnEnchantButtonClicked();
 	UFUNCTION()
 	void  OnSkillTreeButtonClicked();
 

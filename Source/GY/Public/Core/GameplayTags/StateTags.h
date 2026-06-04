@@ -22,7 +22,7 @@ namespace GYStateTags
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift_Altar)
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift_Reroll)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift_Enchant)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift_SkillTree)
 
 

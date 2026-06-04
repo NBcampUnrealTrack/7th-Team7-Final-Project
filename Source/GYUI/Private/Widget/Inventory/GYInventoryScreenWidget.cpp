@@ -62,10 +62,10 @@ bool UGYInventoryScreenWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 	{
 		DragOperation->OriginSlotWidget->SetRenderOpacity(1.0f);
 	}
-	// if (DragOperation->FromContainer.GetObject() == Container.GetObject())
-	// {
-	// 	return true;
-	// }
+	if (DragOperation->FromContainer.GetObject() == Container.GetObject())
+	{
+		return true;
+	}
 
 	UItemTransferPayload* Payload = NewObject<UItemTransferPayload>(this);
 	Payload->FromContainer = DragOperation->FromContainer;
