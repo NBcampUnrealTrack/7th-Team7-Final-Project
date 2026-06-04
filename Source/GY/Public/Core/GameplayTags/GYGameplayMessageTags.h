@@ -60,6 +60,9 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_XPProgress);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_PlayerName);
 
+	// 아이템 정보 패널 (우클릭 → 표시). 인벤/루트/장비/인첸트 공용
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_ShowItemInfo);
+
 	// UI Attribute
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Health);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Stamina);

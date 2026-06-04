@@ -4,7 +4,24 @@
 #include "Core/Types/ItemEnums.h"
 #include "GameplayTagContainer.h"
 #include "Interaction/InteractionOption.h"
+#include "Enchant/RolledEnchantOption.h"
 #include "GYUIMessages.generated.h"
+
+class UItemDefinition;
+
+/** 아이템 정보 패널 표시용 스냅샷. 우클릭 시 슬롯이 발행 (Message.UI.ShowItemInfo). 인벤/루트/장비/인첸트 공용 */
+USTRUCT(BlueprintType)
+struct GY_API FGYItemViewData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) TSoftObjectPtr<UItemDefinition> Definition;
+	UPROPERTY(BlueprintReadWrite) FGameplayTag GradeTag;
+	UPROPERTY(BlueprintReadWrite) int32 Level = 1;
+	UPROPERTY(BlueprintReadWrite) int32 Count = 1;
+	UPROPERTY(BlueprintReadWrite) float StatDeviation = 0.f;
+	UPROPERTY(BlueprintReadWrite) TArray<FRolledEnchantOption> RolledOptions;
+};
 
 /** 데미지 적중, 플로팅 데미지 텍스트 트리거, 히트레벨에 따른 UI 변화 */
 USTRUCT(BlueprintType)
