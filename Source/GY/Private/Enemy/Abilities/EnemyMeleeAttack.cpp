@@ -59,7 +59,7 @@ void UEnemyMeleeAttack::OnWeaponHit(FGameplayEventData Payload)
 		FinalDamage = (AttackValue + W.Additive) * W.Multiplicative;
 	}
 
-	UGYCombatStatics::ApplyDamage(TargetASC, FinalDamage);
+	UGYCombatStatics::ApplyDamage(TargetASC, FinalDamage, OwnerASC);
 
 	if (HitCueTag.IsValid())
 	{

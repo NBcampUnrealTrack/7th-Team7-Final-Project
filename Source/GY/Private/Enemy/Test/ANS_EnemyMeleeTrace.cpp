@@ -51,7 +51,9 @@ void UANS_EnemyMeleeTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeq
 		if (UAbilitySystemComponent* TargetASC =
 			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Target))
 		{
-			UGYCombatStatics::ApplyDamage(TargetASC, Damage);
+			UAbilitySystemComponent* SourceASC =
+				UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Owner);
+			UGYCombatStatics::ApplyDamage(TargetASC, Damage, SourceASC);
 
 			if (HitCueTag.IsValid())
 			{

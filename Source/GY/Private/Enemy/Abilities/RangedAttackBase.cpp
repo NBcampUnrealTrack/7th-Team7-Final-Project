@@ -80,7 +80,7 @@ void URangedAttackBase::OnProjectileHit(FGameplayEventData Payload)
 		FinalDamage /= static_cast<float>(ProjectileCount);
 	}
 
-	UGYCombatStatics::ApplyDamage(TargetASC, FinalDamage);
+	UGYCombatStatics::ApplyDamage(TargetASC, FinalDamage, OwnerASC);
 
 	if (HitCueTag.IsValid())
 	{

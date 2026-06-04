@@ -1,14 +1,23 @@
 #include "AbilitySystem/GYCombatStatics.h"
+#include "AbilitySystem/Attributes/GYBaseAttribute.h"
+#include "AbilitySystemComponent.h"
+#include "Core/GameplayTags/FactionTags.h"
+#include "GameplayEffect.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/GYAdditionalResourceStatics.h"
-#include "AbilitySystem/Attributes/GYBaseAttribute.h"
-#include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
-#include "AttackLogic/Block/GYBlockFragment.h"
-#include "AbilitySystemComponent.h"
-#include "GameplayEffect.h"
-#include "Core/GameplayTags/EventTags.h"
-#include "Core/GameplayTags/AbilityTags.h"
 #include "Logging/GYLogManager.h"
+
+static bool IsSameFaction(UAbilitySystemComponent* A, UAbilitySystemComponent* B)
+{
+	if (!A || !B) return false;
+
+	const bool AEnemy  = A->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy);
+	const bool BEnemy  = B->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy);
+	const bool APlayer = A->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Player);
+	const bool BPlayer = B->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Player);
+
+	return (AEnemy && BEnemy) || (APlayer && BPlayer);
+}
 
 static void ApplyInstantGEToAttribute(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Magnitude)
 {
@@ -38,58 +47,18 @@ void UGYCombatStatics::ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float
 	}
 }
 
-void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float RawDamage,
-	FGameplayTag DodgeStateTag,
-	FGameplayTagContainer ParryStateTags,
-	FGameplayTag BlockStateTag)
+void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC)
 {
 	if (!TargetASC) return;
 
-	if (UGYAbilitySystemComponent* TgtGY = Cast<UGYAbilitySystemComponent>(TargetASC))
-		TgtGY->ApplyCombatTag();
-
-	if (DodgeStateTag.IsValid() && TargetASC->HasMatchingGameplayTag(DodgeStateTag))
-		return;
-
-	if (!ParryStateTags.IsEmpty() && TargetASC->HasAnyMatchingGameplayTags(ParryStateTags))
+	if (SourceASC && IsSameFaction(SourceASC, TargetASC))
 	{
-		FGameplayEventData Payload;
-		Payload.EventTag = GYGameplayTags::Event_Parry_Hit;
-		TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Parry_Hit, &Payload);
 		return;
-	}
-
-	float DamageMultiplier = 1.f;
-	if (BlockStateTag.IsValid() && TargetASC->HasMatchingGameplayTag(BlockStateTag))
-	{
-		FGameplayTagContainer OwnedTags;
-		TargetASC->GetOwnedGameplayTags(OwnedTags);
-
-		bool bFound = false;
-		for (const FGameplayAbilitySpec& Spec : TargetASC->GetActivatableAbilities())
-		{
-			if (bFound) break;
-			for (UGameplayAbility* Instance : Spec.GetAbilityInstances())
-			{
-				UGYPlayerGameplayAbility* GA = Cast<UGYPlayerGameplayAbility>(Instance);
-				if (!GA || !GA->IsActive()) continue;
-				if (!GA->GetAssetTags().HasTag(GYGameplayTags::Ability_Fragment_Block)) continue;
-				if (UGYBlockFragment* BF = GA->GetFragment<UGYBlockFragment>())
-				{
-					if (const FGYBlockData* Data = BF->GetBestMatchingData(OwnedTags))
-					{
-						DamageMultiplier = Data->DamageReductionMultiplier;
-					}
-				}
-				bFound = true;
-				break;
-			}
-		}
 	}
 
 	const UGYBaseAttribute* Base = TargetASC->GetSet<UGYBaseAttribute>();
 	const float Defense = Base ? Base->GetDefense() : 0.f;
-	const float Effective = FMath::Max(0.f, (RawDamage * DamageMultiplier) - Defense);
+	const float Effective = FMath::Max(0.f, RawDamage - Defense);
 
 	ApplyInstantGEToAttribute(TargetASC, UGYBaseAttribute::GetCurrentHealthAttribute(), -Effective);
 

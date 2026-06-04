@@ -15,6 +15,7 @@
 #include "Engine/AssetManager.h"
 #include "Animation/BlendSpace.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "Core/GameplayTags/FactionTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/DataTables/EnemyStatRow.h"
 #include "GameStates/GYGameState.h"
@@ -194,6 +195,10 @@ void AGYEnemyCharacterBase::InitGAS()
 		AbilitySystemComponent->RegisterGameplayTagEvent(
 			GYStateTags::State_Hit_Stagger, EGameplayTagEventType::NewOrRemoved)
 				.AddUObject(this, &AGYEnemyCharacterBase::OnStaggerTagChanged);
+
+		AbilitySystemComponent->AddLooseGameplayTag(
+			GYFactionTags::Character_Faction_Enemy, 1,
+			EGameplayTagReplicationState::TagOnly);
 
 		bAttributeDelegatesBound = true;
 

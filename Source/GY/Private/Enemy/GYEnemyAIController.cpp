@@ -1,7 +1,10 @@
 #include "Enemy/GYEnemyAIController.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "BrainComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Core/GameplayTags/FactionTags.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Damage.h"
@@ -155,6 +158,15 @@ void AGYEnemyAIController::OnUnPossess()
 void AGYEnemyAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 	if (!Actor || !Cast<ACharacter>(Actor)) return;
+
+	if (UAbilitySystemComponent* TargetASC =
+		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor))
+	{
+		if (TargetASC->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy))
+		{
+			return;
+		}
+	}
 
 	UBlackboardComponent* BB = GetBlackboardComponent();
 	if (!BB) return;
