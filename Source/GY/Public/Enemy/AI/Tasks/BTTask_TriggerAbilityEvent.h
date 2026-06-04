@@ -23,6 +23,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "GAS", meta = (Categories = "Anim"))
 	FGameplayTag EventTag;
 
+	UPROPERTY(EditAnywhere, Category = "BlackBoard")
+	FName ClearBoolKeyOnFinish = NAME_None;
+
+	UPROPERTY(EditAnywhere, Category = "GAS")
+	FGameplayTag ClearTagOnFinish;
 private:
 	void OnAbilityEnded(UGameplayAbility* Ability);
 	void OnAbilityActivated(UGameplayAbility* Ability);

@@ -21,6 +21,7 @@
 #include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
+#include "Core/GameplayTags/AbilityTags.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 {
@@ -184,11 +185,15 @@ void AGYEnemyCharacterBase::InitGAS()
 	{
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
 			UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
-			.AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
+				.AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
 
 		AbilitySystemComponent->RegisterGameplayTagEvent(
 			GYStateTags::State_Hit_Stun, EGameplayTagEventType::NewOrRemoved)
-			.AddUObject(this, &AGYEnemyCharacterBase::OnStunTagChanged);
+				.AddUObject(this, &AGYEnemyCharacterBase::OnStunTagChanged);
+
+		AbilitySystemComponent->RegisterGameplayTagEvent(
+			GYStateTags::State_Hit_Stagger, EGameplayTagEventType::NewOrRemoved)
+				.AddUObject(this, &AGYEnemyCharacterBase::OnStaggerTagChanged);
 
 		bAttributeDelegatesBound = true;
 
@@ -343,12 +348,13 @@ void AGYEnemyCharacterBase::OnHealthChanged(const struct FOnAttributeChangeData&
 
 void AGYEnemyCharacterBase::OnStunTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
-	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+	if (NewCount > 0)
 	{
-		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
-		{
-			BB->SetValueAsBool(EnemyBBKeys::IsStunned, NewCount > 0);
-		}
+		HandleStunBegin();
+	}
+	else
+	{
+		HandleStunEnd();
 	}
 }
 
@@ -569,6 +575,113 @@ void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 }
 
 
+bool AGYEnemyCharacterBase::IsStunned() const
+{
+	return AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Hit_Stun);
+}
+
+bool AGYEnemyCharacterBase::IsStaggered() const
+{
+	return AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Hit_Stagger);
+}
+
+void AGYEnemyCharacterBase::OnStaggerTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	if (NewCount > 0)
+	{
+		HandleStaggerBegin();
+	}
+	else
+	{
+		HandleStaggerEnd();
+	}
+}
+
+void AGYEnemyCharacterBase::HandleStunBegin()
+{
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->StopMovementImmediately();
+		Move->DisableMovement();
+	}
+
+	if (HasAuthority())
+	{
+		if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+			{
+				BB->SetValueAsBool(EnemyBBKeys::IsStunned, true);
+			}
+		}
+
+		if (AbilitySystemComponent)
+		{
+			FGameplayTagContainer CancelTags;
+			CancelTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
+			AbilitySystemComponent->CancelAbilities(&CancelTags);
+		}
+
+		GetWorldTimerManager().SetTimer(
+		StunRecoveryTimerHandle,
+		FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			if (AbilitySystemComponent)
+			{
+				AbilitySystemComponent->RemoveLooseGameplayTag(
+					GYStateTags::State_Hit_Stun,
+					1,
+					EGameplayTagReplicationState::TagOnly);
+			}
+		}),
+		StunDuration,
+		false);
+	}
+}
+
+void AGYEnemyCharacterBase::HandleStunEnd()
+{
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->SetMovementMode(MOVE_Walking);
+	}
+
+	if (!HasAuthority()) return;
+
+	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(EnemyBBKeys::IsStunned, false);
+		}
+	}
+}
+
+void AGYEnemyCharacterBase::HandleStaggerBegin()
+{
+	if (!HasAuthority()) return;
+
+	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(EnemyBBKeys::IsStaggered, true);
+		}
+	}
+
+	if (AbilitySystemComponent)
+	{
+		FGameplayTagContainer CancelTags;
+		CancelTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
+		AbilitySystemComponent->CancelAbilities(&CancelTags);
+	}
+}
+
+void AGYEnemyCharacterBase::HandleStaggerEnd()
+{
+	//TODO 은서 : VFX 종료 처리 등등 UI처리 종료 등등
+}
+
 UAnimMontage* AGYEnemyCharacterBase::GetMontageByTag(const FGameplayTag& Tag) const
 {
 	const TObjectPtr<UAnimMontage>* Found = MontageMap.Find(Tag);
@@ -676,9 +789,12 @@ void AGYEnemyCharacterBase::BeginPlay()
 void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (DeactivateTimerHandle.IsValid())
-	{
 		GetWorldTimerManager().ClearTimer(DeactivateTimerHandle);
-	}
+	if (StunRecoveryTimerHandle.IsValid())
+		GetWorldTimerManager().ClearTimer(StunRecoveryTimerHandle);
+	if (StaggerRecoveryTimerHandle.IsValid())
+		GetWorldTimerManager().ClearTimer(StaggerRecoveryTimerHandle);
+
 	Super::EndPlay(EndPlayReason);
 }
 

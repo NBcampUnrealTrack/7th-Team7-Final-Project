@@ -8,7 +8,6 @@
 const FName UEnemyAnimInstance::BB_Key_TargetActor = TEXT("TargetActor");
 const FName UEnemyAnimInstance::BB_Key_IsStunned = TEXT("IsStunned");
 const FName UEnemyAnimInstance::BB_Key_IsDead = TEXT("IsDead");
-const FName UEnemyAnimInstance::BB_Key_IsRunning = TEXT("IsRunning");
 
 UEnemyAnimInstance::UEnemyAnimInstance()
 {
@@ -83,12 +82,10 @@ void UEnemyAnimInstance::UpdateStateFromBlackboard()
 	if (OwnerEnemy)
 	{
 		bIsDead = OwnerEnemy->IsDead();
+		bIsStunned = OwnerEnemy->IsStunned();
 	}
 	if (!BlackboardComponent) return;
 
-	bIsStunned = BlackboardComponent->GetValueAsBool(BB_Key_IsStunned);
-	//bIsDead = BlackboardComponent->GetValueAsBool(BB_Key_IsDead);
-	bIsRunning = BlackboardComponent->GetValueAsBool(BB_Key_IsRunning);
 	bHasTarget = BlackboardComponent->GetValueAsObject(BB_Key_TargetActor) != nullptr;
 }
 

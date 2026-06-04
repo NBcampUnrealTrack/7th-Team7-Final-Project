@@ -3,6 +3,7 @@
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Animation/AnimSequence.h"
+#include "Core/GameplayTags/AbilityTags.h"
 #include "Editor/AnimationBlueprintLibrary/Public/AnimationBlueprintLibrary.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/AnimNotify/EnemyWeaponTrace.h"
@@ -18,10 +19,11 @@ UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 	ActivationBlockedTags.AddTag(GYStateTags::State_Hit_Stagger);
 	ActivationBlockedTags.AddTag(GYStateTags::State_Hit_KnockDown);
 
-	//TODO 은서 : 적 공격 어빌리티 식별용
-	//AbilityTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
-	//TODO 은서 : 공격 중 중복 공격 차단
-	//ActivationBlockedTags(GYGameplayTags::Ability_Attack_Enemy);
+	FGameplayTagContainer AssetTags = GetAssetTags();
+	AssetTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
+	SetAssetTags(AssetTags);
+
+	ActivationBlockedTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
 }
 
 bool UGYEnemyAttackAbilityBase::CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const
