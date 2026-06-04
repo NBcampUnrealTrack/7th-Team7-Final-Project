@@ -1,6 +1,8 @@
 #include "Quest/QuestSubsystem.h"
 #include "Quest/QuestSettings.h"
 #include "Engine/DataTable.h"
+#include "GameStates/GYGameState.h"
+#include "Logging/GYLogManager.h"
 
 void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -15,80 +17,195 @@ void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	UDataTable* DataTable = Settings->QuestDataTable.LoadSynchronous();
 	if (!DataTable)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UQuestSubsystem: QuestDataTable이 설정되지 않았습니다."));
+		GY_WARN(Content, CYS, "UQuestSubsystem: QuestDataTable이 설정되지 않았습니다.");
 		return;
 	}
 
 	BuildCache(DataTable);
 }
 
-void UQuestSubsystem::BuildCache(UDataTable* DataTable)
+void UQuestSubsystem::BuildCache(const UDataTable* DataTable)
 {
 	// 데이터 테이블 순회 및 캐싱
 	QuestCache.Empty();
 
 	for (const FName& RowName : DataTable->GetRowNames())
 	{
-		FQuestTableRow* Row = DataTable->FindRow<FQuestTableRow>(RowName, TEXT("UQuestSubsystem::BuildCache"));
+		const FQuestTableRow* Row = DataTable->FindRow<FQuestTableRow>(RowName, TEXT("UQuestSubsystem::BuildCache"));
 		if (Row)
 		{
-			QuestCache.Add(RowName, Row);
+			if (QuestCache.Contains(Row->QuestTag))
+			{
+				GY_WARN(Content, CYS, "중복 퀘스트 태그 발견 : %s", *Row->QuestTag.ToString());
+				continue;
+			}
+			QuestCache.Add(Row->QuestTag, Row);
 		}
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("UQuestSubsystem: 퀘스트 %d개 로드됨"), QuestCache.Num());
+	GY_LOG(Content, CYS, "UQuestSubsystem: 퀘스트 %d개 로드됨", QuestCache.Num());
 }
 
-const FQuestTableRow* UQuestSubsystem::FindQuestRow(FName QuestId) const
+const FQuestTableRow* UQuestSubsystem::FindQuestRow(FGameplayTag QuestTag) const
 {
-	const FQuestTableRow* const* Found = QuestCache.Find(QuestId);
+	const FQuestTableRow* const* Found = QuestCache.Find(QuestTag);
 	return Found ? *Found : nullptr;
 }
 
-bool UQuestSubsystem::ArePrerequisitesMet(FName QuestId, const TArray<FQuestRuntimeData>& CompletedQuests) const
+bool UQuestSubsystem::ArePrerequisitesMet(FGameplayTag QuestTag) const
 {
-	const FQuestTableRow* Row = FindQuestRow(QuestId);
+	const FQuestTableRow* Row = FindQuestRow(QuestTag);
+	if (!Row)
+	{
+		return false;
+	}
+	if (!Row->PrerequisiteTag.IsValid())
+	{
+		return true;
+	}
+	AGYGameState* GameState = GetGYGameState();
+	if (!GameState)
+	{
+		return false;
+	}
+	return GameState->IsQuestComplete(Row->PrerequisiteTag);
+}
+
+void UQuestSubsystem::HandleQuestEvent(const FQuestEventData& EventData)
+{
+	// 활성화 조건 체크 → 새 퀘스트 시작
+	for (const auto& Pair : QuestCache)
+	{
+		const FQuestTableRow* Row = Pair.Value;
+		if (Row->ActivationEventTag == EventData.EventTag && Row->ActivationTargetId == EventData.TargetId)
+		{
+			StartQuest(Row->QuestTag);
+		}
+	}
+
+	ProcessObjectiveProgress(EventData);
+}
+
+bool UQuestSubsystem::StartQuest(FGameplayTag QuestTag)
+{
+	if (ActiveQuests.Contains(QuestTag))
+	{
+		return false;
+	}
+
+	AGYGameState* GameState = GetGYGameState();
+	if (GameState && GameState->IsQuestComplete(QuestTag))
+	{
+		return false;
+	}
+
+	if (!ArePrerequisitesMet(QuestTag))
+	{
+		return false;
+	}
+
+	const FQuestTableRow* Row = FindQuestRow(QuestTag);
 	if (!Row)
 	{
 		return false;
 	}
 
-	for (const FName& PrereqId : Row->PrerequisiteIds)
-	{
-		const bool bCompleted = CompletedQuests.ContainsByPredicate([&PrereqId](const FQuestRuntimeData& Data)
-		{
-			return Data.QuestId == PrereqId && Data.State == EQuestState::Completed;
-		});
+	FQuestRuntimeData& RuntimeData = ActiveQuests.Add(QuestTag);
+	RuntimeData.QuestTag = QuestTag;
+	RuntimeData.State = EQuestState::InProgress;
+	RuntimeData.ObjectiveProgress = 0;
 
-		if (!bCompleted)
-		{
-			return false;
-		}
-	}
+	GY_LOG(Content, CYS, "퀘스트 시작: %s", *Row->QuestName.ToString());
+	OnQuestStarted.Broadcast(QuestTag);
 
 	return true;
 }
 
-bool UQuestSubsystem::IsQuestComplete(const FQuestRuntimeData& RuntimeData) const
+void UQuestSubsystem::ProcessObjectiveProgress(const FQuestEventData& EventData)
 {
-	const FQuestTableRow* Row = FindQuestRow(RuntimeData.QuestId);
-	if (!Row)
-	{
-		return false;
-	}
+	TArray<FGameplayTag> QuestsToComplete;
 
-	if (RuntimeData.ObjectiveProgress.Num() != Row->Objectives.Num())
+	for (auto& Pair : ActiveQuests)
 	{
-		return false;
-	}
+		const FGameplayTag& QuestTag = Pair.Key;
+		FQuestRuntimeData& RuntimeData = Pair.Value;
 
-	for (int32 i = 0; i < Row->Objectives.Num(); ++i)
-	{
-		if (RuntimeData.ObjectiveProgress[i] < Row->Objectives[i].RequiredCount)
+		if (RuntimeData.State != EQuestState::InProgress)
 		{
-			return false;
+			continue;
+		}
+
+		const FQuestTableRow* Row = FindQuestRow(QuestTag);
+		if (!Row || !Row->Objective.IsValid())
+		{
+			continue;
+		}
+
+		const FQuestObjective& Objective = Row->Objective;
+		if (Objective.ObjectiveEventTag != EventData.EventTag || Objective.TargetId != EventData.TargetId)
+		{
+			continue;
+		}
+		if (RuntimeData.ObjectiveProgress >= Objective.RequiredCount)
+		{
+			continue;
+		}
+
+		RuntimeData.ObjectiveProgress = FMath::Min(
+			RuntimeData.ObjectiveProgress + EventData.Count,
+			Objective.RequiredCount
+		);
+		OnQuestProgressUpdated.Broadcast(QuestTag, RuntimeData.ObjectiveProgress);
+
+		if (RuntimeData.ObjectiveProgress >= Objective.RequiredCount)
+		{
+			QuestsToComplete.Add(QuestTag);
 		}
 	}
 
-	return true;
+	for (const FGameplayTag& QuestTag : QuestsToComplete)
+	{
+		CompleteQuest(QuestTag);
+	}
+}
+
+void UQuestSubsystem::CompleteQuest(FGameplayTag QuestTag)
+{
+	FQuestRuntimeData* RuntimeData = ActiveQuests.Find(QuestTag);
+	if (!RuntimeData)
+	{
+		return;
+	}
+
+	RuntimeData->State = EQuestState::Completed;
+
+	AGYGameState* GameState = GetGYGameState();
+	if (GameState)
+	{
+		GameState->AddCompletedQuest(QuestTag);
+	}
+
+	const FQuestTableRow* Row = FindQuestRow(QuestTag);
+	GY_LOG(Content, CYS, "퀘스트 완료: %s", Row ? *Row->QuestName.ToString() : *QuestTag.ToString());
+	OnQuestCompleted.Broadcast(QuestTag);
+
+	ActiveQuests.Remove(QuestTag);
+}
+
+const FQuestRuntimeData* UQuestSubsystem::GetQuestRuntimeData(FGameplayTag QuestTag) const
+{
+	return ActiveQuests.Find(QuestTag);
+}
+
+AGYGameState* UQuestSubsystem::GetGYGameState() const
+{
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UWorld* World = GI->GetWorld())
+		{
+			return World->GetGameState<AGYGameState>();
+		}
+	}
+
+	return nullptr;
 }

@@ -25,6 +25,7 @@
 #include "Interaction/AltarStorageComponent.h"
 #include "Player/GYPlayerController.h"
 #include "Player/GYPlayerState.h"
+#include "Quest/QuestSubsystem.h"
 
 namespace
 {
@@ -510,6 +511,24 @@ void UGYCheatManager::GY_ToggleCameraTag(const FString& TagName)
 		ASC->AddLooseGameplayTag(Tag);
 
 		GY_LOG(Player, CYS, "Added Camera Tag: %s", *Tag.ToString());
+	}
+}
+
+void UGYCheatManager::GY_QuestComplete(const FString& TagName)
+{
+	const FGameplayTag Tag =
+		FGameplayTag::RequestGameplayTag(
+			FName(*TagName));
+	if (UWorld* World = GetWorld())
+	{
+		if (const UGameInstance* GI = World->GetGameInstance())
+		{
+			if (UQuestSubsystem* QS=GI->GetSubsystem<UQuestSubsystem>())
+			{
+				QS->StartQuest(Tag);
+				QS->CompleteQuest(Tag);
+			}
+		}
 	}
 }
 

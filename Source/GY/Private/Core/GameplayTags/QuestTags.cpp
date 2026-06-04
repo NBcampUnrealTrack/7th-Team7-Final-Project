@@ -10,4 +10,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Quest_Objective_Collect, "Quest.Objective.Collect");
 	UE_DEFINE_GAMEPLAY_TAG(Quest_Objective_Deliver, "Quest.Objective.Deliver");
 	UE_DEFINE_GAMEPLAY_TAG(Quest_Objective_Interact, "Quest.Objective.Interact");
+
+	UE_DEFINE_GAMEPLAY_TAG(Quest_ID_001, "Quest.ID.001");
+	UE_DEFINE_GAMEPLAY_TAG(Quest_ID_002, "Quest.ID.002");
+
 }

@@ -62,6 +62,11 @@ struct FQuestObjective
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	int32 RequiredCount = 1;
+
+	bool IsValid() const
+	{
+		return ObjectiveEventTag.IsValid();
+	}
 };
 
 // 퀘스트 보상
@@ -83,9 +88,15 @@ struct FQuestTableRow : public FTableRowBase
 {
 	GENERATED_BODY()
 
+	// 퀘스트 ID 태그
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest")
+	FGameplayTag QuestTag;
+
+	// 퀘스트 제목
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest")
 	FText QuestName;
 
+	// 퀘스트 내용
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest")
 	FText Description;
 
@@ -99,11 +110,13 @@ struct FQuestTableRow : public FTableRowBase
 
 	// 선행 퀘스트 ID 목록 (DataTable Row Name 기준)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest")
-	TArray<FName> PrerequisiteIds;
+	FGameplayTag PrerequisiteTag;
 
+	// 퀘스트 목표
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest")
-	TArray<FQuestObjective> Objectives;
+	FQuestObjective Objective;
 
+	// 보상
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest")
 	FQuestReward Reward;
 };
@@ -116,14 +129,14 @@ struct FQuestRuntimeData
 
 	// DataTable Row Name = 퀘스트 ID
 	UPROPERTY(BlueprintReadOnly)
-	FName QuestId = NAME_None;
+	FGameplayTag QuestTag = {};
 
 	UPROPERTY(BlueprintReadOnly)
 	EQuestState State = EQuestState::NotStarted;
 
-	// 목표별 현재 진행도 (인덱스 = FQuestObjective 배열 인덱스)
+	// 목표 현재 진행도
 	UPROPERTY(BlueprintReadOnly)
-	TArray<int32> ObjectiveProgress;
+	int32 ObjectiveProgress = 0;
 
-	bool IsValid() const { return QuestId != NAME_None; }
+	bool IsValid() const { return QuestTag.IsValid(); }
 };
