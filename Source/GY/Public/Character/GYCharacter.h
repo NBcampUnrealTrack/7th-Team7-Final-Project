@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "GYCharacter.generated.h"
 
+class ULockOnComponent;
 class UGYPawnExtensionComponent;
 class UAbilitySystemComponent;
 class UActiveEquipmentComponent;
@@ -53,6 +54,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UInteractionComponent> InteractionComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<ULockOnComponent> LockOnComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "AI")
 	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSource;
