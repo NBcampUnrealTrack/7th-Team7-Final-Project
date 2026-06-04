@@ -6,6 +6,8 @@
 #include "Components/Image.h"
 #include "Core/GYItemDragDropOperation.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Inventory/GA_TransferItem.h"
 #include "Inventory/InventoryEntry.h"
 #include "Items/ItemDefinition.h"
@@ -63,6 +65,13 @@ void UGYItemSlotWidget::SetEntry(const FInventoryEntry& Entry)
 	SetRenderOpacity(1.0f);
 	ItemInstanceId = Entry.InstanceId;
 
+	CurrentInfo.Definition = Entry.Definition;
+	CurrentInfo.GradeTag = Entry.GradeTag;
+	CurrentInfo.Level = Entry.Level;
+	CurrentInfo.Count = Entry.StackCount;
+	CurrentInfo.StatDeviation = Entry.StatDeviation;
+	CurrentInfo.RolledOptions = Entry.RolledOptions;
+
 	if (Image_Icon)
 	{
 		Image_Icon->SetOpacity(1.f);
@@ -90,6 +99,7 @@ void UGYItemSlotWidget::SetEmpty()
 {
 	SetRenderOpacity(1.0f);
 	ItemInstanceId = FGuid();
+	CurrentInfo = FGYItemViewData();
 
 	if (Image_Icon)
 	{
@@ -116,6 +126,17 @@ FReply UGYItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, c
 	{
 		return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
 	}
+
+	// 우클릭 → 아이템 정보 패널 표시 (빈 칸이면 무시)
+	if (InMouseEvent.IsMouseButtonDown(EKeys::RightMouseButton) && !CurrentInfo.Definition.IsNull())
+	{
+		if (UWorld* World = GetWorld())
+		{
+			UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_UI_ShowItemInfo, CurrentInfo);
+		}
+		return FReply::Handled();
+	}
+
 	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 
 }

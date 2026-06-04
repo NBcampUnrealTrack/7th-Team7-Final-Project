@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "CommonUserWidget.h"
 #include "GameplayTagContainer.h"
+#include "UI/GYUIMessages.h"
 #include "GYItemSlotWidget.generated.h"
 
 class IItemContainer;
@@ -39,4 +40,7 @@ protected:
 	UPROPERTY()
 	TScriptInterface<IItemContainer> Container;
 	FGuid ItemInstanceId;
+
+	// 우클릭 시 정보 패널로 발행할 스냅샷 (Definition 비면 빈 칸)
+	FGYItemViewData CurrentInfo;
 };
