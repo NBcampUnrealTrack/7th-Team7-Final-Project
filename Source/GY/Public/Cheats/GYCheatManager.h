@@ -68,6 +68,9 @@ public:
 	UFUNCTION(Exec)
 	void GY_ToggleCameraTag(const FString& TagName);
 
+	UFUNCTION(Exec)
+	void GY_QuestComplete(const FString& TagName);
+
 	// Enemy Debug
 	UFUNCTION(Exec)
 	void GY_SpawnEnemy(const FString& EnemyTypeName);
