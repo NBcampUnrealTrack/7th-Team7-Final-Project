@@ -14,18 +14,11 @@ UGA_UseConsumable::UGA_UseConsumable(const FObjectInitializer&)
 	ActivationPolicy = EGYAbilityActivationPolicy::OnInputTriggered;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
-	{
-		FAbilityTriggerData Trigger;
-		Trigger.TriggerTag = GYGameplayTags::Event_Item_Used;
-		Trigger.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
-		AbilityTriggers.Add(Trigger);
-	}
-	{
-		FAbilityTriggerData Trigger;
-		Trigger.TriggerTag = GYGameplayTags::Event_Item_Used;
-		Trigger.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
-		AbilityTriggers.Add(Trigger);
-	}
+
+	FAbilityTriggerData Trigger;
+	Trigger.TriggerTag = GYGameplayTags::Event_Item_Used;
+	Trigger.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
+	AbilityTriggers.Add(Trigger);
 }
 
 void UGA_UseConsumable::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -83,7 +76,6 @@ void UGA_UseConsumable::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	{
 		ConsumableTag = GYGameplayTags::Consumable_ChargePool_HP;
 	}
-
 	else if (TriggerEventData->EventTag.MatchesTagExact(GYGameplayTags::Event_Item_Used_SP))
 	{
 		ConsumableTag = GYGameplayTags::Consumable_ChargePool_SP;
