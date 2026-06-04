@@ -36,9 +36,13 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPanelWidget> SlotContainer;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> ExecuteButton;
 
 	UFUNCTION()
 	void OnCloseButtonClicked();
+	UFUNCTION()
+	void OnExecuteButtonClicked();
 private:
 	void EnsureSlots();
 	void Refresh();

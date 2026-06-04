@@ -1,10 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Widget/Interact/GYAltarWidget.h"
-
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/Button.h"
 #include "Components/PanelWidget.h"
 #include "Core/GYItemDragDropOperation.h"
 #include "Core/GameplayTags/EventTags.h"
@@ -37,6 +34,16 @@ void UGYAltarWidget::NativeConstruct()
 			GYGameplayTags::Message_Altar_EntryChanged,
 			this,
 			&UGYAltarWidget::HandleEntryChanged);
+	}
+
+	if (CloseButton)
+	{
+		CloseButton->OnClicked.AddDynamic(this, &UGYAltarWidget::OnCloseButtonClicked);
+	}
+
+	if (ExecuteButton)
+	{
+		ExecuteButton->OnClicked.AddDynamic(this, &UGYAltarWidget::OnExecuteButtonClicked);
 	}
 
 	Refresh();
@@ -92,6 +99,11 @@ void UGYAltarWidget::OnCloseButtonClicked()
 	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_Altar_Exit, FGameplayEventData());
 }
 
+void UGYAltarWidget::OnExecuteButtonClicked()
+{
+	
+}
+
 void UGYAltarWidget::EnsureSlots()
 {
 	if (SlotWidgets.Num() == GridSlotCount) return;
@@ -110,7 +122,6 @@ void UGYAltarWidget::EnsureSlots()
 		SlotContainer->AddChild(SlotWidget);
 		SlotWidgets.Add(SlotWidget);
 	}
-
 
 }
 
