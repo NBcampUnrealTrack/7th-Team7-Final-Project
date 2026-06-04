@@ -6,6 +6,7 @@
 #include "Inventory/GA_TransferItem.h"
 #include "Items/ItemContainer.h"
 #include "Player/GYPlayerState.h"
+#include "Widget/Interact/GYEnchantWidget.h"
 
 void UGYEnchantSlotWidget::NativeConstruct()
 {
@@ -36,6 +37,10 @@ bool UGYEnchantSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 		DragOperation->OriginSlotWidget->SetRenderOpacity(1.0f);
 	}
 
-	SetEntry(*DragOperation->FromContainer->FindEntry(DragOperation->FromInstanceId));
+	// 대상 지정은 인첸트 위젯이 중앙 처리 (슬롯 표시 + 전용 옵션 패널)
+	if (UGYEnchantWidget* EnchantWidget = GetTypedOuter<UGYEnchantWidget>())
+	{
+		EnchantWidget->SetTarget(DragOperation->FromInstanceId);
+	}
 	return true;
 }
