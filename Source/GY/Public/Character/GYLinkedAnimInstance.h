@@ -31,14 +31,7 @@ protected:
 	UBlendSpace* MoveBlendSpace;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
 	UAnimSequence* IdleSequence;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
-	UAnimSequence* RunStartSequence;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
-	UAnimSequence* RunStopSequence;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
-	UAnimSequence* WalkStartSequence;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
-	UAnimSequence* WalkStopSequence;
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
 	UBlendSpace* WalkStartBlendSpace;
