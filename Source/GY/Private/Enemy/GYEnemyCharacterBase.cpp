@@ -426,7 +426,7 @@ void AGYEnemyCharacterBase::DisableRagdoll()
 	USkeletalMeshComponent* SkeletalMesh = GetMesh();
 	if (!SkeletalMesh) return;
 
-	SkeletalMesh->SetAllBodiesBelowSimulatePhysics(false);
+	//SkeletalMesh->SetAllBodiesBelowSimulatePhysics(false);
 	SkeletalMesh->SetSimulatePhysics(false);
 	SkeletalMesh->bBlendPhysics = false;
 
