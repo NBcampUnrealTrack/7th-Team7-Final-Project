@@ -12,6 +12,8 @@
 #include "Interaction/InteractionComponent.h"
 #include "Player/GYPlayerState.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Hearing.h"
 #include "UI/GYUIMessages.h"
 
 AGYCharacter::AGYCharacter()
@@ -21,6 +23,9 @@ AGYCharacter::AGYCharacter()
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 	GetCharacterMovement()->MaxWalkSpeed = 300.f;
 
+	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
+	StimuliSource->RegisterForSense(UAISense_Hearing::StaticClass());
+	StimuliSource->bAutoRegister = true;
 }
 
 void AGYCharacter::PossessedBy(AController* NewController)
@@ -122,6 +127,30 @@ void AGYCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 		// 멈춰있던 초기화 상태가 있다면 마저 진행하라고 체인을 다시 굴려줍니다.
 		PawnExtComponent->CheckDefaultInitialization();
 	}
+}
+
+void AGYCharacter::MakeFootstepNoise()
+{
+	UAISense_Hearing::ReportNoiseEvent(
+		GetWorld(),
+		GetActorLocation(),
+		0.5f,
+		this,
+		800.f,
+		FName("Footstep")
+		);
+}
+
+void AGYCharacter::MakeSkillNoise(float Loudness, float MaxRange)
+{
+	UAISense_Hearing::ReportNoiseEvent(
+		GetWorld(),
+		GetActorLocation(),
+		Loudness,
+		this,
+		MaxRange,
+		FName("Skill")
+		);
 }
 
 void AGYCharacter::PreInitializeComponents()

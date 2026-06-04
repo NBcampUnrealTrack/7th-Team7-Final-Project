@@ -26,7 +26,7 @@ AGYEnemyAIController::AGYEnemyAIController()
 	DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
 
 	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
-	HearingConfig->HearingRange = 600.f;
+	HearingConfig->HearingRange = 1500.f;
 	HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
 	HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
@@ -156,16 +156,21 @@ void AGYEnemyAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 {
 	if (!Actor || !Cast<ACharacter>(Actor)) return;
 
+	UBlackboardComponent* BB = GetBlackboardComponent();
+	if (!BB) return;
+
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>()
-			&& PerceivedActors.IsEmpty())
+		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
 		{
-			if (UBlackboardComponent* BB = GetBlackboardComponent())
+			if (BB->GetValueAsObject(EnemyBBKeys::TargetActor) == nullptr)
 			{
-				BB->SetValueAsVector(EnemyBBKeys::InvestigateLocation,
-					Stimulus.StimulusLocation);
+				BB->SetValueAsVector(EnemyBBKeys::InvestigateLocation, Stimulus.StimulusLocation);
 			}
+		}
+		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
+		{
+			BB->SetValueAsObject(EnemyBBKeys::TargetActor, Actor);
 		}
 		AddPerceivedActor(Actor, Stimulus);
 	}
@@ -179,10 +184,7 @@ void AGYEnemyAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 				LastVel = TargetPawn->GetVelocity();
 			}
 			const FVector Predicted = Stimulus.StimulusLocation + LastVel * 1.5f;
-			if (UBlackboardComponent* BB = GetBlackboardComponent())
-			{
-				BB->SetValueAsVector(EnemyBBKeys::InvestigateLocation, Predicted);
-			}
+			BB->SetValueAsVector(EnemyBBKeys::InvestigateLocation, Predicted);
 		}
 
 		for (FPerceivedActorInfo& Info : PerceivedActors)
@@ -274,6 +276,16 @@ void AGYEnemyAIController::RemoveOutOfRangeActors(const FVector& EnemyLocation, 
 void AGYEnemyAIController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (AIPerceptionComponent)
+	{
+		if (SightConfig)   AIPerceptionComponent->ConfigureSense(*SightConfig);
+		if (HearingConfig) AIPerceptionComponent->ConfigureSense(*HearingConfig);
+		if (DamageConfig)  AIPerceptionComponent->ConfigureSense(*DamageConfig);
+		if (TouchConfig)   AIPerceptionComponent->ConfigureSense(*TouchConfig);
+
+		AIPerceptionComponent->RequestStimuliListenerUpdate();
+	}
 
 	AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(
 		this, &AGYEnemyAIController::OnTargetPerceptionUpdated);
