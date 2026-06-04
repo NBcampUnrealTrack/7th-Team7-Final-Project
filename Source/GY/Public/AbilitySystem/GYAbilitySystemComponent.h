@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AbilitySystemComponent.h"
+#include "GameplayTagContainer.h"
 #include "GYAbilitySystemComponent.generated.h"
 
 class UGYPeriodicAttributeEffect;
@@ -36,12 +37,24 @@ public:
 	void RescheduleStaggerRegen();
 	void RescheduleStunRegen();
 
+	void ApplyCombatTag();
+	void NotifyAttributeDecreased(const FGameplayAttribute& Attribute);
+
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UGYPeriodicAttributeEffect> StaminaRegenEffect;
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UGYPeriodicAttributeEffect> StaggerRegenEffect;
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UGYPeriodicAttributeEffect> StunRegenEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category="GAS")
+	FGameplayTagContainer CombatAppliedTags;
+
+	UPROPERTY(EditDefaultsOnly, Category="GAS")
+	FGameplayTag RegenAppliedTag;
+
+	UPROPERTY(EditDefaultsOnly, Category="GAS", meta=(ClampMin="0.0", Units="s"))
+	float CombatAppliedDuration = 5.f;
 
 protected:
 	virtual void OnRep_ReplicatedAnimMontage() override;
@@ -53,6 +66,8 @@ private:
 	void ApplyMontageCorrection(UAnimInstance* AnimInst, UAnimMontage* Montage, float StartTime);
 	void OnCombatTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void TryActivateAbilitiesOnSpawn();
+
+	FTimerHandle CombatTagTimer;
 
 	TArray<FGameplayAbilitySpecHandle> InputPressedSpecHandles;
 	TArray<FGameplayAbilitySpecHandle> InputReleasedSpecHandles;

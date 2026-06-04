@@ -4,7 +4,9 @@
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
 #include "AbilitySystemComponent.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Animation/AnimMontage.h"
 #include "AbilitySystem/Abilities/Fragment/AbilityFragment.h"
 #include "AbilitySystem/Abilities/Fragment/AbilityFragmentModifierComponent.h"
@@ -40,9 +42,13 @@ bool UGYPlayerGameplayAbility::CanActivateAbility(
 		{
 			if (Spec.Handle == Handle) continue;
 			if (Spec.IsActive() && Cast<UGYPlayerGameplayAbility>(Spec.Ability))
-			{
 				return false;
-			}
+		}
+
+		if (const UGYPlayerAttribute* Attrs = ASC->GetSet<UGYPlayerAttribute>())
+		{
+			if (Attrs->GetCurrentStamina() <= 0.f)
+				return false;
 		}
 	}
 
@@ -62,6 +68,9 @@ void UGYPlayerGameplayAbility::ActivateAbility(
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
+
+	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo()))
+		GYASC->ApplyCombatTag();
 
 	ScanAndApplyGEModifiers();
 
@@ -346,21 +355,13 @@ void UGYPlayerGameplayAbility::OnGameplayEventDispatched(FGameplayEventData Payl
 
 float UGYPlayerGameplayAbility::PlayMontageForLogic(UAnimMontage* Montage, float PlayRate)
 {
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	if (!ASC) return 0.f;
+	if (!Montage) return 0.f;
 
-	const float ServerTimestamp = GetWorld()->GetTimeSeconds();
-	const float Result = ASC->PlayMontage(this, CurrentActivationInfo, Montage, PlayRate);
+	UAbilityTask_PlayMontageAndWait* Task = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this, NAME_None, Montage, PlayRate, NAME_None, true);
+	Task->ReadyForActivation();
 
-	if (ASC->IsOwnerActorAuthoritative())
-	{
-		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
-		{
-			GYASC->Multicast_NotifyMontageStart(Montage, ServerTimestamp);
-		}
-	}
-
-	return Result;
+	return Montage->GetPlayLength() / FMath::Max(PlayRate, KINDA_SMALL_NUMBER);
 }
 
 AGYCharacter* UGYPlayerGameplayAbility::GetGYCharacter() const

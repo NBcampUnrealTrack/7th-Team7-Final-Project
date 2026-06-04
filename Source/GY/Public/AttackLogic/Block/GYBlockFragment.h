@@ -11,9 +11,11 @@ struct GY_API FGYBlockData
 {
 	GENERATED_BODY()
 
-	// Stamina drained per second while blocking.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block")
 	FGYAttributeCost StaminaDrainPerSecond;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float DamageReductionMultiplier = 0.5f;
 };
 
 UCLASS(EditInlineNew, DefaultToInstanced)

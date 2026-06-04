@@ -1,6 +1,9 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "AbilitySystem/GYPeriodicAttributeEffect.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "GameFramework/Character.h"
@@ -8,26 +11,15 @@
 
 void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
 {
-
 	Super::InitAbilityActorInfo(InOwnerActor, InAvatarActor);
 
-	if (StaminaRegenEffect)
+	CombatAppliedTags.AddTag(GYStateTags::State_Combat_InCombat);
+	RegenAppliedTag = GYStateTags::State_Regen_Delayed;
+
+	if (RegenAppliedTag.IsValid())
 	{
-		const FGameplayTag Tag = GetDefault<UGYPeriodicAttributeEffect>(StaminaRegenEffect)->CombatTag;
-		if (Tag.IsValid())
-			RegisterGameplayTagEvent(Tag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &UGYAbilitySystemComponent::OnCombatTagChanged);
-	}
-	if (StaggerRegenEffect)
-	{
-		const FGameplayTag Tag = GetDefault<UGYPeriodicAttributeEffect>(StaggerRegenEffect)->CombatTag;
-		if (Tag.IsValid())
-			RegisterGameplayTagEvent(Tag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &UGYAbilitySystemComponent::OnCombatTagChanged);
-	}
-	if (StunRegenEffect)
-	{
-		const FGameplayTag Tag = GetDefault<UGYPeriodicAttributeEffect>(StunRegenEffect)->CombatTag;
-		if (Tag.IsValid())
-			RegisterGameplayTagEvent(Tag, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &UGYAbilitySystemComponent::OnCombatTagChanged);
+		RegisterGameplayTagEvent(RegenAppliedTag, EGameplayTagEventType::NewOrRemoved)
+			.AddUObject(this, &UGYAbilitySystemComponent::OnCombatTagChanged);
 	}
 
 	if (GetOwner() && GetOwner()->HasAuthority())
@@ -286,14 +278,54 @@ void UGYAbilitySystemComponent::RescheduleStunRegen()
 	ScheduleEffect(StunRegenEffect, StunRegenGEHandle, StunRegenDelayHandle, &UGYAbilitySystemComponent::StartStunRegen);
 }
 
+void UGYAbilitySystemComponent::ApplyCombatTag()
+{
+	if (!GetWorld()) return;
+
+	for (const FGameplayTag& CombatTag : CombatAppliedTags)
+	{
+		if (!HasMatchingGameplayTag(CombatTag))
+			AddLooseGameplayTag(CombatTag);
+	}
+
+	if (RegenAppliedTag.IsValid() && !HasMatchingGameplayTag(RegenAppliedTag))
+		AddLooseGameplayTag(RegenAppliedTag);
+
+	TWeakObjectPtr<UGYAbilitySystemComponent> WeakThis(this);
+	GetWorld()->GetTimerManager().SetTimer(CombatTagTimer,
+		[WeakThis]()
+		{
+			if (UGYAbilitySystemComponent* Self = WeakThis.Get())
+			{
+				for (const FGameplayTag& CombatTag : Self->CombatAppliedTags)
+				{
+					if (Self->HasMatchingGameplayTag(CombatTag))
+						Self->RemoveLooseGameplayTag(CombatTag);
+				}
+				if (Self->RegenAppliedTag.IsValid() && Self->HasMatchingGameplayTag(Self->RegenAppliedTag))
+					Self->RemoveLooseGameplayTag(Self->RegenAppliedTag);
+			}
+		},
+		FMath::Max(CombatAppliedDuration, KINDA_SMALL_NUMBER), false);
+}
+
+void UGYAbilitySystemComponent::NotifyAttributeDecreased(const FGameplayAttribute& Attribute)
+{
+	ApplyCombatTag();
+
+	if (Attribute == UGYPlayerAttribute::GetCurrentStaminaAttribute())
+		RescheduleStaminaRegen();
+	else if (Attribute == UGYAdditionalAttribute::GetCurrentStaggerAttribute())
+		RescheduleStaggerRegen();
+	else if (Attribute == UGYAdditionalAttribute::GetCurrentStunAttribute())
+		RescheduleStunRegen();
+}
+
 void UGYAbilitySystemComponent::OnCombatTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
-	if (StaminaRegenEffect && GetDefault<UGYPeriodicAttributeEffect>(StaminaRegenEffect)->CombatTag == Tag)
-		ScheduleEffect(StaminaRegenEffect, StaminaRegenGEHandle, StaminaRegenDelayHandle, &UGYAbilitySystemComponent::StartStaminaRegen);
-	if (StaggerRegenEffect && GetDefault<UGYPeriodicAttributeEffect>(StaggerRegenEffect)->CombatTag == Tag)
-		ScheduleEffect(StaggerRegenEffect, StaggerRegenGEHandle, StaggerRegenDelayHandle, &UGYAbilitySystemComponent::StartStaggerRegen);
-	if (StunRegenEffect && GetDefault<UGYPeriodicAttributeEffect>(StunRegenEffect)->CombatTag == Tag)
-		ScheduleEffect(StunRegenEffect, StunRegenGEHandle, StunRegenDelayHandle, &UGYAbilitySystemComponent::StartStunRegen);
+	ScheduleEffect(StaminaRegenEffect, StaminaRegenGEHandle, StaminaRegenDelayHandle, &UGYAbilitySystemComponent::StartStaminaRegen);
+	ScheduleEffect(StaggerRegenEffect, StaggerRegenGEHandle, StaggerRegenDelayHandle, &UGYAbilitySystemComponent::StartStaggerRegen);
+	ScheduleEffect(StunRegenEffect,    StunRegenGEHandle,    StunRegenDelayHandle,    &UGYAbilitySystemComponent::StartStunRegen);
 }
 
 void UGYAbilitySystemComponent::ScheduleEffect(TSubclassOf<UGYPeriodicAttributeEffect> EffectClass, FActiveGameplayEffectHandle& Handle, FTimerHandle& DelayHandle, void(UGYAbilitySystemComponent::* StartFunc)())
@@ -302,10 +334,10 @@ void UGYAbilitySystemComponent::ScheduleEffect(TSubclassOf<UGYPeriodicAttributeE
 	if (!EffectClass) return;
 
 	const UGYPeriodicAttributeEffect* CDO = GetDefault<UGYPeriodicAttributeEffect>(EffectClass);
-	const bool bHasTag = CDO->CombatTag.IsValid() && HasMatchingGameplayTag(CDO->CombatTag);
-	const float Delay = bHasTag ? CDO->CombatStartDelay : 0.f;
+	const bool bInCombat = RegenAppliedTag.IsValid() && HasMatchingGameplayTag(RegenAppliedTag);
+	const float Delay = bInCombat ? CDO->CombatStartDelay : 0.f;
 
-	if (Delay > 0.f)
+if (Delay > 0.f)
 		GetWorld()->GetTimerManager().SetTimer(DelayHandle, this, StartFunc, Delay, false);
 	else
 		(this->*StartFunc)();

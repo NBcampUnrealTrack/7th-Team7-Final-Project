@@ -3,6 +3,7 @@
 #include "AttackLogic/Charge/GYChargeMontageFragment.h"
 #include "AttackLogic/Shared/GYCollisionFragment.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/AbilityTags.h"
@@ -66,6 +67,8 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	{
 		const float Current = ASC->GetNumericAttributeBase(ChargeData->ChargeCost.Attribute);
 		ASC->SetNumericAttributeBase(ChargeData->ChargeCost.Attribute, FMath::Max(0.f, Current - ChargeData->ChargeCost.Amount));
+		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
+			GYASC->NotifyAttributeDecreased(ChargeData->ChargeCost.Attribute);
 	}
 
 	bCharging = true;
@@ -204,6 +207,8 @@ void UGYChargeInputLogic::ExecuteAttack()
 				const float CostAmount = FMath::Lerp(0.f, CostData->AttackCost.Amount, Alpha);
 				const float Current = CostASC->GetNumericAttributeBase(CostData->AttackCost.Attribute);
 				CostASC->SetNumericAttributeBase(CostData->AttackCost.Attribute, FMath::Max(0.f, Current - CostAmount));
+				if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(CostASC))
+					GYASC->NotifyAttributeDecreased(CostData->AttackCost.Attribute);
 			}
 		}
 	}

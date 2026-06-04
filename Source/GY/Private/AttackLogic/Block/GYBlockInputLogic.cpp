@@ -2,6 +2,7 @@
 #include "AttackLogic/Block/GYBlockFragment.h"
 #include "AttackLogic/Block/GYBlockMontageFragment.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/EventTags.h"
@@ -126,6 +127,9 @@ void UGYBlockInputLogic::DrainTick()
 
 	const float Drain = CachedDrainPerSecond * DrainInterval;
 	ASC->SetNumericAttributeBase(CachedDrainAttribute, FMath::Max(0.f, Current - Drain));
+
+	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
+		GYASC->NotifyAttributeDecreased(CachedDrainAttribute);
 
 	if (Current - Drain <= 0.f)
 		PlayBlockEnd();
