@@ -18,8 +18,8 @@ namespace  EnemyBBKeys
 	static const FName TargetLocation		= TEXT("TargetLocation");
 	static const FName StartLocation		= TEXT("StartLocation");
 	static const FName IsStunned			= TEXT("IsStunned");
+	static const FName IsStaggered			= TEXT("IsStaggered");
 	static const FName IsDead				= TEXT("IsDead");
-	static const FName IsRunning			= TEXT("IsRunning");
 	static const FName AttackRadius			= TEXT("AttackRadius");
 	static const FName InvestigateLocation	= TEXT("InvestigateLocation");
 	static const FName HasPatrol			= TEXT("HasPatrol");

@@ -223,7 +223,6 @@ void AGYEnemyAIController::SetupBlackboardDefaults()
 
 	BB->SetValueAsBool(EnemyBBKeys::IsStunned, false);
 	BB->SetValueAsBool(EnemyBBKeys::IsDead, false);
-	BB->SetValueAsBool(EnemyBBKeys::IsRunning, false);
 
 	if (!PatrolPoints.IsEmpty())
 	{
