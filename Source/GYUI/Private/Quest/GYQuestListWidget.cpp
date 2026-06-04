@@ -145,6 +145,10 @@ void UGYQuestListWidget::ShowQuestDetail(FGameplayTag QuestTag)
 	{
 		Text_QuestDesc->SetText(Row->Description);
 	}
+	if (Text_Objective)
+	{
+		Text_Objective->SetText(Row->Objective.Description);
+	}
 
 }
 
@@ -159,6 +163,10 @@ void UGYQuestListWidget::ClearDetail()
 	if (Text_QuestDesc)
 	{
 		Text_QuestDesc->SetText(FText::GetEmpty());
+	}
+	if (Text_Objective)
+	{
+		Text_Objective->SetText(FText::GetEmpty());
 	}
 }
 

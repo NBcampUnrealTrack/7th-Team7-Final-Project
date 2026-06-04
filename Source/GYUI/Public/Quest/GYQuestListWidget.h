@@ -42,6 +42,9 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCommonTextBlock> Text_QuestProgress;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UCommonTextBlock> Text_Objective;
+
 	UPROPERTY(EditDefaultsOnly, Category = "GY|Quest")
 	TSubclassOf<UGYQuestEntryWidget> QuestEntryWidgetClass;
 
