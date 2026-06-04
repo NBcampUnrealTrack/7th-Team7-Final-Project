@@ -1,5 +1,6 @@
 #include "AbilitySystem/GYCombatStatics.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "AbilitySystem/GYAdditionalResourceStatics.h"
 #include "AbilitySystem/Attributes/GYBaseAttribute.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AttackLogic/Block/GYBlockFragment.h"
@@ -26,7 +27,15 @@ static void ApplyInstantGEToAttribute(UAbilitySystemComponent* ASC, const FGamep
 
 void UGYCombatStatics::ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float RawDamage)
 {
+	if (!TargetASC || RawDamage <= 0.f) return;
+
 	ApplyInstantGEToAttribute(TargetASC, UGYBaseAttribute::GetCurrentHealthAttribute(), -RawDamage);
+
+	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
+	{
+		UGYAdditionalResourceStatics::DecreaseStagger(GYASC, RawDamage);
+		UGYAdditionalResourceStatics::DecreaseStun(GYASC, RawDamage);
+	}
 }
 
 void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float RawDamage,
@@ -83,6 +92,15 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 	const float Effective = FMath::Max(0.f, (RawDamage * DamageMultiplier) - Defense);
 
 	ApplyInstantGEToAttribute(TargetASC, UGYBaseAttribute::GetCurrentHealthAttribute(), -Effective);
+
+	if (Effective > 0.f)
+	{
+		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
+		{
+			UGYAdditionalResourceStatics::DecreaseStagger(GYASC, Effective);
+			UGYAdditionalResourceStatics::DecreaseStun(GYASC, Effective);
+		}
+	}
 }
 
 void UGYCombatStatics::ApplyHeal(UAbilitySystemComponent* ASC, float HealAmount)
