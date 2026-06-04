@@ -31,7 +31,7 @@ void UGYAdditionalResourceStatics::DecreaseStagger(UGYAbilitySystemComponent* AS
 	if (!AdditionalAttr || AdditionalAttr->GetCurrentStagger() <= 0.f) return;
 
 	ApplyStaggerUse(ASC, Amount);
-	ASC->RescheduleStaggerRegen();
+	ASC->NotifyAttributeDecreased(UGYAdditionalAttribute::GetCurrentStaggerAttribute());
 }
 
 void UGYAdditionalResourceStatics::ApplyStunUse(UAbilitySystemComponent* ASC, float Amount)
@@ -46,5 +46,5 @@ void UGYAdditionalResourceStatics::DecreaseStun(UGYAbilitySystemComponent* ASC, 
 	if (!AdditionalAttr || AdditionalAttr->GetCurrentStun() <= 0.f) return;
 
 	ApplyStunUse(ASC, Amount);
-	ASC->RescheduleStunRegen();
+	ASC->NotifyAttributeDecreased(UGYAdditionalAttribute::GetCurrentStunAttribute());
 }

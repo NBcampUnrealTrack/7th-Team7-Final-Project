@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "GameplayTagContainer.h"
 #include "GYCombatStatics.generated.h"
 
 class UAbilitySystemComponent;
@@ -13,7 +14,13 @@ class GY_API UGYCombatStatics : public UBlueprintFunctionLibrary
 
 public:
 	UFUNCTION(BlueprintCallable, Category="GY|Combat")
-	static void ApplyDamage(UAbilitySystemComponent* ASC, float RawDamage);
+	static void ApplyDamage(UAbilitySystemComponent* TargetASC, float RawDamage,
+		FGameplayTag DodgeStateTag = FGameplayTag(),
+		FGameplayTagContainer ParryStateTags = FGameplayTagContainer(),
+		FGameplayTag BlockStateTag = FGameplayTag());
+
+	UFUNCTION(BlueprintCallable, Category="GY|Combat")
+	static void ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float RawDamage);
 
 	UFUNCTION(BlueprintCallable, Category="GY|Combat")
 	static void ApplyHeal(UAbilitySystemComponent* ASC, float HealAmount);

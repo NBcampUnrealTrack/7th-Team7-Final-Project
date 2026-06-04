@@ -8,7 +8,6 @@
 #include "Player/GYPlayerState.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/GYAdditionalResourceStatics.h"
-#include "AbilitySystem/GYPeriodicAttributeEffect.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "AbilitySystem/GYPlayerResourceStatics.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
@@ -135,15 +134,21 @@ FReply SGYDebugMenu::GY_DebugDecreaseStun()
 FReply SGYDebugMenu::GY_DebugToggleCombatState()
 {
 	UGYAbilitySystemComponent* ASC = GetASC(PlayerState);
-	if (!ASC || !ASC->StaminaRegenEffect) return FReply::Handled();
+	if (!ASC) return FReply::Handled();
 
-	const FGameplayTag CombatTag = GetDefault<UGYPeriodicAttributeEffect>(ASC->StaminaRegenEffect)->CombatTag;
-	if (!CombatTag.IsValid()) return FReply::Handled();
-
-	if (ASC->HasMatchingGameplayTag(CombatTag))
-		ASC->RemoveLooseGameplayTag(CombatTag);
+	if (ASC->RegenAppliedTag.IsValid() && ASC->HasMatchingGameplayTag(ASC->RegenAppliedTag))
+	{
+		for (const FGameplayTag& CombatTag : ASC->CombatAppliedTags)
+		{
+			if (ASC->HasMatchingGameplayTag(CombatTag))
+				ASC->RemoveLooseGameplayTag(CombatTag);
+		}
+		ASC->RemoveLooseGameplayTag(ASC->RegenAppliedTag);
+	}
 	else
-		ASC->AddLooseGameplayTag(CombatTag);
+	{
+		ASC->ApplyCombatTag();
+	}
 
 	return FReply::Handled();
 }
@@ -151,11 +156,10 @@ FReply SGYDebugMenu::GY_DebugToggleCombatState()
 FText SGYDebugMenu::GetCombatStateButtonText() const
 {
 	UGYAbilitySystemComponent* ASC = GetASC(PlayerState);
-	if (!ASC || !ASC->StaminaRegenEffect)
+	if (!ASC)
 		return FText::FromString(TEXT("Toggle Combat State"));
 
-	const FGameplayTag CombatTag = GetDefault<UGYPeriodicAttributeEffect>(ASC->StaminaRegenEffect)->CombatTag;
-	return ASC->HasMatchingGameplayTag(CombatTag)
+	return (ASC->RegenAppliedTag.IsValid() && ASC->HasMatchingGameplayTag(ASC->RegenAppliedTag))
 		? FText::FromString(TEXT("Set Base State"))
 		: FText::FromString(TEXT("Set Combat State"));
 }

@@ -3,6 +3,7 @@
 #include "AttackLogic/Combo/GYComboMontageFragment.h"
 #include "AttackLogic/Shared/GYCollisionFragment.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/AbilityTags.h"
@@ -187,6 +188,8 @@ void UGYComboInputLogic::PlayCurrentMontage()
 			{
 				const float Current = ASC->GetNumericAttributeBase(Step.StaminaCost.Attribute);
 				ASC->SetNumericAttributeBase(Step.StaminaCost.Attribute, FMath::Max(0.f, Current - Step.StaminaCost.Amount));
+				if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
+					GYASC->NotifyAttributeDecreased(Step.StaminaCost.Attribute);
 			}
 		}
 		CachedAbility->SetDamageMultiplier(Multiplier);
