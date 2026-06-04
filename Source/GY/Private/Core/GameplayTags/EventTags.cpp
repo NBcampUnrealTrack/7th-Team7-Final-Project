@@ -8,6 +8,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Item_Enchanted, "Event.Item.Enchanted");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Item_GemSocketed, "Event.Item.GemSocketed");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Item_Used, "Event.Item.Used");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Item_Used_HP, "Event.Item.Used.HP");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Item_Used_SP, "Event.Item.Used.SP");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Inventory_ItemAdded, "Event.Inventory.ItemAdded");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Inventory_ItemRemoved, "Event.Inventory.ItemRemoved");

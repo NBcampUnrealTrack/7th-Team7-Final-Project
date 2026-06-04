@@ -30,7 +30,6 @@ void UGA_TransferItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
-
 	const UItemTransferPayload* Payload = Cast<UItemTransferPayload>(TriggerEventData->OptionalObject);
 	if (!Payload)
 	{
