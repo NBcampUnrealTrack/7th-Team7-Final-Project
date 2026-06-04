@@ -108,6 +108,8 @@ protected:
 	void EnableRagdoll();
 	void HandleDeathAuthority();
 	void GrantRewards();
+	void DisableRagdoll();
+	void EnableGameplay();
 
 	void BuildMontageMap(const FEnemyAnimationConfig& Config);
 
@@ -178,6 +180,9 @@ protected:
 private:
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	FString WeaponTraceBonePrefix = TEXT("WeaponTrace_");
+
+	FVector DefaultMeshRelativeLocation;
+	FRotator DefaultMeshRelativeRotation;
 
 	FTimerHandle DeactivateTimerHandle;
 };

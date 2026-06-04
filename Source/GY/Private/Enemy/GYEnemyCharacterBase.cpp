@@ -40,6 +40,9 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 
 	AIControllerClass = AGYEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	DefaultMeshRelativeLocation = GetMesh()->GetRelativeLocation();
+	DefaultMeshRelativeRotation = GetMesh()->GetRelativeRotation();
 }
 
 UAbilitySystemComponent* AGYEnemyCharacterBase::GetAbilitySystemComponent() const
@@ -418,6 +421,37 @@ void AGYEnemyCharacterBase::GrantRewards()
 	// TODO 은서: DropTable 로드 후 드롭 액터 스폰
 }
 
+void AGYEnemyCharacterBase::DisableRagdoll()
+{
+	USkeletalMeshComponent* SkeletalMesh = GetMesh();
+	if (!SkeletalMesh) return;
+
+	SkeletalMesh->SetAllBodiesBelowSimulatePhysics(false);
+	SkeletalMesh->SetSimulatePhysics(false);
+	SkeletalMesh->bBlendPhysics = false;
+
+	SkeletalMesh->SetCollisionProfileName(TEXT("CharacterMesh"));
+
+	SkeletalMesh->AttachToComponent(
+		GetCapsuleComponent(),
+		FAttachmentTransformRules::KeepRelativeTransform);
+
+	SkeletalMesh->SetRelativeLocationAndRotation(DefaultMeshRelativeLocation, DefaultMeshRelativeRotation);
+}
+
+void AGYEnemyCharacterBase::EnableGameplay()
+{
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->SetMovementMode(MOVE_Walking);
+	}
+}
+
 void AGYEnemyCharacterBase::Die()
 {
 	if (bIsDead) return;
@@ -482,11 +516,37 @@ void AGYEnemyCharacterBase::Deactivate()
 
 void AGYEnemyCharacterBase::Activate()
 {
-	if (EnemyType != EEnemyType::None && !LoadedDataAsset)
+	if (EnemyType == EEnemyType::None) return;
+
+	bIsDead = false;
+
+	if (DeactivateTimerHandle.IsValid())
 	{
-		SetActorEnableCollision(true);
-		SetActorHiddenInGame(false);
+		GetWorldTimerManager().ClearTimer(DeactivateTimerHandle);
+	}
+
+	DisableRagdoll();
+	EnableGameplay();
+	SetActorEnableCollision(true);
+	SetActorHiddenInGame(false);
+
+	if (!LoadedDataAsset)
+	{
 		InitWithType(EnemyType);
+	}
+	else
+	{
+		bGASGrantedFromDataAsset = false;
+		TryGrantGASFromDataAsset();
+		ApplyAIConfig(LoadedDataAsset->AIConfig);
+
+		if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+			{
+				BB->SetValueAsBool(EnemyBBKeys::IsDead, false);
+			}
+		}
 	}
 }
 
@@ -540,14 +600,21 @@ void AGYEnemyCharacterBase::OnRep_EnemyType()
 
 void AGYEnemyCharacterBase::OnRep_IsActivate()
 {
-	if (!bIsActivate)
+	if (bIsActivate)
 	{
-		SetActorEnableCollision(false);
+		DisableRagdoll();
+		SetActorHiddenInGame(false);
+		SetActorEnableCollision(true);
+
+		if (!LoadedDataAsset)
+		{
+			LoadDataAssetAndApply();
+		}
 	}
 	else
 	{
-		LoadDataAssetAndApply();
-		SetActorEnableCollision(true);
+		SetActorHiddenInGame(true);
+		SetActorEnableCollision(false);
 	}
 }
 
