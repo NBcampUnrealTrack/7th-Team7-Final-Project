@@ -25,7 +25,6 @@ void UAltarStorageComponent::BeginPlay()
 }
 
 
-
 void UAltarStorageComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -198,7 +197,7 @@ bool UAltarStorageComponent::TakeEntry(const FGuid& InstanceId, FInventoryEntry&
 	if (!GetOwner()->HasAuthority()) return false;
 
 	const int32 Index = Storage.Entries.IndexOfByPredicate(
-		[&InstanceId](const FInventoryEntry& E){ return E.InstanceId == InstanceId; });
+		[&InstanceId](const FInventoryEntry& E) { return E.InstanceId == InstanceId; });
 	if (Index == INDEX_NONE) return false;
 
 	OutEntry = Storage.Entries[Index];
@@ -213,7 +212,7 @@ bool UAltarStorageComponent::TakeEntry(const FGuid& InstanceId, FInventoryEntry&
 }
 
 
-void UAltarStorageComponent::Server_RequestDisassemble_Implementation(const FGuid& InstanceId)
+void UAltarStorageComponent::Server_RequestDisassemble_Implementation()
 {
 	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwner());
 	if (!IsValid(PS)) return;
@@ -227,7 +226,10 @@ void UAltarStorageComponent::Server_RequestDisassemble_Implementation(const FGui
 	UDisassembleService* Disassemble = GI->GetSubsystem<UDisassembleService>();
 	if (!IsValid(Disassemble)) return;
 
-	Disassemble->TryDisassemble(this, Currency, InstanceId);
+	for (FInventoryEntry Entry : Storage.Entries)
+	{
+		Disassemble->TryDisassemble(this, Currency, Entry.InstanceId);
+	}
 }
 
 int32 UAltarStorageComponent::GetCapacity() const

@@ -105,6 +105,11 @@ void UGYItemSlotWidget::SetEmpty()
 	OnSlotUpdated(true, FGameplayTag::EmptyTag, 0);
 }
 
+FGuid UGYItemSlotWidget::GetItemInstanceId()
+{
+	return ItemInstanceId;
+}
+
 FReply UGYItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))

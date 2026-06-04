@@ -16,7 +16,7 @@ class GYUI_API UGYTimeRiftWidget : public UGYActivatableWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeConstruct() override;
-
+	virtual void NativeDestruct() override;
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ExitButton;
@@ -43,6 +43,6 @@ private:
 	UFUNCTION()
 	void  OnRerollButtonClicked();
 	UFUNCTION()
-	void  SkillTreeButtonClicked();
+	void  OnSkillTreeButtonClicked();
 
 };

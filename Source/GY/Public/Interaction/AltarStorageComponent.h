@@ -32,7 +32,7 @@ public:
 	virtual bool TakeEntry(const FGuid& InstanceId, FInventoryEntry& OutEntry) override;
 
 	UFUNCTION(Server, Reliable)
-	void Server_RequestDisassemble(const FGuid& InstanceId);
+	void Server_RequestDisassemble();
 
 	FOnAltarChanged OnAltarChanged;
 

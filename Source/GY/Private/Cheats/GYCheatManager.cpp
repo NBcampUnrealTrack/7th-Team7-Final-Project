@@ -217,7 +217,7 @@ void UGYCheatManager::GY_PrintCurrency()
 	}
 }
 
-void UGYCheatManager::GY_Disassemble(int32 InvIndex)
+void UGYCheatManager::GY_Disassemble()
 {
 	AGYPlayerState* PS = GetGYPlayerState(this);
 	if (!IsValid(PS)) return;
@@ -225,15 +225,7 @@ void UGYCheatManager::GY_Disassemble(int32 InvIndex)
 	UAltarStorageComponent* AltarStorage = PS->GetAltarStorageComponent();
 	if (!IsValid(AltarStorage)) return;
 
-	const TArray<FInventoryEntry>& Entries = AltarStorage->GetEntries();
-	if (!Entries.IsValidIndex(InvIndex))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GY_Disassemble: invalid index %d (inventory size = %d)"), InvIndex, Entries.Num());
-		return;
-	}
-
-	const FGuid InstanceId = Entries[InvIndex].InstanceId;
-	AltarStorage->Server_RequestDisassemble(InstanceId);
+	AltarStorage->Server_RequestDisassemble();
 }
 
 void UGYCheatManager::GY_Enchant(int32 InvIndex)

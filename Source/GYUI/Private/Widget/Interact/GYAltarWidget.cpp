@@ -59,6 +59,8 @@ void UGYAltarWidget::NativeDestruct()
 		}
 		ListenerHandle = FGameplayMessageListenerHandle();
 	}
+	CloseButton->OnClicked.RemoveDynamic(this, &UGYAltarWidget::OnCloseButtonClicked);
+	ExecuteButton->OnClicked.RemoveDynamic(this, &UGYAltarWidget::OnExecuteButtonClicked);
 	Super::NativeDestruct();
 }
 
@@ -101,7 +103,13 @@ void UGYAltarWidget::OnCloseButtonClicked()
 
 void UGYAltarWidget::OnExecuteButtonClicked()
 {
-	
+	UAltarStorageComponent* AltarStorageComponent = ResolveAltarStorage();
+	if (!AltarStorageComponent) return;
+
+	AltarStorageComponent->Server_RequestDisassemble();
+
+
+
 }
 
 void UGYAltarWidget::EnsureSlots()

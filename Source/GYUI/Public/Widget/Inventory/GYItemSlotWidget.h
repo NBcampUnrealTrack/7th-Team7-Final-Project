@@ -19,6 +19,7 @@ public:
 	void SetContainer(TScriptInterface<IItemContainer> InContainer);
 	void SetEntry(const FInventoryEntry& Entry);
 	void SetEmpty();
+	FGuid GetItemInstanceId();
 
 protected:
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;

@@ -28,6 +28,8 @@ class GY_API AGYPlayerState : public APlayerState, public IAbilitySystemInterfac
 public:
 	AGYPlayerState();
 
+
+
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
