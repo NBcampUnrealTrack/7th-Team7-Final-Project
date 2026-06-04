@@ -4,13 +4,57 @@
 
 #include "CoreMinimal.h"
 #include "Core/GYActivatableWidget.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
+#include "Interaction/AltarStorageComponent.h"
 #include "GYAltarWidget.generated.h"
 
+struct FGYInventoryEntryMessage;
+class UGYItemSlotWidget;
+class UButton;
 /**
- * 
+ *
  */
 UCLASS()
 class GYUI_API UGYAltarWidget : public UGYActivatableWidget
 {
 	GENERATED_BODY()
+
+public:
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GY|Inventory")
+	TSubclassOf<UGYItemSlotWidget> SlotWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GY|Inventory", meta = (ClampMin = 1))
+	int32 GridSlotCount = 48;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> CloseButton;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPanelWidget> SlotContainer;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> ExecuteButton;
+
+	UFUNCTION()
+	void OnCloseButtonClicked();
+	UFUNCTION()
+	void OnExecuteButtonClicked();
+private:
+	void EnsureSlots();
+	void Refresh();
+	UAltarStorageComponent* ResolveAltarStorage() const;
+	void HandleEntryChanged(FGameplayTag Channel, const FGYInventoryEntryMessage& Msg);
+
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UGYItemSlotWidget>> SlotWidgets;
+
+	UPROPERTY()
+	TScriptInterface<IItemContainer> Container;
+
+	FGameplayMessageListenerHandle ListenerHandle;
 };

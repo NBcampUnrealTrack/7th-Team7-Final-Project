@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerState.h"
 #include "GYPlayerState.generated.h"
 
+class UAltarStorageComponent;
 class USkillTreeComponent;
 class UAbilitySet;
 class UAbilitySystemComponent;
@@ -27,6 +28,8 @@ class GY_API AGYPlayerState : public APlayerState, public IAbilitySystemInterfac
 public:
 	AGYPlayerState();
 
+
+
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -37,6 +40,9 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+	UFUNCTION(BlueprintPure)
+	UAltarStorageComponent* GetAltarStorageComponent() const { return AltarStorageComponent; }
 
 	UFUNCTION(BlueprintPure)
 	UEquipmentLoadoutComponent* GetEquipmentLoadoutComponent() const { return EquipmentLoadoutComponent; }
@@ -64,6 +70,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UInventoryComponent> InventoryComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAltarStorageComponent> AltarStorageComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UEquipmentLoadoutComponent> EquipmentLoadoutComponent;

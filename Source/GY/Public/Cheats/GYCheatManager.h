@@ -36,7 +36,7 @@ public:
 	void GY_PrintCurrency();
 
 	UFUNCTION(Exec)
-	void GY_Disassemble(int32 InvIndex);
+	void GY_Disassemble();
 
 	UFUNCTION(Exec)
 	void GY_Enchant(int32 InvIndex);

@@ -22,6 +22,7 @@
 #include "Loot/LootBoxActor.h"
 #include "Loot/LootTypes.h"
 #include "Enemy/GYEnemyCharacterBase.h"
+#include "Interaction/AltarStorageComponent.h"
 #include "Player/GYPlayerController.h"
 #include "Player/GYPlayerState.h"
 
@@ -216,23 +217,15 @@ void UGYCheatManager::GY_PrintCurrency()
 	}
 }
 
-void UGYCheatManager::GY_Disassemble(int32 InvIndex)
+void UGYCheatManager::GY_Disassemble()
 {
 	AGYPlayerState* PS = GetGYPlayerState(this);
 	if (!IsValid(PS)) return;
 
-	UInventoryComponent* Inv = PS->GetInventoryComponent();
-	if (!IsValid(Inv)) return;
+	UAltarStorageComponent* AltarStorage = PS->GetAltarStorageComponent();
+	if (!IsValid(AltarStorage)) return;
 
-	const TArray<FInventoryEntry>& Entries = Inv->GetEntries();
-	if (!Entries.IsValidIndex(InvIndex))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GY_Disassemble: invalid index %d (inventory size = %d)"), InvIndex, Entries.Num());
-		return;
-	}
-
-	const FGuid InstanceId = Entries[InvIndex].InstanceId;
-	Inv->Server_RequestDisassemble(InstanceId);
+	AltarStorage->Server_RequestDisassemble();
 }
 
 void UGYCheatManager::GY_Enchant(int32 InvIndex)

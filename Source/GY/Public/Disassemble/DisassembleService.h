@@ -5,8 +5,8 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "DisassembleService.generated.h"
 
+class UAltarStorageComponent;
 class UCurrencyComponent;
-class UInventoryComponent;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnItemDisassembled,
 	FGuid /*InstanceId*/,
@@ -19,7 +19,7 @@ class GY_API UDisassembleService : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
-	bool TryDisassemble(UInventoryComponent* Inventory, UCurrencyComponent* Currency, const FGuid& InstanceId);
+	bool TryDisassemble(UAltarStorageComponent* Altar, UCurrencyComponent* Currency, const FGuid& InstanceId);
 
 	FOnItemDisassembled OnItemDisassembled;
 };

@@ -12,6 +12,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Inventory_ItemAdded, "Event.Inventory.ItemAdded");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Inventory_ItemRemoved, "Event.Inventory.ItemRemoved");
 
+	UE_DEFINE_GAMEPLAY_TAG(Event_ItemContainer_Transfer, "Event.ItemContainer.Swap");
+
 	UE_DEFINE_GAMEPLAY_TAG(Event_Anim_Attack_DoTrace, "Event.Anim.Attack.DoTrace");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Anim_ComboWindowOpen, "Event.Anim.Combo.WindowOpen");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Anim_ComboWindowClose, "Event.Anim.Combo.WindowClose");
@@ -25,10 +27,12 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_WeaponTrace_Hit, "Event.Enemy.WeaponTrace.Hit");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_LaunchProjectile, "Event.Enemy.LaunchProjectile");
 
-	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Altar, "Event.TimeRift.Altar");
-	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Rest, "Event.TimeRift.Rest");
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Exit, "Event.TimeRift.Exit");
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Rest, "Event.TimeRift.Rest");
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Altar, "Event.TimeRift.Altar");
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Altar_Exit, "Event.TimeRift.Altar.Exit")
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Reroll, "Event.TimeRift.Reroll");
+	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Reroll_Exit, "Event.TimeRift.Reroll.Exit")
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_SkillTree, "Event.TimeRift.SkillTree");
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_SkillTree_Exit, "Event.TimeRift.SkillTree.Exit");
 

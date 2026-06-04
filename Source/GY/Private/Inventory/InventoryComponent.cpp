@@ -18,6 +18,14 @@ UInventoryComponent::UInventoryComponent()
 {
 	SetIsReplicatedByDefault(true);
 	Inventory.OwnerComponent = this;
+	Capacity = 30;
+}
+
+void UInventoryComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	Inventory.OwnerComponent = this;
+
 }
 
 void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -29,6 +37,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Params.Condition = COND_OwnerOnly;
 	DOREPLIFETIME_WITH_PARAMS_FAST(UInventoryComponent, Inventory, Params);
 }
+
 
 bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId)
 {
@@ -60,7 +69,7 @@ bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 
 			Remaining -= ToAdd;
 
 			Inventory.MarkItemDirty(Entry);
-			NotifyInventoryChanged(Entry.InstanceId, EInventoryEventType::StackCountChanged);
+			NotifyContainerChanged(Entry.InstanceId, EInventoryEventType::StackCountChanged);
 
 			if (!OutInstanceId.IsValid())
 			{
@@ -88,7 +97,7 @@ bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 
 			OutInstanceId = AddedEntry.InstanceId;
 		}
 
-		NotifyInventoryChanged(AddedEntry.InstanceId, EInventoryEventType::Added);
+		NotifyContainerChanged(AddedEntry.InstanceId, EInventoryEventType::Added);
 	}
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
@@ -126,7 +135,7 @@ bool UInventoryComponent::TryRemoveItem(const FGuid& InstanceId, int32 Count)
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
 
-	NotifyInventoryChanged(InstanceId, EventType);
+	NotifyContainerChanged(InstanceId, EventType);
 
 	return true;
 }
@@ -147,7 +156,7 @@ bool UInventoryComponent::MutateEntry(const FGuid& InstanceId, TFunctionRef<void
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
 
-	NotifyInventoryChanged(InstanceId, EInventoryEventType::Mutated);
+	NotifyContainerChanged(InstanceId, EInventoryEventType::Mutated);
 
 	return true;
 }
@@ -181,24 +190,8 @@ void UInventoryComponent::Server_RequestEnchant_Implementation(const FGuid& Inst
 	Enchant->TryEnchant(this, Currency, InstanceId, Seed, Rolled);
 }
 
-void UInventoryComponent::Server_RequestDisassemble_Implementation(const FGuid& InstanceId)
-{
-	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwner());
-	if (!IsValid(PS)) return;
 
-	UCurrencyComponent* Currency = PS->GetCurrencyComponent();
-	if (!IsValid(Currency)) return;
-
-	UGameInstance* GI = GetWorld()->GetGameInstance();
-	if (!IsValid(GI)) return;
-
-	UDisassembleService* Disassemble = GI->GetSubsystem<UDisassembleService>();
-	if (!IsValid(Disassemble)) return;
-
-	Disassemble->TryDisassemble(this, Currency, InstanceId);
-}
-
-void UInventoryComponent::NotifyInventoryChanged(const FGuid& InstanceId, EInventoryEventType EventType)
+void UInventoryComponent::NotifyContainerChanged(const FGuid& InstanceId, EInventoryEventType EventType)
 {
 	OnInventoryChanged.Broadcast(InstanceId, EventType);
 
@@ -213,6 +206,39 @@ void UInventoryComponent::NotifyInventoryChanged(const FGuid& InstanceId, EInven
 
 	BroadcastPotionSnapshots();
 }
+
+
+bool UInventoryComponent::InsertEntry(const FInventoryEntry& Entry)
+{
+	if (!GetOwner()->HasAuthority()) return false;
+
+	FInventoryEntry& Added = Inventory.Entries.Add_GetRef(Entry);
+	Inventory.MarkItemDirty(Added);
+	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
+
+	NotifyContainerChanged(Added.InstanceId, EInventoryEventType::Added);
+	return true;
+}
+
+bool UInventoryComponent::TakeEntry(const FGuid& InstanceId, FInventoryEntry& OutEntry)
+{
+	if (!GetOwner()->HasAuthority()) return false;
+
+	const int32 Index = Inventory.Entries.IndexOfByPredicate(
+		[&InstanceId](const FInventoryEntry& E){ return E.InstanceId == InstanceId; });
+	if (Index == INDEX_NONE) return false;
+
+	OutEntry = Inventory.Entries[Index];
+	const FGuid RemovedId = OutEntry.InstanceId;
+
+	Inventory.Entries.RemoveAt(Index);
+	Inventory.MarkArrayDirty();
+	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
+
+	NotifyContainerChanged(RemovedId, EInventoryEventType::Removed);
+	return true;
+}
+
 
 void UInventoryComponent::BroadcastPotionSnapshots()
 {
@@ -269,6 +295,13 @@ void UInventoryComponent::BroadcastPotionSnapshots()
 	LastPublishedPotionTags = MoveTemp(CurrentKeys);
 }
 
+
+
+int32 UInventoryComponent::GetCapacity() const
+{
+	return Capacity;
+}
+
 TArray<FInventoryEntry> UInventoryComponent::GetAllEntriesByCategory(FGameplayTag CategoryTag) const
 {
 	TArray<FInventoryEntry> Result;
@@ -284,3 +317,4 @@ TArray<FInventoryEntry> UInventoryComponent::GetAllEntriesByCategory(FGameplayTa
 
 	return Result;
 }
+

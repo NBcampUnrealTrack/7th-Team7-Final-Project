@@ -37,7 +37,6 @@ bool AGYGameMode::AdvanceSecond(float Amount, AGYGameState* GYGameState)
 
 	bool ret = false;
 	float CurrentTime = GYGameState->GetCurrentTime();
-	GEngine->AddOnScreenDebugMessage(-1,1,FColor::Red,FString::FromInt(CurrentTime));
 
 	CurrentTime += Amount;
 	if (CurrentTime > GYGameState->GetMidnight())

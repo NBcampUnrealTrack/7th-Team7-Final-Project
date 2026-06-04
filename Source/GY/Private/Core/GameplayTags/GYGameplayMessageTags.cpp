@@ -20,7 +20,9 @@ namespace GYGameplayTags
     UE_DEFINE_GAMEPLAY_TAG(Message_Inventory_PotionUsed, "GY.Message.Inventory.PotionUsed");
     UE_DEFINE_GAMEPLAY_TAG(Message_Inventory_PotionRecharged, "GY.Message.Inventory.PotionRecharged");
     UE_DEFINE_GAMEPLAY_TAG(Message_Inventory_PotionSlotChanged, "GY.Message.Inventory.PotionSlotChanged");
-    UE_DEFINE_GAMEPLAY_TAG(Message_Inventory_EntryChanged, "GY.Message.Inventory.EntryChanged");
+	UE_DEFINE_GAMEPLAY_TAG(Message_Inventory_EntryChanged, "GY.Message.Inventory.EntryChanged");
+
+    UE_DEFINE_GAMEPLAY_TAG(Message_Altar_EntryChanged, "GY.Message.Altar.EntryChanged");
 
     UE_DEFINE_GAMEPLAY_TAG(Message_Equipment_LoadoutSlotChanged, "GY.Message.Equipment.LoadoutSlotChanged");
 
