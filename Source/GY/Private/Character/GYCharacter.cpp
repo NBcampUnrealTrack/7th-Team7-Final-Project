@@ -4,6 +4,7 @@
 #include "Logging/GYLogManager.h"
 
 #include "Character/GYPawnExtensionComponent.h"
+#include "Character/LockOn/LockOnComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Equipment/ActiveEquipmentComponent.h"
@@ -21,6 +22,7 @@ AGYCharacter::AGYCharacter()
 	ActiveEquipmentComponent = CreateDefaultSubobject<UActiveEquipmentComponent>(TEXT("ActiveEquipmentComponent"));
 	PawnExtComponent = CreateDefaultSubobject<UGYPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
+	LockOnComponent = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));
 	GetCharacterMovement()->MaxWalkSpeed = 300.f;
 
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));

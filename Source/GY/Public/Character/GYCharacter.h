@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "GYCharacter.generated.h"
 
+class ULockOnComponent;
 class UGYPawnExtensionComponent;
 class UAbilitySystemComponent;
 class UActiveEquipmentComponent;
@@ -31,6 +32,8 @@ public:
 
 	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
 
+	ULockOnComponent* GetLockOnComponent() const { return LockOnComponent; }
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(Server, Reliable)
@@ -54,6 +57,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UInteractionComponent> InteractionComponent;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<ULockOnComponent> LockOnComponent;
+
 	UPROPERTY(VisibleAnywhere, Category = "AI")
 	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSource;
 
@@ -64,8 +70,5 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HB|Character", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UGYPawnExtensionComponent> PawnExtComponent;
 
-public:
-	UPROPERTY()
-	TWeakObjectPtr<AActor> Target;
 	//TODO::타겟을 정해주는 로직 필요
 };
