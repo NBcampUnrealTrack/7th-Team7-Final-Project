@@ -85,6 +85,12 @@ bool UGYInventoryScreenWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 	return true;
 }
 
+void UGYInventoryScreenWidget::NotifyItemClicked(const FGuid& InstanceId)
+{
+	if (!InstanceId.IsValid()) return;
+	OnItemClicked.Broadcast(InstanceId);
+}
+
 void UGYInventoryScreenWidget::SetCategory(FGameplayTag CategoryTag)
 {
 	if (CurrentCategory == CategoryTag) return;

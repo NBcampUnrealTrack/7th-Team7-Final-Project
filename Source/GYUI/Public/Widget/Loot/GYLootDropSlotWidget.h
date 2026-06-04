@@ -1,18 +1,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonUserWidget.h"
+#include "Widget/Slot/GYItemSlotBase.h"
 #include "GameplayTagContainer.h"
-#include "UI/GYUIMessages.h"
 #include "GYLootDropSlotWidget.generated.h"
 
-class UImage;
 class UCommonTextBlock;
 class ALootBoxActor;
 struct FLootDrop;
 
 UCLASS(Abstract, Blueprintable)
-class GYUI_API UGYLootDropSlotWidget : public UCommonUserWidget
+class GYUI_API UGYLootDropSlotWidget : public UGYItemSlotBase
 {
 	GENERATED_BODY()
 
@@ -21,15 +19,11 @@ public:
 	void SetEmpty();
 
 protected:
-	// 우클릭 → 아이템 정보 패널 표시
-	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void OnViewChanged(bool bIsEmpty) override;
 
 	// BP 클릭/선택 핸들러에서 호출 — 이 드롭 줍기 요청
 	UFUNCTION(BlueprintCallable, Category = "GY|Loot")
 	void RequestTake();
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> Image_Icon;
 
 	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
 	TObjectPtr<UCommonTextBlock> Text_Count;
@@ -41,7 +35,4 @@ protected:
 private:
 	TWeakObjectPtr<ALootBoxActor> BoundBox;
 	int32 DropIndex = INDEX_NONE;
-
-	// 우클릭 시 정보 패널로 발행할 스냅샷 (Definition 비면 빈 칸)
-	FGYItemViewData CurrentInfo;
 };
