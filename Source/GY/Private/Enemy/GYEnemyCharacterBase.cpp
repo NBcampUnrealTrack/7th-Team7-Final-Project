@@ -17,6 +17,7 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/DataTables/EnemyStatRow.h"
+#include "GameStates/GYGameState.h"
 #include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
@@ -115,7 +116,6 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 	ApplyAnimConfig(LoadedDataAsset->AnimationConfig);
 	BuildMontageMap(LoadedDataAsset->AnimationConfig);
 	ApplyAIConfig(LoadedDataAsset->AIConfig);
-	InitStatsFromDataTable();
 
 	CachedWeaponTraceSockets();
 
@@ -124,17 +124,7 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 		InitAnimInstanceAssets(AnimInst);
 	}
 
-	if (AbilitySystemComponent)
-	{
-		AbilitySystemComponent->InitAbilityActorInfo(this, this);
-	}
-
-	if (HasAuthority())
-	{
-		ApplyInitStatEffect();
-		//ApplyPassiveEffects();
-		GrantDefaultAbilities();
-	}
+	TryGrantGASFromDataAsset();
 
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
@@ -192,15 +182,22 @@ void AGYEnemyCharacterBase::InitGAS()
 {
 	if (!AbilitySystemComponent) return;
 
-	AbilitySystemComponent->InitAbilityActorInfo(this,this);
+	const bool bAlreadyInitialized =
+		AbilitySystemComponent->AbilityActorInfo.IsValid() &&
+			AbilitySystemComponent->AbilityActorInfo->AvatarActor == this;
 
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
-        UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
-        .AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
+	if (!bAlreadyInitialized)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
 
-	AbilitySystemComponent->RegisterGameplayTagEvent(
-		GYStateTags::State_Hit_Stun, EGameplayTagEventType::NewOrRemoved)
-		.AddUObject(this, &AGYEnemyCharacterBase::OnStunTagChanged);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+			UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
+			.AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
+
+		AbilitySystemComponent->RegisterGameplayTagEvent(
+			GYStateTags::State_Hit_Stun, EGameplayTagEventType::NewOrRemoved)
+			.AddUObject(this, &AGYEnemyCharacterBase::OnStunTagChanged);
+	}
 
 	TryGrantGASFromDataAsset();
 }
@@ -239,31 +236,74 @@ void AGYEnemyCharacterBase::ApplyPassiveEffects()
 	}
 }
 
-void AGYEnemyCharacterBase::ApplyInitStatEffect()
+FEnemyComputedStats AGYEnemyCharacterBase::ComputeInitialStats(float MapLevel) const
 {
-	if (!LoadedDataAsset || !AbilitySystemComponent) return;
+	FEnemyComputedStats Out;
 
-	TSubclassOf<UGameplayEffect> EffectClass =
-		LoadedDataAsset->GASConfig.InitStatEffect.LoadSynchronous();
-	if (!EffectClass) return;
 
-	FGameplayEffectContextHandle Ctx = AbilitySystemComponent->MakeEffectContext();
-	Ctx.AddSourceObject(this);
+	//TODO 은서 : 추후에 SyncManager를 통해서 EnemyType만 받아서 Row값 받아오는 방식이 더 깔끔할 듯
+	UDataTable* StatTable = EnemyStatTable.LoadSynchronous();
+	if (!StatTable) return Out;
 
-	AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
-		*AbilitySystemComponent->MakeOutgoingSpec(EffectClass, 1.f, Ctx).Data.Get());
+	const FEnemyStatRow* BaseRow = StatTable->FindRow<FEnemyStatRow>(
+		CachedStatRowName, TEXT("ComputeInitialStats"));
+	if (!BaseRow) return Out;
+
+	Out.MaxHealth          = BaseRow->MaxHP;
+	Out.Attack             = BaseRow->AttackPower;
+	Out.Defense            = BaseRow->Defense;
+	Out.MoveSpeed          = BaseRow->MoveSpeed;
+	Out.AttackSpeed        = BaseRow->AttackSpeed;
+	Out.MaxStagger         = BaseRow->MaxStagger;
+	Out.MaxStun            = BaseRow->MaxStun;
+	Out.CriticalRate       = BaseRow->CriticalRate;
+	Out.CriticalMultiplier = BaseRow->CriticalMultiplier;
+
+	UCurveTable* CurveTable = EnemyStatCurveTable.LoadSynchronous();
+	if (!CurveTable) return Out;
+
+	auto EvalMul = [CurveTable, MapLevel](FName RowName) -> float
+	{
+		const FRealCurve* Curve = CurveTable->FindCurve(RowName, TEXT("ComputeInitialStats"), false);
+		return Curve ? Curve->Eval(static_cast<float>(MapLevel)) : 1.f;
+	};
+
+	Out.MaxHealth          *= EvalMul(TEXT("MaxHealth"));
+	Out.Attack             *= EvalMul(TEXT("Attack"));
+	Out.Defense            *= EvalMul(TEXT("Defense"));
+	Out.MaxStagger         *= EvalMul(TEXT("MaxStagger"));
+	Out.MaxStun            *= EvalMul(TEXT("MaxStun"));
+	Out.CriticalRate       *= EvalMul(TEXT("CriticalRate"));
+	Out.CriticalMultiplier *= EvalMul(TEXT("CriticalMultiplier"));
+
+	return Out;
 }
 
-void AGYEnemyCharacterBase::InitStatsFromDataTable()
+void AGYEnemyCharacterBase::ApplyInitialStats(const FEnemyComputedStats& Stats)
 {
-	UDataTable* StatTable = EnemyStatTable.LoadSynchronous();
-	if (!StatTable) return;
+	if (BaseAttribute)
+	{
+		BaseAttribute->SetMaxHealth(Stats.MaxHealth);
+		BaseAttribute->SetCurrentHealth(Stats.MaxHealth);
+		BaseAttribute->SetAttack(Stats.Attack);
+		BaseAttribute->SetDefense(Stats.Defense);
+	}
 
-	const FEnemyStatRow* Row = StatTable->FindRow<FEnemyStatRow>(
-		CachedStatRowName, TEXT("InitStatsFromDataTable"));
-	if (!Row) return;
+	if (AdditionalAttribute)
+	{
+		AdditionalAttribute->SetMaxStagger(Stats.MaxStagger);
+		AdditionalAttribute->SetCurrentStagger(0.f);
+		AdditionalAttribute->SetMaxStun(Stats.MaxStun);
+		AdditionalAttribute->SetCurrentStun(0.f);
+		AdditionalAttribute->SetCriticalRate(Stats.CriticalRate);
+		AdditionalAttribute->SetCriticalMultiplier(Stats.CriticalMultiplier);
+	}
 
-	GetCharacterMovement()->MaxWalkSpeed = Row->MoveSpeed;
+	//TODO 은서 : MoveSpeed와 AttackSpeed가 분리되어서 Attribute 추가되면 이쪽으로 이관
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->MaxWalkSpeed = Stats.MoveSpeed;
+	}
 }
 
 void AGYEnemyCharacterBase::TryGrantGASFromDataAsset()
@@ -277,7 +317,15 @@ void AGYEnemyCharacterBase::TryGrantGASFromDataAsset()
 		return;
 	}
 
-	ApplyInitStatEffect();
+	float WorldLevel = 1.f;
+	if (const AGYGameState* GS = GetWorld()->GetGameState<AGYGameState>())
+	{
+		WorldLevel = GS->GetWorldLevel();
+	}
+
+	const FEnemyComputedStats Stats = ComputeInitialStats(WorldLevel);
+	ApplyInitialStats(Stats);
+
 	//ApplyPassiveEffects();
 	GrantDefaultAbilities();
 	bGASGrantedFromDataAsset = true;

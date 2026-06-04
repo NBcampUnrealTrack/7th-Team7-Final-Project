@@ -16,6 +16,23 @@ class UAbilitySystemComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDead, AGYEnemyCharacterBase*, Enemy);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AGYEnemyCharacterBase*, Enemy, float, DamageAmount);
 
+USTRUCT()
+struct FEnemyComputedStats
+{
+	GENERATED_BODY()
+
+	float MaxHealth				= 100.f;
+	float Attack				= 10.f;
+	float Defense				= 5.f;
+	float MoveSpeed				= 500.f;
+	float AttackSpeed			= 1.f;
+
+	float MaxStagger			= 100.f;
+	float MaxStun				= 100.f;
+	float CriticalRate			= 0.f;
+	float CriticalMultiplier	= 1.5f;
+};
+
 UCLASS(Abstract, BlueprintType, Blueprintable)
 class GY_API AGYEnemyCharacterBase : public ACharacter, public IAbilitySystemInterface, public IWorldPartitionLevelPlacedActor
 {
@@ -75,9 +92,9 @@ protected:
 	void GrantDefaultAbilities();
 	//TODO 은서 : 코드에서 Effect 생성해주므로 사실상 필요없을수도있음
 	void ApplyPassiveEffects();
-	void ApplyInitStatEffect();
-	//TODO 은서 : Enemy Attribute에 세팅 해야함.
-	void InitStatsFromDataTable();
+
+	FEnemyComputedStats ComputeInitialStats(float MapLevel) const;
+	void ApplyInitialStats(const FEnemyComputedStats& Stats);
 
 	void TryGrantGASFromDataAsset();
 
@@ -119,6 +136,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data")
 	TSoftObjectPtr<UDataTable> EnemyTypeTable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data")
+	TSoftObjectPtr<UCurveTable> EnemyStatCurveTable;
 
 	FName CachedStatRowName;
 
