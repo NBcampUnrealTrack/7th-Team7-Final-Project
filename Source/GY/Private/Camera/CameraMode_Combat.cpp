@@ -3,6 +3,7 @@
 #include "Camera/GYCameraComponent.h"
 #include "Camera/GYCameraModeData.h"
 #include "Character/GYCharacter.h"
+#include "Character/LockOn/LockOnComponent.h"
 #include "Logging/GYLogManager.h"
 
 void UCameraMode_Combat::ExitMode()
@@ -22,7 +23,7 @@ void UCameraMode_Combat::UpdateCamera(float DeltaTime, FGYCameraView& OutView)
 	AGYCharacter* Character = Cast<AGYCharacter>(Pawn);
 	if (!Character) return;
 
-	TWeakObjectPtr<AActor> TargetActor = Character->Target;
+	TWeakObjectPtr<AActor> TargetActor = Character->GetLockOnComponent()->GetCurrentTarget();
 	if (!TargetActor.IsValid())
 	{
 		// 타겟이 없으면 Super에서 설정한 기본 뷰 유지

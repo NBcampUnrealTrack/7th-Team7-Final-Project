@@ -4,7 +4,7 @@
 #include "Logging/GYLogManager.h"
 
 #include "Character/GYPawnExtensionComponent.h"
-#include "Character/LockOnComponent.h"
+#include "Character/LockOn/LockOnComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Equipment/ActiveEquipmentComponent.h"

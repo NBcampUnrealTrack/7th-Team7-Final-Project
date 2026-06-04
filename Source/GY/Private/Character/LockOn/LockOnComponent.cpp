@@ -1,4 +1,4 @@
-#include "Character/LockOnComponent.h"
+#include "Character/LockOn/LockOnComponent.h"
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
@@ -75,6 +75,11 @@ void ULockOnComponent::BindToASC(UAbilitySystemComponent* InASC)
 	}
 }
 
+AActor* ULockOnComponent::GetCurrentTarget() const
+{
+	return CurrentTarget.Get();
+}
+
 void ULockOnComponent::OnInCombatTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
 	if (NewCount > 0)
@@ -101,7 +106,7 @@ void ULockOnComponent::StartLockOn()
 	if (!Target) return;
 
 	CurrentTarget = Target;
-	OnRep_CurrentTarget(); // 서버에선 직접 호출
+	OnRep_CurrentTarget();
 }
 
 void ULockOnComponent::StopLockOn()
@@ -135,7 +140,6 @@ void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	UpdateRotationToTarget(DeltaTime);
 
-	// 너무 멀어지면 서버에서 정리 (클라이언트는 Replicated로 자동 따라감)
 	if (GetOwner()->HasAuthority())
 	{
 		const float DistSq = FVector::DistSquared(
@@ -159,12 +163,15 @@ AActor* ULockOnComponent::FindBestTarget() const
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(LockOnFindBestTarget), false);
 	Params.AddIgnoredActor(Owner);
 
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
+
 	TArray<FOverlapResult> Overlaps;
-	World->OverlapMultiByChannel(
+	World->OverlapMultiByObjectType(
 		Overlaps,
 		Owner->GetActorLocation(),
 		FQuat::Identity,
-		TargetTraceChannel,
+		ObjectParams,
 		FCollisionShape::MakeSphere(MaxLockOnDistance),
 		Params);
 

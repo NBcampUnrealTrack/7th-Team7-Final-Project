@@ -21,19 +21,18 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void BindToASC(UAbilitySystemComponent* InASC);
 
-	UFUNCTION(BlueprintPure, Category="LockOn")
-	AActor* GetCurrentTarget() const { return CurrentTarget.Get(); }
-
-	UFUNCTION(BlueprintPure, Category="LockOn")
+	AActor* GetCurrentTarget() const;
 	bool IsLockedOn() const { return CurrentTarget.IsValid(); }
+
+	void StartLockOn();
+	void StopLockOn();
 
 protected:
 	UFUNCTION()
 	void OnRep_CurrentTarget();
 
 	void OnInCombatTagChanged(const FGameplayTag Tag, int32 NewCount);
-	void StartLockOn();
-	void StopLockOn();
+
 	AActor* FindBestTarget() const;
 	void UpdateRotationToTarget(float DeltaTime);
 
@@ -42,9 +41,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="LockOn")
 	float RotationInterpSpeed = 8.f;
-
-	UPROPERTY(EditDefaultsOnly, Category="LockOn")
-	TEnumAsByte<ECollisionChannel> TargetTraceChannel = ECC_Pawn;
 
 	UPROPERTY(ReplicatedUsing=OnRep_CurrentTarget)
 	TWeakObjectPtr<AActor> CurrentTarget;

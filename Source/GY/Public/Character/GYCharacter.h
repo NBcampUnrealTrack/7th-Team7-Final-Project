@@ -32,6 +32,8 @@ public:
 
 	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
 
+	ULockOnComponent* GetLockOnComponent() const { return LockOnComponent; }
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(Server, Reliable)
@@ -68,8 +70,5 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HB|Character", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UGYPawnExtensionComponent> PawnExtComponent;
 
-public:
-	UPROPERTY()
-	TWeakObjectPtr<AActor> Target;
 	//TODO::타겟을 정해주는 로직 필요
 };
