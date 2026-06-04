@@ -26,10 +26,6 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* ASC, float RawDamage
 	const float Defense = Base ? Base->GetDefense() : 0.f;
 	const float Effective = FMath::Max(0.f, RawDamage - Defense);
 
-	GY_WARN(Combat, ESK, "[CombatStatics] ApplyDamage - Raw: %.1f, Defense: %.1f, Effective: %.1f, Target: %s",
-	RawDamage, Defense, Effective,
-	ASC->GetAvatarActor() ? *ASC->GetAvatarActor()->GetName() : TEXT("Unknown"));
-
 	ApplyInstantGEToAttribute(ASC, UGYBaseAttribute::GetCurrentHealthAttribute(), -Effective);
 }
 

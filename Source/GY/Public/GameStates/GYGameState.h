@@ -50,7 +50,7 @@ private:
 	const float Midnight = 24.f * 60.f * 60.f;
 
 	UPROPERTY()
-	float WorldLevel = 10;
+	float WorldLevel = 1;
 
 	/** 시간 변경 시 GMS 브로드캐스트 */
 	void BroadcastTimeChanged();

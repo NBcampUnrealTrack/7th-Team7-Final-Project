@@ -148,18 +148,11 @@ void AGYEnemyCharacterBase::ApplyVisualConfig(const FEnemyVisualConfig& Config)
 void AGYEnemyCharacterBase::ApplyAIConfig(const FEnemyAIConfig& Config)
 {
 	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController());
-	if (!AIC)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Enemy] ApplyAIConfig: Controller null, BT 미시작"));
-		return;
-	}
+	if (!AIC) return;
 
 	UBehaviorTree* BT = Config.BehaviorTree.LoadSynchronous();
-	if (!BT)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Enemy] ApplyAIConfig: BT 에셋 null"));
-		return;
-	}
+	if (!BT) return;
+
 	if (Config.bHasPatrol && Config.PatrolOffsets.Num() > 0)
 	{
 		AIC->SetPatrolPoints(Config.PatrolOffsets, GetActorLocation());
@@ -182,14 +175,10 @@ void AGYEnemyCharacterBase::InitGAS()
 {
 	if (!AbilitySystemComponent) return;
 
-	const bool bAlreadyInitialized =
-		AbilitySystemComponent->AbilityActorInfo.IsValid() &&
-			AbilitySystemComponent->AbilityActorInfo->AvatarActor == this;
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 
-	if (!bAlreadyInitialized)
+	if (!bAttributeDelegatesBound)
 	{
-		AbilitySystemComponent->InitAbilityActorInfo(this, this);
-
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
 			UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
 			.AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
@@ -197,6 +186,9 @@ void AGYEnemyCharacterBase::InitGAS()
 		AbilitySystemComponent->RegisterGameplayTagEvent(
 			GYStateTags::State_Hit_Stun, EGameplayTagEventType::NewOrRemoved)
 			.AddUObject(this, &AGYEnemyCharacterBase::OnStunTagChanged);
+
+		bAttributeDelegatesBound = true;
+
 	}
 
 	TryGrantGASFromDataAsset();
@@ -357,16 +349,89 @@ void AGYEnemyCharacterBase::OnStunTagChanged(const FGameplayTag Tag, int32 NewCo
 	}
 }
 
+void AGYEnemyCharacterBase::DisableGameplay()
+{
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->StopMovementImmediately();
+		Move->DisableMovement();
+	}
+
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+void AGYEnemyCharacterBase::EnableRagdoll()
+{
+	if (USkeletalMeshComponent* SkeletalMesh = GetMesh())
+	{
+		SkeletalMesh->SetCollisionProfileName(TEXT("Ragdoll"));
+		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		SkeletalMesh->SetSimulatePhysics(true);
+		SkeletalMesh->WakeAllRigidBodies();
+	}
+}
+
+void AGYEnemyCharacterBase::OnDeathAnimFinished()
+{
+
+	if (!bIsDead) return;
+
+	if (!HasAuthority())
+	{
+		EnableRagdoll();
+	}
+
+	GetWorldTimerManager().SetTimer(
+		DeactivateTimerHandle,
+		FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			Deactivate();
+		}),
+		DeactivateDelay,
+		false);
+}
+
+void AGYEnemyCharacterBase::HandleDeathAuthority()
+{
+	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(EnemyBBKeys::IsDead, true);
+		}
+		AIC->StopBehaviorTree();
+	}
+
+	GrantRewards();
+}
+
+void AGYEnemyCharacterBase::GrantRewards()
+{
+	if (!LoadedDataAsset) return;
+	const FEnemyRewardConfig& Reward = LoadedDataAsset->RewardConfig;
+
+	// TODO 은서: 경험치 시스템과 연결 → Reward.ExpReward
+	// TODO 은서: 골드/통화 시스템과 연결 → Reward.GoldReward
+	// TODO 은서: DropTable 로드 후 드롭 액터 스폰
+}
+
 void AGYEnemyCharacterBase::Die()
 {
 	if (bIsDead) return;
 	bIsDead = true;
 
-	Deactivate();
+	DisableGameplay();
 
-	//TODO 은서 : RewardConfig에서 데이터 값을 가져와 Drop Actor나 보상 처리 연결 필요
-	//TODO 은서 : Interface 상속받아서 deActivate 처리 로직이 들어가야함.
+	if (HasAuthority())
+	{
+		HandleDeathAuthority();
+	}
+
 	OnEnemyDead.Broadcast(this);
+
 }
 
 #if WITH_EDITOR
@@ -408,21 +473,9 @@ void AGYEnemyCharacterBase::PostEditChangeProperty(struct FPropertyChangedEvent&
 
 void AGYEnemyCharacterBase::Deactivate()
 {
-	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
-	{
-		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
-		{
-			BB->SetValueAsBool(EnemyBBKeys::IsDead, true);
-		}
-		AIC->StopBehaviorTree();
-	}
-
-	//TODO 은서: 나중에 랙돌이나 Die 애니메이션 끝나고 죽을 수 있게 해주면 될덧
-	SetActorEnableCollision(false);
 	SetActorHiddenInGame(true);
 
 	//TODO 은서: 로드 중일 때 로드 취소 Handler 통해서 하면 되지 않을까??
-
 	GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorDeactivated(this);
 }
 
@@ -522,11 +575,6 @@ void AGYEnemyCharacterBase::CachedWeaponTraceSockets()
 
 	WeaponTraceSockets = Found;
 
-	for (const FName& Bone : WeaponTraceSockets)
-	{
-		GY_LOG(AI,ESK, " - %s", *Bone.ToString());
-	}
-
 }
 
 void AGYEnemyCharacterBase::FaceToTarget(AActor* Target)
@@ -550,16 +598,20 @@ void AGYEnemyCharacterBase::BeginPlay()
 
 	bIsDead = false;
 
+	InitGAS();
+
 	if (HasAuthority())
 	{
 		bIsActivate = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
 	}
-	else
+}
+
+void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (DeactivateTimerHandle.IsValid())
 	{
-		if (EnemyType != EEnemyType::None && !LoadedDataAsset)
-		{
-			//LoadDataAssetAndApply();
-		}
+		GetWorldTimerManager().ClearTimer(DeactivateTimerHandle);
 	}
+	Super::EndPlay(EndPlayReason);
 }
 

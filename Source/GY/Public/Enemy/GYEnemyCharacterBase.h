@@ -74,8 +74,11 @@ public:
 
 	void FaceToTarget(AActor* Target);
 	void SetOrientToMovement(bool bEnable);
+
+	void OnDeathAnimFinished();
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_Controller() override;
 
@@ -101,6 +104,11 @@ protected:
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
 	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
 
+	void DisableGameplay();
+	void EnableRagdoll();
+	void HandleDeathAuthority();
+	void GrantRewards();
+
 	void BuildMontageMap(const FEnemyAnimationConfig& Config);
 
 	UFUNCTION()
@@ -111,6 +119,7 @@ protected:
 private:
 	void CachedWeaponTraceSockets();
 public:
+	/** UI, 퀘스트 쪽에 쓸 수도있어서 남겨두는 용 */
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyDead OnEnemyDead;
 
@@ -130,7 +139,6 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Enemy|Data")
 	TObjectPtr<UEnemyDataAsset> LoadedDataAsset;
 
-	/** TODO 은서 : 수정되어야함 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data")
 	TSoftObjectPtr<UDataTable> EnemyStatTable;
 
@@ -155,6 +163,7 @@ protected:
 
 	bool bGASGrantedFromDataAsset = false;
 
+	bool bAttributeDelegatesBound = false;
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category ="Enemy|Anim")
 	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> MontageMap;
 
@@ -163,7 +172,13 @@ protected:
 
 	UPROPERTY(VisibleAnywhere,ReplicatedUsing = OnRep_IsActivate, BlueprintReadOnly, Category = "Enemy|Activate")
 	bool bIsActivate = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Death")
+	float DeactivateDelay = 3.f;
 private:
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	FString WeaponTraceBonePrefix = TEXT("WeaponTrace_");
+
+	FTimerHandle DeactivateTimerHandle;
 };
+
