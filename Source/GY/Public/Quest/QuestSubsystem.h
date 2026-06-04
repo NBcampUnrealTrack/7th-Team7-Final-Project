@@ -5,6 +5,12 @@
 #include "Quest/QuestTypes.h"
 #include "QuestSubsystem.generated.h"
 
+class AGYGameState;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnQuestStarted, FGameplayTag /*QuestTag*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnQuestProgressUpdated, FGameplayTag /*QuestTag*/, int32 /*NewCount*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnQuestCompleted, FGameplayTag /*QuestTag*/);
+
 UCLASS()
 class GY_API UQuestSubsystem : public UGameInstanceSubsystem
 {
@@ -14,19 +20,43 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	// 퀘스트 정의 조회 (없으면 nullptr)
-	const FQuestTableRow* FindQuestRow(FName QuestId) const;
+	const FQuestTableRow* FindQuestRow(FGameplayTag QuestTag) const;
 
 	// 선행 퀘스트 조건 충족 여부 확인
 	UFUNCTION(BlueprintCallable, Category="Quest")
-	bool ArePrerequisitesMet(FName QuestId, const TArray<FQuestRuntimeData>& CompletedQuests) const;
+	bool ArePrerequisitesMet(FGameplayTag QuestTag) const;
 
-	// 모든 목표 달성 여부 확인
+	// 퀘스트 이벤트 처리 (활성화 + 목표 진행 통합)
 	UFUNCTION(BlueprintCallable, Category="Quest")
-	bool IsQuestComplete(const FQuestRuntimeData& RuntimeData) const;
+	void HandleQuestEvent(const FQuestEventData& EventData);
+
+	// 런타임 퀘스트 상태 조회 (없으면 nullptr)
+	const FQuestRuntimeData* GetQuestRuntimeData(FGameplayTag QuestTag) const;
+
+	// 진행 중인 전체 퀘스트 조회
+	const TMap<FGameplayTag, FQuestRuntimeData>& GetActiveQuests() const { return ActiveQuests; }
+
+	// DataTable에 등록된 전체 퀘스트 조회
+	const TMap<FGameplayTag, const FQuestTableRow*>& GetAllQuestRows() const { return QuestCache; }
+
+	AGYGameState* GetGYGameState() const;
+
+	// UI 바인딩용 델리게이트
+	FOnQuestStarted OnQuestStarted;
+	FOnQuestProgressUpdated OnQuestProgressUpdated;
+	FOnQuestCompleted OnQuestCompleted;
 
 private:
-	// Row Name → Row 포인터 캐시 (DataTable 수명에 종속)
-	TMap<FName, FQuestTableRow*> QuestCache;
+	// QuestTag → Row 포인터 캐시 (DataTable 수명에 종속)
+	TMap<FGameplayTag, const FQuestTableRow*> QuestCache;
 
-	void BuildCache(UDataTable* DataTable);
+	// 진행 중인 퀘스트 런타임 상태
+	TMap<FGameplayTag, FQuestRuntimeData> ActiveQuests;
+
+	void BuildCache(const UDataTable* DataTable);
+
+public:
+	bool StartQuest(FGameplayTag QuestTag);
+	void ProcessObjectiveProgress(const FQuestEventData& EventData);
+	void CompleteQuest(FGameplayTag QuestTag);
 };

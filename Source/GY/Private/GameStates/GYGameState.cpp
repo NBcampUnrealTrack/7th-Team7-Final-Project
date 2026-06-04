@@ -1,8 +1,6 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿#include "GameStates/GYGameState.h"
 
-
-#include "GameStates/GYGameState.h"
-
+#include "GameplayTagContainer.h"
 #include "Net/UnrealNetwork.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
@@ -30,6 +28,16 @@ void AGYGameState::OnRep_CurrentTime()
 
 void AGYGameState::OnRep_TimeScale()
 {
+}
+
+bool AGYGameState::IsQuestComplete(const FGameplayTag QuestTag) const
+{
+	return ClearedQuests.Contains(QuestTag);
+}
+
+void AGYGameState::AddCompletedQuest(FGameplayTag QuestTag)
+{
+	ClearedQuests.Add(QuestTag);
 }
 
 void AGYGameState::BeginPlay()
