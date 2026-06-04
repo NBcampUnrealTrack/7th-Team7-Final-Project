@@ -31,6 +31,17 @@ void AGYRegionVolume::BeginPlay()
 	}
 }
 
+bool AGYRegionVolume::IsLocationInside(const FVector& WorldLocation) const
+{
+	if (!IsValid(TriggerBox)) return false;
+
+	const FVector Local = TriggerBox->GetComponentTransform().InverseTransformPosition(WorldLocation);
+	const FVector Extent = TriggerBox->GetUnscaledBoxExtent();
+	return FMath::Abs(Local.X) <= Extent.X
+		&& FMath::Abs(Local.Y) <= Extent.Y
+		&& FMath::Abs(Local.Z) <= Extent.Z;
+}
+
 void AGYRegionVolume::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)

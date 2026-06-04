@@ -4,7 +4,29 @@
 #include "Core/Types/ItemEnums.h"
 #include "GameplayTagContainer.h"
 #include "Interaction/InteractionOption.h"
+#include "Enchant/RolledEnchantOption.h"
 #include "GYUIMessages.generated.h"
+
+class UItemDefinition;
+
+/** 아이템 정보 패널 표시용 스냅샷. 우클릭 시 슬롯이 발행 (Message.UI.ShowItemInfo). 인벤/루트/장비/인첸트 공용 */
+USTRUCT(BlueprintType)
+struct GY_API FGYItemViewData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) TSoftObjectPtr<UItemDefinition> Definition;
+	// 인벤 아이템일 때만 유효. 리롤 등 EntryChanged 시 패널 자동 갱신 판정용
+	UPROPERTY(BlueprintReadWrite) FGuid InstanceId;
+	UPROPERTY(BlueprintReadWrite) FGameplayTag GradeTag;
+	UPROPERTY(BlueprintReadWrite) int32 Level = 1;
+	UPROPERTY(BlueprintReadWrite) int32 Count = 1;
+	UPROPERTY(BlueprintReadWrite) float StatDeviation = 0.f;
+	UPROPERTY(BlueprintReadWrite) TArray<FRolledEnchantOption> RolledOptions;
+
+	// 발행한 슬롯 위젯. 같은 소스 재우클릭 = 토글 닫기 판정용
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<UObject> Source;
+};
 
 /** 데미지 적중, 플로팅 데미지 텍스트 트리거, 히트레벨에 따른 UI 변화 */
 USTRUCT(BlueprintType)
@@ -197,4 +219,15 @@ struct GY_API FGYInventoryEntryMessage
 
 	UPROPERTY(BlueprintReadWrite) FGuid InstanceId;
 	UPROPERTY(BlueprintReadWrite) EInventoryEventType EventType = EInventoryEventType::Added;
+};
+
+/** 룻박스 상태 — 위젯이 Box에서 PendingDrops를 직접 조회. ShowBox(열기 트리거)/BoxStateChanged(갱신) 공용 */
+USTRUCT(BlueprintType)
+struct GY_API FGYLootBoxStateMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<AActor> Box;
+	UPROPERTY(BlueprintReadWrite) bool bOpened = false;
+	UPROPERTY(BlueprintReadWrite) int32 RemainingDrops = 0;
 };

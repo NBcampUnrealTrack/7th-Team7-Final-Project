@@ -12,12 +12,21 @@ class UInventoryComponent;
 class UPanelWidget;
 struct FGYInventoryEntryMessage;
 
+// 인벤 슬롯 좌클릭(드래그 아님) 시 발행. 호스트 화면(인첸트/루트/장착)이 바인딩해 동작 결정
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGYOnInventoryItemClicked, FGuid, InstanceId);
+
 UCLASS(Abstract, Blueprintable)
 class GYUI_API UGYInventoryScreenWidget : public UGYActivatableWidget
 {
 	GENERATED_BODY()
 
 public:
+	/** 슬롯이 좌클릭 시 호출 → OnItemClicked 발행 */
+	void NotifyItemClicked(const FGuid& InstanceId);
+
+	UPROPERTY(BlueprintAssignable, Category = "GY|Inventory")
+	FGYOnInventoryItemClicked OnItemClicked;
+
 	/** 카테고리 탭에서 호출. 빈 태그면 전체 표시 */
 	UFUNCTION(BlueprintCallable, Category = "GY|Inventory")
 	void SetCategory(FGameplayTag CategoryTag);

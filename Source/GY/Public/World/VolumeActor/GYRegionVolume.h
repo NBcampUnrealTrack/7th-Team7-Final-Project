@@ -16,6 +16,10 @@ class GY_API AGYRegionVolume : public AActor
 public:
 	AGYRegionVolume();
 
+	// 루트박스 등이 자기 지역을 상속하는 데 사용
+	const TSoftObjectPtr<URegionLootData>& GetRegionData() const { return RegionData; }
+	bool IsLocationInside(const FVector& WorldLocation) const;
+
 protected:
 	virtual void BeginPlay() override;
 

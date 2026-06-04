@@ -33,6 +33,10 @@ namespace GYGameplayTags
 	// 장비
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Equipment_LoadoutSlotChanged);
 
+	// 룻박스
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Loot_ShowBox);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Loot_BoxStateChanged);
+
 	// 무기 숙련도 빌드, 노드 관련 - 임시
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Build_NodeUnlocked);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Build_ActionToggled);
@@ -55,6 +59,9 @@ namespace GYGameplayTags
 	// PlayerHUD
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_XPProgress);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_PlayerName);
+
+	// 아이템 정보 패널 (우클릭 → 표시). 인벤/루트/장비/인첸트 공용
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_ShowItemInfo);
 
 	// UI Attribute
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Health);

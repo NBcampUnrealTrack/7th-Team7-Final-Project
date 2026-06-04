@@ -5,6 +5,7 @@
 
 class UCommonActivatableWidget;
 class UGYPrimaryGameLayout;
+class UGYLootBoxScreenWidget;
 
 UCLASS(Config=Game, DefaultConfig, meta=(DisplayName="GY UI"))
 class GYUI_API UGYUISettings : public UDeveloperSettings
@@ -17,4 +18,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI")
 	TSoftClassPtr<UCommonActivatableWidget> HUDWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Config, Category="UI")
+	TSoftClassPtr<UGYLootBoxScreenWidget> LootBoxScreenClass;
 };
