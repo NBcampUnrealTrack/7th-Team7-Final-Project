@@ -25,9 +25,9 @@ void UGYTimeRiftWidget::NativeConstruct()
 	{
 		AltarButton->OnClicked.AddDynamic(this, &UGYTimeRiftWidget::OnAltarButtonClicked);
 	}
-	if (RerollButton != nullptr)
+	if (EnchantButton != nullptr)
 	{
-		RerollButton->OnClicked.AddDynamic(this, &UGYTimeRiftWidget::OnRerollButtonClicked);
+		EnchantButton->OnClicked.AddDynamic(this, &UGYTimeRiftWidget::OnEnchantButtonClicked);
 	}
 	if (SkillTreeButton != nullptr)
 	{
@@ -41,7 +41,7 @@ void UGYTimeRiftWidget::NativeDestruct()
 	ExitButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnExitButtonClicked);
 	RestButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnRestButtonClicked);
 	AltarButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnAltarButtonClicked);
-	RerollButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnRerollButtonClicked);
+	EnchantButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnEnchantButtonClicked);
 	SkillTreeButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnSkillTreeButtonClicked);
 }
 
@@ -74,13 +74,13 @@ void UGYTimeRiftWidget::OnAltarButtonClicked()
 	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_Altar, FGameplayEventData());
 }
 
-void UGYTimeRiftWidget::OnRerollButtonClicked()
+void UGYTimeRiftWidget::OnEnchantButtonClicked()
 {
 	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState());
 	if (!PS) return;
 	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
 	if (!ASC) return;
-	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_Reroll, FGameplayEventData());
+	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_Enchant, FGameplayEventData());
 }
 
 void UGYTimeRiftWidget::OnSkillTreeButtonClicked()
