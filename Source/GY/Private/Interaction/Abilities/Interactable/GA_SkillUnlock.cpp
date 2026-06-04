@@ -60,7 +60,7 @@ void UGA_SkillUnlock::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 
 	AGYPlayerState* PS = Avatar->GetPlayerState<AGYPlayerState>();
-	if (!Avatar)
+	if (!PS)
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
