@@ -22,4 +22,16 @@ struct FEnemyStatRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
 	float AttackSpeed = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats|Additional")
+	float MaxStagger = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats|Additional")
+	float MaxStun = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats|Additional")
+	float CriticalRate = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats|Additional")
+	float CriticalMultiplier = 1.5f;
 };

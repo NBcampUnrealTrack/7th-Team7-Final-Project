@@ -114,7 +114,8 @@ static FTransform GetBoneComponentSpaceTransform(UAnimSequence* Seq, int32 BoneI
 	for (int32 Bone : Chain)
 	{
 		FTransform LocalTransform;
-		Seq->GetBoneTransform(LocalTransform, FSkeletonPoseBoneIndex(Bone), (double)Time, false);
+		Seq->GetBoneTransform(LocalTransform, FSkeletonPoseBoneIndex(Bone),
+			FAnimExtractContext((double)Time, false), false);
 		CSTransform = LocalTransform * CSTransform;
 	}
 
