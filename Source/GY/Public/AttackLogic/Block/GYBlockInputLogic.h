@@ -20,6 +20,7 @@ public:
 private:
 	void DrainTick();
 	void PlayBlockEnd();
+	void PlayBlockBreak();
 	void RemoveBlockTag();
 
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
@@ -27,9 +28,12 @@ private:
 	FGameplayTag CachedBlockAppliedTag;
 	FGameplayAttribute CachedDrainAttribute;
 	float CachedDrainPerSecond = 0.f;
+	FGameplayAttribute CachedHitCostAttribute;
+	float CachedHitCostMultiplier = 1.f;
 	bool bEnding = false;
 	FTimerHandle DrainTimer;
 	FTimerHandle EndMontageTimer;
+	FTimerHandle BlockBreakTimer;
 
 	static constexpr float DrainInterval = 0.1f;
 };

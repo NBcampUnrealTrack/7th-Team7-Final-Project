@@ -13,8 +13,6 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AttackLogic/Charge/GYChargeFragment.h"
-#include "AttackLogic/Parry/GYParryFragment.h"
-#include "AttackLogic/Block/GYBlockFragment.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/InputTag.h"
@@ -36,10 +34,6 @@ UGYHeroComponent::UGYHeroComponent(const FObjectInitializer& ObjectInitializer)
 	SetIsReplicatedByDefault(true);
 	ChargeThresholdEventTags.AddTag(GYGameplayTags::InputTag_Charge);
 	ChargeAbilityTags.AddTag(GYGameplayTags::Ability_Attack_Charge);
-
-	BlockThresholdEventTags.AddTag(GYGameplayTags::InputTag_Block);
-	ParryAbilityTags.AddTag(GYGameplayTags::Ability_Parry);
-	BlockAbilityTags.AddTag(GYGameplayTags::Ability_Block);
 }
 
 bool UGYHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
@@ -320,131 +314,19 @@ void UGYHeroComponent::OnParryPressed()
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!PS) return;
 
-	UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
-	if (!ASC) return;
-
-	ASC->HandleAbilityInputPressed(GYGameplayTags::InputTag_Parry);
-
-	if (HasBlockDataForCurrentWeapon())
-	{
-		const float ParryTime = GetParryTimeForCurrentWeapon();
-		if (ParryTime > 0.f)
-		{
-			GetWorld()->GetTimerManager().SetTimer(
-				BlockThresholdTimer, this, &UGYHeroComponent::OnBlockThreshold, ParryTime, false);
-		}
-	}
-}
-
-void UGYHeroComponent::OnBlockThreshold()
-{
-	if (!bParryHeld) return;
-
-	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
-	if (!PS) return;
-
-	UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
-	if (!ASC) return;
-
-	APawn* Pawn = GetPawn<APawn>();
-	for (const FGameplayTag& Tag : BlockThresholdEventTags)
-	{
-		SendGameplayEventLocal(Tag);
-		if (Pawn && !Pawn->HasAuthority())
-			ServerSendGameplayEvent(Tag);
-	}
-
-	for (const FGameplayTag& Tag : BlockThresholdEventTags)
-	{
-		ASC->HandleAbilityInputPressed(Tag);
-	}
-}
-
-bool UGYHeroComponent::HasBlockDataForCurrentWeapon() const
-{
-	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
-	UGYAbilitySystemComponent* ASC = PS ? PS->GetGYAbilitySystemComponent() : nullptr;
-	if (!ASC) return false;
-
-	FGameplayTagContainer OwnedTags;
-	ASC->GetOwnedGameplayTags(OwnedTags);
-
-	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
-	{
-		const UGYPlayerGameplayAbility* PA = Cast<UGYPlayerGameplayAbility>(Spec.Ability);
-		if (!PA || !PA->GetAssetTags().HasAny(BlockAbilityTags)) continue;
-
-		for (const UAbilityFragment* Frag : PA->Fragments)
-		{
-			const UGYBlockFragment* BF = Cast<UGYBlockFragment>(Frag);
-			if (!BF) continue;
-
-			if (BF->GetBestMatchingData(OwnedTags)) return true;
-
-			if (PA->DefaultWeaponTypeTag.IsValid())
-			{
-				FGameplayTagContainer Fallback;
-				Fallback.AddTag(PA->DefaultWeaponTypeTag);
-				if (BF->GetBestMatchingData(Fallback)) return true;
-			}
-		}
-	}
-	return false;
-}
-
-float UGYHeroComponent::GetParryTimeForCurrentWeapon() const
-{
-	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
-	UGYAbilitySystemComponent* ASC = PS ? PS->GetGYAbilitySystemComponent() : nullptr;
-	if (!ASC) return 0.f;
-
-	FGameplayTagContainer OwnedTags;
-	ASC->GetOwnedGameplayTags(OwnedTags);
-
-	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
-	{
-		const UGYPlayerGameplayAbility* PA = Cast<UGYPlayerGameplayAbility>(Spec.Ability);
-		if (!PA || !PA->GetAssetTags().HasAny(ParryAbilityTags)) continue;
-
-		for (const UAbilityFragment* Frag : PA->Fragments)
-		{
-			const UGYParryFragment* PF = Cast<UGYParryFragment>(Frag);
-			if (!PF) continue;
-
-			const FGYParryData* Data = PF->GetBestMatchingData(OwnedTags);
-			if (Data) return Data->ParryTime;
-
-			if (PA->DefaultWeaponTypeTag.IsValid())
-			{
-				FGameplayTagContainer Fallback;
-				Fallback.AddTag(PA->DefaultWeaponTypeTag);
-				Data = PF->GetBestMatchingData(Fallback);
-				if (Data) return Data->ParryTime;
-			}
-		}
-	}
-	return 0.f;
+	if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
+		ASC->HandleAbilityInputPressed(GYGameplayTags::InputTag_Parry);
 }
 
 void UGYHeroComponent::OnParryReleased()
 {
 	bParryHeld = false;
-	GetWorld()->GetTimerManager().ClearTimer(BlockThresholdTimer);
-
-	SendGameplayEventLocal(GYGameplayTags::Event_Input_ParryRelease);
-	APawn* Pawn = GetPawn<APawn>();
-	if (Pawn && !Pawn->HasAuthority())
-	{
-		ServerSendGameplayEvent(GYGameplayTags::Event_Input_ParryRelease);
-	}
 
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!PS) return;
 
 	if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
-	{
 		ASC->HandleAbilityInputReleased(GYGameplayTags::InputTag_Parry);
-	}
 }
 
 void UGYHeroComponent::OnAttackPressed()

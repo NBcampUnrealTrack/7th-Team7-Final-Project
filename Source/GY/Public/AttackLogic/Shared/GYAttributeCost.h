@@ -15,3 +15,15 @@ struct GY_API FGYAttributeCost
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0"))
 	float Amount = 0.f;
 };
+
+USTRUCT(BlueprintType)
+struct GY_API FGYAttributeEffect
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayAttribute Attribute;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float Amount = 0.f;
+};

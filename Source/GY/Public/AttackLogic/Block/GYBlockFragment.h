@@ -16,6 +16,12 @@ struct GY_API FGYBlockData
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float DamageReductionMultiplier = 0.5f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block")
+	FGameplayAttribute BlockHitCostAttribute;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Block", meta = (ClampMin = "0.0"))
+	float BlockHitCostMultiplier = 1.f;
 };
 
 UCLASS(EditInlineNew, DefaultToInstanced)

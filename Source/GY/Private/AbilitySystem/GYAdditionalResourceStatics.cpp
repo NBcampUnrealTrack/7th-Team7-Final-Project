@@ -48,3 +48,11 @@ void UGYAdditionalResourceStatics::IncreaseStun(UGYAbilitySystemComponent* ASC, 
 	ApplyStunUse(ASC, Amount);
 	ASC->NotifyAttributeChanged(UGYAdditionalAttribute::GetCurrentStunAttribute());
 }
+
+void UGYAdditionalResourceStatics::ApplyAttributeDelta(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Amount)
+{
+	if (!ASC || !Attribute.IsValid() || Amount == 0.f) return;
+	AdditionalResource_ApplyInstantGE(ASC, Attribute, Amount);
+	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
+		GYASC->NotifyAttributeChanged(Attribute);
+}

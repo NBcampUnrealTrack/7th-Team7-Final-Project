@@ -19,6 +19,15 @@ public:
 	static void ApplyDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category="GY|Combat")
+	static bool HandleDodgeCheck(UAbilitySystemComponent* TargetASC);
+
+	UFUNCTION(BlueprintCallable, Category="GY|Combat")
+	static bool HandleParryCheck(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category="GY|Combat")
+	static bool HandleBlockCheck(UAbilitySystemComponent* TargetASC, float& OutReductionMultiplier);
+
+	UFUNCTION(BlueprintCallable, Category="GY|Combat")
 	static void ApplyHeal(UAbilitySystemComponent* ASC, float HealAmount);
 
 	UFUNCTION(BlueprintPure, Category="GY|Combat")

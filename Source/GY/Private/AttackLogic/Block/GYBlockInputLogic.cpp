@@ -57,6 +57,8 @@ void UGYBlockInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	CachedBlockAppliedTag = Fragment->BlockAppliedTag;
 	CachedDrainAttribute = BlockData->StaminaDrainPerSecond.Attribute;
 	CachedDrainPerSecond = BlockData->StaminaDrainPerSecond.Amount;
+	CachedHitCostAttribute = BlockData->BlockHitCostAttribute;
+	CachedHitCostMultiplier = BlockData->BlockHitCostMultiplier;
 
 	if (ASC && CachedBlockAppliedTag.IsValid())
 		ASC->AddLooseGameplayTag(CachedBlockAppliedTag);
@@ -84,6 +86,7 @@ void UGYBlockInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bW
 	{
 		CachedAbility->GetWorld()->GetTimerManager().ClearTimer(DrainTimer);
 		CachedAbility->GetWorld()->GetTimerManager().ClearTimer(EndMontageTimer);
+		CachedAbility->GetWorld()->GetTimerManager().ClearTimer(BlockBreakTimer);
 	}
 	RemoveBlockTag();
 	CachedAbility.Reset();
@@ -92,12 +95,27 @@ void UGYBlockInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bW
 
 TArray<FGameplayTag> UGYBlockInputLogic::GetSubscribedEventTags() const
 {
-	return { GYGameplayTags::Event_Input_ParryRelease };
+	return { GYGameplayTags::Event_Block_Hit };
 }
 
 void UGYBlockInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
 {
-	PlayBlockEnd();
+	if (EventTag != GYGameplayTags::Event_Block_Hit || bEnding || !CachedAbility.IsValid()) return;
+	if (!CachedHitCostAttribute.IsValid() || CachedHitCostMultiplier <= 0.f) return;
+
+	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return;
+
+	const float Cost = Payload.EventMagnitude * CachedHitCostMultiplier;
+	const float Current = ASC->GetNumericAttributeBase(CachedHitCostAttribute);
+	const float NewValue = Current - Cost;
+	ASC->SetNumericAttributeBase(CachedHitCostAttribute, NewValue);
+
+	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
+		GYASC->NotifyAttributeChanged(CachedHitCostAttribute);
+
+	if (NewValue <= 0.f)
+		PlayBlockBreak();
 }
 
 void UGYBlockInputLogic::OnInputReleased()
@@ -149,6 +167,36 @@ void UGYBlockInputLogic::PlayBlockEnd()
 		TWeakObjectPtr<UGYBlockInputLogic> WeakThis(this);
 		CachedAbility->GetWorld()->GetTimerManager().SetTimer(
 			EndMontageTimer,
+			[WeakThis]()
+			{
+				if (UGYBlockInputLogic* Self = WeakThis.Get())
+					if (Self->CachedAbility.IsValid())
+						Self->CachedAbility->RequestEnd(false);
+			},
+			FMath::Max(Duration, 0.1f),
+			false
+		);
+	}
+	else
+	{
+		CachedAbility->RequestEnd(false);
+	}
+}
+
+void UGYBlockInputLogic::PlayBlockBreak()
+{
+	if (bEnding || !CachedAbility.IsValid()) return;
+	bEnding = true;
+
+	CachedAbility->GetWorld()->GetTimerManager().ClearTimer(DrainTimer);
+	RemoveBlockTag();
+
+	if (CachedMontageSet && CachedMontageSet->BlockBreakMontage)
+	{
+		const float Duration = CachedAbility->PlayMontageForLogic(CachedMontageSet->BlockBreakMontage, 1.f);
+		TWeakObjectPtr<UGYBlockInputLogic> WeakThis(this);
+		CachedAbility->GetWorld()->GetTimerManager().SetTimer(
+			BlockBreakTimer,
 			[WeakThis]()
 			{
 				if (UGYBlockInputLogic* Self = WeakThis.Get())

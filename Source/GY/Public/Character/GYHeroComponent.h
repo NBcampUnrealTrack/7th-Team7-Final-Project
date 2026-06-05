@@ -48,15 +48,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Attack")
 	FGameplayTagContainer ChargeAbilityTags;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Block")
-	FGameplayTagContainer BlockThresholdEventTags;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Block")
-	FGameplayTagContainer ParryAbilityTags;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Block")
-	FGameplayTagContainer BlockAbilityTags;
-
 protected:
 	//생명 주기 함수
 	virtual void OnRegister() override;
@@ -71,9 +62,6 @@ private:
 
 	void OnParryPressed();
 	void OnParryReleased();
-	void OnBlockThreshold();
-	bool HasBlockDataForCurrentWeapon() const;
-	float GetParryTimeForCurrentWeapon() const;
 
 	void SendGameplayEventLocal(FGameplayTag EventTag);
 
@@ -82,7 +70,6 @@ private:
 
 	FAbilitySetGrantedHandles GrantedHandles;
 	FTimerHandle ChargeThresholdTimer;
-	FTimerHandle BlockThresholdTimer;
 	bool bAttackHeld = false;
 	bool bParryHeld = false;
 };

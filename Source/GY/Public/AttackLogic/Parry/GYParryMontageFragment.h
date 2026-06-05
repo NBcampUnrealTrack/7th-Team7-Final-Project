@@ -18,6 +18,9 @@ struct GY_API FGYParryMontageSet
 	FName ParryLoopSection = TEXT("Loop");
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UAnimMontage> CounterMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UAnimMontage> EndMontage;
 };
 

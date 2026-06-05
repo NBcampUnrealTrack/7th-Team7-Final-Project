@@ -21,6 +21,9 @@ struct GY_API FGYBlockMontageSet
 	// Played when block ends before the ability fully ends.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UAnimMontage> EndMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UAnimMontage> BlockBreakMontage;
 };
 
 UCLASS(EditInlineNew, DefaultToInstanced)
