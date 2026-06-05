@@ -34,9 +34,11 @@ static void ApplyInstantGEToAttribute(UAbilitySystemComponent* ASC, const FGamep
 	ASC->ApplyGameplayEffectSpecToSelf(Spec);
 }
 
-void UGYCombatStatics::ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float RawDamage)
+void UGYCombatStatics::ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC)
 {
 	if (!TargetASC || RawDamage <= 0.f) return;
+
+	if (SourceASC && IsSameFaction(SourceASC, TargetASC)) return;
 
 	ApplyInstantGEToAttribute(TargetASC, UGYBaseAttribute::GetCurrentHealthAttribute(), -RawDamage);
 
@@ -51,10 +53,7 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 {
 	if (!TargetASC) return;
 
-	if (SourceASC && IsSameFaction(SourceASC, TargetASC))
-	{
-		return;
-	}
+	if (SourceASC && IsSameFaction(SourceASC, TargetASC)) return;
 
 	const UGYBaseAttribute* Base = TargetASC->GetSet<UGYBaseAttribute>();
 	const float Defense = Base ? Base->GetDefense() : 0.f;
