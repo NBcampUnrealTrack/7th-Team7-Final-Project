@@ -39,6 +39,44 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 }
 
 
+bool UInventoryComponent::RefillConsumable(TSoftObjectPtr<UItemDefinition> Def, int32& Count, FGuid& OutInstanceId, const UItemFragment_Consumable* ConsumableFragment)
+{
+	const FGameplayTag PoolTag = ConsumableFragment->ChargePoolTag;
+	const int32 PoolSum = GetChargePoolSum(PoolTag);
+	const int32 Space = FMath::Max(0, ConsumableFragment->MaxCharge - PoolSum);
+	Count = FMath::Min(Count, Space);
+	if (Count <= 0) return false;
+
+	for (FInventoryEntry& Entry : Inventory.Entries)
+	{
+		if (Entry.Definition != Def) continue;
+
+		Entry.StackCount += Count;
+		Inventory.MarkItemDirty(Entry);
+		NotifyContainerChanged(Entry.InstanceId, EInventoryEventType::StackCountChanged);
+
+		OutInstanceId = Entry.InstanceId;
+		MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
+		BroadcastPotionSnapshots();
+		return true;
+	}
+
+	FInventoryEntry NewEntry;
+	NewEntry.InstanceId = FGuid::NewGuid();
+	NewEntry.Definition = Def;
+	NewEntry.StackCount = Count;
+
+	FInventoryEntry& AddedEntry = Inventory.Entries.Add_GetRef(NewEntry);
+	Inventory.MarkItemDirty(AddedEntry);
+
+	OutInstanceId = AddedEntry.InstanceId;
+	NotifyContainerChanged(AddedEntry.InstanceId, EInventoryEventType::Added);
+
+	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
+	BroadcastPotionSnapshots();
+	return true;
+}
+
 bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId)
 {
 	if (!GetOwner()->HasAuthority()) return false;
@@ -47,6 +85,17 @@ bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 
 
 	UItemDefinition* DefPtr = Def.LoadSynchronous();
 	if (!IsValid(DefPtr)) return false;
+
+	const UItemFragment_Consumable* ConsumableFragment = DefPtr->FindFragment<UItemFragment_Consumable>();
+
+	OutInstanceId = FGuid();
+
+	//포션용
+	if (ConsumableFragment && ConsumableFragment->ChargePoolTag.IsValid())
+	{
+		return RefillConsumable(Def, Count, OutInstanceId, ConsumableFragment);
+	}
+
 
 	const UItemFragment_Stackable* StackableFragment = DefPtr->FindFragment<UItemFragment_Stackable>();
 	const int32 MaxStack = StackableFragment != nullptr ? StackableFragment->MaxStackSize : 1;
@@ -295,6 +344,21 @@ void UInventoryComponent::BroadcastPotionSnapshots()
 	LastPublishedPotionTags = MoveTemp(CurrentKeys);
 }
 
+int32 UInventoryComponent::GetChargePoolSum(const FGameplayTag& PoolTag) const
+{
+	int32 Sum = 0;
+	for (const FInventoryEntry& Entry : Inventory.Entries)
+	{
+		UItemDefinition* Def = Entry.Definition.LoadSynchronous();
+		if (!Def) continue;
+		const UItemFragment_Consumable* Consumable = Def->FindFragment<UItemFragment_Consumable>();
+		if (Consumable && Consumable->ChargePoolTag == PoolTag)
+		{
+			Sum += Entry.StackCount;
+		}
+	}
+	return Sum;
+}
 
 
 int32 UInventoryComponent::GetCapacity() const

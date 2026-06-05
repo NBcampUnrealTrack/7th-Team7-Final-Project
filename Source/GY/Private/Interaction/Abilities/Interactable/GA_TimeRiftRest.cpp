@@ -7,6 +7,8 @@
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "GameModes/GYGameMode.h"
+#include "Inventory/InventoryComponent.h"
+#include "Player/GYPlayerState.h"
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
 
 UGA_TimeRiftRest::UGA_TimeRiftRest(const FObjectInitializer& ObjectInitializer)
@@ -51,6 +53,28 @@ void UGA_TimeRiftRest::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			if (AGYGameMode* GameMove = Cast<AGYGameMode>(World->GetAuthGameMode()))
 			{
 				GameMove->AdvanceHour(RestAdvanceHour);
+			}
+		}
+		AActor* Avatar = GetAvatarActorFromActorInfo();
+
+		UInventoryComponent* InventoryComponent = nullptr;
+		if (APawn* Pawn = Cast<APawn>(Avatar))
+		{
+			if (AGYPlayerState* GYPlayerState =  Cast<AGYPlayerState>(Pawn->GetPlayerState()))
+			{
+				InventoryComponent = GYPlayerState->GetInventoryComponent();
+			}
+		}
+		if (InventoryComponent == nullptr)
+		{
+			InventoryComponent = Avatar->FindComponentByClass<UInventoryComponent>();
+		}
+		if (InventoryComponent)
+		{
+			for (TSoftObjectPtr<UItemDefinition> PotionDef : RefillPotionDefs)
+			{
+				FGuid OutId;
+				InventoryComponent->TryAddItem(PotionDef, 10000, OutId);
 			}
 		}
 

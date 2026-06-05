@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerState.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Engine/OverlapResult.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Net/UnrealNetwork.h"
 
@@ -96,14 +98,15 @@ void ULockOnComponent::StartLockOn()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
-	if (BoundASC.IsValid())
-	{
-		BoundASC->AddLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
-		                              EGameplayTagReplicationState::CountToOwner);
-	}
 
 	AActor* Target = FindBestTarget();
 	if (!Target) return;
+
+	if (BoundASC.IsValid())
+	{
+		BoundASC->AddLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
+									  EGameplayTagReplicationState::CountToOwner);
+	}
 
 	CurrentTarget = Target;
 	OnRep_CurrentTarget();
@@ -119,12 +122,33 @@ void ULockOnComponent::StopLockOn()
 		BoundASC->RemoveLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
 		                                 EGameplayTagReplicationState::CountToOwner);
 	}
+
+
 	OnRep_CurrentTarget();
 }
 
 void ULockOnComponent::OnRep_CurrentTarget()
 {
 	SetComponentTickEnabled(CurrentTarget.IsValid());
+
+	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
+	{
+		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+		{
+			if (CurrentTarget.IsValid())
+			{
+				bSavedOrientToMovement = Movement->bOrientRotationToMovement;
+				bSavedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
+				Movement->bOrientRotationToMovement = false;
+				Character->bUseControllerRotationYaw = true;
+			}
+			else
+			{
+				Movement->bOrientRotationToMovement = bSavedOrientToMovement;
+				Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
+			}
+		}
+	}
 }
 
 void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType,

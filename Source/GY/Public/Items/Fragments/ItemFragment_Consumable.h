@@ -24,4 +24,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = 1))
 	int32 StackCost = 1;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = 1))
+	int32 MaxCharge = 5;
 };

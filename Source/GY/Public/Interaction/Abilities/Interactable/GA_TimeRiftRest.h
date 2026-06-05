@@ -6,6 +6,7 @@
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "GA_TimeRiftRest.generated.h"
 
+class UItemDefinition;
 /**
  *
  */
@@ -27,4 +28,8 @@ protected:
 	TSubclassOf<UGameplayEffect> RecoveryEffect;
 	UPROPERTY(EditDefaultsOnly, Category = "Rest")
 	float RestAdvanceHour;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Rest")
+	TArray<TSoftObjectPtr<UItemDefinition>> RefillPotionDefs;
+
 };
