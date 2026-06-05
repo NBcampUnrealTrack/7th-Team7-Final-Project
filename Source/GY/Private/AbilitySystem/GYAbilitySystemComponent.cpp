@@ -309,7 +309,7 @@ void UGYAbilitySystemComponent::ApplyCombatTag()
 		FMath::Max(CombatAppliedDuration, KINDA_SMALL_NUMBER), false);
 }
 
-void UGYAbilitySystemComponent::NotifyAttributeDecreased(const FGameplayAttribute& Attribute)
+void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute& Attribute)
 {
 	ApplyCombatTag();
 

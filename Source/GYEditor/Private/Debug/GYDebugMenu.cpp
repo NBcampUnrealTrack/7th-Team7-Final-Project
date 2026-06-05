@@ -121,13 +121,13 @@ FReply SGYDebugMenu::GY_DebugUseStamina()
 
 FReply SGYDebugMenu::GY_DebugDecreaseStagger()
 {
-	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYAdditionalResourceStatics::DecreaseStagger(ASC, 20.f);
+	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYAdditionalResourceStatics::IncreaseStagger(ASC, 20.f);
 	return FReply::Handled();
 }
 
 FReply SGYDebugMenu::GY_DebugDecreaseStun()
 {
-	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYAdditionalResourceStatics::DecreaseStun(ASC, 40.f);
+	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYAdditionalResourceStatics::IncreaseStun(ASC, 40.f);
 	return FReply::Handled();
 }
 

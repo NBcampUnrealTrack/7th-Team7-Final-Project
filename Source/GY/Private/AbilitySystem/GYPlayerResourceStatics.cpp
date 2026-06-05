@@ -31,7 +31,7 @@ void UGYPlayerResourceStatics::UseStamina(UGYAbilitySystemComponent* ASC, float 
 	if (!PlayerAttr || PlayerAttr->GetCurrentStamina() <= 0.f) return;
 
 	ApplyStaminaUse(ASC, Amount);
-	ASC->NotifyAttributeDecreased(UGYPlayerAttribute::GetCurrentStaminaAttribute());
+	ASC->NotifyAttributeChanged(UGYPlayerAttribute::GetCurrentStaminaAttribute());
 }
 
 void UGYPlayerResourceStatics::ApplyAttributeDelta(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Magnitude)

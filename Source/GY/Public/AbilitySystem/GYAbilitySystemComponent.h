@@ -38,7 +38,7 @@ public:
 	void RescheduleStunRegen();
 
 	void ApplyCombatTag();
-	void NotifyAttributeDecreased(const FGameplayAttribute& Attribute);
+	void NotifyAttributeChanged(const FGameplayAttribute& Attribute);
 
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UGYPeriodicAttributeEffect> StaminaRegenEffect;

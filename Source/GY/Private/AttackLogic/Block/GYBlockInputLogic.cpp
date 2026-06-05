@@ -129,7 +129,7 @@ void UGYBlockInputLogic::DrainTick()
 	ASC->SetNumericAttributeBase(CachedDrainAttribute, FMath::Max(0.f, Current - Drain));
 
 	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
-		GYASC->NotifyAttributeDecreased(CachedDrainAttribute);
+		GYASC->NotifyAttributeChanged(CachedDrainAttribute);
 
 	if (Current - Drain <= 0.f)
 		PlayBlockEnd();

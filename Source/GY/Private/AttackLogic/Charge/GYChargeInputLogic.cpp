@@ -68,7 +68,7 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		const float Current = ASC->GetNumericAttributeBase(ChargeData->ChargeCost.Attribute);
 		ASC->SetNumericAttributeBase(ChargeData->ChargeCost.Attribute, FMath::Max(0.f, Current - ChargeData->ChargeCost.Amount));
 		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
-			GYASC->NotifyAttributeDecreased(ChargeData->ChargeCost.Attribute);
+			GYASC->NotifyAttributeChanged(ChargeData->ChargeCost.Attribute);
 	}
 
 	bCharging = true;
@@ -208,7 +208,7 @@ void UGYChargeInputLogic::ExecuteAttack()
 				const float Current = CostASC->GetNumericAttributeBase(CostData->AttackCost.Attribute);
 				CostASC->SetNumericAttributeBase(CostData->AttackCost.Attribute, FMath::Max(0.f, Current - CostAmount));
 				if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(CostASC))
-					GYASC->NotifyAttributeDecreased(CostData->AttackCost.Attribute);
+					GYASC->NotifyAttributeChanged(CostData->AttackCost.Attribute);
 			}
 		}
 	}
