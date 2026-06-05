@@ -43,8 +43,6 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 	AIControllerClass = AGYEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
-	DefaultMeshRelativeLocation = GetMesh()->GetRelativeLocation();
-	DefaultMeshRelativeRotation = GetMesh()->GetRelativeRotation();
 }
 
 UAbilitySystemComponent* AGYEnemyCharacterBase::GetAbilitySystemComponent() const
@@ -440,14 +438,19 @@ void AGYEnemyCharacterBase::DisableRagdoll()
 	//SkeletalMesh->SetAllBodiesBelowSimulatePhysics(false);
 	SkeletalMesh->SetSimulatePhysics(false);
 	SkeletalMesh->bBlendPhysics = false;
-
 	SkeletalMesh->SetCollisionProfileName(TEXT("CharacterMesh"));
 
 	SkeletalMesh->AttachToComponent(
 		GetCapsuleComponent(),
 		FAttachmentTransformRules::KeepRelativeTransform);
 
-	SkeletalMesh->SetRelativeLocationAndRotation(DefaultMeshRelativeLocation, DefaultMeshRelativeRotation);
+	if (const AGYEnemyCharacterBase* CDO = GetClass()->GetDefaultObject<AGYEnemyCharacterBase>())
+	{
+		if (const USkeletalMeshComponent* CDOMesh = CDO->GetMesh())
+		{
+			SkeletalMesh->SetRelativeLocationAndRotation(CDOMesh->GetRelativeLocation(), CDOMesh->GetRelativeRotation());
+		}
+	}
 }
 
 void AGYEnemyCharacterBase::EnableGameplay()
@@ -789,6 +792,8 @@ void AGYEnemyCharacterBase::BeginPlay()
 	{
 		bIsActivate = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
 	}
+	DefaultMeshRelativeLocation = GetMesh()->GetRelativeLocation();
+	DefaultMeshRelativeRotation = GetMesh()->GetRelativeRotation();
 }
 
 void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
