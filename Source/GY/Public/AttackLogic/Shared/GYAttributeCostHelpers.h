@@ -12,7 +12,7 @@ namespace GYAttributeCostHelpers
 		const float Current = ASC->GetNumericAttributeBase(Cost.Attribute);
 		ASC->SetNumericAttributeBase(Cost.Attribute, FMath::Max(0.f, Current - Cost.Amount));
 		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
-			GYASC->NotifyAttributeDecreased(Cost.Attribute);
+			GYASC->NotifyAttributeChanged(Cost.Attribute);
 	}
 
 	inline void ApplyReward(UAbilitySystemComponent* ASC, const FGYAttributeCost& Reward)

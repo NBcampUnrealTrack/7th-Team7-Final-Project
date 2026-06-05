@@ -21,30 +21,30 @@ static void AdditionalResource_ApplyInstantGE(UAbilitySystemComponent* ASC, cons
 
 void UGYAdditionalResourceStatics::ApplyStaggerUse(UAbilitySystemComponent* ASC, float Amount)
 {
-	AdditionalResource_ApplyInstantGE(ASC, UGYAdditionalAttribute::GetCurrentStaggerAttribute(), -Amount);
+	AdditionalResource_ApplyInstantGE(ASC, UGYAdditionalAttribute::GetCurrentStaggerAttribute(), Amount);
 }
 
-void UGYAdditionalResourceStatics::DecreaseStagger(UGYAbilitySystemComponent* ASC, float Amount)
+void UGYAdditionalResourceStatics::IncreaseStagger(UGYAbilitySystemComponent* ASC, float Amount)
 {
 	if (!ASC) return;
 	const UGYAdditionalAttribute* AdditionalAttr = ASC->GetSet<UGYAdditionalAttribute>();
-	if (!AdditionalAttr || AdditionalAttr->GetCurrentStagger() <= 0.f) return;
+	if (!AdditionalAttr || AdditionalAttr->GetCurrentStagger() >= AdditionalAttr->GetMaxStagger()) return;
 
 	ApplyStaggerUse(ASC, Amount);
-	ASC->NotifyAttributeDecreased(UGYAdditionalAttribute::GetCurrentStaggerAttribute());
+	ASC->NotifyAttributeChanged(UGYAdditionalAttribute::GetCurrentStaggerAttribute());
 }
 
 void UGYAdditionalResourceStatics::ApplyStunUse(UAbilitySystemComponent* ASC, float Amount)
 {
-	AdditionalResource_ApplyInstantGE(ASC, UGYAdditionalAttribute::GetCurrentStunAttribute(), -Amount);
+	AdditionalResource_ApplyInstantGE(ASC, UGYAdditionalAttribute::GetCurrentStunAttribute(), Amount);
 }
 
-void UGYAdditionalResourceStatics::DecreaseStun(UGYAbilitySystemComponent* ASC, float Amount)
+void UGYAdditionalResourceStatics::IncreaseStun(UGYAbilitySystemComponent* ASC, float Amount)
 {
 	if (!ASC) return;
 	const UGYAdditionalAttribute* AdditionalAttr = ASC->GetSet<UGYAdditionalAttribute>();
-	if (!AdditionalAttr || AdditionalAttr->GetCurrentStun() <= 0.f) return;
+	if (!AdditionalAttr || AdditionalAttr->GetCurrentStun() >= AdditionalAttr->GetMaxStun()) return;
 
 	ApplyStunUse(ASC, Amount);
-	ASC->NotifyAttributeDecreased(UGYAdditionalAttribute::GetCurrentStunAttribute());
+	ASC->NotifyAttributeChanged(UGYAdditionalAttribute::GetCurrentStunAttribute());
 }

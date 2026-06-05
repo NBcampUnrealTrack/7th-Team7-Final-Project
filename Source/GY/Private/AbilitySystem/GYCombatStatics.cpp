@@ -44,8 +44,8 @@ void UGYCombatStatics::ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float
 
 	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
 	{
-		UGYAdditionalResourceStatics::DecreaseStagger(GYASC, RawDamage);
-		UGYAdditionalResourceStatics::DecreaseStun(GYASC, RawDamage);
+		UGYAdditionalResourceStatics::IncreaseStagger(GYASC, RawDamage);
+		UGYAdditionalResourceStatics::IncreaseStun(GYASC, RawDamage);
 	}
 }
 
@@ -65,8 +65,8 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 	{
 		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
 		{
-			UGYAdditionalResourceStatics::DecreaseStagger(GYASC, Effective);
-			UGYAdditionalResourceStatics::DecreaseStun(GYASC, Effective);
+			UGYAdditionalResourceStatics::IncreaseStagger(GYASC, Effective);
+			UGYAdditionalResourceStatics::IncreaseStun(GYASC, Effective);
 		}
 	}
 }
