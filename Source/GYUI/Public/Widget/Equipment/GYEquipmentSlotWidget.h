@@ -7,6 +7,7 @@
 #include "GYEquipmentSlotWidget.generated.h"
 
 class UTexture2D;
+class UBorder;
 class UEquipmentLoadoutComponent;
 struct FGYEquipSlotMessage;
 
@@ -29,6 +30,10 @@ protected:
 	// 빈 슬롯 placeholder 아이콘 (슬롯별 실루엣)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GY|Equip")
 	TSoftObjectPtr<UTexture2D> EmptySlotIcon;
+
+	// 등급별 색 테두리 (인벤 슬롯과 동일). 있으면 등급색으로 칠하고 빈 칸이면 숨김
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
+	TObjectPtr<UBorder> GradeOutline;
 
 private:
 	void Refresh();

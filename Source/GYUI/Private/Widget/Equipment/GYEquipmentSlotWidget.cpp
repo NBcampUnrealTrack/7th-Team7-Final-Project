@@ -1,7 +1,9 @@
 #include "Widget/Equipment/GYEquipmentSlotWidget.h"
 
+#include "Components/Border.h"
 #include "Components/Image.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/ItemTags.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
@@ -91,6 +93,34 @@ void UGYEquipmentSlotWidget::OnViewChanged(bool bIsEmpty)
 	{
 		Image_Icon->SetOpacity(1.f);
 		Image_Icon->SetBrushFromSoftTexture(EmptySlotIcon.LoadSynchronous(), false);
+	}
+
+	// 등급 테두리 (인벤 슬롯과 동일 색)
+	if (GradeOutline)
+	{
+		if (bIsEmpty)
+		{
+			GradeOutline->SetVisibility(ESlateVisibility::Hidden);
+		}
+		else
+		{
+			const FGameplayTag& Grade = CurrentInfo.GradeTag;
+			FLinearColor Color(0.6f, 0.6f, 0.6f); // Normal/기본
+			if (Grade.MatchesTagExact(GYGameplayTags::Item_Grade_Legendary_Engraved))
+			{
+				Color = FLinearColor(0.8f, 0.2f, 1.0f);
+			}
+			else if (Grade.MatchesTagExact(GYGameplayTags::Item_Grade_Legendary))
+			{
+				Color = FLinearColor(1.0f, 0.55f, 0.1f);
+			}
+			else if (Grade.MatchesTagExact(GYGameplayTags::Item_Grade_Special))
+			{
+				Color = FLinearColor(0.3f, 0.5f, 1.0f);
+			}
+			GradeOutline->SetBrushColor(Color);
+			GradeOutline->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
 	}
 }
 
