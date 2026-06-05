@@ -7,10 +7,12 @@
 #include "GYInventoryScreenWidget.generated.h"
 
 class IItemContainer;
+class UEquipmentLoadoutComponent;
 class UGYItemSlotWidget;
 class UInventoryComponent;
 class UPanelWidget;
 struct FGYInventoryEntryMessage;
+struct FGYEquipSlotMessage;
 
 // 인벤 슬롯 좌클릭(드래그 아님) 시 발행. 호스트 화면(인첸트/루트/장착)이 바인딩해 동작 결정
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGYOnInventoryItemClicked, FGuid, InstanceId);
@@ -58,7 +60,10 @@ private:
 	void EnsureSlots();
 	void Refresh();
 	UInventoryComponent* ResolveInventory() const;
+	UEquipmentLoadoutComponent* ResolveLoadout() const;
 	void HandleEntryChanged(FGameplayTag Channel, const FGYInventoryEntryMessage& Msg);
+	// 장착/해제 시 인벤 그리드 갱신 (장착 중인 아이템은 가방에서 숨김)
+	void HandleLoadoutChanged(FGameplayTag Channel, const FGYEquipSlotMessage& Msg);
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UGYItemSlotWidget>> SlotWidgets;
@@ -68,4 +73,5 @@ private:
 
 	FGameplayTag CurrentCategory;
 	FGameplayMessageListenerHandle ListenerHandle;
+	FGameplayMessageListenerHandle LoadoutListenerHandle;
 };
