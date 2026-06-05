@@ -4,6 +4,7 @@
 #include "Currency/CurrencyComponent.h"
 #include "Disassemble/DisassembleService.h"
 #include "Enchant/EnchantService.h"
+#include "Equipment/EquipmentLoadoutComponent.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Items/Fragments/ItemFragment_Consumable.h"
@@ -39,14 +40,14 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 }
 
 
-bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId)
+int32 UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId)
 {
-	if (!GetOwner()->HasAuthority()) return false;
-	if (Count <= 0) return false;
-	if (Def.IsNull()) return false;
+	if (!GetOwner()->HasAuthority()) return 0;
+	if (Count <= 0) return 0;
+	if (Def.IsNull()) return 0;
 
 	UItemDefinition* DefPtr = Def.LoadSynchronous();
-	if (!IsValid(DefPtr)) return false;
+	if (!IsValid(DefPtr)) return 0;
 
 	const UItemFragment_Stackable* StackableFragment = DefPtr->FindFragment<UItemFragment_Stackable>();
 	const int32 MaxStack = StackableFragment != nullptr ? StackableFragment->MaxStackSize : 1;
@@ -78,8 +79,9 @@ bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 
 		}
 	}
 
-	// 2) 남은 수량은 새 엔트리에 (MaxStack 초과면 여러 엔트리로 분배)
-	while (Remaining > 0)
+	// 2) 남은 수량은 새 엔트리에 (MaxStack 초과면 여러 엔트리로 분배). 단 빈 슬롯이 있을 때만
+	int32 FreeSlots = Capacity - GetOccupiedSlotCount();
+	while (Remaining > 0 && FreeSlots > 0)
 	{
 		const int32 ToAdd = FMath::Min(MaxStack, Remaining);
 
@@ -91,6 +93,7 @@ bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 
 		FInventoryEntry& AddedEntry = Inventory.Entries.Add_GetRef(NewEntry);
 		Inventory.MarkItemDirty(AddedEntry);
 		Remaining -= ToAdd;
+		--FreeSlots;
 
 		if (!OutInstanceId.IsValid())
 		{
@@ -100,9 +103,13 @@ bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 
 		NotifyContainerChanged(AddedEntry.InstanceId, EInventoryEventType::Added);
 	}
 
-	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
+	const int32 AddedCount = Count - Remaining;
+	if (AddedCount > 0)
+	{
+		MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
+	}
 
-	return true;
+	return AddedCount;
 }
 
 bool UInventoryComponent::TryRemoveItem(const FGuid& InstanceId, int32 Count)
@@ -211,6 +218,8 @@ void UInventoryComponent::NotifyContainerChanged(const FGuid& InstanceId, EInven
 bool UInventoryComponent::InsertEntry(const FInventoryEntry& Entry)
 {
 	if (!GetOwner()->HasAuthority()) return false;
+	// 빈 슬롯이 없으면 통째 이동 불가 (드래그·이동 등)
+	if (GetOccupiedSlotCount() >= Capacity) return false;
 
 	FInventoryEntry& Added = Inventory.Entries.Add_GetRef(Entry);
 	Inventory.MarkItemDirty(Added);
@@ -300,6 +309,27 @@ void UInventoryComponent::BroadcastPotionSnapshots()
 int32 UInventoryComponent::GetCapacity() const
 {
 	return Capacity;
+}
+
+int32 UInventoryComponent::GetOccupiedSlotCount() const
+{
+	int32 EquippedCount = 0;
+
+	const AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwner());
+	const UEquipmentLoadoutComponent* Loadout = IsValid(PS) ? PS->GetEquipmentLoadoutComponent() : nullptr;
+	if (IsValid(Loadout))
+	{
+		for (const FEquipmentLoadoutEntry& LoadoutEntry : Loadout->GetEntries())
+		{
+			// 로드아웃이 가리키는 InstanceId가 실제 가방에 있을 때만 차감 (장착 = 가방 슬롯 점유 해제)
+			if (LoadoutEntry.InstanceId.IsValid() && FindEntry(LoadoutEntry.InstanceId) != nullptr)
+			{
+				++EquippedCount;
+			}
+		}
+	}
+
+	return Inventory.Entries.Num() - EquippedCount;
 }
 
 TArray<FInventoryEntry> UInventoryComponent::GetAllEntriesByCategory(FGameplayTag CategoryTag) const

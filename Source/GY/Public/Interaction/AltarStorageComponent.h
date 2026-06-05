@@ -22,7 +22,7 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual int32 GetCapacity() const override;
-	virtual bool TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId) override;
+	virtual int32 TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId) override;
 	virtual bool TryRemoveItem(const FGuid& InstanceId, int32 Count) override;
 	virtual bool MutateEntry(const FGuid& InstanceId, TFunctionRef<void(FInventoryEntry&)> Mutator) override;
 	virtual const FInventoryEntry* FindEntry(const FGuid& InstanceId) const override;

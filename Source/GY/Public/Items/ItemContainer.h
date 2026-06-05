@@ -20,7 +20,8 @@ class GY_API IItemContainer
 	GENERATED_BODY()
 
 public:
-	virtual bool TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId) =0;
+	// 반환: 실제로 추가된 수량. 용량이 부족하면 가능한 만큼만 넣고 나머지는 더하지 않음 (0 = 전혀 못 넣음)
+	virtual int32 TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId) =0;
 	virtual bool TryRemoveItem(const FGuid& InstanceId, int32 Count) =0;
 	virtual bool MutateEntry(const FGuid& InstanceId, TFunctionRef<void(FInventoryEntry&)> Mutator) =0;
 	virtual const FInventoryEntry* FindEntry(const FGuid& InstanceId) const =0;

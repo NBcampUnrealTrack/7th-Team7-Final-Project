@@ -35,14 +35,14 @@ void UAltarStorageComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	DOREPLIFETIME_WITH_PARAMS_FAST(UAltarStorageComponent, Storage, Params);
 }
 
-bool UAltarStorageComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId)
+int32 UAltarStorageComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId)
 {
-	if (!GetOwner()->HasAuthority()) return false;
-	if (Count <= 0) return false;
-	if (Def.IsNull()) return false;
+	if (!GetOwner()->HasAuthority()) return 0;
+	if (Count <= 0) return 0;
+	if (Def.IsNull()) return 0;
 
 	UItemDefinition* DefPtr = Def.LoadSynchronous();
-	if (!IsValid(DefPtr)) return false;
+	if (!IsValid(DefPtr)) return 0;
 
 	const UItemFragment_Stackable* StackableFragment = DefPtr->FindFragment<UItemFragment_Stackable>();
 	const int32 MaxStack = StackableFragment != nullptr ? StackableFragment->MaxStackSize : 1;
@@ -98,7 +98,7 @@ bool UAltarStorageComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(UAltarStorageComponent, Storage, this);
 
-	return true;
+	return Count - Remaining;
 }
 
 bool UAltarStorageComponent::TryRemoveItem(const FGuid& InstanceId, int32 Count)

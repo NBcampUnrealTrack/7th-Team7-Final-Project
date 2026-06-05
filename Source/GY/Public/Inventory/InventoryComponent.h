@@ -25,7 +25,11 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual int32 GetCapacity() const override;
-	virtual bool TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId) override;
+	virtual int32 TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId) override;
+
+	// 현재 가방이 차지한 슬롯 수 (장착 중인 아이템은 제외 — 로드아웃이 참조만 하므로 용량에서 빠짐)
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	int32 GetOccupiedSlotCount() const;
 	virtual bool TryRemoveItem(const FGuid& InstanceId, int32 Count) override;
 	virtual bool MutateEntry(const FGuid& InstanceId, TFunctionRef<void(FInventoryEntry&)> Mutator) override;
 	virtual const FInventoryEntry* FindEntry(const FGuid& InstanceId) const override;
