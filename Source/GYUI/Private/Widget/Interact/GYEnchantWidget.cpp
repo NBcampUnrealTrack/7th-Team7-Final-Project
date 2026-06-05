@@ -15,6 +15,7 @@
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
 #include "Player/GYPlayerState.h"
+#include "Widget/Equipment/GYEquipmentPanelWidget.h"
 #include "Widget/Interact/GYEnchantSlotWidget.h"
 #include "Widget/Inventory/GYInventoryScreenWidget.h"
 #include "Widget/ItemInfo/GYItemInfoWidget.h"
@@ -80,6 +81,13 @@ void UGYEnchantWidget::NativeConstruct()
 	{
 		InventoryScreen->OnItemClicked.AddDynamic(this, &UGYEnchantWidget::HandleInventoryItemClicked);
 	}
+
+	// 임베드된 장비 패널의 장착품 좌클릭 → 인첸트 대상 지정
+	EquipmentPanel = Cast<UGYEquipmentPanelWidget>(GetWidgetFromName(TEXT("WBP_EquipmentPanel")));
+	if (EquipmentPanel)
+	{
+		EquipmentPanel->OnSlotClicked.AddDynamic(this, &UGYEnchantWidget::HandleEquipSlotClicked);
+	}
 }
 
 void UGYEnchantWidget::NativeDestruct()
@@ -91,6 +99,10 @@ void UGYEnchantWidget::NativeDestruct()
 	if (InventoryScreen)
 	{
 		InventoryScreen->OnItemClicked.RemoveDynamic(this, &UGYEnchantWidget::HandleInventoryItemClicked);
+	}
+	if (EquipmentPanel)
+	{
+		EquipmentPanel->OnSlotClicked.RemoveDynamic(this, &UGYEnchantWidget::HandleEquipSlotClicked);
 	}
 
 
@@ -111,6 +123,11 @@ void UGYEnchantWidget::OnCloseButtonClicked()
 }
 
 void UGYEnchantWidget::HandleInventoryItemClicked(FGuid InstanceId)
+{
+	SetTarget(InstanceId);
+}
+
+void UGYEnchantWidget::HandleEquipSlotClicked(FGameplayTag SlotTag, FGuid InstanceId)
 {
 	SetTarget(InstanceId);
 }
