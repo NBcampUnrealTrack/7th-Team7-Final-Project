@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "Inventory/InventoryEntry.h"
 #include "Items/ItemContainer.h"
+#include "Items/Fragments/ItemFragment_Consumable.h"
 #include "Templates/Function.h"
 #include "InventoryComponent.generated.h"
 
@@ -47,6 +48,7 @@ public:
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Inventory")
 	FInventoryList Inventory;
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Inventory")
@@ -54,7 +56,6 @@ protected:
 private:
 	/** 인벤 전체 스캔 후 ChargePool 별 스택 집계 → GMS publish. 빈슬롯 전환 위해 이전 publish 셋 캐시 */
 	void BroadcastPotionSnapshots();
-
 
 private:
 	TSet<FGameplayTag> LastPublishedPotionTags;

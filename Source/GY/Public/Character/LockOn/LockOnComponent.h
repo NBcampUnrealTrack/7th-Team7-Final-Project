@@ -48,4 +48,6 @@ protected:
 private:
 	FDelegateHandle InCombatTagHandle;
 	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
+	bool bSavedOrientToMovement = true;
+	bool bSavedUseControllerRotationYaw = false;
 };

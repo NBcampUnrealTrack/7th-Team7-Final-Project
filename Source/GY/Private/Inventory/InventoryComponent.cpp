@@ -48,6 +48,8 @@ bool UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 
 	UItemDefinition* DefPtr = Def.LoadSynchronous();
 	if (!IsValid(DefPtr)) return false;
 
+	OutInstanceId = FGuid();
+
 	const UItemFragment_Stackable* StackableFragment = DefPtr->FindFragment<UItemFragment_Stackable>();
 	const int32 MaxStack = StackableFragment != nullptr ? StackableFragment->MaxStackSize : 1;
 
@@ -294,7 +296,6 @@ void UInventoryComponent::BroadcastPotionSnapshots()
 
 	LastPublishedPotionTags = MoveTemp(CurrentKeys);
 }
-
 
 
 int32 UInventoryComponent::GetCapacity() const
