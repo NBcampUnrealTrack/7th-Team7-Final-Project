@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbilityTypes.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 
@@ -64,6 +65,32 @@ void UBTTask_TriggerAbilityEvent::OnTaskFinished(UBehaviorTreeComponent& OwnerCo
 			}
 		}
 		ActiveAbility = nullptr;
+	}
+
+	if (ClearBoolKeyOnFinish != NAME_None)
+	{
+		if (UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(ClearBoolKeyOnFinish, false);
+		}
+	}
+
+	if (ClearTagOnFinish.IsValid())
+	{
+		AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetAIOwner());
+		if (AIC)
+		{
+			if (APawn* P = AIC->GetPawn())
+			{
+				if (UAbilitySystemComponent* ASC =
+					UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(P))
+				{
+					ASC->RemoveLooseGameplayTag(
+						ClearTagOnFinish, 1,
+						EGameplayTagReplicationState::TagOnly);
+				}
+			}
+		}
 	}
 	CachedOwnerComp = nullptr;
 }

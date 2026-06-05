@@ -8,6 +8,7 @@
 #include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Character/GYPawnData.h"
+#include "Core/GameplayTags/FactionTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Interaction/AltarStorageComponent.h"
@@ -78,6 +79,10 @@ void AGYPlayerState::InitGAS(APawn* Avatar)
 	AbilitySystemComponent->InitAbilityActorInfo(this, Avatar);
 
 	if (GetLocalRole() != ROLE_Authority) return;
+
+	AbilitySystemComponent->AddLooseGameplayTag(
+		GYFactionTags::Character_Faction_Player, 1,
+		EGameplayTagReplicationState::TagOnly);
 
 	if (InitData)
 	{

@@ -35,4 +35,5 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Sprint)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Blocking)
 
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Attack_Enemy)
 }

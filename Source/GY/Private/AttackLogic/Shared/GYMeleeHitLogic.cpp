@@ -30,7 +30,8 @@ void UGYMeleeHitLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEve
 	if (!TargetActor) return;
 
 	float Damage = 0.f;
-	if (UAbilitySystemComponent* InstigatorASC = CachedAbility->GetAbilitySystemComponentFromActorInfo())
+	UAbilitySystemComponent* InstigatorASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+	if (InstigatorASC)
 	{
 		if (const UGYBaseAttribute* Attrs = InstigatorASC->GetSet<UGYBaseAttribute>())
 		{
@@ -42,7 +43,7 @@ void UGYMeleeHitLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEve
 	{
 		if (UAbilitySystemComponent* TargetASC = ASCInterface->GetAbilitySystemComponent())
 		{
-			UGYCombatStatics::ApplyDamage(TargetASC, Damage);
+			UGYCombatStatics::ApplyDamage(TargetASC, Damage, InstigatorASC);
 		}
 	}
 }

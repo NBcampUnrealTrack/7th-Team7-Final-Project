@@ -96,10 +96,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AnimInstance|State",
 		meta = (AllowPrivateAccess = "true"))
-	bool bIsRunning = false;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AnimInstance|State",
-		meta = (AllowPrivateAccess = "true"))
 	bool bIsStunned = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AnimInstance|State",
@@ -128,7 +124,6 @@ private:
 	static const FName BB_Key_TargetActor;
 	static const FName BB_Key_IsStunned;
 	static const FName BB_Key_IsDead;
-	static const FName BB_Key_IsRunning;
 
 public:
 

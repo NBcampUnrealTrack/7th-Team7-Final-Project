@@ -5,6 +5,8 @@
 #include "EdGraphUtilities.h"
 #include "SkillTreeEditor/SkillTreeNodeFactory.h"
 #include "SkillTreeEditor/AssetTypeActions_SkillTree.h"
+#include "Enemy/AnimNotify/EnemyWeaponTrace.h"
+#include "Enemy/AnimNotify/LaunchProjectile.h"
 
 #define LOCTEXT_NAMESPACE "FGYEditorModule"
 
@@ -76,7 +78,16 @@ void FGYEditorModule::SyncAbilityWeightRow(class UBlueprint* BP)
 		{
 			if (NotifyEvent.NotifyStateClass &&
 				NotifyEvent.NotifyStateClass->IsA<UEnemyWeaponTrace>())
+			{
 				TraceCount++;
+				continue;
+			}
+
+			if (NotifyEvent.Notify && NotifyEvent.Notify->IsA<ULaunchProjectile>())
+			{
+				TraceCount++;
+				continue;
+			}
 		}
 	}
 

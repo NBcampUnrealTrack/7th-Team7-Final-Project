@@ -9,7 +9,6 @@ void UAnimNotify_FootStep::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenc
 
 	if (AGYCharacter* Owner = Cast<AGYCharacter>(MeshComp->GetOwner()))
 	{
-		UE_LOG(LogTemp,Log,TEXT("FootStep"));
 		Owner->MakeFootstepNoise();
 	}
 }

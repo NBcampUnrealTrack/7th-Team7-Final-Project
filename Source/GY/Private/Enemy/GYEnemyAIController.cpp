@@ -1,7 +1,10 @@
 #include "Enemy/GYEnemyAIController.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "BrainComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Core/GameplayTags/FactionTags.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Damage.h"
@@ -156,6 +159,15 @@ void AGYEnemyAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 {
 	if (!Actor || !Cast<ACharacter>(Actor)) return;
 
+	if (UAbilitySystemComponent* TargetASC =
+		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor))
+	{
+		if (TargetASC->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy))
+		{
+			return;
+		}
+	}
+
 	UBlackboardComponent* BB = GetBlackboardComponent();
 	if (!BB) return;
 
@@ -223,7 +235,6 @@ void AGYEnemyAIController::SetupBlackboardDefaults()
 
 	BB->SetValueAsBool(EnemyBBKeys::IsStunned, false);
 	BB->SetValueAsBool(EnemyBBKeys::IsDead, false);
-	BB->SetValueAsBool(EnemyBBKeys::IsRunning, false);
 
 	if (!PatrolPoints.IsEmpty())
 	{

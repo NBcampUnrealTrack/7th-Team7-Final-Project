@@ -57,6 +57,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsDead() const { return bIsDead; }
 
+	UFUNCTION(BlueprintPure, Category = "Enemy")
+	bool IsStunned() const;
+
+	UFUNCTION(BlueprintPure, Category = "Enemy")
+	bool IsStaggered() const;
+
 	UFUNCTION(BlueprintPure, Category = "Enemy|Anim")
 	UAnimMontage* GetMontageByTag(const FGameplayTag& Tag) const;
 
@@ -103,11 +109,19 @@ protected:
 
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
 	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
+	void OnStaggerTagChanged(const FGameplayTag Tag, int32 NewCount);
+
+	void HandleStunBegin();
+	void HandleStunEnd();
+	void HandleStaggerBegin();
+	void HandleStaggerEnd();
 
 	void DisableGameplay();
 	void EnableRagdoll();
 	void HandleDeathAuthority();
 	void GrantRewards();
+	void DisableRagdoll();
+	void EnableGameplay();
 
 	void BuildMontageMap(const FEnemyAnimationConfig& Config);
 
@@ -175,10 +189,18 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Death")
 	float DeactivateDelay = 3.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Status")
+	float StunDuration = 2.f;
 private:
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	FString WeaponTraceBonePrefix = TEXT("WeaponTrace_");
 
+	FVector DefaultMeshRelativeLocation;
+	FRotator DefaultMeshRelativeRotation;
+
 	FTimerHandle DeactivateTimerHandle;
+	FTimerHandle StunRecoveryTimerHandle;
+	FTimerHandle StaggerRecoveryTimerHandle;
 };
 
