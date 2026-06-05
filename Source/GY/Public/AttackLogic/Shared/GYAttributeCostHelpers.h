@@ -10,7 +10,7 @@ namespace GYAttributeCostHelpers
 	{
 		if (!ASC || !Cost.Attribute.IsValid() || Cost.Amount <= 0.f) return;
 		const float Current = ASC->GetNumericAttributeBase(Cost.Attribute);
-		ASC->SetNumericAttributeBase(Cost.Attribute, FMath::Max(0.f, Current - Cost.Amount));
+		ASC->SetNumericAttributeBase(Cost.Attribute, Current - Cost.Amount);
 		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
 			GYASC->NotifyAttributeChanged(Cost.Attribute);
 	}

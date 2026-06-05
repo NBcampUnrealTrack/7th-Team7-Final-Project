@@ -30,5 +30,6 @@ private:
 	const FGYParryData* CachedParryData = nullptr;
 	FTimerHandle ParryWindowTimer;
 	FTimerHandle ParryAnimTimer;
+	FTimerHandle CounterMontageTimer;
 	FTimerHandle EndMontageTimer;
 };

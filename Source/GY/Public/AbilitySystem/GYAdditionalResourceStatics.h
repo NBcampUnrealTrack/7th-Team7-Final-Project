@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "AttributeSet.h"
 #include "GYAdditionalResourceStatics.generated.h"
 
 class UAbilitySystemComponent;
@@ -24,5 +25,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="GY|AdditionalResource")
 	static void IncreaseStun(UGYAbilitySystemComponent* ASC, float Amount);
+
+	UFUNCTION(BlueprintCallable, Category="GY|AdditionalResource")
+	static void ApplyAttributeDelta(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Amount);
 
 };

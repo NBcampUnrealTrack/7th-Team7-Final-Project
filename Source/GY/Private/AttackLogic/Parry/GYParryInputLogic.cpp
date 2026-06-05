@@ -3,7 +3,9 @@
 #include "AttackLogic/Parry/GYParryMontageFragment.h"
 #include "AttackLogic/Shared/GYAttributeCostHelpers.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
+#include "AbilitySystem/GYAdditionalResourceStatics.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystemGlobals.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/EventTags.h"
 
@@ -70,9 +72,7 @@ void UGYParryInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	if (ASC)
 	{
 		for (const FGameplayTag& Tag : CachedParryData->ParryAppliedTags)
-		{
 			ASC->AddLooseGameplayTag(Tag);
-		}
 	}
 
 	TWeakObjectPtr<UGYParryInputLogic> WeakThis(this);
@@ -93,9 +93,7 @@ void UGYParryInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 void UGYParryInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
 {
 	if (CachedAbility.IsValid())
-	{
 		CachedAbility->GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
-	}
 	RemoveParryTag();
 	CachedAbility.Reset();
 	CachedMontageSet = nullptr;
@@ -116,13 +114,42 @@ void UGYParryInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 
 	RemoveParryTag();
 
+	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+
 	if (CachedParryData)
 	{
-		UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
 		ApplyReward(ASC, CachedParryData->StaminaReward);
+
+		if (const AActor* AttackerActor = Payload.Instigator.Get())
+		{
+			if (UAbilitySystemComponent* AttackerASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(AttackerActor))
+			{
+				for (const FGYAttributeEffect& Effect : CachedParryData->ReceiverAffected)
+					UGYAdditionalResourceStatics::ApplyAttributeDelta(AttackerASC, Effect.Attribute, Effect.Amount);
+			}
+		}
 	}
 
-	PlayEndMontage();
+	if (CachedMontageSet && CachedMontageSet->CounterMontage)
+	{
+		const float Duration = CachedAbility->PlayMontageForLogic(CachedMontageSet->CounterMontage, 1.f);
+		TWeakObjectPtr<UGYParryInputLogic> WeakThis(this);
+		CachedAbility->GetWorld()->GetTimerManager().SetTimer(
+			CounterMontageTimer,
+			[WeakThis]()
+			{
+				if (UGYParryInputLogic* Self = WeakThis.Get())
+					if (Self->CachedAbility.IsValid())
+						Self->CachedAbility->RequestEnd(false);
+			},
+			FMath::Max(Duration, 0.1f),
+			false
+		);
+	}
+	else
+	{
+		CachedAbility->RequestEnd(false);
+	}
 }
 
 TArray<FGameplayTag> UGYParryInputLogic::GetRequiredFragmentTags() const
@@ -146,9 +173,7 @@ void UGYParryInputLogic::OnParryWindowExpired()
 		[WeakThis]()
 		{
 			if (UGYParryInputLogic* Self = WeakThis.Get())
-			{
 				Self->OnParryAnimExpired();
-			}
 		},
 		FMath::Max(CachedParryData->ParryAnimTime, KINDA_SMALL_NUMBER),
 		false
@@ -198,8 +223,6 @@ void UGYParryInputLogic::RemoveParryTag()
 	for (const FGameplayTag& Tag : CachedParryData->ParryAppliedTags)
 	{
 		if (ASC->HasMatchingGameplayTag(Tag))
-		{
 			ASC->RemoveLooseGameplayTag(Tag);
-		}
 	}
 }

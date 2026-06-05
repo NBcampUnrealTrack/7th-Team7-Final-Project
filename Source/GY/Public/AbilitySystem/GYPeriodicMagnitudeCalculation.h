@@ -24,8 +24,13 @@ class GY_API UGYStaminaRegenMagnitude : public UGYPercentOfMaxMagnitude
 public:
 	UGYStaminaRegenMagnitude();
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY")
+	float NegativeRatePercentPerSecond = 0.1f;
+
 private:
 	FGameplayEffectAttributeCaptureDefinition MaxStaminaDef;
+	FGameplayEffectAttributeCaptureDefinition CurrentStaminaDef;
 };
 UCLASS()
 class GY_API UGYStaggerRegenMagnitude : public UGYPercentOfMaxMagnitude

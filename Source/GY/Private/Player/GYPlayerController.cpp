@@ -47,6 +47,7 @@ void AGYPlayerController::BeginPlay()
 	if (IsLocalController())
 	{
 		EnableCheats();
+		bShowMouseCursor = true;
 	}
 }
 

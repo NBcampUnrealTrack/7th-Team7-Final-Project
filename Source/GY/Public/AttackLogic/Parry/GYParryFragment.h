@@ -23,9 +23,11 @@ struct GY_API FGYParryData
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cost")
 	FGYAttributeCost StaminaReward;
 
-	// Tags applied to the ASC during the parry window. Hit-detection checks for these to identify a successful parry.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Parry")
 	FGameplayTagContainer ParryAppliedTags;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Parry")
+	TArray<FGYAttributeEffect> ReceiverAffected;
 };
 
 UCLASS(EditInlineNew, DefaultToInstanced)
