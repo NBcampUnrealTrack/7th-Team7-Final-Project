@@ -46,6 +46,9 @@ protected:
 	TWeakObjectPtr<AActor> CurrentTarget;
 
 private:
+	void BroadcastLockOnMessage();
+
+
 	FDelegateHandle InCombatTagHandle;
 	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
 	bool bSavedOrientToMovement = true;

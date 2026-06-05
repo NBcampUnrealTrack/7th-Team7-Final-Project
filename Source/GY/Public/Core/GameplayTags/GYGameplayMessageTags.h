@@ -73,4 +73,7 @@ namespace GYGameplayTags
 
 	// 세계 시간
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_World_TimeChanged);
+
+	// 락온
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_LockOn_Changed);
 }

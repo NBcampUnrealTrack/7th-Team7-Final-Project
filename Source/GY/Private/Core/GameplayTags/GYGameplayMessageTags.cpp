@@ -55,4 +55,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Message_Character_Ready, "Message.Character.Ready");
 
 	UE_DEFINE_GAMEPLAY_TAG(Message_World_TimeChanged, "Message.World.TimeChanged");
+
+	UE_DEFINE_GAMEPLAY_TAG(Message_LockOn_Changed, "Message.LockOn.Changed");
+
 }

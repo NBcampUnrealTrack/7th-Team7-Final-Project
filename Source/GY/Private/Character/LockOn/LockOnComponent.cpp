@@ -3,13 +3,16 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Core/GameplayTags/CameraTags.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/PlayerState.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Engine/OverlapResult.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Net/UnrealNetwork.h"
+#include "UI/GYUIMessages.h"
 
 ULockOnComponent::ULockOnComponent()
 {
@@ -42,6 +45,12 @@ void ULockOnComponent::BeginPlay()
 
 void ULockOnComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (CurrentTarget.IsValid())
+	{
+		CurrentTarget = nullptr;
+		OnRep_CurrentTarget();
+	}
+
 	if (BoundASC.IsValid())
 	{
 		BoundASC->RegisterGameplayTagEvent(
@@ -123,7 +132,6 @@ void ULockOnComponent::StopLockOn()
 		                                 EGameplayTagReplicationState::CountToOwner);
 	}
 
-
 	OnRep_CurrentTarget();
 }
 
@@ -149,6 +157,7 @@ void ULockOnComponent::OnRep_CurrentTarget()
 			}
 		}
 	}
+	BroadcastLockOnMessage();
 }
 
 void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -158,6 +167,7 @@ void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	if (!CurrentTarget.IsValid())
 	{
+		if (GetOwner()->HasAuthority()) StopLockOn();
 		SetComponentTickEnabled(false);
 		return;
 	}
@@ -235,4 +245,18 @@ void ULockOnComponent::UpdateRotationToTarget(float DeltaTime)
 	const FRotator CurrentRot = Controller->GetControlRotation();
 	const FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, RotationInterpSpeed);
 	Controller->SetControlRotation(NewRot);
+}
+
+void ULockOnComponent::BroadcastLockOnMessage()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	UGameplayMessageSubsystem& MS = UGameplayMessageSubsystem::Get(World);
+
+	FGYLockOnMessage LockOnMessage;
+	LockOnMessage.Owner = GetOwner();
+	LockOnMessage.Target = CurrentTarget;
+	MS.BroadcastMessage(GYGameplayTags::Message_LockOn_Changed, LockOnMessage);
+
 }
