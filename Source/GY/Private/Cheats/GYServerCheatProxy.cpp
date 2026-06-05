@@ -197,7 +197,7 @@ void AGYServerCheatProxy::Server_AddItem_Implementation(const FString& ItemPath,
 	}
 
 	FGuid OutId;
-	if (Inv->TryAddItem(Def, Count, OutId))
+	if (Inv->TryAddItem(Def, Count, OutId) > 0)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Server_AddItem: %s x%d (InstanceId=%s)"),
 			*Def->ItemId.ToString(), Count, *OutId.ToString());
@@ -221,7 +221,7 @@ void AGYServerCheatProxy::Server_EquipItem_Implementation(const FString& ItemPat
 	}
 
 	FGuid OutId;
-	if (!Inv->TryAddItem(Def, 1, OutId)) return;
+	if (Inv->TryAddItem(Def, 1, OutId) <= 0) return;
 
 	Loadout->Server_RequestEquip(OutId);
 }

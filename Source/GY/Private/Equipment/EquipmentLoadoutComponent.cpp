@@ -48,6 +48,12 @@ void UEquipmentLoadoutComponent::Server_RequestEquip_Implementation(const FGuid&
 
 void UEquipmentLoadoutComponent::Server_RequestUnequip_Implementation(FGameplayTag SlotTag)
 {
+	// 가방이 꽉 차 있으면 해제 불가 — 해제하면 아이템이 다시 가방 슬롯을 차지하는데 들어갈 칸이 없음
+	// (장착 아이템은 점유 카운트에서 제외돼 있으므로, 점유 >= 용량이면 해제 시 초과)
+	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwner());
+	UInventoryComponent* Inv = IsValid(PS) ? PS->GetInventoryComponent() : nullptr;
+	if (IsValid(Inv) && Inv->GetOccupiedSlotCount() >= Inv->GetCapacity()) return;
+
 	ClearSlot(SlotTag);
 }
 

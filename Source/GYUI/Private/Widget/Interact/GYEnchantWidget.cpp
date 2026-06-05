@@ -15,6 +15,7 @@
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
 #include "Player/GYPlayerState.h"
+#include "Widget/Equipment/GYEquipmentPanelWidget.h"
 #include "Widget/Interact/GYEnchantSlotWidget.h"
 #include "Widget/Inventory/GYInventoryScreenWidget.h"
 #include "Widget/ItemInfo/GYItemInfoWidget.h"
@@ -28,9 +29,15 @@ void UGYEnchantWidget::OnCurrencyChanged(FGameplayTag GameplayTag, int32 Amount)
 	if (IsValid(CostTable))
 	{
 		const FEnchantCostRow* CostRow = CostTable->FindRow<FEnchantCostRow>(Settings->DefaultCostRowName, TEXT("EnchantService::TryEnchant"));
-		MaxAmount = CostRow->Amount;
+		if (CostRow != nullptr)
+		{
+			MaxAmount = CostRow->Amount;
+		}
 	}
-	ProgressBar->SetPercent(static_cast<float>(Amount)/MaxAmount);
+	if (ProgressBar)
+	{
+		ProgressBar->SetPercent(static_cast<float>(Amount)/MaxAmount);
+	}
 	if (Text_TimeShard)
 	{
 		Text_TimeShard->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), Amount, MaxAmount)));
@@ -46,8 +53,12 @@ void UGYEnchantWidget::NativeConstruct()
 	AGYPlayerState* PS = IsValid(PC) ? PC->GetPlayerState<AGYPlayerState>() : nullptr;
 	UCurrencyComponent* CurrencyComponent =  IsValid(PS) ? PS->GetCurrencyComponent() : nullptr;
 
-	int32 CurrentAmount = CurrencyComponent->GetAmount(GYGameplayTags::Currency_TimeShard);
-	OnCurrencyChangedHandle = CurrencyComponent->OnCurrencyChanged.AddUObject(this, &UGYEnchantWidget::OnCurrencyChanged);
+	int32 CurrentAmount = 0;
+	if (IsValid(CurrencyComponent))
+	{
+		CurrentAmount = CurrencyComponent->GetAmount(GYGameplayTags::Currency_TimeShard);
+		OnCurrencyChangedHandle = CurrencyComponent->OnCurrencyChanged.AddUObject(this, &UGYEnchantWidget::OnCurrencyChanged);
+	}
 
 	const UGYEnchantSettings* Settings = GetDefault<UGYEnchantSettings>();
 
@@ -56,7 +67,10 @@ void UGYEnchantWidget::NativeConstruct()
 	if (IsValid(CostTable))
 	{
 		const FEnchantCostRow* CostRow = CostTable->FindRow<FEnchantCostRow>(Settings->DefaultCostRowName, TEXT("EnchantService::TryEnchant"));
-		MaxAmount = CostRow->Amount;
+		if (CostRow != nullptr)
+		{
+			MaxAmount = CostRow->Amount;
+		}
 	}
 
 	ProgressBar->SetPercent(static_cast<float>(CurrentAmount)/MaxAmount);
@@ -80,24 +94,45 @@ void UGYEnchantWidget::NativeConstruct()
 	{
 		InventoryScreen->OnItemClicked.AddDynamic(this, &UGYEnchantWidget::HandleInventoryItemClicked);
 	}
+
+	// 임베드된 장비 패널의 장착품 좌클릭 → 인첸트 대상 지정
+	EquipmentPanel = Cast<UGYEquipmentPanelWidget>(GetWidgetFromName(TEXT("WBP_EquipmentPanel")));
+	if (EquipmentPanel)
+	{
+		EquipmentPanel->OnSlotClicked.AddDynamic(this, &UGYEnchantWidget::HandleEquipSlotClicked);
+	}
 }
 
 void UGYEnchantWidget::NativeDestruct()
 {
 	Super::NativeDestruct();
-	CloseButton->OnClicked.RemoveDynamic(this, &UGYEnchantWidget::OnCloseButtonClicked);
-	ExecuteButton->OnClicked.RemoveDynamic(this, &UGYEnchantWidget::OnExecuteButtonClicked);
+	if (CloseButton)
+	{
+		CloseButton->OnClicked.RemoveDynamic(this, &UGYEnchantWidget::OnCloseButtonClicked);
+	}
+	if (ExecuteButton)
+	{
+		ExecuteButton->OnClicked.RemoveDynamic(this, &UGYEnchantWidget::OnExecuteButtonClicked);
+	}
 
 	if (InventoryScreen)
 	{
 		InventoryScreen->OnItemClicked.RemoveDynamic(this, &UGYEnchantWidget::HandleInventoryItemClicked);
 	}
+	if (EquipmentPanel)
+	{
+		EquipmentPanel->OnSlotClicked.RemoveDynamic(this, &UGYEnchantWidget::HandleEquipSlotClicked);
+	}
 
-
+	// 종료 시점엔 PlayerState/Currency가 이미 정리됐을 수 있어 null 가드 필수
 	APlayerController* PC = GetOwningPlayer();
 	AGYPlayerState* PS = IsValid(PC) ? PC->GetPlayerState<AGYPlayerState>() : nullptr;
-	UCurrencyComponent* CurrencyComponent =  IsValid(PS) ? PS->GetCurrencyComponent() : nullptr;
-	CurrencyComponent->OnCurrencyChanged.Remove(OnCurrencyChangedHandle);
+	UCurrencyComponent* CurrencyComponent = IsValid(PS) ? PS->GetCurrencyComponent() : nullptr;
+	if (IsValid(CurrencyComponent) && OnCurrencyChangedHandle.IsValid())
+	{
+		CurrencyComponent->OnCurrencyChanged.Remove(OnCurrencyChangedHandle);
+		OnCurrencyChangedHandle.Reset();
+	}
 }
 
 void UGYEnchantWidget::OnCloseButtonClicked()
@@ -111,6 +146,11 @@ void UGYEnchantWidget::OnCloseButtonClicked()
 }
 
 void UGYEnchantWidget::HandleInventoryItemClicked(FGuid InstanceId)
+{
+	SetTarget(InstanceId);
+}
+
+void UGYEnchantWidget::HandleEquipSlotClicked(FGameplayTag SlotTag, FGuid InstanceId)
 {
 	SetTarget(InstanceId);
 }

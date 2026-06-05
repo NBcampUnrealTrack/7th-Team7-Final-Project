@@ -166,7 +166,8 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 	const FLootDrop& Drop = PendingDrops[DropIndex];
 
 	FGuid OutId;
-	if (!Inv->TryAddItem(Drop.Definition, Drop.Count, OutId)) return;
+	const int32 Added = Inv->TryAddItem(Drop.Definition, Drop.Count, OutId);
+	if (Added <= 0) return;  // 가방이 꽉 차 못 넣음 — 상자에 그대로 유지
 
 	Inv->MutateEntry(OutId, [&Drop](FInventoryEntry& Entry)
 	{
@@ -178,7 +179,15 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 		Entry.RandomSeed = Drop.UsedSeed;
 	});
 
-	PendingDrops.RemoveAt(DropIndex);
+	if (Added >= Drop.Count)
+	{
+		PendingDrops.RemoveAt(DropIndex);
+	}
+	else
+	{
+		// 일부만 들어감 — 남은 수량은 상자에 유지
+		PendingDrops[DropIndex].Count -= Added;
+	}
 
 	// 빈 상자라도 파괴하지 않음 — 직접 닫기 전까지 유지, 다른 플레이어가 빈 것을 확인 가능
 	// authority(리슨서버/호스트)는 OnRep이 안 뜨므로 직접 통지. dedicated server는 self-guard로 no-op

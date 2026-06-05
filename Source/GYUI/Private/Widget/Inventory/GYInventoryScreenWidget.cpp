@@ -6,6 +6,7 @@
 #include "Core/GYItemDragDropOperation.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Equipment/EquipmentLoadoutComponent.h"
 #include "Inventory/GA_TransferItem.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
@@ -27,10 +28,15 @@ void UGYInventoryScreenWidget::NativeConstruct()
 
 	if (UWorld* World = GetWorld())
 	{
-		ListenerHandle = UGameplayMessageSubsystem::Get(World).RegisterListener(
+		UGameplayMessageSubsystem& Messaging = UGameplayMessageSubsystem::Get(World);
+		ListenerHandle = Messaging.RegisterListener(
 			GYGameplayTags::Message_Inventory_EntryChanged,
 			this,
 			&UGYInventoryScreenWidget::HandleEntryChanged);
+		LoadoutListenerHandle = Messaging.RegisterListener(
+			GYGameplayTags::Message_Equipment_LoadoutSlotChanged,
+			this,
+			&UGYInventoryScreenWidget::HandleLoadoutChanged);
 	}
 
 	Refresh();
@@ -39,14 +45,14 @@ void UGYInventoryScreenWidget::NativeConstruct()
 
 void UGYInventoryScreenWidget::NativeDestruct()
 {
-	if (ListenerHandle.IsValid())
+	if (UWorld* World = GetWorld())
 	{
-		if (UWorld* World = GetWorld())
-		{
-			UGameplayMessageSubsystem::Get(World).UnregisterListener(ListenerHandle);
-		}
-		ListenerHandle = FGameplayMessageListenerHandle();
+		UGameplayMessageSubsystem& Messaging = UGameplayMessageSubsystem::Get(World);
+		if (ListenerHandle.IsValid()) Messaging.UnregisterListener(ListenerHandle);
+		if (LoadoutListenerHandle.IsValid()) Messaging.UnregisterListener(LoadoutListenerHandle);
 	}
+	ListenerHandle = FGameplayMessageListenerHandle();
+	LoadoutListenerHandle = FGameplayMessageListenerHandle();
 
 	Super::NativeDestruct();
 }
@@ -133,12 +139,27 @@ void UGYInventoryScreenWidget::Refresh()
 		return;
 	}
 
+	// 장착 중인 아이템은 가방 그리드에서 숨김 (로드아웃이 InstanceId로 참조만 하고 인벤엔 남아있음)
+	TSet<FGuid> EquippedIds;
+	if (UEquipmentLoadoutComponent* Loadout = ResolveLoadout())
+	{
+		for (const FEquipmentLoadoutEntry& LoadoutEntry : Loadout->GetEntries())
+		{
+			if (LoadoutEntry.InstanceId.IsValid())
+			{
+				EquippedIds.Add(LoadoutEntry.InstanceId);
+			}
+		}
+	}
+
 	const TArray<FInventoryEntry>& Entries = Inv->GetEntries();
 	int32 SlotIndex = 0;
 
 	for (const FInventoryEntry& Entry : Entries)
 	{
 		if (SlotIndex >= SlotWidgets.Num()) break;
+
+		if (EquippedIds.Contains(Entry.InstanceId)) continue;
 
 		if (CurrentCategory.IsValid())
 		{
@@ -169,7 +190,19 @@ UInventoryComponent* UGYInventoryScreenWidget::ResolveInventory() const
 	return IsValid(PS) ? PS->GetInventoryComponent() : nullptr;
 }
 
+UEquipmentLoadoutComponent* UGYInventoryScreenWidget::ResolveLoadout() const
+{
+	APlayerController* PC = GetOwningPlayer();
+	AGYPlayerState* PS = IsValid(PC) ? PC->GetPlayerState<AGYPlayerState>() : nullptr;
+	return IsValid(PS) ? PS->GetEquipmentLoadoutComponent() : nullptr;
+}
+
 void UGYInventoryScreenWidget::HandleEntryChanged(FGameplayTag, const FGYInventoryEntryMessage&)
+{
+	Refresh();
+}
+
+void UGYInventoryScreenWidget::HandleLoadoutChanged(FGameplayTag, const FGYEquipSlotMessage&)
 {
 	Refresh();
 }

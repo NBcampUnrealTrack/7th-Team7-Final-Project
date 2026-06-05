@@ -11,6 +11,7 @@ class UButton;
 class UCommonTextBlock;
 class UGYEnchantSlotWidget;
 class UGYInventoryScreenWidget;
+class UGYEquipmentPanelWidget;
 class UGYItemInfoWidget;
 /**
  *
@@ -58,8 +59,15 @@ private:
 	UFUNCTION()
 	void HandleInventoryItemClicked(FGuid InstanceId);
 
+	// 장착 아이템 좌클릭 → 인첸트 대상 지정 (장착 해제 없이 그대로 리롤)
+	UFUNCTION()
+	void HandleEquipSlotClicked(FGameplayTag SlotTag, FGuid InstanceId);
+
 	FDelegateHandle OnCurrencyChangedHandle;
 
 	UPROPERTY()
 	TObjectPtr<UGYInventoryScreenWidget> InventoryScreen;
+
+	UPROPERTY()
+	TObjectPtr<UGYEquipmentPanelWidget> EquipmentPanel;
 };
