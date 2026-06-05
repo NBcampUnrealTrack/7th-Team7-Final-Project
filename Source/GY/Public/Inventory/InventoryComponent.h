@@ -56,9 +56,6 @@ protected:
 private:
 	/** 인벤 전체 스캔 후 ChargePool 별 스택 집계 → GMS publish. 빈슬롯 전환 위해 이전 publish 셋 캐시 */
 	void BroadcastPotionSnapshots();
-	int32 GetChargePoolSum(const FGameplayTag& PoolTag) const;
-	bool RefillConsumable(TSoftObjectPtr<UItemDefinition> Def, int32& Count, FGuid& OutInstanceId,
-						  const UItemFragment_Consumable* ConsumableFragment);
 
 private:
 	TSet<FGameplayTag> LastPublishedPotionTags;

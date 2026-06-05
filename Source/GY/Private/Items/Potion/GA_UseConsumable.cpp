@@ -33,6 +33,11 @@ void UGA_UseConsumable::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
+	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
 
 	UInventoryComponent* InventoryComponent = nullptr;
 

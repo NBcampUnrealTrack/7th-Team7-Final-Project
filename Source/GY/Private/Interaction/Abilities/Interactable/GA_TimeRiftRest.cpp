@@ -8,6 +8,7 @@
 #include "Core/GameplayTags/StateTags.h"
 #include "GameModes/GYGameMode.h"
 #include "Inventory/InventoryComponent.h"
+#include "Items/ItemDefinition.h"
 #include "Player/GYPlayerState.h"
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
 
@@ -73,8 +74,28 @@ void UGA_TimeRiftRest::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		{
 			for (TSoftObjectPtr<UItemDefinition> PotionDef : RefillPotionDefs)
 			{
-				FGuid OutId;
-				InventoryComponent->TryAddItem(PotionDef, 10000, OutId);
+				const UItemFragment_Consumable* ConsumableFragment = PotionDef.LoadSynchronous()->FindFragment<UItemFragment_Consumable>();
+				if (ConsumableFragment && ConsumableFragment->ChargePoolTag.IsValid())
+				{
+					const FGameplayTag PoolTag = ConsumableFragment->ChargePoolTag;
+
+					int32 PoolSum = 0;
+					for (const FInventoryEntry& Entry : InventoryComponent->GetEntries())
+					{
+						UItemDefinition* Def = Entry.Definition.LoadSynchronous();
+						if (!Def) continue;
+						const UItemFragment_Consumable* Consumable = Def->FindFragment<UItemFragment_Consumable>();
+						if (Consumable && Consumable->ChargePoolTag == PoolTag)
+						{
+							PoolSum += Entry.StackCount;
+						}
+					}
+
+					const int32 Space = FMath::Max(0, ConsumableFragment->MaxCharge - PoolSum);
+					int Count = FMath::Min(10000, Space);
+					FGuid OutId;
+					InventoryComponent->TryAddItem(PotionDef, Count, OutId);
+				}
 			}
 		}
 
