@@ -14,6 +14,9 @@ struct GY_API FGYParryData
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0", Units = "s"))
 	float ParryTime = 0.5f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0", ClampMax = "360.0", Units = "deg"))
+	float ParryAngle = 360.f;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0", Units = "s"))
 	float ParryAnimTime = 0.5f;
 

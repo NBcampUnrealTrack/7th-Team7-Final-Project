@@ -55,6 +55,22 @@ void UGYCombatStatics::ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float
 	}
 }
 
+static bool IsWithinAngle(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC, float AngleDegrees)
+{
+	if (AngleDegrees >= 360.f) return true;
+
+	AActor* TargetActor = TargetASC ? TargetASC->GetAvatarActor() : nullptr;
+	AActor* SourceActor = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
+	if (!TargetActor || !SourceActor) return true;
+
+	const FVector TargetLoc = TargetActor->GetActorLocation();
+	const FVector Forward = TargetActor->GetActorForwardVector().GetSafeNormal2D();
+	const FVector ToSource = (SourceActor->GetActorLocation() - TargetLoc).GetSafeNormal2D();
+
+	const float AngleDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(FVector::DotProduct(Forward, ToSource), -1.f, 1.f)));
+	return AngleDeg <= AngleDegrees * 0.5f;
+}
+
 bool UGYCombatStatics::HandleDodgeCheck(UAbilitySystemComponent* TargetASC)
 {
 	if (!TargetASC) return false;
@@ -93,19 +109,23 @@ bool UGYCombatStatics::HandleParryCheck(UAbilitySystemComponent* TargetASC, UAbi
 			if (!PF) continue;
 			const FGYParryData* Data = PF->GetBestMatchingData(TargetOwnedTags);
 			if (!Data || !TargetASC->HasAnyMatchingGameplayTags(Data->ParryAppliedTags)) continue;
+			if (!IsWithinAngle(TargetASC, SourceASC, Data->ParryAngle)) continue;
 
 			FGameplayEventData Payload;
 			Payload.EventTag = GYGameplayTags::Event_Parry_Hit;
 			if (SourceASC)
 				Payload.Instigator = SourceASC->GetAvatarActor();
-			TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Parry_Hit, &Payload);
+			if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
+				GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_Parry_Hit, Payload);
+			else
+				TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Parry_Hit, &Payload);
 			return true;
 		}
 	}
 	return false;
 }
 
-bool UGYCombatStatics::HandleBlockCheck(UAbilitySystemComponent* TargetASC, float& OutReductionMultiplier)
+bool UGYCombatStatics::HandleBlockCheck(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC, float& OutReductionMultiplier)
 {
 	if (!TargetASC) return false;
 
@@ -124,6 +144,7 @@ bool UGYCombatStatics::HandleBlockCheck(UAbilitySystemComponent* TargetASC, floa
 			if (!TargetASC->HasMatchingGameplayTag(BF->BlockAppliedTag)) continue;
 			const FGYBlockData* Data = BF->GetBestMatchingData(OwnedTags);
 			if (!Data) continue;
+			if (!IsWithinAngle(TargetASC, SourceASC, Data->BlockAngle)) continue;
 			OutReductionMultiplier = Data->DamageReductionMultiplier;
 			return true;
 		}
@@ -141,7 +162,7 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 	if (HandleParryCheck(TargetASC, SourceASC)) return;
 
 	float ReductionMultiplier = 0.f;
-	const bool bBlocked = HandleBlockCheck(TargetASC, ReductionMultiplier);
+	const bool bBlocked = HandleBlockCheck(TargetASC, SourceASC, ReductionMultiplier);
 
 	const UGYBaseAttribute* Base = TargetASC->GetSet<UGYBaseAttribute>();
 	const float Defense = Base ? Base->GetDefense() : 0.f;
@@ -153,7 +174,10 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 		FGameplayEventData Payload;
 		Payload.EventTag = GYGameplayTags::Event_Block_Hit;
 		Payload.EventMagnitude = DamageAfterDefense * ReductionMultiplier;
-		TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Block_Hit, &Payload);
+		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
+			GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_Block_Hit, Payload);
+		else
+			TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Block_Hit, &Payload);
 	}
 
 	ApplyInstantGEToAttribute(TargetASC, UGYBaseAttribute::GetCurrentHealthAttribute(), -Effective);

@@ -121,6 +121,11 @@ void UGYAbilitySystemComponent::Server_SendGameplayEvent_Implementation(FGamepla
 	HandleGameplayEvent(EventTag, &Payload);
 }
 
+void UGYAbilitySystemComponent::Multicast_SendGameplayEvent_Implementation(FGameplayTag EventTag, FGameplayEventData Payload)
+{
+	HandleGameplayEvent(EventTag, &Payload);
+}
+
 void UGYAbilitySystemComponent::HandleAbilityInputPressed(const FGameplayTag& InputTag)
 {
 	FGameplayAbilitySpecHandle FoundHandle;

@@ -33,6 +33,9 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_SendGameplayEvent(FGameplayTag EventTag, FGameplayEventData Payload);
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SendGameplayEvent(FGameplayTag EventTag, FGameplayEventData Payload);
+
 	void RescheduleStaminaRegen();
 	void RescheduleStaggerRegen();
 	void RescheduleStunRegen();

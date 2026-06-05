@@ -25,7 +25,7 @@ public:
 	static bool HandleParryCheck(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category="GY|Combat")
-	static bool HandleBlockCheck(UAbilitySystemComponent* TargetASC, float& OutReductionMultiplier);
+	static bool HandleBlockCheck(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC, float& OutReductionMultiplier);
 
 	UFUNCTION(BlueprintCallable, Category="GY|Combat")
 	static void ApplyHeal(UAbilitySystemComponent* ASC, float HealAmount);
