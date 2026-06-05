@@ -231,3 +231,14 @@ struct GY_API FGYLootBoxStateMessage
 	UPROPERTY(BlueprintReadWrite) bool bOpened = false;
 	UPROPERTY(BlueprintReadWrite) int32 RemainingDrops = 0;
 };
+
+
+/** 락온 메시지 */
+USTRUCT(BlueprintType)
+struct GY_API FGYLockOnMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<AActor> Owner;
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<AActor> Target;
+};
