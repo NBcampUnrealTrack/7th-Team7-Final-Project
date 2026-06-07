@@ -355,11 +355,6 @@ void UGYHeroComponent::OnAttackPressed()
 	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Combo));
 
 	SendGameplayEventLocal(GYGameplayTags::Event_Input_Attack);
-	APawn* Pawn = GetPawn<APawn>();
-	if (Pawn && !Pawn->HasAuthority())
-	{
-		ServerSendGameplayEvent(GYGameplayTags::Event_Input_Attack);
-	}
 
 	if (HoldToChargeTime > 0.f)
 	{

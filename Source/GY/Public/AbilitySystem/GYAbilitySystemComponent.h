@@ -33,6 +33,9 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_SendGameplayEvent(FGameplayTag EventTag, FGameplayEventData Payload);
 
+	UFUNCTION(Server, Reliable)
+	void Server_AdvanceCombo(int32 NewComboIndex);
+
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SendGameplayEvent(FGameplayTag EventTag, FGameplayEventData Payload);
 

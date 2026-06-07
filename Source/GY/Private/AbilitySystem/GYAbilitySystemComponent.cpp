@@ -4,6 +4,7 @@
 #include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
 #include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Core/GameplayTags/EventTags.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "GameFramework/Character.h"
@@ -124,6 +125,13 @@ void UGYAbilitySystemComponent::Server_SendGameplayEvent_Implementation(FGamepla
 void UGYAbilitySystemComponent::Multicast_SendGameplayEvent_Implementation(FGameplayTag EventTag, FGameplayEventData Payload)
 {
 	HandleGameplayEvent(EventTag, &Payload);
+}
+
+void UGYAbilitySystemComponent::Server_AdvanceCombo_Implementation(int32 NewComboIndex)
+{
+	FGameplayEventData Payload;
+	Payload.EventMagnitude = static_cast<float>(NewComboIndex);
+	HandleGameplayEvent(GYGameplayTags::Event_Combo_Advance, &Payload);
 }
 
 void UGYAbilitySystemComponent::HandleAbilityInputPressed(const FGameplayTag& InputTag)
