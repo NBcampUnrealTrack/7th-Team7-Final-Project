@@ -77,4 +77,12 @@ namespace GYGameplayTags
 
 	// 락온
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_LockOn_Changed);
+
+	// 지역 나가기
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Region_Exited);
+
+	// 보스
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Boss_State);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Boss_Stat_Health);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Boss_Stat_Poise);
 }
