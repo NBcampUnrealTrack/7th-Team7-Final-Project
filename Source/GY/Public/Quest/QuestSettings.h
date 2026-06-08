@@ -15,5 +15,8 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category="Quest")
 	TSoftObjectPtr<UDataTable> QuestDataTable;
 
+	UPROPERTY(Config, EditAnywhere, Category="Dialogue")
+	TSoftObjectPtr<UDataTable> DialogueDataTable;
+
 	static const UQuestSettings* Get() { return GetDefault<UQuestSettings>(); }
 };
