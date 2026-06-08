@@ -2,3 +2,207 @@
 
 
 #include "AbilitySystem/Abilities/Parkour/GYParkourLogic.h"
+
+#include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
+#include "AbilitySystem/Abilities/Parkour/GYParkourFragment.h"
+#include "Core/GameplayTags/AbilityTags.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "DrawDebugHelpers.h"
+void UGYParkourLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
+{
+	Super::OnExecute(Ability);
+	CachedAbility = Ability;
+	CachedFragment = Ability->GetFragment<UGYParkourFragment>();
+
+	if (!CachedFragment)
+	{
+		Ability->RequestEnd();
+		return;
+	}
+
+	TryParkour();
+}
+
+void UGYParkourLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
+{
+	CachedFragment = nullptr;
+	CachedAbility.Reset();
+
+	Super::OnAbilityEnd(Ability, bWasCancelled);
+}
+
+void UGYParkourLogic::OnInputPressed()
+{
+	Super::OnInputPressed();
+}
+
+void UGYParkourLogic::OnInputReleased()
+{
+	Super::OnInputReleased();
+}
+
+TArray<FGameplayTag> UGYParkourLogic::GetRequiredFragmentTags() const
+{
+	return {GYGameplayTags::Ability_Fragment_Parkour};
+}
+
+void UGYParkourLogic::TryParkour()
+{
+	FHitResult WallHit; // 벽의 옆면 충돌정보
+
+	// 벽 없으면 리턴
+	if (!DoForwardTrace(WallHit))
+	{
+		CachedAbility->RequestEnd();
+		return;
+	}
+
+	// 장애물의 윗면 감지
+	FHitResult TopHit; // 꼭대기 충돌 정보
+	if (!DoTopTrace(WallHit.ImpactPoint, TopHit))
+	{
+		CachedAbility->RequestEnd(false);
+		return;
+	}
+
+	// 높이 계산
+	const float Height = GetMantleHeight(TopHit.ImpactPoint);
+
+	// 높이가 범위를 벗어나면 파쿠르 불가
+	if (Height > CachedFragment->MidMantleMaxHeight)
+	{
+		CachedAbility->RequestEnd(false);
+		return;
+	}
+
+	//발 판별 + 몽타주 선택
+	const bool bLeftFoot = IsLeftFootForward();
+	UAnimMontage* Montage = SelectMontage(bLeftFoot);
+
+	if (!Montage)
+	{
+		CachedAbility->RequestEnd(false);
+		return;
+	}
+
+	CachedAbility->PlayMontageForLogic(Montage);
+
+}
+
+bool UGYParkourLogic::DoForwardTrace(FHitResult& OutHit)
+{
+	if (!CachedAbility.IsValid()) return false;
+
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	if (!Character) return false;
+
+	UWorld* World = CachedAbility->GetWorld();
+	if (!World) return false;
+
+	const FVector Start = Character->GetActorLocation();
+	const FVector End = Start + Character->GetActorForwardVector() * CachedFragment->ForwardTraceDistance;
+
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(Character);
+	bool bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_GameTraceChannel2, CollisionParams);
+
+	// 디버그
+#if ENABLE_DRAW_DEBUG
+	DrawDebugLine(World, Start, End, bHit ? FColor::Blue : FColor::Orange, false, 2.f, 0, 2.f);
+	if (bHit)
+		DrawDebugSphere(World, OutHit.ImpactPoint, 8.f, 8, FColor::Blue, false, 2.f);
+#endif
+
+	return bHit;
+}
+
+bool UGYParkourLogic::DoTopTrace(FVector WallLoc, FHitResult& OutHit)
+{
+	if (!CachedAbility.IsValid()) return false;
+
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	if (!Character) return false;
+
+	UWorld* World = CachedAbility->GetWorld();
+	if (!World) return false;
+
+	//벽에서 일정 높이부터 아래로 검사
+	const FVector Start = FVector(WallLoc.X, WallLoc.Y,
+	                              Character->GetActorLocation().Z + CachedFragment->TraceHeightOffset);
+	const FVector End = FVector(WallLoc.X, WallLoc.Y,
+	                            Character->GetActorLocation().Z - Character->GetSimpleCollisionHalfHeight());
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Character);
+	bool bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_GameTraceChannel2, Params);
+
+#if ENABLE_DRAW_DEBUG
+	DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 2.f, 0, 2.f);
+	if (bHit)
+		DrawDebugSphere(World, OutHit.ImpactPoint, 8.f, 8, FColor::Green, false, 2.f);
+#endif
+
+	return bHit;
+}
+
+float UGYParkourLogic::GetMantleHeight(FVector TopHitLoc)
+{
+	if (!CachedAbility.IsValid()) return -1.f;
+
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	if (!Character) return -1.f;
+
+	const float FootHeight = Character->GetActorLocation().Z - Character->GetSimpleCollisionHalfHeight();
+	const float HeightDiff = TopHitLoc.Z - FootHeight;
+
+	return FMath::Max(HeightDiff, 0.f); // 음수 방지
+}
+
+UAnimMontage* UGYParkourLogic::SelectMontage(bool bLeftFoot)
+{
+	if (!CachedAbility.IsValid() || !CachedFragment) return nullptr;
+
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	if (!Character) return nullptr;
+
+	UCharacterMovementComponent* CMC = Character->GetCharacterMovement();
+	if (!CMC) return nullptr;
+
+	const float Speed = CMC->Velocity.Size2D(); // 수평 속도
+	const bool bShouldMoving = !CMC->GetCurrentAcceleration().IsNearlyZero();
+	const float MaxWalk = CMC->MaxWalkSpeed;
+
+	if (Speed <= 0.f && bShouldMoving)
+	{
+		return bLeftFoot ? CachedFragment->Montage_Stand_Lfoot : CachedFragment->Montage_Stand_Rfoot;
+	}
+
+	if (Speed < MaxWalk * 0.8f)
+	{
+		// 걷는 상태
+		return bLeftFoot ? CachedFragment->Montage_Walk_Lfoot : CachedFragment->Montage_Walk_Rfoot;
+	}
+
+	// 달리는 상태
+	return bLeftFoot ? CachedFragment->Montage_Run_Lfoot : CachedFragment->Montage_Run_Rfoot;
+}
+
+bool UGYParkourLogic::IsLeftFootForward()
+{
+	if (!CachedAbility.IsValid()) return true;
+
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	if (!Character) return true;
+
+	USkeletalMeshComponent* Mesh = Character->GetMesh();
+	if (!Mesh) return true;
+
+	const FVector LeftFootLoc = Mesh->GetBoneLocation(FName("foot_l"));
+	const FVector RightFootLoc = Mesh->GetBoneLocation(FName("foot_r"));
+	const FVector Forward = Character->GetActorForwardVector();
+
+
+	const float Dot = FVector::DotProduct(LeftFootLoc - RightFootLoc, Forward);
+	return Dot > 0.f;
+}
