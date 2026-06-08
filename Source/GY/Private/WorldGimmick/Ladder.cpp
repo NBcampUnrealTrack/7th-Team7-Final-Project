@@ -22,6 +22,9 @@ void ALadder::CreateCollision()
 
 	BottomBoxCollision = CreateDefaultSubobject<UBoxComponent>("BottomBox");
 	BottomBoxCollision->SetupAttachment(RootComponent);
+
+	ClimbIntoFromTopBoxCollision = CreateDefaultSubobject<UBoxComponent>("ClimbTopBox");
+	ClimbIntoFromTopBoxCollision->SetupAttachment(RootComponent);
 }
 
 // 에디터에서 액터의 transform이 변할때마다 호출됨. 액터 변경시마다 생성자의 초기화처럼 작동함.

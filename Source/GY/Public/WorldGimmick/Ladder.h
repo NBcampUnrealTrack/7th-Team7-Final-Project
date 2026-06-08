@@ -91,6 +91,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ladder|Collision")
 	TObjectPtr<UBoxComponent> BottomBoxCollision;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ladder|Collision")
+	TObjectPtr<UBoxComponent> ClimbIntoFromTopBoxCollision;
+
+
 
 
 	// 사다리생성함수
@@ -106,11 +110,11 @@ public:
 	void CreatePole();
 	void CreateWallConnection();
 	void CreateTopLadder();
-
-
-
-
 	void UpdateCollision();
+
+
+	Overlapbegin
+
 
 protected:
 	int32 PoleMeshHeight;
