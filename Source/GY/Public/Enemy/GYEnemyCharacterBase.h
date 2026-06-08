@@ -71,6 +71,7 @@ public:
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+	virtual void PostEditMove(bool bFinished) override;
 #endif
 
 	virtual void Deactivate();
@@ -196,11 +197,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	FString WeaponTraceBonePrefix = TEXT("WeaponTrace_");
 
-	FVector DefaultMeshRelativeLocation;
-	FRotator DefaultMeshRelativeRotation;
-
 	FTimerHandle DeactivateTimerHandle;
 	FTimerHandle StunRecoveryTimerHandle;
 	FTimerHandle StaggerRecoveryTimerHandle;
+
+	UPROPERTY()
+	FVector EnemySpawnLocation;
+	UPROPERTY()
+	FRotator EnemySpawnRotation;
 };
 
