@@ -9,6 +9,8 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
+#include "MotionWarpingComponent.h"
+
 void UGYParkourLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
 	Super::OnExecute(Ability);
@@ -26,6 +28,10 @@ void UGYParkourLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 
 void UGYParkourLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
 {
+	if (ACharacter* Character = Cast<ACharacter>(Ability->GetAvatarActorFromActorInfo()))
+	{
+		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	}
 	CachedFragment = nullptr;
 	CachedAbility.Reset();
 
@@ -86,7 +92,20 @@ void UGYParkourLogic::TryParkour()
 		return;
 	}
 
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	Character->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	if (UMotionWarpingComponent* MotionWarpingComponent = Character->FindComponentByClass<UMotionWarpingComponent>())
+	{
+		FMotionWarpingTarget WarpTarget;
+		WarpTarget.Name = FName("ParkourTarget");
+		WarpTarget.Location = TopHit.ImpactPoint;
+		WarpTarget.Rotation = Character->GetActorRotation();
+
+		MotionWarpingComponent->AddOrUpdateWarpTarget(WarpTarget);
+	}
+
 	CachedAbility->PlayMontageForLogic(Montage);
+
 
 }
 
@@ -173,12 +192,12 @@ UAnimMontage* UGYParkourLogic::SelectMontage(bool bLeftFoot)
 	const bool bShouldMoving = !CMC->GetCurrentAcceleration().IsNearlyZero();
 	const float MaxWalk = CMC->MaxWalkSpeed;
 
-	if (Speed <= 0.f && bShouldMoving)
+	if (!bShouldMoving )
 	{
 		return bLeftFoot ? CachedFragment->Montage_Stand_Lfoot : CachedFragment->Montage_Stand_Rfoot;
 	}
 
-	if (Speed < MaxWalk * 0.8f)
+	if (Speed < 500.f && bShouldMoving) // 달리기 600, 걷기 300 중간값 500이하면 걷기판단. 하드코딩이지만 봐주세요ㅜ
 	{
 		// 걷는 상태
 		return bLeftFoot ? CachedFragment->Montage_Walk_Lfoot : CachedFragment->Montage_Walk_Rfoot;
