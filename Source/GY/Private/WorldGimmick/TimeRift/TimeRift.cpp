@@ -56,6 +56,8 @@ void ATimeRift::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionO
 	Option.Text = NSLOCTEXT("TimeRift", "Sit", "앉기");
 	Option.OptionTag = InteractTag;
 	OutOptions.Add(Option);
+
+	RegisterAsCheckpoint(PlayerState);
 }
 
 void ATimeRift::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
@@ -69,5 +71,22 @@ void ATimeRift::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 	if (!AbilitySystemComponent) return;
 
 	AbilitySystemComponent->AddLooseGameplayTag(GYStateTags::State_Interaction_TimeRift, 1, EGameplayTagReplicationState::TagOnly);
+
+	RegisterAsCheckpoint(PlayerState);
+}
+
+void ATimeRift::RegisterAsCheckpoint(AGYPlayerState* PlayerState) const
+{
+	if (!HasAuthority()) return;
+	if (!PlayerState) return;
+	if (!PersistentGuid.IsValid()) return;
+
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (UTimeRiftSubsystem* TimeRiftSubsystem = GameInstance->GetSubsystem<UTimeRiftSubsystem>())
+		{
+			TimeRiftSubsystem->NotifyVisited(PersistentGuid);
+		}
+	}
 }
 

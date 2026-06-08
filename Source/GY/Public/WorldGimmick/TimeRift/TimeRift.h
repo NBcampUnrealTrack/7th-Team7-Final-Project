@@ -6,6 +6,8 @@
 #include "World/ActorManagement/RespawnPoint.h"
 #include "TimeRift.generated.h"
 
+class AGYPlayerState;
+
 UCLASS()
 class GY_API ATimeRift : public AActor, public IInteractable, public IRespawnPoint
 {
@@ -23,6 +25,7 @@ public:
 	FORCEINLINE virtual FGuid GetPersistentGuid() override { return PersistentGuid; }
 	FORCEINLINE virtual void SetPersistentGuid(FGuid Guid) override { PersistentGuid = Guid; }
 	FORCEINLINE virtual FTransform GetRespawnTransform() const override	{ return RespawnPoint ? RespawnPoint->GetComponentTransform() : GetActorTransform();}
+	void RegisterAsCheckpoint(AGYPlayerState* PlayerState) const;
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category="TimeRift")
