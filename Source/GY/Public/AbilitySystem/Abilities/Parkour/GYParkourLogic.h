@@ -30,6 +30,10 @@ public:
 	UAnimMontage* SelectMontage(bool bLeftFoot);
 	bool IsLeftFootForward(); // 어느발이 앞에있는지 판별
 
+	void PlayMontage(UAnimMontage* Montage);
+
+	UFUNCTION()
+	void OnMontageEnded();
 
 
 

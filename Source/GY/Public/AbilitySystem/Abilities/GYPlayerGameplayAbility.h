@@ -137,9 +137,7 @@ public:
 	UEquipmentInstance* GetCurrentWeapon() const;
 	float PlayMontageForLogic(UAnimMontage* Montage, float PlayRate = 1.f);
 
-	//몽타주 완료 콜백함수
-	UFUNCTION()
-	void OnMontageCompleted();
+
 
 	void RequestEnd(bool bWasCancelled = false)
 	{
