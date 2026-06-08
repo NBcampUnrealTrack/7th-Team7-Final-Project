@@ -16,6 +16,7 @@ class UGYAbilitySystemComponent;
 class UGYPawnData;
 class UGYPlayerInitData;
 class UInventoryComponent;
+class UItemTransactionComponent;
 class ULootViewerComponent;
 class UGYPlayerBaseAttribute;
 class UGYPlayerAdditionalAttribute;
@@ -57,6 +58,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	ULootViewerComponent* GetLootViewerComponent() const { return LootViewerComponent; }
 
+	UFUNCTION(BlueprintPure)
+	UItemTransactionComponent* GetItemTransactionComponent() const { return ItemTransactionComponent; }
+
 	void InitGAS(APawn* Avatar);
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
@@ -86,6 +90,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<ULootViewerComponent> LootViewerComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UItemTransactionComponent> ItemTransactionComponent;
 
 	UPROPERTY(VisibleAnywhere, Category="SkillTree")
 	TObjectPtr<USkillTreeComponent> SkillTreeComponent;
