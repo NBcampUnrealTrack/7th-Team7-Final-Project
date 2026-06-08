@@ -55,6 +55,9 @@ public:
 		const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo) override;
+
+
+
 protected:
 	//LogicInjector, AbilityFragmentModifier 적용
 	void ScanAndApplyGEModifiers();
@@ -133,6 +136,8 @@ public:
 	AGYCharacter* GetGYCharacter() const;
 	UEquipmentInstance* GetCurrentWeapon() const;
 	float PlayMontageForLogic(UAnimMontage* Montage, float PlayRate = 1.f);
+
+
 
 	void RequestEnd(bool bWasCancelled = false)
 	{
