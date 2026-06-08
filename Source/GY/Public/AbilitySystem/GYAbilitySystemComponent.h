@@ -53,12 +53,9 @@ public:
 	TSubclassOf<UGYPeriodicAttributeEffect> StaggerRegenEffect;
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UGYPeriodicAttributeEffect> StunRegenEffect;
-
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
-	FGameplayTagContainer CombatAppliedTags;
+	TSubclassOf<UGYPeriodicAttributeEffect> CombatStateEffect;
 
-	UPROPERTY(EditDefaultsOnly, Category="GAS")
-	FGameplayTag RegenAppliedTag;
 
 protected:
 	virtual void OnRep_ReplicatedAnimMontage() override;
@@ -89,4 +86,7 @@ private:
 	FActiveGameplayEffectHandle StaggerRegenGEHandle;
 	FTimerHandle StunRegenDelayHandle;
 	FActiveGameplayEffectHandle StunRegenGEHandle;
+
+	FActiveGameplayEffectHandle CombatStateEffectHandle;
+
 };

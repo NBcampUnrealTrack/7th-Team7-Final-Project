@@ -182,9 +182,9 @@ void AGYEnemyAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 		}
 		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
-			BB->SetValueAsObject(EnemyBBKeys::TargetActor, Actor);
+			AddPerceivedActor(Actor, Stimulus);
 		}
-		AddPerceivedActor(Actor, Stimulus);
+
 	}
 	else
 	{

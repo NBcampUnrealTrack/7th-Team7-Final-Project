@@ -14,14 +14,8 @@ void UGYAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 {
 	Super::InitAbilityActorInfo(InOwnerActor, InAvatarActor);
 
-	CombatAppliedTags.AddTag(GYStateTags::State_Combat_InCombat);
-	RegenAppliedTag = GYStateTags::State_Regen_Delayed;
-
-	if (RegenAppliedTag.IsValid())
-	{
-		RegisterGameplayTagEvent(RegenAppliedTag, EGameplayTagEventType::NewOrRemoved)
-			.AddUObject(this, &UGYAbilitySystemComponent::OnCombatTagChanged);
-	}
+	RegisterGameplayTagEvent(GYStateTags::State_Combat_InCombat, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &UGYAbilitySystemComponent::OnCombatTagChanged);
 
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
@@ -293,28 +287,17 @@ void UGYAbilitySystemComponent::RescheduleStunRegen()
 
 void UGYAbilitySystemComponent::ApplyCombatTag()
 {
-	if (!GetWorld()) return;
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	if (!CombatStateEffect) return;
 
-	for (const FGameplayTag& CombatTag : CombatAppliedTags)
-	{
-		if (!HasMatchingGameplayTag(CombatTag))
-			AddLooseGameplayTag(CombatTag);
-	}
+	ApplyEffect(CombatStateEffect, CombatStateEffectHandle);
 
-	if (RegenAppliedTag.IsValid() && !HasMatchingGameplayTag(RegenAppliedTag))
-		AddLooseGameplayTag(RegenAppliedTag);
 }
 
 void UGYAbilitySystemComponent::RemoveCombatTag()
 {
-	for (const FGameplayTag& CombatTag : CombatAppliedTags)
-	{
-		if (HasMatchingGameplayTag(CombatTag))
-			RemoveLooseGameplayTag(CombatTag);
-	}
+	RemoveActiveGameplayEffect(CombatStateEffectHandle, 1);
 
-	if (RegenAppliedTag.IsValid() && HasMatchingGameplayTag(RegenAppliedTag))
-		RemoveLooseGameplayTag(RegenAppliedTag);
 }
 
 void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute& Attribute)
@@ -340,7 +323,7 @@ void UGYAbilitySystemComponent::ScheduleEffect(TSubclassOf<UGYPeriodicAttributeE
 	if (!EffectClass) return;
 
 	const UGYPeriodicAttributeEffect* CDO = GetDefault<UGYPeriodicAttributeEffect>(EffectClass);
-	const bool bInCombat = RegenAppliedTag.IsValid() && HasMatchingGameplayTag(RegenAppliedTag);
+	const bool bInCombat = HasMatchingGameplayTag(GYStateTags::State_Combat_InCombat);
 	const float Delay = bInCombat ? CDO->CombatStartDelay : 0.f;
 
 if (Delay > 0.f)
