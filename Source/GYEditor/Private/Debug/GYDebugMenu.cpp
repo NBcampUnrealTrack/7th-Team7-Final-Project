@@ -11,6 +11,7 @@
 #include "AbilitySystem/GYCombatStatics.h"
 #include "AbilitySystem/GYPlayerResourceStatics.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "Core/GameplayTags/StateTags.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -136,14 +137,9 @@ FReply SGYDebugMenu::GY_DebugToggleCombatState()
 	UGYAbilitySystemComponent* ASC = GetASC(PlayerState);
 	if (!ASC) return FReply::Handled();
 
-	if (ASC->RegenAppliedTag.IsValid() && ASC->HasMatchingGameplayTag(ASC->RegenAppliedTag))
+	if (ASC->HasMatchingGameplayTag(GYStateTags::State_Combat_InCombat))
 	{
-		for (const FGameplayTag& CombatTag : ASC->CombatAppliedTags)
-		{
-			if (ASC->HasMatchingGameplayTag(CombatTag))
-				ASC->RemoveLooseGameplayTag(CombatTag);
-		}
-		ASC->RemoveLooseGameplayTag(ASC->RegenAppliedTag);
+		ASC->RemoveCombatTag();
 	}
 	else
 	{
@@ -159,7 +155,7 @@ FText SGYDebugMenu::GetCombatStateButtonText() const
 	if (!ASC)
 		return FText::FromString(TEXT("Toggle Combat State"));
 
-	return (ASC->RegenAppliedTag.IsValid() && ASC->HasMatchingGameplayTag(ASC->RegenAppliedTag))
+	return (ASC->HasMatchingGameplayTag(GYStateTags::State_Combat_InCombat))
 		? FText::FromString(TEXT("Set Base State"))
 		: FText::FromString(TEXT("Set Combat State"));
 }
