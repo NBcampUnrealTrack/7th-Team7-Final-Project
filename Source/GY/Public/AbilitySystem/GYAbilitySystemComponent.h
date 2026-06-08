@@ -44,6 +44,7 @@ public:
 	void RescheduleStunRegen();
 
 	void ApplyCombatTag();
+	void RemoveCombatTag();
 	void NotifyAttributeChanged(const FGameplayAttribute& Attribute);
 
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
@@ -59,9 +60,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	FGameplayTag RegenAppliedTag;
 
-	UPROPERTY(EditDefaultsOnly, Category="GAS", meta=(ClampMin="0.0", Units="s"))
-	float CombatAppliedDuration = 5.f;
-
 protected:
 	virtual void OnRep_ReplicatedAnimMontage() override;
 
@@ -72,8 +70,6 @@ private:
 	void ApplyMontageCorrection(UAnimInstance* AnimInst, UAnimMontage* Montage, float StartTime);
 	void OnCombatTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void TryActivateAbilitiesOnSpawn();
-
-	FTimerHandle CombatTagTimer;
 
 	TArray<FGameplayAbilitySpecHandle> InputPressedSpecHandles;
 	TArray<FGameplayAbilitySpecHandle> InputReleasedSpecHandles;
