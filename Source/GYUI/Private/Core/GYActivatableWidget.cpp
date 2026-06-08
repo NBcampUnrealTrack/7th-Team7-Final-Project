@@ -12,7 +12,8 @@ TOptional<FUIInputConfig> UGYActivatableWidget::GetDesiredInputConfig() const
 	switch (InputMode)
 	{
 	case EGYWidgetInputMode::Game: // 게임 모드 - 조작o
-		return FUIInputConfig(ECommonInputMode::Game, GameMouseCaptureMode);
+		// 캡처(클릭/차지) 중에도 커서 유지
+		return FUIInputConfig(ECommonInputMode::Game, GameMouseCaptureMode, false);
 	case EGYWidgetInputMode::Menu: // 메뉴 모드 - 조작x, UI만 조작
 		return FUIInputConfig(ECommonInputMode::Menu, EMouseCaptureMode::NoCapture);
 	case EGYWidgetInputMode::Default:
