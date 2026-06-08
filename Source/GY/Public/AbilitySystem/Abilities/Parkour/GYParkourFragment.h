@@ -39,7 +39,7 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	float LowMantleMaxHeight   = 80.f;   // run 몽타주 상한 높이 (cm)
 	UPROPERTY(EditDefaultsOnly)
-	float MidMantleMaxHeight   = 150.f;  // stand 몽타주 상한 높이 (cm)
-	// MidMantleMaxHeight 초과 → walk 몽타주
+	float MidMantleMaxHeight   = 150.f;  // Walk 몽타주 상한 높이 (cm)
+	// MidMantleMaxHeight 초과 → Stand 몽타주
 
 };
