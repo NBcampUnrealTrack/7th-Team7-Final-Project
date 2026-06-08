@@ -275,7 +275,8 @@ void UQuestSubsystem::BroadcastNarrativeDialogue(FGameplayTag NarrativeTag)
 
 void UQuestSubsystem::OnQuestCompletedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message)
 {
-	CompleteQuest(Message.QuestId);
+	// 클라이언트 전용: ActiveQuests 없이 UI 델리게이트만 브로드캐스트
+	OnQuestCompleted.Broadcast(Message.QuestId);
 }
 
 void UQuestSubsystem::OnLootBoxOpened(FGameplayTag Channel, const FGYLootBoxStateMessage& Message)
