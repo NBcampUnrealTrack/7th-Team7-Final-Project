@@ -10,6 +10,7 @@ class AGYGameState;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnQuestStarted, FGameplayTag /*QuestTag*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnQuestProgressUpdated, FGameplayTag /*QuestTag*/, int32 /*NewCount*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnQuestCompleted, FGameplayTag /*QuestTag*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnNarrativeDialogueStarted, TArray<FDialogueRow> /*Rows*/);
 
 UCLASS()
 class GY_API UQuestSubsystem : public UGameInstanceSubsystem
@@ -41,10 +42,14 @@ public:
 
 	AGYGameState* GetGYGameState() const;
 
+	// NarrativeTag와 일치하는 다이얼로그 행을 Order 순으로 정렬해 UI에 브로드캐스트
+	void BroadcastNarrativeDialogue(FGameplayTag NarrativeTag);
+
 	// UI 바인딩용 델리게이트
 	FOnQuestStarted OnQuestStarted;
 	FOnQuestProgressUpdated OnQuestProgressUpdated;
 	FOnQuestCompleted OnQuestCompleted;
+	FOnNarrativeDialogueStarted OnNarrativeDialogueStarted;
 
 private:
 	// QuestTag → Row 포인터 캐시 (DataTable 수명에 종속)

@@ -197,6 +197,45 @@ const FQuestRuntimeData* UQuestSubsystem::GetQuestRuntimeData(FGameplayTag Quest
 	return ActiveQuests.Find(QuestTag);
 }
 
+void UQuestSubsystem::BroadcastNarrativeDialogue(FGameplayTag NarrativeTag)
+{
+	const UQuestSettings* Settings = UQuestSettings::Get();
+	if (!Settings)
+	{
+		return;
+	}
+
+	UDataTable* Table = Settings->DialogueDataTable.LoadSynchronous();
+	if (!Table)
+	{
+		GY_WARN(Content, CYS, "UQuestSubsystem: DialogueDataTable이 설정되지 않았습니다.");
+		return;
+	}
+
+	TArray<FDialogueRow*> AllRows;
+	Table->GetAllRows<FDialogueRow>(TEXT("UQuestSubsystem::BroadcastNarrativeDialogue"), AllRows);
+
+	TArray<FDialogueRow> Filtered;
+	for (const FDialogueRow* Row : AllRows)
+	{
+		if (Row && Row->NarrativeTag == NarrativeTag)
+		{
+			Filtered.Add(*Row);
+		}
+	}
+
+	if (Filtered.IsEmpty())
+	{
+		GY_WARN(Content, CYS, "UQuestSubsystem: NarrativeTag [%s]에 해당하는 다이얼로그가 없습니다.", *NarrativeTag.ToString());
+		return;
+	}
+
+	Filtered.Sort([](const FDialogueRow& A, const FDialogueRow& B) { return A.Order < B.Order; });
+
+	GY_LOG(Content, CYS, "다이얼로그 브로드캐스트: [%s] %d줄", *NarrativeTag.ToString(), Filtered.Num());
+	OnNarrativeDialogueStarted.Broadcast(Filtered);
+}
+
 AGYGameState* UQuestSubsystem::GetGYGameState() const
 {
 	if (UGameInstance* GI = GetGameInstance())
