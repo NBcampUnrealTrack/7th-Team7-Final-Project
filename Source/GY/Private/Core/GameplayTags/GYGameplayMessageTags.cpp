@@ -28,6 +28,7 @@ namespace GYGameplayTags
 
     UE_DEFINE_GAMEPLAY_TAG(Message_Loot_ShowBox, "GY.Message.Loot.ShowBox");
     UE_DEFINE_GAMEPLAY_TAG(Message_Loot_BoxStateChanged, "GY.Message.Loot.BoxStateChanged");
+	UE_DEFINE_GAMEPLAY_TAG(Message_Loot_BoxOpened, "GY.Message.Loot.BoxOpened");
 
     UE_DEFINE_GAMEPLAY_TAG(Message_Build_NodeUnlocked, "GY.Message.Build.NodeUnlocked");
     UE_DEFINE_GAMEPLAY_TAG(Message_Build_ActionToggled, "GY.Message.Build.ActionToggled");

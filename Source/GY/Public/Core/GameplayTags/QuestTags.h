@@ -16,6 +16,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Objective_Collect) // 수집
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Objective_Deliver) // 배달
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Objective_Interact) // 상호작용
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_Objective_OpenLootBox) // 루트박스 열기
 
 	/* 퀘스트 ID Tag */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Quest_ID_001)
