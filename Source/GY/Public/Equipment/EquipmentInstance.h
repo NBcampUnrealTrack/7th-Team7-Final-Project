@@ -17,6 +17,11 @@ class GY_API UEquipmentInstance : public UObject
 	GENERATED_BODY()
 
 public:
+	// 런타임 생성(NewObject) UObject라 기본값은 false. 복제 서브오브젝트로 쓰이므로 true 강제.
+	virtual bool IsSupportedForNetworking() const override { return true; }
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	void Initialize(const FGuid& InInstanceId, TSoftObjectPtr<UItemDefinition> InDefinition);
 
 	virtual void OnEquipped(APawn* OwningPawn);
@@ -40,11 +45,15 @@ protected:
 	void ApplyVisuals();
 	void RemoveVisuals();
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FGuid InstanceId;
 
-	UPROPERTY()
+	// PostReplicatedAdd가 서브오브젝트 프로퍼티 도착 전에 호출되므로, 외형은 이 값이 복제된 뒤 OnRep에서 적용
+	UPROPERTY(ReplicatedUsing = OnRep_ItemDefinition)
 	TSoftObjectPtr<UItemDefinition> ItemDefinition;
+
+	UFUNCTION()
+	void OnRep_ItemDefinition();
 
 	UPROPERTY()
 	TWeakObjectPtr<APawn> OwnerPawn;
