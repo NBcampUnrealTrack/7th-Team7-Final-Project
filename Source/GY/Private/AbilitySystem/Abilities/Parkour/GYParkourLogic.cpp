@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
 #include "MotionWarpingComponent.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
 void UGYParkourLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
@@ -105,7 +106,7 @@ void UGYParkourLogic::TryParkour()
 		MotionWarpingComponent->AddOrUpdateWarpTarget(WarpTarget);
 	}
 
-	CachedAbility->PlayMontageForLogic(Montage);
+	PlayMontage(Montage);
 }
 
 bool UGYParkourLogic::DoForwardTrace(FHitResult& OutHit)
@@ -250,4 +251,38 @@ bool UGYParkourLogic::IsLeftFootForward()
 
 	const float Dot = FVector::DotProduct(LeftFootLoc - RightFootLoc, Forward);
 	return Dot > 0.f;
+}
+
+void UGYParkourLogic::PlayMontage(UAnimMontage* Montage)
+{
+	if (!CachedAbility.IsValid() || !Montage) return;
+
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	if (!Character) return;
+
+
+	Character->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+
+	UAbilityTask_PlayMontageAndWait* Task = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		CachedAbility.Get(), NAME_None, Montage, 1.f, NAME_None, true);
+
+	Task->OnCompleted.AddDynamic(this, &UGYParkourLogic::OnMontageEnded);
+	Task->OnBlendOut.AddDynamic(this, &UGYParkourLogic::OnMontageEnded);
+	Task->OnInterrupted.AddDynamic(this, &UGYParkourLogic::OnMontageEnded);
+	Task->OnCancelled.AddDynamic(this, &UGYParkourLogic::OnMontageEnded);
+
+	Task->ReadyForActivation();
+}
+
+void UGYParkourLogic::OnMontageEnded()
+{
+	if (!CachedAbility.IsValid()) return;
+
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	if (Character)
+	{
+		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	}
+
+	CachedAbility->RequestEnd(false);
 }
