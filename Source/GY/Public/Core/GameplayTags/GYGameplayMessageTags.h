@@ -36,6 +36,7 @@ namespace GYGameplayTags
 	// 룻박스
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Loot_ShowBox);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Loot_BoxStateChanged);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Loot_BoxOpened); // 게임 로직용 (DS 포함 서버 전용)
 
 	// 무기 숙련도 빌드, 노드 관련 - 임시
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Build_NodeUnlocked);

@@ -13,6 +13,7 @@ void AGYGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGYGameState, CurrentTime);
 	DOREPLIFETIME(AGYGameState, TimeScale);
+	DOREPLIFETIME(AGYGameState, ClearedQuests);
 }
 
 void AGYGameState::SetCurrentTime(float InCurrentTime)
@@ -37,7 +38,19 @@ bool AGYGameState::IsQuestComplete(const FGameplayTag QuestTag) const
 
 void AGYGameState::AddCompletedQuest(FGameplayTag QuestTag)
 {
-	ClearedQuests.Add(QuestTag);
+	if (!HasAuthority()) return;
+	ClearedQuests.AddUnique(QuestTag);
+}
+
+void AGYGameState::OnRep_ClearedQuests()
+{
+	for (int32 i = PreviousClearedCount; i < ClearedQuests.Num(); i++)
+	{
+		FGYQuestProgressMessage Msg;
+		Msg.QuestId = ClearedQuests[i];
+		UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Quest_Completed, Msg);
+	}
+	PreviousClearedCount = ClearedQuests.Num();
 }
 
 void AGYGameState::BeginPlay()

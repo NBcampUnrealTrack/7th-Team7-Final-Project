@@ -140,3 +140,25 @@ struct FQuestRuntimeData
 
 	bool IsValid() const { return QuestTag.IsValid(); }
 };
+
+// 네러티브 다이얼로그
+USTRUCT(BlueprintType)
+struct FDialogueRow : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	FGameplayTag NarrativeTag;
+
+	UPROPERTY(EditAnywhere)
+	int32 Order;
+
+	UPROPERTY(EditAnywhere)
+	bool bIsPlayer;
+
+	UPROPERTY(EditAnywhere)
+	FText Speaker;
+
+	UPROPERTY(EditAnywhere)
+	FText Dialogue;
+};

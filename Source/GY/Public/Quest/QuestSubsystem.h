@@ -2,14 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Quest/QuestTypes.h"
 #include "QuestSubsystem.generated.h"
+
+struct FGYLootBoxStateMessage;
+struct FGYQuestProgressMessage;
 
 class AGYGameState;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnQuestStarted, FGameplayTag /*QuestTag*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnQuestProgressUpdated, FGameplayTag /*QuestTag*/, int32 /*NewCount*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnQuestCompleted, FGameplayTag /*QuestTag*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnNarrativeDialogueStarted, TArray<FDialogueRow> /*Rows*/);
 
 UCLASS()
 class GY_API UQuestSubsystem : public UGameInstanceSubsystem
@@ -18,6 +23,7 @@ class GY_API UQuestSubsystem : public UGameInstanceSubsystem
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
 
 	// 퀘스트 정의 조회 (없으면 nullptr)
 	const FQuestTableRow* FindQuestRow(FGameplayTag QuestTag) const;
@@ -41,10 +47,14 @@ public:
 
 	AGYGameState* GetGYGameState() const;
 
+	// NarrativeTag와 일치하는 다이얼로그 행을 Order 순으로 정렬해 UI에 브로드캐스트
+	void BroadcastNarrativeDialogue(FGameplayTag NarrativeTag);
+
 	// UI 바인딩용 델리게이트
 	FOnQuestStarted OnQuestStarted;
 	FOnQuestProgressUpdated OnQuestProgressUpdated;
 	FOnQuestCompleted OnQuestCompleted;
+	FOnNarrativeDialogueStarted OnNarrativeDialogueStarted;
 
 private:
 	// QuestTag → Row 포인터 캐시 (DataTable 수명에 종속)
@@ -53,7 +63,18 @@ private:
 	// 진행 중인 퀘스트 런타임 상태
 	TMap<FGameplayTag, FQuestRuntimeData> ActiveQuests;
 
+	UPROPERTY()
+	TObjectPtr<UDataTable> CachedQuestTable;
+
+	UPROPERTY()
+	TObjectPtr<UDataTable> CachedDialogueTable;
+
 	void BuildCache(const UDataTable* DataTable);
+	void OnLootBoxOpened(FGameplayTag Channel, const FGYLootBoxStateMessage& Message);
+	void OnQuestCompletedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message);
+
+	FGameplayMessageListenerHandle LootBoxOpenedListenerHandle;
+	FGameplayMessageListenerHandle QuestCompletedListenerHandle;
 
 public:
 	bool StartQuest(FGameplayTag QuestTag);

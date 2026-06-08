@@ -1,8 +1,12 @@
 #include "Quest/QuestSubsystem.h"
 #include "Quest/QuestSettings.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/QuestTags.h"
 #include "Engine/DataTable.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "GameStates/GYGameState.h"
 #include "Logging/GYLogManager.h"
+#include "UI/GYUIMessages.h"
 
 void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -14,14 +18,40 @@ void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		return;
 	}
 
-	UDataTable* DataTable = Settings->QuestDataTable.LoadSynchronous();
-	if (!DataTable)
+	CachedQuestTable = Settings->QuestDataTable.LoadSynchronous();
+	if (!CachedQuestTable)
 	{
 		GY_WARN(Content, CYS, "UQuestSubsystem: QuestDataTable이 설정되지 않았습니다.");
 		return;
 	}
 
-	BuildCache(DataTable);
+	CachedDialogueTable = Settings->DialogueDataTable.LoadSynchronous();
+	if (!CachedDialogueTable)
+	{
+		GY_WARN(Content, CYS, "UQuestSubsystem: DialogueDataTable이 설정되지 않았습니다.");
+	}
+
+	BuildCache(CachedQuestTable);
+
+	Collection.InitializeDependency<UGameplayMessageSubsystem>();
+	UGameplayMessageSubsystem* MsgSubsystem = GetGameInstance()->GetSubsystem<UGameplayMessageSubsystem>();
+	if (MsgSubsystem)
+	{
+		LootBoxOpenedListenerHandle = MsgSubsystem->RegisterListener<FGYLootBoxStateMessage>(
+			GYGameplayTags::Message_Loot_BoxOpened,
+			this, &UQuestSubsystem::OnLootBoxOpened);
+
+		QuestCompletedListenerHandle = MsgSubsystem->RegisterListener<FGYQuestProgressMessage>(
+			GYGameplayTags::Message_Quest_Completed,
+			this, &UQuestSubsystem::OnQuestCompletedFromServer);
+	}
+}
+
+void UQuestSubsystem::Deinitialize()
+{
+	LootBoxOpenedListenerHandle.Unregister();
+	QuestCompletedListenerHandle.Unregister();
+	Super::Deinitialize();
 }
 
 void UQuestSubsystem::BuildCache(const UDataTable* DataTable)
@@ -57,8 +87,10 @@ bool UQuestSubsystem::ArePrerequisitesMet(FGameplayTag QuestTag) const
 	const FQuestTableRow* Row = FindQuestRow(QuestTag);
 	if (!Row)
 	{
+		GY_WARN(Content, CYS, "ArePrerequisitesMet - QuestCache에 없음 (캐시 크기=%d): %s", QuestCache.Num(), *QuestTag.ToString());
 		return false;
 	}
+	GY_LOG(Content, CYS, "ArePrerequisitesMet - PrerequisiteTag=[%s] IsValid=%d", *Row->PrerequisiteTag.ToString(), Row->PrerequisiteTag.IsValid() ? 1 : 0);
 	if (!Row->PrerequisiteTag.IsValid())
 	{
 		return true;
@@ -66,7 +98,8 @@ bool UQuestSubsystem::ArePrerequisitesMet(FGameplayTag QuestTag) const
 	AGYGameState* GameState = GetGYGameState();
 	if (!GameState)
 	{
-		return false;
+		GY_LOG(Content, CYS, "ArePrerequisitesMet - GameState 없음, 통과 처리");
+		return true;
 	}
 	return GameState->IsQuestComplete(Row->PrerequisiteTag);
 }
@@ -90,23 +123,27 @@ bool UQuestSubsystem::StartQuest(FGameplayTag QuestTag)
 {
 	if (ActiveQuests.Contains(QuestTag))
 	{
+		GY_LOG(Content, CYS, "StartQuest 실패 - 이미 진행 중: %s", *QuestTag.ToString());
 		return false;
 	}
 
 	AGYGameState* GameState = GetGYGameState();
 	if (GameState && GameState->IsQuestComplete(QuestTag))
 	{
+		GY_LOG(Content, CYS, "StartQuest 실패 - 이미 완료됨: %s", *QuestTag.ToString());
 		return false;
 	}
 
 	if (!ArePrerequisitesMet(QuestTag))
 	{
+		GY_LOG(Content, CYS, "StartQuest 실패 - 선행 퀘스트 미완료: %s", *QuestTag.ToString());
 		return false;
 	}
 
 	const FQuestTableRow* Row = FindQuestRow(QuestTag);
 	if (!Row)
 	{
+		GY_LOG(Content, CYS, "StartQuest 실패 - QuestCache에 없음 (캐시 크기=%d): %s", QuestCache.Num(), *QuestTag.ToString());
 		return false;
 	}
 
@@ -138,10 +175,17 @@ void UQuestSubsystem::ProcessObjectiveProgress(const FQuestEventData& EventData)
 		const FQuestTableRow* Row = FindQuestRow(QuestTag);
 		if (!Row || !Row->Objective.IsValid())
 		{
+			GY_LOG(Content, CYS, "ProcessObjective - Objective 없음: %s", *QuestTag.ToString());
 			continue;
 		}
 
 		const FQuestObjective& Objective = Row->Objective;
+		GY_LOG(Content, CYS, "ProcessObjective - Quest=%s ObjectiveTag=[%s] EventTag=[%s] ObjTargetId=%s EventTargetId=%s",
+			*QuestTag.ToString(),
+			*Objective.ObjectiveEventTag.ToString(),
+			*EventData.EventTag.ToString(),
+			*Objective.TargetId.ToString(),
+			*EventData.TargetId.ToString());
 		if (Objective.ObjectiveEventTag != EventData.EventTag || Objective.TargetId != EventData.TargetId)
 		{
 			continue;
@@ -195,6 +239,52 @@ void UQuestSubsystem::CompleteQuest(FGameplayTag QuestTag)
 const FQuestRuntimeData* UQuestSubsystem::GetQuestRuntimeData(FGameplayTag QuestTag) const
 {
 	return ActiveQuests.Find(QuestTag);
+}
+
+void UQuestSubsystem::BroadcastNarrativeDialogue(FGameplayTag NarrativeTag)
+{
+	if (!CachedDialogueTable)
+	{
+		GY_WARN(Content, CYS, "UQuestSubsystem: DialogueDataTable이 로드되지 않았습니다.");
+		return;
+	}
+
+	TArray<FDialogueRow*> AllRows;
+	CachedDialogueTable->GetAllRows<FDialogueRow>(TEXT("UQuestSubsystem::BroadcastNarrativeDialogue"), AllRows);
+
+	TArray<FDialogueRow> Filtered;
+	for (const FDialogueRow* Row : AllRows)
+	{
+		if (Row && Row->NarrativeTag == NarrativeTag)
+		{
+			Filtered.Add(*Row);
+		}
+	}
+
+	if (Filtered.IsEmpty())
+	{
+		GY_WARN(Content, CYS, "UQuestSubsystem: NarrativeTag [%s]에 해당하는 다이얼로그가 없습니다.", *NarrativeTag.ToString());
+		return;
+	}
+
+	Filtered.Sort([](const FDialogueRow& A, const FDialogueRow& B) { return A.Order < B.Order; });
+
+	GY_LOG(Content, CYS, "다이얼로그 브로드캐스트: [%s] %d줄", *NarrativeTag.ToString(), Filtered.Num());
+	OnNarrativeDialogueStarted.Broadcast(Filtered);
+}
+
+void UQuestSubsystem::OnQuestCompletedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message)
+{
+	CompleteQuest(Message.QuestId);
+}
+
+void UQuestSubsystem::OnLootBoxOpened(FGameplayTag Channel, const FGYLootBoxStateMessage& Message)
+{
+	GY_LOG(Content, CYS, "OnLootBoxOpened - ActiveQuests=%d", ActiveQuests.Num());
+	FQuestEventData EventData;
+	EventData.EventTag = GYGameplayTags::Quest_Objective_OpenLootBox;
+	EventData.Count = 1;
+	ProcessObjectiveProgress(EventData);
 }
 
 AGYGameState* UQuestSubsystem::GetGYGameState() const
