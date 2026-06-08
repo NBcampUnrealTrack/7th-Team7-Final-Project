@@ -33,20 +33,30 @@ void AQuestTriggerVolume::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp
                                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                              const FHitResult& SweepResult)
 {
-	if (!OtherActor || !OtherActor->IsA(AGYCharacter::StaticClass()))
+	if (!OtherActor || !OtherActor->IsA(AGYCharacter::StaticClass())) return;
+
+	AGYCharacter* Character = Cast<AGYCharacter>(OtherActor);
+	if (!IsValid(Character)) return;
+
+	// 서버: 퀘스트 시작만 (한 번)
+	if (HasAuthority())
 	{
+		if (!bTriggered)
+		{
+			bTriggered = true;
+			GetQuestSubsystem()->StartQuest(QuestTag);
+			GY_LOG(Content, CYS, "퀘스트 활성화:%s", *QuestTag.ToString());
+		}
 		return;
 	}
-	if (bTriggered)
-		return;
-	// 대화
+
+	// 클라이언트: 자신의 캐릭터만, 각 플레이어 독립적으로 한 번
+	if (!Character->IsLocallyControlled()) return;
+	if (bTriggered) return;
+
+	bTriggered = true;
 	GY_LOG(Content, CYS, "NPC와의 대화");
 	PlayNarrativeDialogue();
-	// 퀘스트 활성화
-	UQuestSubsystem* QuestSubsystem = GetQuestSubsystem();
-	QuestSubsystem->StartQuest(QuestTag);
-	GY_LOG(Content, CYS, "퀘스트 활성화:%s", *(QuestTag.ToString()));
-	bTriggered = true;
 }
 
 void AQuestTriggerVolume::PlayNarrativeDialogue() const
