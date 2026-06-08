@@ -9,7 +9,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Parry, "Ability.Parry");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Dodge, "Ability.Dodge");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Sprint, "Ability.Sprint");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_Parkour, "Ability.Parkour");
 
 	// Fragment Type
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Charge, "Ability.Fragment.Charge");
@@ -24,8 +23,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_DodgeMontage, "Ability.Fragment.DodgeMontage");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Direction, "Ability.Fragment.Direction");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Sprint, "Ability.Fragment.Sprint");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Parkour, "Ability.Fragment.Parkour");
-
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Block, "Ability.Fragment.Block");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_BlockMontage, "Ability.Fragment.BlockMontage");
 	// State
