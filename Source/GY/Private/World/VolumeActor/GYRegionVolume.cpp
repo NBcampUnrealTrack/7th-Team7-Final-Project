@@ -22,13 +22,21 @@ void AGYRegionVolume::BeginPlay()
 {
 	Super::BeginPlay();
 	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AGYRegionVolume::OnOverlapBegin);
+	TriggerBox->OnComponentEndOverlap.AddDynamic(this, &AGYRegionVolume::OnOverlapEnd);
 
-	TArray<AActor*> Overlapping;
-	TriggerBox->GetOverlappingActors(Overlapping, APawn::StaticClass());
-	for (AActor* Actor : Overlapping)
+	// 0.1초 뒤에 체크하여 초기화 시간 확보
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, [this]()
 	{
-		OnOverlapBegin(TriggerBox, Actor, nullptr, 0, false, FHitResult());
-	}
+		if (!IsValid(this)) return;
+
+		TArray<AActor*> Overlapping;
+		TriggerBox->GetOverlappingActors(Overlapping, APawn::StaticClass());
+		for (AActor* Actor : Overlapping)
+		{
+		   OnOverlapBegin(TriggerBox, Actor, nullptr, 0, false, FHitResult());
+		}
+	}, 0.1f, false);
 }
 
 bool AGYRegionVolume::IsLocationInside(const FVector& WorldLocation) const
@@ -47,7 +55,7 @@ void AGYRegionVolume::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
 	bool bFromSweep, const FHitResult& SweepResult)
 {
 	APawn* Pawn = Cast<APawn>(OtherActor);
-	if (!Pawn || !Pawn->IsLocallyControlled()) return; // 로컬 플레이어만
+	if (!Pawn) return;
 
 	URegionLootData* Region = RegionData.LoadSynchronous();
 	if (!Region) return;
@@ -74,6 +82,28 @@ void AGYRegionVolume::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
 	Msg.RegionDisplayName = Region->RegionDisplayName;
 	Msg.RegionLevel = GetDefault<UGYWorldDataSettings>()->DefaultRegionLevel;
 	Msg.RegionIcon = Region->RegionIcon;
+	Msg.BossActor = TargetBossActor;
+	Msg.Pawn = Pawn;
 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Region_Entered, Msg);
+}
+
+void AGYRegionVolume::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	APawn* Pawn = Cast<APawn>(OtherActor);
+	if (!Pawn) return;
+	if (TriggerBox->IsOverlappingActor(Pawn))
+	{
+		return;
+	}
+
+	URegionLootData* Region = RegionData.LoadSynchronous();
+	if (!Region) return;
+
+	FGYRegionExitedMessage ExitMsg;
+	ExitMsg.RegionId = Region->RegionId;
+	ExitMsg.Pawn = Pawn;
+
+	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Region_Exited, ExitMsg);
 }
