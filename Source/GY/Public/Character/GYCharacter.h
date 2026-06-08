@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "GYCharacter.generated.h"
 
+class UMotionWarpingComponent;
 class ULockOnComponent;
 class UGYPawnExtensionComponent;
 class UAbilitySystemComponent;
@@ -34,6 +35,8 @@ public:
 
 	ULockOnComponent* GetLockOnComponent() const { return LockOnComponent; }
 
+
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(Server, Reliable)
@@ -59,6 +62,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<ULockOnComponent> LockOnComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "AI")
 	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSource;
