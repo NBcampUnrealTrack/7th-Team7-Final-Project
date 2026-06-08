@@ -7,6 +7,15 @@
 #include "GameFramework/Pawn.h"
 #include "Items/Fragments/ItemFragment_EquipmentVisual.h"
 #include "Items/ItemDefinition.h"
+#include "Net/UnrealNetwork.h"
+
+void UEquipmentInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UEquipmentInstance, InstanceId);
+	DOREPLIFETIME(UEquipmentInstance, ItemDefinition);
+}
 
 void UEquipmentInstance::Initialize(const FGuid& InInstanceId, TSoftObjectPtr<UItemDefinition> InDefinition)
 {
@@ -17,6 +26,12 @@ void UEquipmentInstance::Initialize(const FGuid& InInstanceId, TSoftObjectPtr<UI
 UItemDefinition* UEquipmentInstance::GetItemDefinition() const
 {
 	return ItemDefinition.Get();
+}
+
+void UEquipmentInstance::OnRep_ItemDefinition()
+{
+	// 클라: PostReplicatedAdd에서 OwnerPawn은 이미 세팅됨. 정의가 도착했으니 외형 적용
+	ApplyVisuals();
 }
 
 void UEquipmentInstance::OnEquipped(APawn* OwningPawn)
@@ -45,6 +60,9 @@ void UEquipmentInstance::ApplyVisuals()
 
 	UItemDefinition* Def = ItemDefinition.LoadSynchronous();
 	if (!IsValid(Def)) return;
+
+	// 이미 적용됨 (OnEquipped + OnRep_ItemDefinition 중복 호출 방어)
+	if (SpawnedActors.Num() > 0 || LinkedAnimLayerClass != nullptr) return;
 
 	const UItemFragment_EquipmentVisual* Visual = Def->FindFragment<UItemFragment_EquipmentVisual>();
 	if (Visual == nullptr) return;
