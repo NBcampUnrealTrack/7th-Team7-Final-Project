@@ -1,5 +1,6 @@
 #include "Quest/QuestTriggerVolume.h"
 
+#include "Character/GYCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Logging/GYLogManager.h"
 #include "Quest/QuestSubsystem.h"
@@ -32,6 +33,10 @@ void AQuestTriggerVolume::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp
                                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                              const FHitResult& SweepResult)
 {
+	if (!OtherActor || !OtherActor->IsA(AGYCharacter::StaticClass()))
+	{
+		return;
+	}
 	if (bTriggered)
 		return;
 	// 대화
