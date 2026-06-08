@@ -16,10 +16,10 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_SwordAndShieldMultiplier)
-	FGameplayAttributeData SwordAndShieldMultiplier;
-	GY_ATTRIBUTE_ACCESSORS(UGYWeaponAttribute, SwordAndShieldMultiplier)
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_WeaponDamageMultiplier)
+	FGameplayAttributeData WeaponDamageMultiplier;
+	GY_ATTRIBUTE_ACCESSORS(UGYWeaponAttribute, WeaponDamageMultiplier)
 
 	UFUNCTION()
-	virtual void OnRep_SwordAndShieldMultiplier(const FGameplayAttributeData& OldSwordAndShieldMultiplier);
+	virtual void OnRep_WeaponDamageMultiplier(const FGameplayAttributeData& OldWeaponDamageMultiplier);
 };

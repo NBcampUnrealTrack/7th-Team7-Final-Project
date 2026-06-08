@@ -3,6 +3,7 @@
 #include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAdditionalAttribute.h"
 #include "AbilitySystem/Attributes/Player/GYWeaponAttribute.h"
+#include "GameplayTagContainer.h"
 #include "AbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffect.h"
@@ -168,10 +169,7 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 				Base->SetCurrentHealth(FMath::Clamp(Base->GetCurrentHealth() * NewMax / OldMax, 0.f, NewMax));
 			}
 		}
-		if (Weapon)
-		{
-			Weapon->SetSwordAndShieldMultiplier(Weapon->GetSwordAndShieldMultiplier() + Magnitude * StatScalingData->StrengthToSwordAndShieldMultiplier);
-		}
+		RecalculateWeaponMultiplier(ASC, Weapon);
 	}
 	else if (Data.EvaluatedData.Attribute == GetDexterityAttribute())
 	{
@@ -180,9 +178,29 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 			Additional->SetCriticalRate(Additional->GetCriticalRate() + Magnitude * StatScalingData->DexterityToCriticalRate);
 		}
 		SetEvasionInvincibilityTime(GetEvasionInvincibilityTime() + Magnitude * StatScalingData->DexterityToEvasionInvincibilityTime);
-		if (Weapon)
+		RecalculateWeaponMultiplier(ASC, Weapon);
+	}
+}
+
+void UGYPlayerAttribute::RecalculateWeaponMultiplier(UAbilitySystemComponent* ASC, UGYWeaponAttribute* Weapon)
+{
+	if (!StatScalingData || !Weapon || !ASC) return;
+
+	const FWeaponStyleScalingFactors* Factors = nullptr;
+	for (const TPair<FGameplayTag, FWeaponStyleScalingFactors>& Pair : StatScalingData->WeaponStyleFactors)
+	{
+		if (ASC->HasMatchingGameplayTag(Pair.Key))
 		{
-			Weapon->SetSwordAndShieldMultiplier(Weapon->GetSwordAndShieldMultiplier() + Magnitude * StatScalingData->DexterityToSwordAndShieldMultiplier);
+			Factors = &Pair.Value;
+			break;
 		}
 	}
+
+	if (!Factors)
+	{
+		Weapon->SetWeaponDamageMultiplier(1.f);
+		return;
+	}
+
+	Weapon->SetWeaponDamageMultiplier(1.f + GetStrength() * Factors->StrengthFactor + GetDexterity() * Factors->DexterityFactor);
 }

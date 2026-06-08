@@ -23,6 +23,8 @@
 #include "Net/UnrealNetwork.h"
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
 #include "Core/GameplayTags/AbilityTags.h"
+#include "Player/GYPlayerState.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 {
@@ -425,9 +427,37 @@ void AGYEnemyCharacterBase::GrantRewards()
 	if (!LoadedDataAsset) return;
 	const FEnemyRewardConfig& Reward = LoadedDataAsset->RewardConfig;
 
-	// TODO 은서: 경험치 시스템과 연결 → Reward.ExpReward
-	// TODO 은서: 골드/통화 시스템과 연결 → Reward.GoldReward
-	// TODO 은서: DropTable 로드 후 드롭 액터 스폰
+	// 경험치 시스템과 연결 -> 관식 작업함
+	AGameStateBase* GS = GetWorld()->GetGameState<AGameStateBase>();
+	if (!GS || GS->PlayerArray.IsEmpty()) return;
+
+	const float XPPerPlayer = static_cast<float>(Reward.ExpReward) / GS->PlayerArray.Num();
+
+	for (APlayerState* PS : GS->PlayerArray)
+	{
+		AGYPlayerState* GYPS = Cast<AGYPlayerState>(PS);
+		if (!GYPS) continue;
+
+		UAbilitySystemComponent* ASC = GYPS->GetAbilitySystemComponent();
+		if (!ASC) continue;
+
+		UGameplayEffect* XPEffect = NewObject<UGameplayEffect>(
+			this,
+			MakeUniqueObjectName(this, UGameplayEffect::StaticClass(), TEXT("GE_EnemyReward_XP")));
+		XPEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
+
+		FGameplayModifierInfo Modifier;
+		Modifier.Attribute = UGYPlayerAttribute::GetXPAttribute();
+		Modifier.ModifierOp = EGameplayModOp::Additive;
+		Modifier.ModifierMagnitude = FScalableFloat(XPPerPlayer);
+		XPEffect->Modifiers.Add(Modifier);
+
+		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+		ASC->ApplyGameplayEffectToSelf(XPEffect, 1.f, Context);
+	}
+
+	// TODO: 골드/통화 시스템과 연결 → Reward.GoldReward
+	// TODO: DropTable 로드 후 드롭 액터 스폰
 }
 
 void AGYEnemyCharacterBase::DisableRagdoll()
