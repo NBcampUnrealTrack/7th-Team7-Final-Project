@@ -58,7 +58,7 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!IsValid(PS)) return;
 	if (!IsValid(ActiveEquipmentComponent)) return;
-
+	LockOnComponent->BindToASC(PS);
 	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
 	if (!IsValid(Loadout)) return;
 
@@ -86,6 +86,9 @@ void AGYCharacter::OnRep_Controller()
 		PawnExtComponent->CheckDefaultInitialization();
 	}
 
+	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
+	LockOnComponent->BindToASC(PS);
+
 	BroadcastCharacterReady(); // 컨트롤러가 늦게 복제될 때도 알림
 }
 
@@ -102,6 +105,7 @@ void AGYCharacter::OnRep_PlayerState()
 	if (!IsValid(PS)) return;
 
 	PS->InitGAS(this);
+	LockOnComponent->BindToASC(PS);
 
 	BroadcastCharacterReady();
 }
