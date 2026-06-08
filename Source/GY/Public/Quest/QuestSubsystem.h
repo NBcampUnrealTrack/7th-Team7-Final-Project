@@ -2,8 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Quest/QuestTypes.h"
 #include "QuestSubsystem.generated.h"
+
+struct FGYLootBoxStateMessage;
+struct FGYQuestProgressMessage;
 
 class AGYGameState;
 
@@ -19,6 +23,7 @@ class GY_API UQuestSubsystem : public UGameInstanceSubsystem
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
 
 	// 퀘스트 정의 조회 (없으면 nullptr)
 	const FQuestTableRow* FindQuestRow(FGameplayTag QuestTag) const;
@@ -58,7 +63,18 @@ private:
 	// 진행 중인 퀘스트 런타임 상태
 	TMap<FGameplayTag, FQuestRuntimeData> ActiveQuests;
 
+	UPROPERTY()
+	TObjectPtr<UDataTable> CachedQuestTable;
+
+	UPROPERTY()
+	TObjectPtr<UDataTable> CachedDialogueTable;
+
 	void BuildCache(const UDataTable* DataTable);
+	void OnLootBoxOpened(FGameplayTag Channel, const FGYLootBoxStateMessage& Message);
+	void OnQuestCompletedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message);
+
+	FGameplayMessageListenerHandle LootBoxOpenedListenerHandle;
+	FGameplayMessageListenerHandle QuestCompletedListenerHandle;
 
 public:
 	bool StartQuest(FGameplayTag QuestTag);
