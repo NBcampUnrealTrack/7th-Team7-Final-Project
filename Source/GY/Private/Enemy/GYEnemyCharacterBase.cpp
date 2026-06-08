@@ -517,6 +517,16 @@ void AGYEnemyCharacterBase::PostEditChangeProperty(struct FPropertyChangedEvent&
 		}
 	}
 }
+
+void AGYEnemyCharacterBase::PostEditMove(bool bFinished)
+{
+	Super::PostEditMove(bFinished);
+	if (bFinished)
+	{
+		EnemySpawnLocation = GetActorLocation();
+		EnemySpawnRotation = GetActorRotation();
+	}
+}
 #endif
 
 void AGYEnemyCharacterBase::Deactivate()
@@ -562,6 +572,9 @@ void AGYEnemyCharacterBase::Activate()
 			}
 		}
 	}
+
+	SetActorLocation(EnemySpawnLocation);
+	SetActorRotation(EnemySpawnRotation);
 }
 
 void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -792,8 +805,6 @@ void AGYEnemyCharacterBase::BeginPlay()
 	{
 		bIsActivate = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
 	}
-	DefaultMeshRelativeLocation = GetMesh()->GetRelativeLocation();
-	DefaultMeshRelativeRotation = GetMesh()->GetRelativeRotation();
 }
 
 void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
