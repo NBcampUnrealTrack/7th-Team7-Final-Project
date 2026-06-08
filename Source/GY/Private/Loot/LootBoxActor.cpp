@@ -148,6 +148,12 @@ void ALootBoxActor::OpenBox(APawn* Opener)
 
 	PendingDrops = Result.Drops;
 	bOpened = true;
+
+	FGYLootBoxStateMessage OpenMsg;
+	OpenMsg.Box = this;
+	OpenMsg.bOpened = true;
+	UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Loot_BoxOpened, OpenMsg);
+
 	// 갱신 알림은 클라의 OnRep에서 처리 (데디 서버는 UI 없음)
 }
 
