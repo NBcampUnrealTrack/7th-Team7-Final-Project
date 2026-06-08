@@ -87,6 +87,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void PossessedBy(AController* NewController) override;
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void OnRep_Controller() override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
@@ -174,6 +175,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
 	TObjectPtr<UGYEnemyAdditionalAttribute> AdditionalAttribute;
 
+	UPROPERTY(Replicated)
 	bool bIsDead = false;
 
 	bool bGASGrantedFromDataAsset = false;

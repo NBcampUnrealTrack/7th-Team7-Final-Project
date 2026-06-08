@@ -471,22 +471,30 @@ void AGYEnemyCharacterBase::DisableRagdoll()
 	USkeletalMeshComponent* SkeletalMesh = GetMesh();
 	if (!SkeletalMesh) return;
 
+	SkeletalMesh->SetAllBodiesSimulatePhysics(false);
 	SkeletalMesh->SetSimulatePhysics(false);
+	SkeletalMesh->PutAllRigidBodiesToSleep();
+	SkeletalMesh->SetAllBodiesPhysicsBlendWeight(0.f);
 	SkeletalMesh->bBlendPhysics = false;
+
 	SkeletalMesh->SetCollisionProfileName(TEXT("CharacterMesh"));
 	SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+	SkeletalMesh->AttachToComponent(
+			GetCapsuleComponent(),
+			FAttachmentTransformRules::SnapToTargetIncludingScale);
 
 	if (const AGYEnemyCharacterBase* CDO = GetClass()->GetDefaultObject<AGYEnemyCharacterBase>())
 	{
 		if (const USkeletalMeshComponent* CDOMesh = CDO->GetMesh())
 		{
-			SkeletalMesh->SetRelativeLocationAndRotation(CDOMesh->GetRelativeLocation(), CDOMesh->GetRelativeRotation());
+			SkeletalMesh->SetRelativeLocationAndRotation(
+				CDOMesh->GetRelativeLocation(),
+				CDOMesh->GetRelativeRotation());
 		}
 	}
 
-	SkeletalMesh->AttachToComponent(
-			GetCapsuleComponent(),
-			FAttachmentTransformRules::KeepRelativeTransform);
+	SkeletalMesh->RecreatePhysicsState();
 
 	if (UAnimInstance* AnimInstance = SkeletalMesh->GetAnimInstance())
 	{
@@ -636,6 +644,7 @@ void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimePro
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGYEnemyCharacterBase, EnemyType);
 	DOREPLIFETIME(AGYEnemyCharacterBase, bIsActivate);
+	DOREPLIFETIME(AGYEnemyCharacterBase, bIsDead);
 }
 
 void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
@@ -792,7 +801,6 @@ void AGYEnemyCharacterBase::OnRep_IsActivate()
 	UE_LOG(LogTemp,Warning,TEXT("OnRep_IsActivate 1 : %d"), bIsActivate);
 	if (bIsActivate)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("OnRep_IsActivate 2"));
 		DisableRagdoll();
 		SetActorHiddenInGame(false);
 		//SetActorEnableCollision(true);
@@ -864,7 +872,10 @@ void AGYEnemyCharacterBase::BeginPlay()
 	GetCapsuleComponent()->SetCollisionProfileName("Pawn");
 	UE_LOG(LogTemp,Warning,TEXT("[%s]AGYEnemyCharacterBase::BeginPlay 2=========CollisionEnabled: %d, CollisionProfileName%s"),HasAuthority()== 1? TEXT("Server"):TEXT("Client"),GetCapsuleComponent()->GetCollisionEnabled(),*GetCapsuleComponent()->GetCollisionProfileName().ToString());
 
-	bIsDead = false;
+	if (HasAuthority())
+	{
+		bIsDead = false;
+	}
 
 	InitGAS();
 
@@ -872,6 +883,7 @@ void AGYEnemyCharacterBase::BeginPlay()
 	{
 		bIsActivate = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
 	}
+
 }
 
 void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
