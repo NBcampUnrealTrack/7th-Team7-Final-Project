@@ -1,7 +1,8 @@
-#include "WorldGimmick/TimeRift.h"
+#include "WorldGimmick/TimeRift/TimeRift.h"
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Player/GYPlayerState.h"
+#include "WorldGimmick/TimeRift/TimeRiftSubsystem.h"
 
 
 ATimeRift::ATimeRift()
@@ -11,13 +12,34 @@ ATimeRift::ATimeRift()
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	SetRootComponent(StaticMeshComponent);
 
+	RespawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("RespawnPoint"));
+	RespawnPoint->SetupAttachment(StaticMeshComponent);
+
 	InteractTag = GYGameplayTags::Interaction_TimeRift_Sit;
 }
 
 void ATimeRift::BeginPlay()
 {
 	Super::BeginPlay();
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (auto* TimeRiftSubsystem = GameInstance->GetSubsystem<UTimeRiftSubsystem>())
+		{
+			TimeRiftSubsystem->RegisterActor(this);
+		}
+	}
+}
 
+void ATimeRift::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (auto* TimeRiftSubsystem = GameInstance->GetSubsystem<UTimeRiftSubsystem>())
+		{
+			TimeRiftSubsystem->UnregisterActor(this);
+		}
+	}
+	Super::EndPlay(EndPlayReason);
 }
 
 

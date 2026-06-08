@@ -14,6 +14,8 @@
 #include "WorldPartition/WorldPartition.h"
 #include "WorldPartition/WorldPartitionActorDescInstance.h"
 #include "World/ActorManagement//WorldPartitionLevelPlacedActor.h"
+#include "World/ActorManagement/RespawnPoint.h"
+#include "World/ActorManagement/RespawnPointTableRow.h"
 
 ULevelPlacedActorDataExporter::ULevelPlacedActorDataExporter()
 {
@@ -56,27 +58,39 @@ void ULevelPlacedActorDataExporter::ExportMonsterData()
 
 	GY_LOG(Game, JCM, "ULevelPlacedActorDataExporter: %d Actor Collected", ActorGuidSet.Num());
 
-	bool bSuccess = true;
-	if (UDataTable* SpawnTable = BuildActorRegionTable())
-	{
-		bSuccess = SaveDataTable(SpawnTable, OutputPath / TEXT("DT_ActorGuidData"));
-	}
+	UGYWorldDataSettings* MutableSettings = GetMutableDefault<UGYWorldDataSettings>();
 
-	GY_LOG(Game, JCM, "MonsterDataExporter: %s", bSuccess ? TEXT("완료") : TEXT("일부 저장 실패"));
-
-	if (bSuccess)
+	if (UDataTable* ActorTable = BuildActorGuidTable())
 	{
-		if (UGYWorldDataSettings* MutableSettings = GetMutableDefault<UGYWorldDataSettings>())
+		const FString AssetName = TEXT("DT_ActorGuidData");
+		const FString AssetPath = OutputPath / AssetName;
+		if (SaveDataTable(ActorTable, AssetPath) && MutableSettings)
 		{
-			MutableSettings->SetupPath(OutputPath/TEXT("DT_ActorGuidData.")+TEXT("DT_ActorGuidData"));
+			MutableSettings->SetupPath(AssetPath + TEXT(".") + AssetName);
 		}
 	}
+
+	if (UDataTable* CheckpointTable = BuildRespawnPointTable())
+	{
+		const FString AssetName = TEXT("DT_RespawnCheckpoint");
+		const FString AssetPath = OutputPath / AssetName;
+		if (SaveDataTable(CheckpointTable, AssetPath) && MutableSettings)
+		{
+			MutableSettings->RespawnCheckpointTable = TSoftObjectPtr<UDataTable>(
+				FSoftObjectPath(AssetPath + TEXT(".") + AssetName));
+			GY_LOG(Game, JCM, "RespawnCheckpointTable path saved");
+		}
+	}
+
+	MutableSettings->SaveConfig();
+	MutableSettings->TryUpdateDefaultConfigFile();
 
 }
 
 void ULevelPlacedActorDataExporter::CollectActorsFromWorld(UWorld* World)
 {
 	ActorGuidSet.Empty();
+	RespawnCheckpointRows.Empty();
 
 	UWorldPartition* WP = World->GetWorldPartition();
 
@@ -106,8 +120,14 @@ void ULevelPlacedActorDataExporter::CollectActorsFromWorld(UWorld* World)
 			{
 				ActorClass = LoadedAsset->GetClass();
 			};
-			if (!ActorClass || !ActorClass->ImplementsInterface(UWorldPartitionLevelPlacedActor::StaticClass()))
-				continue;
+			if (!ActorClass) continue;
+
+			const bool bIsLevelPlaced = ActorClass->ImplementsInterface(
+				UWorldPartitionLevelPlacedActor::StaticClass());
+			const bool bIsCheckpoint = ActorClass->ImplementsInterface(
+				URespawnPoint::StaticClass());
+
+			if (!bIsLevelPlaced && !bIsCheckpoint) continue;
 
 			AActor* TargetActor = nullptr;
 
@@ -116,33 +136,46 @@ void ULevelPlacedActorDataExporter::CollectActorsFromWorld(UWorld* World)
 			{
 				TargetActor = MutableDescInstance->GetActor();
 			}
-
-			if (TargetActor)
-			{
-				TargetActor->Modify();
-
-				if (IWorldPartitionLevelPlacedActor* Interface = Cast<IWorldPartitionLevelPlacedActor>(TargetActor))
-				{
-					FGuid ActorGuid = ActorDesc->GetGuid();
-					Interface->SetPersistentGuid(ActorGuid);
-
-					GY_LOG(Game, JCM, "Baked Guid [%s] to Actor [%s]", *ActorGuid.ToString(), *TargetActor->GetName());
-				}
-			}
-			else
+			if (!TargetActor)
 			{
 				GY_ERROR(Game, JCM, "Failed to load Actor Instance for Guid: %s", *ActorDesc->GetGuid().ToString());
 				continue;
 			}
+			TargetActor->Modify();
+			const FGuid ActorGuid = ActorDesc->GetGuid();
+			if (bIsLevelPlaced)
+			{
+				if (IWorldPartitionLevelPlacedActor* Interface = Cast<IWorldPartitionLevelPlacedActor>(TargetActor))
+				{
+					Interface->SetPersistentGuid(ActorGuid);
+					ActorGuidSet.Add(ActorGuid);
 
+					GY_LOG(Game, JCM, "Baked Guid [%s] to Actor [%s]", *ActorGuid.ToString(), *TargetActor->GetName());
+				}
+			}
 
-			ActorGuidSet.Add(ActorDesc->GetGuid());
+			if (bIsCheckpoint)
+			{
+				if (IRespawnPoint* RespawnPoint = Cast<IRespawnPoint>(TargetActor))
+				{
+					RespawnPoint->SetPersistentGuid(ActorGuid);
+
+					FRespawnPointTableRow Row;
+					Row.ActorGuid = ActorGuid;
+					Row.RespawnTransform = RespawnPoint->GetRespawnTransform();
+
+					RespawnCheckpointRows.Add(ActorGuid, Row);
+
+					GY_LOG(Game, JCM, "Baked Checkpoint [%s] to [%s]", *ActorGuid.ToString(), *TargetActor->GetName());
+				}
+			}
+
 		}
 		return true;
 	});
 }
 
-UDataTable* ULevelPlacedActorDataExporter::BuildActorRegionTable()
+UDataTable* ULevelPlacedActorDataExporter::BuildActorGuidTable()
 {
 	UPackage* Pkg = CreatePackage(*(OutputPath / TEXT("DT_ActorGuidData")));
 	UDataTable* Table = NewObject<UDataTable>(Pkg, FName("DT_ActorGuidData"), RF_Public | RF_Standalone);
@@ -156,6 +189,25 @@ UDataTable* ULevelPlacedActorDataExporter::BuildActorRegionTable()
 		Table->AddRow(FName(*FString::Printf(TEXT("Monster_%04d"), Idx++)), Row);
 	}
 
+	return Table;
+}
+
+UDataTable* ULevelPlacedActorDataExporter::BuildRespawnPointTable()
+{
+	if (RespawnCheckpointRows.IsEmpty()) return nullptr;
+
+	const FString AssetName = TEXT("DT_RespawnCheckpoint");
+	UPackage* Pkg = CreatePackage(*(OutputPath / AssetName));
+	UDataTable* Table = NewObject<UDataTable>(Pkg, FName(AssetName),
+		RF_Public | RF_Standalone);
+	Table->RowStruct = FRespawnPointTableRow::StaticStruct();
+
+	int32 Idx = 0;
+	for (const auto& Pair : RespawnCheckpointRows)
+	{
+		Table->AddRow(FName(*FString::Printf(TEXT("Checkpoint_%04d"), Idx++)),
+			Pair.Value);
+	}
 	return Table;
 }
 

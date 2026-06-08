@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Editor/Blutility/Classes/AssetActionUtility.h"
+#include "World/ActorManagement/RespawnPointTableRow.h"
 #include "LevelPlacedActorDataExporter.generated.h"
 
 /**
@@ -26,12 +27,13 @@ private:
 	void ExportMonsterData();
 
 private:
-#if WITH_EDITOR
 	TSet<FGuid> ActorGuidSet;
 
+	UPROPERTY()
+	TMap<FGuid, FRespawnPointTableRow> RespawnCheckpointRows;
+
 	void CollectActorsFromWorld(UWorld* World);
-	UDataTable* BuildActorRegionTable();
-	UDataTable* BuildRegionSummaryTable();
+	UDataTable* BuildActorGuidTable();
+	UDataTable* BuildRespawnPointTable();
 	bool SaveDataTable(UDataTable* DataTable, const FString& AssetPath);
-#endif
 };
