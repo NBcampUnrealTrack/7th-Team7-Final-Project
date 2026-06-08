@@ -3,13 +3,15 @@
 #include "AbilitySystemComponent.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "GameplayTagContainer.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "GameFramework/PlayerState.h"
 #include "GYUIManagerSubsystem.generated.h"
 
 class AGYPlayerController;
 class UCommonActivatableWidget;
 class UGYPrimaryGameLayout;
-
+struct FGYRegionEnteredMessage;
+struct FGYRegionExitedMessage;
 /**
  * 로컬마다 생성, 관리되는 UI 총괄 매니저
  */
@@ -124,4 +126,27 @@ private:
 	/** 플레이어 명단 동기화 */
 	void SyncPlayerRoster();
 	APlayerState* GetLocalPlayerState() const;
+
+    /** Region 진입/나가기, 보스 데이터 */
+	void HandleRegionEntered(FGameplayTag, const FGYRegionEnteredMessage& Msg);
+	void HandleRegionExited(FGameplayTag, const FGYRegionExitedMessage& Msg);
+
+	void BindBoss(AGYEnemyCharacterBase* Boss);
+	void UnbindBoss();
+	void BroadcastBossHealth();
+	void BroadcastBossPoise();
+
+	UFUNCTION()
+	void HandleBossDead(AGYEnemyCharacterBase* Boss);
+
+	TWeakObjectPtr<AGYEnemyCharacterBase> CurrentBoss;
+	TWeakObjectPtr<UAbilitySystemComponent> BossASC;
+
+	FDelegateHandle BossHealthHandle, BossMaxHealthHandle;
+	FDelegateHandle BossPoiseHandle, BossMaxPoiseHandle;
+
+	FGameplayMessageListenerHandle RegionEnterListenerHandle;
+	FGameplayMessageListenerHandle RegionExitListenerHandle;
+
+	FGameplayTag ActiveRegionId;
 };
