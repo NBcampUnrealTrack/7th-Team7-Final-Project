@@ -1,6 +1,7 @@
 #include "Inventory/InventoryComponent.h"
 
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/ItemTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Disassemble/DisassembleService.h"
 #include "Enchant/EnchantService.h"
@@ -310,6 +311,11 @@ void UInventoryComponent::BroadcastPotionSnapshots()
 int32 UInventoryComponent::GetCapacity() const
 {
 	return Capacity;
+}
+
+FGameplayTag UInventoryComponent::GetContainerTag() const
+{
+	return GYGameplayTags::Container_Inventory;
 }
 
 int32 UInventoryComponent::GetOccupiedSlotCount() const

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "UObject/Interface.h"
 #include "Core/Types/ItemEnums.h"
 
@@ -31,4 +32,7 @@ public:
 
 	virtual bool InsertEntry(const FInventoryEntry& Entry) = 0;
 	virtual bool TakeEntry(const FGuid& InstanceId, FInventoryEntry& OutEntry) = 0;
+
+	// 컨테이너 식별 태그 (Container.*). 전송 RPC가 포인터 대신 이 태그로 서버에서 컨테이너를 resolve
+	virtual FGameplayTag GetContainerTag() const = 0;
 };
