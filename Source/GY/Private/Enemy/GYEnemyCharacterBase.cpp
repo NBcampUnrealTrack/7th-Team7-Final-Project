@@ -387,16 +387,11 @@ void AGYEnemyCharacterBase::EnableRagdoll()
 		SkeletalMesh->SetCollisionProfileName(TEXT("Ragdoll"));
 		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		SkeletalMesh->SetSimulatePhysics(true);
-		UE_LOG(LogTemp, Warning, TEXT("AttachParent after ragdoll: %s"),
-		SkeletalMesh->GetAttachParent() ? *SkeletalMesh->GetAttachParent()->GetName() : TEXT("NULL"));
-		SkeletalMesh->WakeAllRigidBodies();
-		UE_LOG(LogTemp,Warning,TEXT("AGYEnemyCharacterBase::EnableRagdoll=========SimulatePhysics : %s"),*GetNameSafe(SkeletalMesh->GetAttachParent()));
 	}
 }
 
 void AGYEnemyCharacterBase::OnDeathAnimFinished()
 {
-
 	if (!bIsDead) return;
 
 	if (!HasAuthority())
@@ -484,6 +479,7 @@ void AGYEnemyCharacterBase::DisableRagdoll()
 			GetCapsuleComponent(),
 			FAttachmentTransformRules::SnapToTargetIncludingScale);
 
+
 	if (const AGYEnemyCharacterBase* CDO = GetClass()->GetDefaultObject<AGYEnemyCharacterBase>())
 	{
 		if (const USkeletalMeshComponent* CDOMesh = CDO->GetMesh())
@@ -501,6 +497,7 @@ void AGYEnemyCharacterBase::DisableRagdoll()
 		AnimInstance->StopAllMontages(0.f);
 	}
 	SkeletalMesh->InitAnim(true);
+
 }
 
 void AGYEnemyCharacterBase::EnableGameplay()
@@ -593,9 +590,8 @@ void AGYEnemyCharacterBase::Deactivate()
 
 void AGYEnemyCharacterBase::Activate()
 {
-	UE_LOG(LogTemp,Warning,TEXT("AGYEnemyCharacterBase::Activate=========EnemyType: %s"),*UEnum::GetValueAsString(EnemyType));
 	if (EnemyType == EEnemyType::None) return;
-	UE_LOG(LogTemp,Warning,TEXT("AGYEnemyCharacterBase::Activate=========SimulatePhysics: %s"),*GetNameSafe(GetMesh()->GetAttachParent()));
+
 	bIsDead = false;
 	bIsActivate = true;
 
@@ -607,10 +603,9 @@ void AGYEnemyCharacterBase::Activate()
 	DisableRagdoll();
 
 	EnableGameplay();
-	//SetActorEnableCollision(true);
 
 	FVector SpawnLocation = EnemySpawnLocation;
-	SpawnLocation.Z += 100.f;
+	SpawnLocation.Z += 30.f;
 	SetActorLocationAndRotation(
 	SpawnLocation,
 	EnemySpawnRotation,
@@ -636,7 +631,6 @@ void AGYEnemyCharacterBase::Activate()
 			}
 		}
 	}
-	UE_LOG(LogTemp,Warning,TEXT("AGYEnemyCharacterBase::Activate=========CollisionEnabled: %d, CollisionProfileName%s"),GetCapsuleComponent()->GetCollisionEnabled(),*GetCapsuleComponent()->GetCollisionProfileName().ToString());
 }
 
 void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -657,7 +651,6 @@ void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 	}
 	InitGAS();
 }
-
 
 bool AGYEnemyCharacterBase::IsStunned() const
 {
@@ -797,13 +790,11 @@ void AGYEnemyCharacterBase::OnRep_EnemyType()
 
 void AGYEnemyCharacterBase::OnRep_IsActivate()
 {
-
-	UE_LOG(LogTemp,Warning,TEXT("OnRep_IsActivate 1 : %d"), bIsActivate);
 	if (bIsActivate)
 	{
 		DisableRagdoll();
+
 		SetActorHiddenInGame(false);
-		//SetActorEnableCollision(true);
 
 		if (!LoadedDataAsset)
 		{
@@ -813,7 +804,6 @@ void AGYEnemyCharacterBase::OnRep_IsActivate()
 	else
 	{
 		SetActorHiddenInGame(true);
-		//SetActorEnableCollision(false);
 	}
 }
 
@@ -867,10 +857,8 @@ void AGYEnemyCharacterBase::BeginPlay()
 		EnemySpawnLocation = GetActorLocation();
 		EnemySpawnRotation = GetActorRotation();
 	}
-	UE_LOG(LogTemp,Warning,TEXT("[%s]AGYEnemyCharacterBase::BeginPlay 1=========CollisionEnabled: %d, CollisionProfileName%s"),HasAuthority()== 1? TEXT("Server"):TEXT("Client"),GetCapsuleComponent()->GetCollisionEnabled(),*GetCapsuleComponent()->GetCollisionProfileName().ToString());
 
 	GetCapsuleComponent()->SetCollisionProfileName("Pawn");
-	UE_LOG(LogTemp,Warning,TEXT("[%s]AGYEnemyCharacterBase::BeginPlay 2=========CollisionEnabled: %d, CollisionProfileName%s"),HasAuthority()== 1? TEXT("Server"):TEXT("Client"),GetCapsuleComponent()->GetCollisionEnabled(),*GetCapsuleComponent()->GetCollisionProfileName().ToString());
 
 	if (HasAuthority())
 	{
