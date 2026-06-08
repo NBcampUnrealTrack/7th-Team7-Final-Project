@@ -106,6 +106,26 @@ struct GY_API FGYRegionEnteredMessage
 	UPROPERTY(BlueprintReadWrite) FText RegionDisplayName;
 	UPROPERTY(BlueprintReadWrite) int32 RegionLevel = 1;
 	UPROPERTY(BlueprintReadWrite) TSoftObjectPtr<UTexture2D> RegionIcon;
+	UPROPERTY() TSoftObjectPtr<AActor> BossActor;
+	UPROPERTY() TWeakObjectPtr<APawn> Pawn;
+};
+
+/** 지역 나가기 */
+USTRUCT(BlueprintType)
+struct FGYRegionExitedMessage
+{
+	GENERATED_BODY()
+	UPROPERTY() FGameplayTag RegionId;
+	UPROPERTY() TWeakObjectPtr<APawn> Pawn;
+};
+
+/** 보스 상태 체크 */
+USTRUCT(BlueprintType)
+struct FGYBossStateMessage
+{
+	GENERATED_BODY()
+	UPROPERTY() bool bVisible = false;
+	UPROPERTY() FText BossName;
 };
 
 /** 채팅 */
