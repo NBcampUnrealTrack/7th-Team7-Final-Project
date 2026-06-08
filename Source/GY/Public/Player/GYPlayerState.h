@@ -59,13 +59,6 @@ public:
 
 	void InitGAS(APawn* Avatar);
 
-	UFUNCTION(BlueprintCallable, Server, Reliable, Category="Checkpoint")
-	void Server_SetCheckpoint(FVector Location);
-
-	FVector GetCheckpointLocation() const { return LastCheckpointLocation; }
-	bool HasCheckpoint() const { return bHasCheckpoint; }
-	FVector GetInitialSpawnLocation() const { return InitialSpawnLocation; }
-
 	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
 	TObjectPtr<UGYPlayerInitData> InitData;
 
@@ -109,12 +102,4 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UGYWeaponAttribute> WeaponAttribute;
 
-	UPROPERTY(Replicated)
-	FVector LastCheckpointLocation = FVector::ZeroVector;
-
-	UPROPERTY(Replicated)
-	bool bHasCheckpoint = false;
-
-	bool bAttributesInitialized = false;
-	FVector InitialSpawnLocation = FVector::ZeroVector;
 };

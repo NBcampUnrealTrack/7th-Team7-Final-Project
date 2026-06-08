@@ -3,17 +3,12 @@
 #include "AbilitySystemComponent.h"
 #include "Logging/GYLogManager.h"
 
-#include "Character/GYPawnData.h"
 #include "Character/GYPawnExtensionComponent.h"
-#include "Character/GYPlayerActionConfig.h"
 #include "Character/LockOn/LockOnComponent.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
-#include "GameModes/GYGameMode.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interaction/InteractionComponent.h"
 #include "Player/GYPlayerState.h"
@@ -43,8 +38,6 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	{
 		PS->InitGAS(this);
 	}
-
-	SubscribeHealthDelegate();
 
 	if (PawnExtComponent)
 	{
@@ -198,66 +191,4 @@ void AGYCharacter::BroadcastCharacterReady()
 	Msg.OwnerActor = this;
 
 	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Character_Ready,Msg);
-}
-
-void AGYCharacter::SubscribeHealthDelegate()
-{
-	if (bHealthDelegateBound) return;
-
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
-	if (!ASC) return;
-
-	ASC->GetGameplayAttributeValueChangeDelegate(
-		UGYPlayerBaseAttribute::GetCurrentHealthAttribute())
-		.AddUObject(this, &AGYCharacter::OnHealthChanged);
-
-	bHealthDelegateBound = true;
-}
-
-void AGYCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
-{
-	if (Data.NewValue <= 0.f && !bIsDead)
-	{
-		HandleDeath();
-	}
-}
-
-void AGYCharacter::HandleDeath()
-{
-	if (!HasAuthority()) return;
-	bIsDead = true;
-
-	if (UCharacterMovementComponent* Move = GetCharacterMovement())
-	{
-		Move->StopMovementImmediately();
-		Move->DisableMovement();
-	}
-
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	const UGYPlayerActionConfig* Config = nullptr;
-	if (PawnExtComponent && PawnExtComponent->PawnData)
-	{
-		Config = PawnExtComponent->PawnData->ActionConfig;
-	}
-
-	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
-	{
-		if (Config)
-		{
-			for (const FGameplayTag& Tag : Config->DeathTags)
-			{
-				ASC->AddLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
-			}
-		}
-	}
-
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (!PC) return;
-
-	if (AGYGameMode* GM = GetWorld()->GetAuthGameMode<AGYGameMode>())
-	{
-		const float Delay = Config ? Config->RespawnDelay : 5.f;
-		GM->RequestRespawn(PC, Delay);
-	}
 }
