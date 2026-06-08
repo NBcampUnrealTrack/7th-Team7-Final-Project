@@ -150,6 +150,8 @@ void UGYPlayerGameplayAbility::InputReleased(
 	}
 }
 
+
+
 void UGYPlayerGameplayAbility::ScanAndApplyGEModifiers()
 {
 	//로직 리셋, Fragment build
@@ -358,7 +360,18 @@ float UGYPlayerGameplayAbility::PlayMontageForLogic(UAnimMontage* Montage, float
 		this, NAME_None, Montage, PlayRate, NAME_None, true);
 	Task->ReadyForActivation();
 
+	// 몽타주 종료 시 EndAbility 호출되도록 콜백 바인딩
+	Task->OnCompleted.AddDynamic(this, &UGYPlayerGameplayAbility::OnMontageCompleted);
+	Task->OnBlendOut.AddDynamic(this, &UGYPlayerGameplayAbility::OnMontageCompleted);
+	Task->OnInterrupted.AddDynamic(this, &UGYPlayerGameplayAbility::OnMontageCompleted);
+	Task->OnCancelled.AddDynamic(this, &UGYPlayerGameplayAbility::OnMontageCompleted);
+
 	return Montage->GetPlayLength() / FMath::Max(PlayRate, KINDA_SMALL_NUMBER);
+}
+
+void UGYPlayerGameplayAbility::OnMontageCompleted()
+{
+	RequestEnd(false);
 }
 
 AGYCharacter* UGYPlayerGameplayAbility::GetGYCharacter() const
