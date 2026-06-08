@@ -15,6 +15,7 @@ public:
 	AGYGameMode();
 	virtual bool AllowCheats(APlayerController* P) override;
 	bool AdvanceHour(float Hour);
+	void RequestRespawn(APlayerController* PC, float Delay);
 
 protected:
 	virtual void Tick(float DeltaSeconds) override;
@@ -22,4 +23,5 @@ protected:
 
 private:
 	bool UpdateWorldTime(float DeltaTime);
+	void PerformRespawn(APlayerController* PC);
 };
