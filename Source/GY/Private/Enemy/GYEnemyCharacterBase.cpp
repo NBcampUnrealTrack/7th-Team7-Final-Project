@@ -30,6 +30,9 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	bReplicates = true;
+	SetReplicateMovement(true);
+
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
@@ -384,13 +387,11 @@ void AGYEnemyCharacterBase::EnableRagdoll()
 		SkeletalMesh->SetCollisionProfileName(TEXT("Ragdoll"));
 		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		SkeletalMesh->SetSimulatePhysics(true);
-		SkeletalMesh->WakeAllRigidBodies();
 	}
 }
 
 void AGYEnemyCharacterBase::OnDeathAnimFinished()
 {
-
 	if (!bIsDead) return;
 
 	if (!HasAuthority())
@@ -465,22 +466,38 @@ void AGYEnemyCharacterBase::DisableRagdoll()
 	USkeletalMeshComponent* SkeletalMesh = GetMesh();
 	if (!SkeletalMesh) return;
 
-	//SkeletalMesh->SetAllBodiesBelowSimulatePhysics(false);
+	SkeletalMesh->SetAllBodiesSimulatePhysics(false);
 	SkeletalMesh->SetSimulatePhysics(false);
+	SkeletalMesh->PutAllRigidBodiesToSleep();
+	SkeletalMesh->SetAllBodiesPhysicsBlendWeight(0.f);
 	SkeletalMesh->bBlendPhysics = false;
+
 	SkeletalMesh->SetCollisionProfileName(TEXT("CharacterMesh"));
+	SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
 	SkeletalMesh->AttachToComponent(
-		GetCapsuleComponent(),
-		FAttachmentTransformRules::KeepRelativeTransform);
+			GetCapsuleComponent(),
+			FAttachmentTransformRules::SnapToTargetIncludingScale);
+
 
 	if (const AGYEnemyCharacterBase* CDO = GetClass()->GetDefaultObject<AGYEnemyCharacterBase>())
 	{
 		if (const USkeletalMeshComponent* CDOMesh = CDO->GetMesh())
 		{
-			SkeletalMesh->SetRelativeLocationAndRotation(CDOMesh->GetRelativeLocation(), CDOMesh->GetRelativeRotation());
+			SkeletalMesh->SetRelativeLocationAndRotation(
+				CDOMesh->GetRelativeLocation(),
+				CDOMesh->GetRelativeRotation());
 		}
 	}
+
+	SkeletalMesh->RecreatePhysicsState();
+
+	if (UAnimInstance* AnimInstance = SkeletalMesh->GetAnimInstance())
+	{
+		AnimInstance->StopAllMontages(0.f);
+	}
+	SkeletalMesh->InitAnim(true);
+
 }
 
 void AGYEnemyCharacterBase::EnableGameplay()
@@ -493,6 +510,7 @@ void AGYEnemyCharacterBase::EnableGameplay()
 	if (UCharacterMovementComponent* Move = GetCharacterMovement())
 	{
 		Move->SetMovementMode(MOVE_Walking);
+		Move->bForceNextFloorCheck = true;
 	}
 }
 
@@ -561,6 +579,8 @@ void AGYEnemyCharacterBase::PostEditMove(bool bFinished)
 
 void AGYEnemyCharacterBase::Deactivate()
 {
+	bIsActivate = false;
+
 	SetActorHiddenInGame(true);
 
 	//TODO 은서: 로드 중일 때 로드 취소 Handler 통해서 하면 되지 않을까??
@@ -573,6 +593,7 @@ void AGYEnemyCharacterBase::Activate()
 	if (EnemyType == EEnemyType::None) return;
 
 	bIsDead = false;
+	bIsActivate = true;
 
 	if (DeactivateTimerHandle.IsValid())
 	{
@@ -580,9 +601,17 @@ void AGYEnemyCharacterBase::Activate()
 	}
 
 	DisableRagdoll();
+
 	EnableGameplay();
-	SetActorEnableCollision(true);
-	SetActorHiddenInGame(false);
+
+	FVector SpawnLocation = EnemySpawnLocation;
+	SpawnLocation.Z += 30.f;
+	SetActorLocationAndRotation(
+	SpawnLocation,
+	EnemySpawnRotation,
+	/*bSweep=*/false,
+	nullptr,
+	ETeleportType::TeleportPhysics);
 
 	if (!LoadedDataAsset)
 	{
@@ -602,9 +631,6 @@ void AGYEnemyCharacterBase::Activate()
 			}
 		}
 	}
-
-	SetActorLocation(EnemySpawnLocation);
-	SetActorRotation(EnemySpawnRotation);
 }
 
 void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -612,6 +638,7 @@ void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimePro
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGYEnemyCharacterBase, EnemyType);
 	DOREPLIFETIME(AGYEnemyCharacterBase, bIsActivate);
+	DOREPLIFETIME(AGYEnemyCharacterBase, bIsDead);
 }
 
 void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
@@ -624,7 +651,6 @@ void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 	}
 	InitGAS();
 }
-
 
 bool AGYEnemyCharacterBase::IsStunned() const
 {
@@ -767,8 +793,8 @@ void AGYEnemyCharacterBase::OnRep_IsActivate()
 	if (bIsActivate)
 	{
 		DisableRagdoll();
+
 		SetActorHiddenInGame(false);
-		SetActorEnableCollision(true);
 
 		if (!LoadedDataAsset)
 		{
@@ -778,7 +804,6 @@ void AGYEnemyCharacterBase::OnRep_IsActivate()
 	else
 	{
 		SetActorHiddenInGame(true);
-		SetActorEnableCollision(false);
 	}
 }
 
@@ -827,7 +852,18 @@ void AGYEnemyCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	bIsDead = false;
+	if (EnemySpawnLocation.IsNearlyZero())
+	{
+		EnemySpawnLocation = GetActorLocation();
+		EnemySpawnRotation = GetActorRotation();
+	}
+
+	GetCapsuleComponent()->SetCollisionProfileName("Pawn");
+
+	if (HasAuthority())
+	{
+		bIsDead = false;
+	}
 
 	InitGAS();
 
@@ -835,6 +871,7 @@ void AGYEnemyCharacterBase::BeginPlay()
 	{
 		bIsActivate = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
 	}
+
 }
 
 void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)

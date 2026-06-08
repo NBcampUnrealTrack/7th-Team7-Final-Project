@@ -174,6 +174,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
 	TObjectPtr<UGYEnemyAdditionalAttribute> AdditionalAttribute;
 
+	UPROPERTY(Replicated)
 	bool bIsDead = false;
 
 	bool bGASGrantedFromDataAsset = false;
