@@ -3,9 +3,11 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
+#include "Components/GameFrameworkInitStateInterface.h"
 #include "LockOnComponent.generated.h"
 
 
+class AGYPlayerState;
 class UAbilitySystemComponent;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -15,11 +17,10 @@ class GY_API ULockOnComponent : public UActorComponent
 public:
 	ULockOnComponent();
 
-	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	void BindToASC(UAbilitySystemComponent* InASC);
+	void BindToASC(AGYPlayerState* PlayerState);
 
 	AActor* GetCurrentTarget() const;
 	bool IsLockedOn() const { return CurrentTarget.IsValid(); }

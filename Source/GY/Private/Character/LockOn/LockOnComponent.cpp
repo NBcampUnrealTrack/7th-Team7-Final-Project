@@ -3,6 +3,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Core/GameplayTags/CameraTags.h"
+#include "Core/GameplayTags/GameFeaturesInitTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/PlayerState.h"
 #include "Core/GameplayTags/StateTags.h"
@@ -12,6 +13,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Net/UnrealNetwork.h"
+#include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
 
 ULockOnComponent::ULockOnComponent()
@@ -27,21 +29,6 @@ void ULockOnComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(ULockOnComponent, CurrentTarget);
 }
 
-void ULockOnComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
-	{
-		if (APlayerState* PS = OwnerPawn->GetPlayerState())
-		{
-			if (IAbilitySystemInterface* PSASI = Cast<IAbilitySystemInterface>(PS))
-			{
-				BindToASC(PSASI->GetAbilitySystemComponent());
-			}
-		}
-	}
-}
 
 void ULockOnComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
@@ -61,10 +48,14 @@ void ULockOnComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ULockOnComponent::BindToASC(UAbilitySystemComponent* InASC)
+void ULockOnComponent::BindToASC(AGYPlayerState* PlayerState)
 {
-	if (!InASC) return;
-	if (BoundASC == InASC) return;
+	if (!PlayerState) return;
+
+	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
+
+	if (!ASC) return;
+	if (BoundASC == ASC) return;
 
 	if (BoundASC.IsValid())
 	{
@@ -74,17 +65,18 @@ void ULockOnComponent::BindToASC(UAbilitySystemComponent* InASC)
 		        .Remove(InCombatTagHandle);
 	}
 
-	BoundASC = InASC;
-	InCombatTagHandle = InASC->RegisterGameplayTagEvent(
+	BoundASC = ASC;
+	InCombatTagHandle = ASC->RegisterGameplayTagEvent(
 		                         GYStateTags::State_Combat_InCombat,
 		                         EGameplayTagEventType::NewOrRemoved)
 	                         .AddUObject(this, &ULockOnComponent::OnInCombatTagChanged);
 
-	if (InASC->HasMatchingGameplayTag(GYStateTags::State_Combat_InCombat))
+	if (ASC->HasMatchingGameplayTag(GYStateTags::State_Combat_InCombat))
 	{
 		StartLockOn();
 	}
 }
+
 
 AActor* ULockOnComponent::GetCurrentTarget() const
 {
