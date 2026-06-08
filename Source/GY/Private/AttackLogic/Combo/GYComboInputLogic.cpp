@@ -109,7 +109,7 @@ void UGYComboInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 
 	if (EventTag == GYGameplayTags::Event_Input_Attack)
 	{
-		if (!bReady || !bWindowOpen || CachedAbility->GetAvatarActorFromActorInfo()->HasAuthority()) return;
+		if (!bReady || !bWindowOpen || !CachedAbility->IsLocallyControlled()) return;
 		AdvanceCombo();
 	}
 	else if (EventTag == GYGameplayTags::Event_Combo_Advance)
@@ -131,7 +131,7 @@ void UGYComboInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 	else if (EventTag == GYGameplayTags::Event_Anim_ComboWindowClose)
 	{
 		bWindowOpen = false;
-		if (!CachedAbility->GetAvatarActorFromActorInfo()->HasAuthority() && ComboIndex == ComboIndexAtWindowOpen)
+		if (CachedAbility->IsLocallyControlled() && ComboIndex == ComboIndexAtWindowOpen)
 		{
 			CachedAbility->RequestEnd(false);
 		}
