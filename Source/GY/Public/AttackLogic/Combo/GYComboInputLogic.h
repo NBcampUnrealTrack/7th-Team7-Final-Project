@@ -31,7 +31,6 @@ private:
 	int32 MaxComboCount = 0;
 	int32 ComboIndexAtWindowOpen = 0;
 	bool bWindowOpen = false;
-	bool bPendingCombo = false;
 	bool bReady = false;
 	const TArray<TObjectPtr<UAnimMontage>>* CachedMontages = nullptr;
 	const TArray<FGYCollisionShapeData>* CachedCollisions = nullptr;

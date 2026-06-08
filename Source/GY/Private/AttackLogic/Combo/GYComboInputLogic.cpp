@@ -4,7 +4,6 @@
 #include "AttackLogic/Shared/GYCollisionFragment.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
-#include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/AbilityTags.h"
 
@@ -13,7 +12,6 @@ void UGYComboInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	CachedAbility = Ability;
 	ComboIndex = 0;
 	bWindowOpen = false;
-	bPendingCombo = false;
 	CachedMontages = nullptr;
 	CachedCollisions = nullptr;
 
@@ -92,7 +90,6 @@ void UGYComboInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bW
 	CachedMontages = nullptr;
 	CachedCollisions = nullptr;
 	bWindowOpen = false;
-	bPendingCombo = false;
 	bReady = false;
 }
 
@@ -101,7 +98,8 @@ TArray<FGameplayTag> UGYComboInputLogic::GetSubscribedEventTags() const
 	return {
 		GYGameplayTags::Event_Input_Attack,
 		GYGameplayTags::Event_Anim_ComboWindowOpen,
-		GYGameplayTags::Event_Anim_ComboWindowClose
+		GYGameplayTags::Event_Anim_ComboWindowClose,
+		GYGameplayTags::Event_Combo_Advance
 	};
 }
 
@@ -111,32 +109,29 @@ void UGYComboInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 
 	if (EventTag == GYGameplayTags::Event_Input_Attack)
 	{
-		if (!bReady) return;
-
-		if (bWindowOpen)
+		if (!bReady || !bWindowOpen || CachedAbility->GetAvatarActorFromActorInfo()->HasAuthority()) return;
+		AdvanceCombo();
+	}
+	else if (EventTag == GYGameplayTags::Event_Combo_Advance)
+	{
+		if (!CachedAbility->GetAvatarActorFromActorInfo()->HasAuthority()) return;
+		const int32 TargetStep = FMath::FloorToInt(Payload.EventMagnitude);
+		if (TargetStep > ComboIndex && TargetStep < MaxComboCount)
 		{
-			AdvanceCombo();
-		}
-		else
-		{
-			bPendingCombo = true;
+			ComboIndex = TargetStep;
+			bWindowOpen = false;
+			PlayCurrentMontage();
 		}
 	}
 	else if (EventTag == GYGameplayTags::Event_Anim_ComboWindowOpen)
 	{
 		bWindowOpen = true;
 		ComboIndexAtWindowOpen = ComboIndex;
-		if (bPendingCombo)
-		{
-			bPendingCombo = false;
-			AdvanceCombo();
-		}
 	}
 	else if (EventTag == GYGameplayTags::Event_Anim_ComboWindowClose)
 	{
 		bWindowOpen = false;
-		bPendingCombo = false;
-		if (ComboIndex == ComboIndexAtWindowOpen)
+		if (!CachedAbility->GetAvatarActorFromActorInfo()->HasAuthority() && ComboIndex == ComboIndexAtWindowOpen)
 		{
 			CachedAbility->RequestEnd(false);
 		}
@@ -215,8 +210,13 @@ void UGYComboInputLogic::AdvanceCombo()
 	{
 		ComboIndex++;
 		bWindowOpen = false;
-		bPendingCombo = false;
 		PlayCurrentMontage();
+
+		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(
+			CachedAbility->GetAbilitySystemComponentFromActorInfo()))
+		{
+			GYASC->Server_AdvanceCombo(ComboIndex);
+		}
 	}
 }
 

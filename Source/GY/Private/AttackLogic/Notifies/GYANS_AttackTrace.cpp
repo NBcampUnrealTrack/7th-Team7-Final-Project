@@ -35,13 +35,22 @@ static const FGYCollisionShapeData* GetCurrentCollisionData(AActor* Owner)
 	return nullptr;
 }
 
+static FVector ComputeTraceOrigin(USkeletalMeshComponent* MeshComp, const FGYCollisionShapeData* CollisionData)
+{
+	const FName BoneName = CollisionData ? CollisionData->BoneName : TEXT("hand_r");
+	const FVector BoneLoc = MeshComp->GetSocketLocation(BoneName);
+	const FQuat BoneQuat = MeshComp->GetSocketQuaternion(BoneName);
+	return BoneLoc + BoneQuat.RotateVector(CollisionData ? CollisionData->Offset : FVector::ZeroVector);
+}
+
 void UGYANS_AttackTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 	float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
-	if (MeshComp)
-	{
-		HitActorsPerMesh.FindOrAdd(MeshComp).Actors.Empty();
-	}
+	if (!MeshComp) return;
+	const FGYCollisionShapeData* CollisionData = GetCurrentCollisionData(MeshComp->GetOwner());
+	FGYHitActorList& Entry = HitActorsPerMesh.FindOrAdd(MeshComp);
+	Entry.Actors.Empty();
+	Entry.LastTraceOrigin = ComputeTraceOrigin(MeshComp, CollisionData);
 }
 
 void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -55,15 +64,16 @@ void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeque
 
 	const FGYCollisionShapeData* CollisionData = GetCurrentCollisionData(Owner);
 
-	const FName BoneName = CollisionData ? CollisionData->BoneName : TEXT("hand_r");
-	const FVector BoneLocation = MeshComp->GetSocketLocation(BoneName);
-	const FQuat BoneQuat = MeshComp->GetSocketQuaternion(BoneName);
-
-	const FVector TraceOrigin = BoneLocation + BoneQuat.RotateVector(
-		CollisionData ? CollisionData->Offset : FVector::ZeroVector);
+	const FQuat BoneQuat = MeshComp->GetSocketQuaternion(
+		CollisionData ? CollisionData->BoneName : FName(TEXT("hand_r")));
+	const FVector TraceOrigin = ComputeTraceOrigin(MeshComp, CollisionData);
 	const FQuat TraceRot = CollisionData
 		? (BoneQuat * CollisionData->Rotation.Quaternion())
 		: FQuat::Identity;
+
+	FGYHitActorList& Entry = HitActorsPerMesh.FindOrAdd(MeshComp);
+	const FVector SweepStart = Entry.LastTraceOrigin;
+	Entry.LastTraceOrigin = TraceOrigin;
 
 	FCollisionShape Shape;
 	if (CollisionData)
@@ -92,15 +102,15 @@ void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeque
 	TArray<FHitResult> Hits;
 	World->SweepMultiByChannel(
 		Hits,
+		SweepStart,
 		TraceOrigin,
-		TraceOrigin + FVector(0.f, 0.f, 0.1f),
 		TraceRot,
 		ECC_Pawn,
 		Shape,
 		QueryParams
 	);
 
-	TArray<TObjectPtr<AActor>>& HitActors = HitActorsPerMesh.FindOrAdd(MeshComp).Actors;
+	TArray<TObjectPtr<AActor>>& HitActors = Entry.Actors;
 	bool bHitAny = false;
 
 	for (const FHitResult& Hit : Hits)

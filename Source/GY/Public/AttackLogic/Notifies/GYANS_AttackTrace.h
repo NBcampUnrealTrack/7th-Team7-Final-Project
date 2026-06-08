@@ -11,6 +11,8 @@ struct FGYHitActorList
 
 	UPROPERTY()
 	TArray<TObjectPtr<AActor>> Actors;
+
+	FVector LastTraceOrigin = FVector::ZeroVector;
 };
 
 UCLASS()
