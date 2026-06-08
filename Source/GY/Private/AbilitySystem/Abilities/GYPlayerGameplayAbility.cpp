@@ -69,9 +69,6 @@ void UGYPlayerGameplayAbility::ActivateAbility(
 		return;
 	}
 
-	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo()))
-		GYASC->ApplyCombatTag();
-
 	ScanAndApplyGEModifiers();
 
 	for (UAbilityLogicBase* Logic : LogicList)

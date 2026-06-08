@@ -303,29 +303,22 @@ void UGYAbilitySystemComponent::ApplyCombatTag()
 
 	if (RegenAppliedTag.IsValid() && !HasMatchingGameplayTag(RegenAppliedTag))
 		AddLooseGameplayTag(RegenAppliedTag);
+}
 
-	TWeakObjectPtr<UGYAbilitySystemComponent> WeakThis(this);
-	GetWorld()->GetTimerManager().SetTimer(CombatTagTimer,
-		[WeakThis]()
-		{
-			if (UGYAbilitySystemComponent* Self = WeakThis.Get())
-			{
-				for (const FGameplayTag& CombatTag : Self->CombatAppliedTags)
-				{
-					if (Self->HasMatchingGameplayTag(CombatTag))
-						Self->RemoveLooseGameplayTag(CombatTag);
-				}
-				if (Self->RegenAppliedTag.IsValid() && Self->HasMatchingGameplayTag(Self->RegenAppliedTag))
-					Self->RemoveLooseGameplayTag(Self->RegenAppliedTag);
-			}
-		},
-		FMath::Max(CombatAppliedDuration, KINDA_SMALL_NUMBER), false);
+void UGYAbilitySystemComponent::RemoveCombatTag()
+{
+	for (const FGameplayTag& CombatTag : CombatAppliedTags)
+	{
+		if (HasMatchingGameplayTag(CombatTag))
+			RemoveLooseGameplayTag(CombatTag);
+	}
+
+	if (RegenAppliedTag.IsValid() && HasMatchingGameplayTag(RegenAppliedTag))
+		RemoveLooseGameplayTag(RegenAppliedTag);
 }
 
 void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute& Attribute)
 {
-	ApplyCombatTag();
-
 	if (Attribute == UGYPlayerAttribute::GetCurrentStaminaAttribute())
 		RescheduleStaminaRegen();
 	else if (Attribute == UGYAdditionalAttribute::GetCurrentStaggerAttribute())
