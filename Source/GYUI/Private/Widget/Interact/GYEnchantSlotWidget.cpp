@@ -3,7 +3,6 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Core/GYItemDragDropOperation.h"
 #include "Core/GameplayTags/EventTags.h"
-#include "Inventory/GA_TransferItem.h"
 #include "Items/ItemContainer.h"
 #include "Player/GYPlayerState.h"
 #include "Widget/Interact/GYEnchantWidget.h"

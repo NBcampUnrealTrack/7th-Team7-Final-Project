@@ -65,6 +65,10 @@ struct GY_API FInventoryList : public FFastArraySerializer
 		return FFastArraySerializer::FastArrayDeltaSerialize<FInventoryEntry, FInventoryList>(
 			Entries, DeltaParms, *this);
 	}
+
+	// 델타 적용이 끝난 뒤 클라에서 1회 호출. PreReplicatedRemove 시점엔 배열이 아직 stale하므로
+	// 최종 일관 상태로 UI를 갱신하려면 여기서 알린다.
+	void PostReplicatedReceive(const FFastArraySerializer::FPostReplicatedReceiveParameters& Parameters);
 };
 
 template <>

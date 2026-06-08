@@ -38,6 +38,7 @@ public:
 	virtual void NotifyContainerChanged(const FGuid& InstanceId, EInventoryEventType EventType) override;
 	virtual bool InsertEntry(const FInventoryEntry& Entry) override;
 	virtual bool TakeEntry(const FGuid& InstanceId, FInventoryEntry& OutEntry) override;
+	virtual FGameplayTag GetContainerTag() const override;
 
 	TArray<FInventoryEntry> GetAllEntriesByCategory(FGameplayTag CategoryTag) const;
 

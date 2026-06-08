@@ -13,6 +13,7 @@
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Interaction/AltarStorageComponent.h"
 #include "Inventory/InventoryComponent.h"
+#include "Inventory/ItemTransactionComponent.h"
 #include "Loot/LootViewerComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerInitData.h"
@@ -44,6 +45,7 @@ AGYPlayerState::AGYPlayerState()
 	CurrencyComponent = CreateDefaultSubobject<UCurrencyComponent>(TEXT("CurrencyComponent"));
 	SkillTreeComponent = CreateDefaultSubobject<USkillTreeComponent>(TEXT("SkillTreeComponent"));
 	LootViewerComponent = CreateDefaultSubobject<ULootViewerComponent>(TEXT("LootViewerComponent"));
+	ItemTransactionComponent = CreateDefaultSubobject<UItemTransactionComponent>(TEXT("ItemTransactionComponent"));
 }
 
 UAbilitySystemComponent* AGYPlayerState::GetAbilitySystemComponent() const

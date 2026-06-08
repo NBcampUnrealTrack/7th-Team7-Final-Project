@@ -1,6 +1,7 @@
 #include "Interaction/AltarStorageComponent.h"
 
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/ItemTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Disassemble/DisassembleService.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
@@ -235,4 +236,9 @@ void UAltarStorageComponent::Server_RequestDisassemble_Implementation()
 int32 UAltarStorageComponent::GetCapacity() const
 {
 	return Capacity;
+}
+
+FGameplayTag UAltarStorageComponent::GetContainerTag() const
+{
+	return GYGameplayTags::Container_Altar;
 }
