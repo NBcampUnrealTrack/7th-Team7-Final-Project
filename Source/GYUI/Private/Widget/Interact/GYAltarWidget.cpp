@@ -8,7 +8,8 @@
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Interaction/AltarStorageComponent.h"
-#include "Inventory/GA_TransferItem.h"
+#include "Inventory/ItemTransactionComponent.h"
+#include "Items/ItemContainer.h"
 #include "Items/ItemDefinition.h"
 #include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
@@ -71,20 +72,19 @@ bool UGYAltarWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 	if (!DragOperation || !DragOperation->FromContainer) return false;
 	if (!Container) return false;
 
-	DragOperation->OriginSlotWidget->SetRenderOpacity(1.0f);
-
-	UItemTransferPayload* Payload = NewObject<UItemTransferPayload>(this);
-	Payload->FromContainer = DragOperation->FromContainer;
-	Payload->FromInstanceId = DragOperation->FromInstanceId;
-	Payload->ToContainer = Container;
+	if (DragOperation->OriginSlotWidget.IsValid())
+	{
+		DragOperation->OriginSlotWidget->SetRenderOpacity(1.0f);
+	}
 
 	if (AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState()))
 	{
-		if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
+		if (UItemTransactionComponent* Transaction = PS->GetItemTransactionComponent())
 		{
-			FGameplayEventData EventData;
-			EventData.OptionalObject = Payload;
-			ASC->Server_SendGameplayEvent(GYGameplayTags::Event_ItemContainer_Transfer, EventData);
+			Transaction->Server_TransferItem(
+				DragOperation->FromContainer->GetContainerTag(),
+				DragOperation->FromInstanceId,
+				Container->GetContainerTag());
 		}
 	}
 

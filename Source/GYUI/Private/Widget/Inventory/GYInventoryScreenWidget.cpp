@@ -7,8 +7,9 @@
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
-#include "Inventory/GA_TransferItem.h"
 #include "Inventory/InventoryComponent.h"
+#include "Inventory/ItemTransactionComponent.h"
+#include "Items/ItemContainer.h"
 #include "Inventory/InventoryEntry.h"
 #include "Items/ItemDefinition.h"
 #include "Player/GYPlayerState.h"
@@ -73,18 +74,14 @@ bool UGYInventoryScreenWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 		return true;
 	}
 
-	UItemTransferPayload* Payload = NewObject<UItemTransferPayload>(this);
-	Payload->FromContainer = DragOperation->FromContainer;
-	Payload->FromInstanceId = DragOperation->FromInstanceId;
-	Payload->ToContainer = Container;
-
 	if (AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState()))
 	{
-		if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
+		if (UItemTransactionComponent* Transaction = PS->GetItemTransactionComponent())
 		{
-			FGameplayEventData EventData;
-			EventData.OptionalObject = Payload;
-			ASC->Server_SendGameplayEvent(GYGameplayTags::Event_ItemContainer_Transfer, EventData);
+			Transaction->Server_TransferItem(
+				DragOperation->FromContainer->GetContainerTag(),
+				DragOperation->FromInstanceId,
+				Container->GetContainerTag());
 		}
 	}
 
