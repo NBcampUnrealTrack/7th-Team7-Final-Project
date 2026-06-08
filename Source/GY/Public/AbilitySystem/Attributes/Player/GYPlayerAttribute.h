@@ -7,6 +7,7 @@
 #include "GYPlayerAttribute.generated.h"
 
 class UGYStatScalingData;
+class UGYWeaponAttribute;
 
 UCLASS()
 class GY_API UGYPlayerAttribute : public UAttributeSet
@@ -91,4 +92,7 @@ public:
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+
+private:
+	void RecalculateWeaponMultiplier(UAbilitySystemComponent* ASC, UGYWeaponAttribute* Weapon);
 };
