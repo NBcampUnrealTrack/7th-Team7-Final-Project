@@ -12,7 +12,7 @@ namespace GYStateTags
 	UE_DEFINE_GAMEPLAY_TAG(State_Hit_Stun, "State.Hit.Stun");
 
 	UE_DEFINE_GAMEPLAY_TAG(State_Exhausted, "State.Exhausted");
-	UE_DEFINE_GAMEPLAY_TAG(State_Falling, "State.Falling");
+
 
 	UE_DEFINE_GAMEPLAY_TAG(State_Combat_InCombat, "State.Combat.InCombat");
 	UE_DEFINE_GAMEPLAY_TAG(State_Combat_SuperArmor, "State.Combat.SuperArmor");
