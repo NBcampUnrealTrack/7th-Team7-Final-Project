@@ -54,7 +54,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UGYPeriodicAttributeEffect> StunRegenEffect;
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
-	TSubclassOf<UGYPeriodicAttributeEffect> CombatStateEffect;
+	TSubclassOf<UGameplayEffect> CombatStateEffect;
 
 
 protected:

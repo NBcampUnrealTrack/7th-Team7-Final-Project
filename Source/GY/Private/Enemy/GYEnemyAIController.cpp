@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "BrainComponent.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Core/GameplayTags/FactionTags.h"
 #include "Enemy/GYEnemyCharacterBase.h"
@@ -11,6 +12,7 @@
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Touch.h"
+#include "Player/GYPlayerState.h"
 
 AGYEnemyAIController::AGYEnemyAIController()
 {
@@ -254,6 +256,24 @@ void AGYEnemyAIController::AddPerceivedActor(AActor* Actor, const FAIStimulus& S
 		}
 	}
 
+	UGYAbilitySystemComponent* ASC = nullptr;
+
+	if (APawn* TargetPawn = Cast<APawn>(Actor))
+	{
+		if (AGYPlayerState* GYPlayerState = Cast<AGYPlayerState>(TargetPawn->GetPlayerState()))
+		{
+			ASC = GYPlayerState->GetGYAbilitySystemComponent();
+		}
+	}
+	if (!ASC)
+	{
+		ASC = Actor->FindComponentByClass<UGYAbilitySystemComponent>();
+	}
+	if (ASC)
+	{
+		ASC->ApplyCombatTag();
+	}
+
 	FPerceivedActorInfo& NewInfo = PerceivedActors.AddDefaulted_GetRef();
 	NewInfo.Actor = Actor;
 	NewInfo.LastStimulus = Stimulus;
@@ -262,10 +282,32 @@ void AGYEnemyAIController::AddPerceivedActor(AActor* Actor, const FAIStimulus& S
 
 void AGYEnemyAIController::RemovePerceivedActor(AActor* Actor)
 {
-	PerceivedActors.RemoveAll([Actor](const FPerceivedActorInfo& Info)
+
+	for (auto It = PerceivedActors.CreateIterator(); It; ++It)
 	{
-		return Info.Actor == Actor;
-	});
+		if (It->Actor == Actor)
+		{
+			UGYAbilitySystemComponent* ASC = nullptr;
+
+			if (APawn* TargetPawn = Cast<APawn>(Actor))
+			{
+				if (AGYPlayerState* GYPlayerState = Cast<AGYPlayerState>(TargetPawn->GetPlayerState()))
+				{
+					ASC = GYPlayerState->GetGYAbilitySystemComponent();
+				}
+			}
+			if (!ASC)
+			{
+				ASC = Actor->FindComponentByClass<UGYAbilitySystemComponent>();
+			}
+			if (ASC)
+			{
+				ASC->RemoveCombatTag();
+			}
+
+			It.RemoveCurrent();
+		}
+	}
 }
 
 void AGYEnemyAIController::RemoveOutOfRangeActors(const FVector& EnemyLocation, float LoseSightDist)
@@ -273,15 +315,37 @@ void AGYEnemyAIController::RemoveOutOfRangeActors(const FVector& EnemyLocation, 
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float LoseSightDelay = 5.f;
 
-	PerceivedActors.RemoveAll([&](const FPerceivedActorInfo& Info)
+	for (auto It = PerceivedActors.CreateIterator(); It; ++It)
 	{
-		if (!Info.Actor.IsValid()) return true;
+		bool bShouldRemove = !It->Actor.IsValid();
 
-		bool bOutOfRange = FVector::Dist(EnemyLocation, Info.Actor->GetActorLocation()) > LoseSightDist;
-		bool bExpired = (CurrentTime - Info.LastPerceivedTime) > LoseSightDelay;
+		bool bOutOfRange = FVector::Dist(EnemyLocation, It->Actor->GetActorLocation()) > LoseSightDist;
+		bool bExpired = (CurrentTime - It->LastPerceivedTime) > LoseSightDelay;
 
-		return bOutOfRange && bExpired;
-	});
+		bShouldRemove |= bOutOfRange && bExpired;
+		if (bShouldRemove)
+		{
+			UGYAbilitySystemComponent* ASC = nullptr;
+
+			if (APawn* TargetPawn = Cast<APawn>(It->Actor))
+			{
+				if (AGYPlayerState* GYPlayerState = Cast<AGYPlayerState>(TargetPawn->GetPlayerState()))
+				{
+					ASC = GYPlayerState->GetGYAbilitySystemComponent();
+				}
+			}
+			if (!ASC)
+			{
+				ASC = It->Actor->FindComponentByClass<UGYAbilitySystemComponent>();
+			}
+			if (ASC)
+			{
+				ASC->RemoveCombatTag();
+			}
+			It.RemoveCurrent();
+		}
+	}
+
 }
 
 void AGYEnemyAIController::BeginPlay()

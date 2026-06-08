@@ -45,6 +45,12 @@ void ULockOnComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 			        EGameplayTagEventType::NewOrRemoved)
 		        .Remove(InCombatTagHandle);
 	}
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(RetryTargetHandle);
+	}
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -85,9 +91,19 @@ AActor* ULockOnComponent::GetCurrentTarget() const
 
 void ULockOnComponent::OnInCombatTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	if (NewCount > 0)
 	{
 		StartLockOn();
+		if (!GetCurrentTarget())
+		{
+			if (UWorld* World = GetWorld())
+			{
+				World->GetTimerManager().SetTimer(
+					RetryTargetHandle, this, &ULockOnComponent::RetryFindTarget,
+					TargetRetryInterval, true);
+			}
+		}
 	}
 	else
 	{
@@ -116,6 +132,11 @@ void ULockOnComponent::StartLockOn()
 void ULockOnComponent::StopLockOn()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(RetryTargetHandle);
+	}
 
 	CurrentTarget = nullptr;
 	if (BoundASC.IsValid())
@@ -251,4 +272,28 @@ void ULockOnComponent::BroadcastLockOnMessage()
 	LockOnMessage.Target = CurrentTarget;
 	MS.BroadcastMessage(GYGameplayTags::Message_LockOn_Changed, LockOnMessage);
 
+}
+
+
+void ULockOnComponent::RetryFindTarget()
+{
+	if (!BoundASC.IsValid()
+		|| !BoundASC->HasMatchingGameplayTag(GYStateTags::State_Combat_InCombat))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(RetryTargetHandle);
+		return;
+	}
+
+	AActor* Target = FindBestTarget();
+	if (!Target) return;
+
+	GetWorld()->GetTimerManager().ClearTimer(RetryTargetHandle);
+
+	if (BoundASC.IsValid())
+	{
+		BoundASC->AddLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
+			EGameplayTagReplicationState::CountToOwner);
+	}
+	CurrentTarget = Target;
+	OnRep_CurrentTarget();
 }

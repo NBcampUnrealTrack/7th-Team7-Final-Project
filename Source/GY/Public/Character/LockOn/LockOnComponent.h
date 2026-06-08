@@ -46,8 +46,15 @@ protected:
 	UPROPERTY(ReplicatedUsing=OnRep_CurrentTarget)
 	TWeakObjectPtr<AActor> CurrentTarget;
 
+	UPROPERTY(EditDefaultsOnly, Category="LockOn")
+	float TargetRetryInterval = 0.2f;
+
+	FTimerHandle RetryTargetHandle;
+
+
 private:
 	void BroadcastLockOnMessage();
+	void RetryFindTarget();
 
 
 	FDelegateHandle InCombatTagHandle;

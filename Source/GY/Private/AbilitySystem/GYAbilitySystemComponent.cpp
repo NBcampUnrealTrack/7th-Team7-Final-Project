@@ -290,7 +290,11 @@ void UGYAbilitySystemComponent::ApplyCombatTag()
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	if (!CombatStateEffect) return;
 
-	ApplyEffect(CombatStateEffect, CombatStateEffectHandle);
+	FGameplayEffectContextHandle Context = MakeEffectContext();
+	FGameplayEffectSpecHandle Spec = MakeOutgoingSpec(CombatStateEffect, 1.f, Context);
+	if (!Spec.IsValid()) return;
+
+	CombatStateEffectHandle = ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
 
 }
 
