@@ -11,7 +11,6 @@
 
 
 struct FInputActionValue;
-class UGYAbilitySystemComponent;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class GY_API UGYHeroComponent : public UPawnComponent, public IGameFrameworkInitStateInterface
@@ -56,7 +55,6 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
-	bool IsInputBlocked() const;
 	void OnAttackPressed();
 	void OnAttackReleased();
 	void OnChargeThreshold();
@@ -71,7 +69,6 @@ private:
 	void ServerSendGameplayEvent(FGameplayTag EventTag);
 
 	FAbilitySetGrantedHandles GrantedHandles;
-	TWeakObjectPtr<UGYAbilitySystemComponent> CachedASC;
 	FTimerHandle ChargeThresholdTimer;
 	bool bAttackHeld = false;
 	bool bParryHeld = false;

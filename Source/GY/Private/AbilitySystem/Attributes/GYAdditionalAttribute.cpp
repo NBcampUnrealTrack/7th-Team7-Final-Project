@@ -5,8 +5,8 @@
 
 UGYAdditionalAttribute::UGYAdditionalAttribute()
 {
-	InitCurrentStagger(0.f);
-	InitMaxStagger(0.f);
+	InitCurrentStagger(80.f);
+	InitMaxStagger(80.f);
 	InitCurrentStun(150.f);
 	InitMaxStun(150.f);
 }

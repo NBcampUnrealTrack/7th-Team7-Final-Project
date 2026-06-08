@@ -1,12 +1,7 @@
 #include "GameModes/GYGameMode.h"
 
-#include "AbilitySystemComponent.h"
 #include "SkeletalMeshTypes.h"
 #include "Character/GYCharacter.h"
-#include "Character/GYPawnData.h"
-#include "Character/GYPawnExtensionComponent.h"
-#include "Character/GYPlayerActionConfig.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
 #include "GameStates/GYGameState.h"
 #include "Misc/TrackedActivity.h"
 #include "Player/GYPlayerController.h"
@@ -77,62 +72,4 @@ bool AGYGameMode::AdvanceHour(float Hour)
 	if (false == IsValid(GYGameState)) return false;
 	float Amount = Hour*60.f*60.f;
 	return AdvanceSecond(Amount, GYGameState);
-}
-
-void AGYGameMode::RequestRespawn(APlayerController* PC, float Delay)
-{
-	if (!PC) return;
-	FTimerHandle Handle;
-	FTimerDelegate Del;
-	Del.BindUObject(this, &AGYGameMode::PerformRespawn, PC);
-	GetWorldTimerManager().SetTimer(Handle, Del, Delay, false);
-}
-
-void AGYGameMode::PerformRespawn(APlayerController* PC)
-{
-	if (!PC) return;
-
-	AGYPlayerState* PS = PC->GetPlayerState<AGYPlayerState>();
-	if (!PS) return;
-
-	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
-	if (!ASC) return;
-
-	const UGYPlayerActionConfig* Config = nullptr;
-	if (APawn* OldPawn = PC->GetPawn())
-	{
-		if (UGYPawnExtensionComponent* ExtComp = OldPawn->FindComponentByClass<UGYPawnExtensionComponent>())
-		{
-			if (ExtComp->PawnData) Config = ExtComp->PawnData->ActionConfig;
-		}
-	}
-
-	if (Config)
-	{
-		for (const FGameplayTag& Tag : Config->DeathTags)
-		{
-			ASC->RemoveLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
-		}
-	}
-
-	FTransform SpawnTransform = FTransform::Identity;
-	if (PS->HasCheckpoint())
-	{
-		SpawnTransform.SetLocation(PS->GetCheckpointLocation());
-	}
-	else
-	{
-		SpawnTransform.SetLocation(PS->GetInitialSpawnLocation());
-	}
-
-	if (APawn* OldPawn = PC->GetPawn())
-	{
-		PC->UnPossess();
-		OldPawn->Destroy();
-	}
-
-	RestartPlayerAtTransform(PC, SpawnTransform);
-
-	const float MaxHP = ASC->GetNumericAttribute(UGYPlayerBaseAttribute::GetMaxHealthAttribute());
-	ASC->SetNumericAttributeBase(UGYPlayerBaseAttribute::GetCurrentHealthAttribute(), MaxHP);
 }
