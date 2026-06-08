@@ -17,12 +17,25 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Curves/CurveFloat.h"
 #include "GameFramework/GameStateBase.h"
+#include "Enemy/GYEnemyCharacterBase.h"
+#include "Enemy/Config/EnemyDataAsset.h"
+#include "AbilitySystem/Attributes/Enemy/GYEnemyBaseAttribute.h"
+#include "AbilitySystem/Attributes/Enemy/GYEnemyAdditionalAttribute.h"
 
 void UGYUIManagerSubsystem::Deinitialize()
 {
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(RosterSyncHandle);
+		if (UGameInstance* GI = World->GetGameInstance())
+		{
+			if (UGameplayMessageSubsystem* MSG = GI->GetSubsystem<UGameplayMessageSubsystem>())
+			{
+				MSG->UnregisterListener(RegionEnterListenerHandle);
+				MSG->UnregisterListener(RegionExitListenerHandle);
+			}
+		}
+		UnbindBoss();
 	}
 	RemovePrimaryGameLayout();
 	Super::Deinitialize();
@@ -75,6 +88,15 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 				this, &UGYUIManagerSubsystem::SyncPlayerRoster), RosterSyncInterval, true);
 		}
 		SyncPlayerRoster();
+	}
+
+	if (UWorld* World = GetWorld())
+	{
+		UGameplayMessageSubsystem& MSG = UGameplayMessageSubsystem::Get(World);
+		RegionEnterListenerHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_Region_Entered, this, &UGYUIManagerSubsystem::HandleRegionEntered);
+		RegionExitListenerHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_Region_Exited,  this, &UGYUIManagerSubsystem::HandleRegionExited);
 	}
 }
 
@@ -440,4 +462,126 @@ UCommonActivatableWidget* UGYUIManagerSubsystem::ToggleWidgetInLayer(
 		});
 	}
 	return Widget;
+}
+
+void UGYUIManagerSubsystem::HandleRegionEntered(FGameplayTag, const FGYRegionEnteredMessage& Msg)
+{
+    APawn* LocalPawn = GetLocalPlayer() ? GetLocalPlayer()->GetPlayerController(GetWorld())->GetPawn() : nullptr;
+    if (!LocalPawn || Msg.Pawn.Get() != LocalPawn) return;
+
+	ActiveRegionId = Msg.RegionId;
+
+    AGYEnemyCharacterBase* Boss = Cast<AGYEnemyCharacterBase>(Msg.BossActor.LoadSynchronous());
+    if (!Boss || Boss->IsDead()) return;
+    if (CurrentBoss.Get() == Boss) return;
+
+    BindBoss(Boss);
+}
+
+void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegionExitedMessage& Msg)
+{
+    APawn* LocalPawn = GetLocalPlayer() ? GetLocalPlayer()->GetPlayerController(GetWorld())->GetPawn() : nullptr;
+    if (Msg.Pawn.Get() != LocalPawn) return;
+
+	if (Msg.RegionId == ActiveRegionId)
+	{
+		ActiveRegionId = FGameplayTag(); // 지역 정보 초기화
+		UnbindBoss();
+	}
+}
+
+void UGYUIManagerSubsystem::BindBoss(AGYEnemyCharacterBase* Boss)
+{
+	if (CurrentBoss.Get() == Boss) return;
+	UnbindBoss();
+
+	UAbilitySystemComponent* ASC = Boss ? Boss->GetAbilitySystemComponent() : nullptr;
+	if (!ASC) return;
+
+	CurrentBoss = Boss;
+	BossASC = ASC;
+
+	BossHealthHandle = ASC->GetGameplayAttributeValueChangeDelegate(
+		UGYEnemyBaseAttribute::GetCurrentHealthAttribute()).AddWeakLambda(this,
+			[this](const FOnAttributeChangeData&) { BroadcastBossHealth(); });
+	BossMaxHealthHandle = ASC->GetGameplayAttributeValueChangeDelegate(
+		UGYEnemyBaseAttribute::GetMaxHealthAttribute()).AddWeakLambda(this,
+			[this](const FOnAttributeChangeData&) { BroadcastBossHealth(); });
+	BossPoiseHandle = ASC->GetGameplayAttributeValueChangeDelegate(
+		UGYEnemyAdditionalAttribute::GetCurrentStunAttribute()).AddWeakLambda(this,
+			[this](const FOnAttributeChangeData&) { BroadcastBossPoise(); });
+	BossMaxPoiseHandle = ASC->GetGameplayAttributeValueChangeDelegate(
+		UGYEnemyAdditionalAttribute::GetMaxStunAttribute()).AddWeakLambda(this,
+			[this](const FOnAttributeChangeData&) { BroadcastBossPoise(); });
+
+	Boss->OnEnemyDead.AddUniqueDynamic(this, &UGYUIManagerSubsystem::HandleBossDead);
+
+	// 상태, 이름 송신
+	FGYBossStateMessage State;
+	State.bVisible = true;
+	if (UEnemyDataAsset* Data = Boss->GetEnemyData())
+		State.BossName = Data->EnemyName;
+	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
+
+	// 현재 Rep 값 즉시 송신
+	BroadcastBossHealth();
+	BroadcastBossPoise();
+}
+
+void UGYUIManagerSubsystem::UnbindBoss()
+{
+	if (UAbilitySystemComponent* ASC = BossASC.Get())
+	{
+		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
+		.Remove(BossHealthHandle);
+		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyBaseAttribute::GetMaxHealthAttribute())
+		.Remove(BossMaxHealthHandle);
+		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyAdditionalAttribute::GetCurrentStunAttribute())
+		.Remove(BossPoiseHandle);
+		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyAdditionalAttribute::GetMaxStunAttribute())
+		.Remove(BossMaxPoiseHandle);
+	}
+	if (AGYEnemyCharacterBase* Boss = CurrentBoss.Get())
+	{
+		Boss->OnEnemyDead.RemoveDynamic(this, &UGYUIManagerSubsystem::HandleBossDead);
+	}
+
+	const bool bWasBound = CurrentBoss.IsValid();
+	CurrentBoss = nullptr;
+	BossASC = nullptr;
+
+	if (bWasBound && GetWorld())
+	{
+		FGYBossStateMessage State;
+		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
+	}
+}
+
+void UGYUIManagerSubsystem::HandleBossDead(AGYEnemyCharacterBase*)
+{
+	UnbindBoss();
+}
+
+void UGYUIManagerSubsystem::BroadcastBossHealth()
+{
+	UAbilitySystemComponent* ASC = BossASC.Get();
+	if (!ASC || !GetWorld()) return;
+
+	FGYAttributeValueMessage Msg;
+	Msg.CurrentValue = ASC->GetNumericAttribute(UGYEnemyBaseAttribute::GetCurrentHealthAttribute());
+	Msg.MaxValue = ASC->GetNumericAttribute(UGYEnemyBaseAttribute::GetMaxHealthAttribute());
+
+	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_Stat_Health, Msg);
+}
+
+void UGYUIManagerSubsystem::BroadcastBossPoise()
+{
+	UAbilitySystemComponent* ASC = BossASC.Get();
+	if (!ASC || !GetWorld()) return;
+
+	FGYAttributeValueMessage Msg;
+	Msg.CurrentValue = ASC->GetNumericAttribute(UGYEnemyAdditionalAttribute::GetCurrentStunAttribute());
+	Msg.MaxValue = ASC->GetNumericAttribute(UGYEnemyAdditionalAttribute::GetMaxStunAttribute());
+
+	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_Stat_Poise, Msg);
 }
