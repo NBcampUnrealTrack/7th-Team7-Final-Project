@@ -36,6 +36,12 @@ void UGYRegionInfoWidget::HandleWorldTimeChanged(FGameplayTag Channel, const FGY
 
 void UGYRegionInfoWidget::HandleRegionEntered(FGameplayTag, const FGYRegionEnteredMessage& Message)
 {
+	APawn* LocalPawn = GetOwningPlayerPawn();
+	if (!LocalPawn || Message.Pawn.Get() != LocalPawn)
+	{
+		return;
+	}
+
 	if (Text_RegionName)
 	{
 		Text_RegionName->SetText(Message.RegionDisplayName);

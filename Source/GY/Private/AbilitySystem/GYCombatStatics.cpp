@@ -174,22 +174,14 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 		FGameplayEventData Payload;
 		Payload.EventTag = GYGameplayTags::Event_Block_Hit;
 		Payload.EventMagnitude = DamageAfterDefense * ReductionMultiplier;
-		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
-			GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_Block_Hit, Payload);
-		else
-			TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Block_Hit, &Payload);
+
+		TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Block_Hit, &Payload);
 	}
 
 	ApplyInstantGEToAttribute(TargetASC, UGYBaseAttribute::GetCurrentHealthAttribute(), -Effective);
 
-	if (Effective > 0.f)
-	{
-		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
-		{
-			UGYAdditionalResourceStatics::IncreaseStagger(GYASC, Effective);
-			UGYAdditionalResourceStatics::IncreaseStun(GYASC, Effective);
-		}
-	}
+	UGYAdditionalResourceStatics::IncreaseStagger(TargetASC, Effective);
+	UGYAdditionalResourceStatics::IncreaseStun(TargetASC, Effective);
 }
 
 void UGYCombatStatics::ApplyHeal(UAbilitySystemComponent* ASC, float HealAmount)
