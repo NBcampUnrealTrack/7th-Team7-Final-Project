@@ -7,10 +7,12 @@
 #include "UI/GYUIMessages.h"
 #include "Loot/RegionLootData.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
+#include "Net/UnrealNetwork.h"
 
 AGYRegionVolume::AGYRegionVolume()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 
 	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
 	RootComponent = TriggerBox;
@@ -106,4 +108,10 @@ void AGYRegionVolume::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* 
 	ExitMsg.Pawn = Pawn;
 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Region_Exited, ExitMsg);
+}
+
+void AGYRegionVolume::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGYRegionVolume, TargetBossActor); // 서버에서 복제한 액터 클라이언트로 동기화
 }

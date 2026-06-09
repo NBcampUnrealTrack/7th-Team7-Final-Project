@@ -19,6 +19,9 @@ public:
 	const TSoftObjectPtr<URegionLootData>& GetRegionData() const { return RegionData; }
 	bool IsLocationInside(const FVector& WorldLocation) const;
 
+	// 네트워크 동기화 변수 등록용
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -28,8 +31,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Region")
 	TSoftObjectPtr<URegionLootData> RegionData;
 
-	UPROPERTY(EditAnywhere, Category = "Region")
-	TSoftObjectPtr<AActor> TargetBossActor;
+	UPROPERTY(EditAnywhere, Replicated, Category = "Region")
+	TObjectPtr<AActor> TargetBossActor;
 
 private:
 	UFUNCTION()
