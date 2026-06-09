@@ -20,7 +20,8 @@ class UItemTransactionComponent;
 class ULootViewerComponent;
 class UGYPlayerVitalAttributeSet;
 class UGYPlayerDamageAttributeSet;
-class UGYPlayerAttribute;
+class UGYCoreStatAttributeSet;
+class UGYProgressionAttributeSet;
 
 UCLASS()
 class GY_API AGYPlayerState : public APlayerState, public IAbilitySystemInterface
@@ -111,7 +112,10 @@ protected:
 	TObjectPtr<UGYPlayerDamageAttributeSet> DamageAttribute;
 
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
-	TObjectPtr<UGYPlayerAttribute> PlayerAttribute;
+	TObjectPtr<UGYCoreStatAttributeSet> CoreStatAttribute;
+
+	UPROPERTY(VisibleAnywhere, Category = "GAS")
+	TObjectPtr<UGYProgressionAttributeSet> ProgressionAttribute;
 
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UGYWeaponAttribute> WeaponAttribute;

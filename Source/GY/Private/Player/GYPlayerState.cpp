@@ -2,9 +2,10 @@
 
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerDamageAttributeSet.h"
+#include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
+#include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Character/GYPawnData.h"
 #include "Core/GameplayTags/FactionTags.h"
@@ -28,12 +29,14 @@ AGYPlayerState::AGYPlayerState()
 
 	VitalAttribute = CreateDefaultSubobject<UGYPlayerVitalAttributeSet>(TEXT("VitalAttribute"));
 	DamageAttribute = CreateDefaultSubobject<UGYPlayerDamageAttributeSet>(TEXT("DamageAttribute"));
-	PlayerAttribute = CreateDefaultSubobject<UGYPlayerAttribute>(TEXT("PlayerAttribute"));
+	CoreStatAttribute = CreateDefaultSubobject<UGYCoreStatAttributeSet>(TEXT("CoreStatAttribute"));
+	ProgressionAttribute = CreateDefaultSubobject<UGYProgressionAttributeSet>(TEXT("ProgressionAttribute"));
 	WeaponAttribute = CreateDefaultSubobject<UGYWeaponAttribute>(TEXT("WeaponAttribute"));
 
 	AbilitySystemComponent->AddAttributeSetSubobject(VitalAttribute.Get());
 	AbilitySystemComponent->AddAttributeSetSubobject(DamageAttribute.Get());
-	AbilitySystemComponent->AddAttributeSetSubobject(PlayerAttribute.Get());
+	AbilitySystemComponent->AddAttributeSetSubobject(CoreStatAttribute.Get());
+	AbilitySystemComponent->AddAttributeSetSubobject(ProgressionAttribute.Get());
 	AbilitySystemComponent->AddAttributeSetSubobject(WeaponAttribute.Get());
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
@@ -95,10 +98,10 @@ void AGYPlayerState::InitGAS(APawn* Avatar)
 		AbilitySystemComponent->SetNumericAttributeBase(UGYDamageAttributeSet::GetAttackAttribute(),        InitData->Attack);
 		AbilitySystemComponent->SetNumericAttributeBase(UGYDamageAttributeSet::GetDefenseAttribute(),       InitData->Defense);
 
-		AbilitySystemComponent->SetNumericAttributeBase(UGYPlayerAttribute::GetMaxStaminaAttribute(),     InitData->MaxStamina);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYPlayerAttribute::GetCurrentStaminaAttribute(), InitData->MaxStamina);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYPlayerAttribute::GetStrengthAttribute(),       InitData->Strength);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYPlayerAttribute::GetDexterityAttribute(),      InitData->Dexterity);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetMaxStaminaAttribute(),     InitData->MaxStamina);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute(), InitData->MaxStamina);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYCoreStatAttributeSet::GetStrengthAttribute(),       InitData->Strength);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYCoreStatAttributeSet::GetDexterityAttribute(),      InitData->Dexterity);
 
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxStaggerAttribute(),     InitData->MaxStagger);
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentStaggerAttribute(), InitData->MaxStagger);

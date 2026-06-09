@@ -10,7 +10,7 @@
 #include "AbilitySystem/GYAdditionalResourceStatics.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "AbilitySystem/GYPlayerResourceStatics.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
 #include "Core/GameplayTags/StateTags.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
@@ -162,12 +162,12 @@ FText SGYDebugMenu::GetCombatStateButtonText() const
 
 FReply SGYDebugMenu::GY_DebugAddStrength()
 {
-	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::ApplyAttributeDelta(ASC, UGYPlayerAttribute::GetStrengthAttribute(), 1.f);
+	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::ApplyAttributeDelta(ASC, UGYCoreStatAttributeSet::GetStrengthAttribute(), 1.f);
 	return FReply::Handled();
 }
 
 FReply SGYDebugMenu::GY_DebugAddDexterity()
 {
-	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::ApplyAttributeDelta(ASC, UGYPlayerAttribute::GetDexterityAttribute(), 1.f);
+	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYPlayerResourceStatics::ApplyAttributeDelta(ASC, UGYCoreStatAttributeSet::GetDexterityAttribute(), 1.f);
 	return FReply::Handled();
 }

@@ -2,7 +2,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Components/ProgressBar.h"
 #include "CommonTextBlock.h"
 #include "GameFramework/PlayerState.h"
@@ -66,7 +66,7 @@ void UGYPlayerListEntryWidget::BindToASC(UAbilitySystemComponent* InASC)
 		[this](const FOnAttributeChangeData&) { RefreshAll(); });
 	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetMaxHealthAttribute(),
 		[this](const FOnAttributeChangeData&) { RefreshAll(); });
-	ListenForAttributeChange(InASC, UGYPlayerAttribute::GetLevelAttribute(),
+	ListenForAttributeChange(InASC, UGYProgressionAttributeSet::GetLevelAttribute(),
 		[this](const FOnAttributeChangeData&) { RefreshAll(); });
 
 	RefreshAll();
@@ -91,7 +91,7 @@ void UGYPlayerListEntryWidget::RefreshAll()
 	{
 		Cur = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetCurrentHealthAttribute());
 		Max = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetMaxHealthAttribute());
-		Level = FMath::RoundToInt(ASC->GetNumericAttribute(UGYPlayerAttribute::GetLevelAttribute()));
+		Level = FMath::RoundToInt(ASC->GetNumericAttribute(UGYProgressionAttributeSet::GetLevelAttribute()));
 	}
 
 	if (LevelText) LevelText->SetText(FText::AsNumber(Level));

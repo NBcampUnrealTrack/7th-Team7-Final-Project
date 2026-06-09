@@ -1,7 +1,7 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "AbilitySystem/GYPeriodicAttributeEffect.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Core/GameplayTags/EventTags.h"
@@ -306,7 +306,7 @@ void UGYAbilitySystemComponent::RemoveCombatTag()
 
 void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute& Attribute)
 {
-	if (Attribute == UGYPlayerAttribute::GetCurrentStaminaAttribute())
+	if (Attribute == UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute())
 		RescheduleStaminaRegen();
 	else if (Attribute == UGYVitalAttributeSet::GetCurrentStaggerAttribute())
 		RescheduleStaggerRegen();

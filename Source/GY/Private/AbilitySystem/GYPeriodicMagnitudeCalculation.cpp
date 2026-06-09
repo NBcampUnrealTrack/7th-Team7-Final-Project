@@ -1,7 +1,7 @@
 #include "AbilitySystem/GYPeriodicMagnitudeCalculation.h"
 
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 
 float UGYPercentOfMaxMagnitude::CalculateFromCaptured(const FGameplayEffectAttributeCaptureDefinition& CaptureDef, const FGameplayEffectSpec& Spec) const
 {
@@ -18,12 +18,12 @@ float UGYPercentOfMaxMagnitude::CalculateFromCaptured(const FGameplayEffectAttri
 
 UGYStaminaRegenMagnitude::UGYStaminaRegenMagnitude()
 {
-	MaxStaminaDef.AttributeToCapture = UGYPlayerAttribute::GetMaxStaminaAttribute();
+	MaxStaminaDef.AttributeToCapture = UGYPlayerVitalAttributeSet::GetMaxStaminaAttribute();
 	MaxStaminaDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
 	MaxStaminaDef.bSnapshot = false;
 	RelevantAttributesToCapture.Add(MaxStaminaDef);
 
-	CurrentStaminaDef.AttributeToCapture = UGYPlayerAttribute::GetCurrentStaminaAttribute();
+	CurrentStaminaDef.AttributeToCapture = UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute();
 	CurrentStaminaDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
 	CurrentStaminaDef.bSnapshot = false;
 	RelevantAttributesToCapture.Add(CurrentStaminaDef);

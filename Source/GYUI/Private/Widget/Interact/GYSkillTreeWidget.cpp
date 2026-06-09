@@ -4,7 +4,7 @@
 #include "Widget/Interact/GYSkillTreeWidget.h"
 
 #include "AbilitySystem/GYAbilitySystemComponent.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -43,7 +43,7 @@ void UGYSkillTreeWidget::NativeConstruct()
 	if (UAbilitySystemComponent* ASC = GetOwnerASC())
 	{
 		SkillPointHandle = ASC->GetGameplayAttributeValueChangeDelegate(
-			UGYPlayerAttribute::GetSkillPointAttribute())
+			UGYProgressionAttributeSet::GetSkillPointAttribute())
 			.AddLambda([this](const FOnAttributeChangeData&)
 			{
 				Refresh();
@@ -69,7 +69,7 @@ void UGYSkillTreeWidget::NativeDestruct()
 	if (UAbilitySystemComponent* ASC = GetOwnerASC())
 	{
 		ASC->GetGameplayAttributeValueChangeDelegate(
-			   UGYPlayerAttribute::GetSkillPointAttribute())
+			   UGYProgressionAttributeSet::GetSkillPointAttribute())
 		   .Remove(SkillPointHandle);
 	}
 	Super::NativeDestruct();
@@ -215,7 +215,7 @@ ESkillNodeState UGYSkillTreeWidget::ComputeNodeState(USkillNodeDataAsset* Node) 
 
 	if (UAbilitySystemComponent* ASC = GetOwnerASC())
 	{
-		const float SkillPoint = ASC->GetNumericAttribute(UGYPlayerAttribute::GetSkillPointAttribute());
+		const float SkillPoint = ASC->GetNumericAttribute(UGYProgressionAttributeSet::GetSkillPointAttribute());
 		if (SkillPoint >= 1.f)
 		{
 			return ESkillNodeState::Unlockable;

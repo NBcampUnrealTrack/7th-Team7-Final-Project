@@ -4,7 +4,7 @@
 #include "Interaction/Abilities/Interactable/GA_SkillUnlock.h"
 
 #include "AbilitySystemComponent.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Player/GYPlayerState.h"
@@ -85,7 +85,7 @@ void UGA_SkillUnlock::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		return;
 	}
 
-	const float CurrentSP = ASC->GetNumericAttribute(UGYPlayerAttribute::GetSkillPointAttribute());
+	const float CurrentSP = ASC->GetNumericAttribute(UGYProgressionAttributeSet::GetSkillPointAttribute());
 	if (CurrentSP < 1.f)
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);

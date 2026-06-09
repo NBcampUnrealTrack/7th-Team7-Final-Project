@@ -4,7 +4,7 @@
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 
 #include "AbilitySystem/GYAbilitySystemComponent.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Animation/AnimMontage.h"
@@ -48,7 +48,7 @@ bool UGYPlayerGameplayAbility::CanActivateAbility(
 					return false;
 			}
 
-			if (const UGYPlayerAttribute* Attrs = ASC->GetSet<UGYPlayerAttribute>())
+			if (const UGYPlayerVitalAttributeSet* Attrs = ASC->GetSet<UGYPlayerVitalAttributeSet>())
 			{
 				if (Attrs->GetCurrentStamina() <= 0.f)
 					return false;

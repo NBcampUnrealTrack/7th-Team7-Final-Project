@@ -1,6 +1,6 @@
 #include "AbilitySystem/GYPlayerResourceStatics.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
 
@@ -21,17 +21,17 @@ static void PlayerResource_ApplyInstantGE(UAbilitySystemComponent* ASC, const FG
 
 void UGYPlayerResourceStatics::ApplyStaminaUse(UAbilitySystemComponent* ASC, float Amount)
 {
-	PlayerResource_ApplyInstantGE(ASC, UGYPlayerAttribute::GetCurrentStaminaAttribute(), -Amount);
+	PlayerResource_ApplyInstantGE(ASC, UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute(), -Amount);
 }
 
 void UGYPlayerResourceStatics::UseStamina(UGYAbilitySystemComponent* ASC, float Amount)
 {
 	if (!ASC) return;
-	const UGYPlayerAttribute* PlayerAttr = ASC->GetSet<UGYPlayerAttribute>();
-	if (!PlayerAttr || PlayerAttr->GetCurrentStamina() <= 0.f) return;
+	const UGYPlayerVitalAttributeSet* PlayerVital = ASC->GetSet<UGYPlayerVitalAttributeSet>();
+	if (!PlayerVital || PlayerVital->GetCurrentStamina() <= 0.f) return;
 
 	ApplyStaminaUse(ASC, Amount);
-	ASC->NotifyAttributeChanged(UGYPlayerAttribute::GetCurrentStaminaAttribute());
+	ASC->NotifyAttributeChanged(UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute());
 }
 
 void UGYPlayerResourceStatics::ApplyAttributeDelta(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Magnitude)

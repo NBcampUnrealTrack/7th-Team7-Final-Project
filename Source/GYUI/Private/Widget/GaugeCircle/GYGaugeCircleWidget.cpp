@@ -5,7 +5,7 @@
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
@@ -79,8 +79,8 @@ void UGYGaugeCircleWidget::BindToASC(UAbilitySystemComponent* InASC)
 	BindAttr(UGYVitalAttributeSet::GetCurrentStunAttribute(), &UGYGaugeCircleWidget::OnPoiseChanged);
 	BindAttr(UGYVitalAttributeSet::GetMaxStunAttribute(), &UGYGaugeCircleWidget::OnPoiseChanged);
 
-	BindAttr(UGYPlayerAttribute::GetCurrentStaminaAttribute(), &UGYGaugeCircleWidget::OnStaminaChanged);
-	BindAttr(UGYPlayerAttribute::GetMaxStaminaAttribute(), &UGYGaugeCircleWidget::OnStaminaChanged);
+	BindAttr(UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute(), &UGYGaugeCircleWidget::OnStaminaChanged);
+	BindAttr(UGYPlayerVitalAttributeSet::GetMaxStaminaAttribute(), &UGYGaugeCircleWidget::OnStaminaChanged);
 
 	RefreshHP(false);
 	RefreshPoise(false);
@@ -203,8 +203,8 @@ void UGYGaugeCircleWidget::RefreshStamina(bool bFromGameplay)
 	UAbilitySystemComponent* ASC = BoundASC.Get();
 	if (!ASC) return;
 
-	const FGameplayAttribute CurAttr = UGYPlayerAttribute::GetCurrentStaminaAttribute();
-	const FGameplayAttribute MaxAttr = UGYPlayerAttribute::GetMaxStaminaAttribute();
+	const FGameplayAttribute CurAttr = UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute();
+	const FGameplayAttribute MaxAttr = UGYPlayerVitalAttributeSet::GetMaxStaminaAttribute();
 	if (!ASC->HasAttributeSetForAttribute(CurAttr)) return;
 
 	const float Cur = ASC->GetNumericAttribute(CurAttr);

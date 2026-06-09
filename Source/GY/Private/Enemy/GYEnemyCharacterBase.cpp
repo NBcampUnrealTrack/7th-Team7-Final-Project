@@ -24,7 +24,7 @@
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Player/GYPlayerState.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Character/GYCharacter.h"
 #include "Character/LockOn/LockOnComponent.h"
 
@@ -452,7 +452,7 @@ void AGYEnemyCharacterBase::GrantRewards()
 		XPEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
 
 		FGameplayModifierInfo Modifier;
-		Modifier.Attribute = UGYPlayerAttribute::GetXPAttribute();
+		Modifier.Attribute = UGYProgressionAttributeSet::GetXPAttribute();
 		Modifier.ModifierOp = EGameplayModOp::Additive;
 		Modifier.ModifierMagnitude = FScalableFloat(XPPerPlayer);
 		XPEffect->Modifiers.Add(Modifier);
