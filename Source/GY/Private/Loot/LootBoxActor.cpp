@@ -1,8 +1,12 @@
 #include "Loot/LootBoxActor.h"
 
+#include "AbilitySystemGlobals.h"
 #include "Components/StaticMeshComponent.h"
+#include "Core/GameplayTags/CameraTags.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/InteractionTags.h"
+#include "Core/GameplayTags/SoundTags.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Inventory/InventoryComponent.h"
@@ -92,8 +96,19 @@ void ALootBoxActor::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 	// 비어 있어도 점유 + UI 표시 (빈 그리드 확인)
 	if (bOpened)
 	{
+		const bool bIsNewViewer = (CurrentViewer != Interactor->GetPlayerState());
 		CurrentViewer = Interactor->GetPlayerState();
 		ShowToInteractor(Interactor);
+		if (bIsNewViewer)
+		{
+			// 열림
+			PlayOpenEffect(Interactor);
+		}
+		else
+		{
+			// 닫힘
+			PlayCloseEffect(Interactor);
+		}
 	}
 }
 
@@ -154,6 +169,7 @@ void ALootBoxActor::OpenBox(APawn* Opener)
 	OpenMsg.bOpened = true;
 	UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Loot_BoxOpened, OpenMsg);
 
+	PlayFirstEffect(Opener);
 	// 갱신 알림은 클라의 OnRep에서 처리 (데디 서버는 UI 없음)
 }
 
@@ -173,7 +189,7 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 
 	FGuid OutId;
 	const int32 Added = Inv->TryAddItem(Drop.Definition, Drop.Count, OutId);
-	if (Added <= 0) return;  // 가방이 꽉 차 못 넣음 — 상자에 그대로 유지
+	if (Added <= 0) return; // 가방이 꽉 차 못 넣음 — 상자에 그대로 유지
 
 	Inv->MutateEntry(OutId, [&Drop](FInventoryEntry& Entry)
 	{
@@ -230,4 +246,55 @@ void ALootBoxActor::BroadcastStateChanged()
 	Msg.bOpened = bOpened;
 	Msg.RemainingDrops = PendingDrops.Num();
 	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Loot_BoxStateChanged, Msg);
+}
+
+void ALootBoxActor::PlayOpenEffect(APawn* Opener)
+{
+	if (!IsValid(Opener)) return;
+
+	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Opener);
+	if (!ASC) return;
+
+	ASC->AddLooseGameplayTag(GYGameplayTags::Camera_Mode_ZoomIn, 1, EGameplayTagReplicationState::CountToOwner);
+
+	if (AGYPlayerState* PS = Opener->GetPlayerState<AGYPlayerState>())
+	{
+		if (ULootViewerComponent* Viewer = PS->GetLootViewerComponent())
+		{
+			Viewer->Client_PlayLootBoxSound(GYGameplayTags::Sound_Interaction_LootBox_Open);
+		}
+	}
+}
+
+void ALootBoxActor::PlayCloseEffect(APawn* Opener)
+{
+	if (!IsValid(Opener)) return;
+
+	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Opener);
+	if (!ASC) return;
+
+	const int32 Count = ASC->GetGameplayTagCount(GYGameplayTags::Camera_Mode_ZoomIn);
+	if (Count > 0)
+	{
+		ASC->RemoveLooseGameplayTag(GYGameplayTags::Camera_Mode_ZoomIn, Count, EGameplayTagReplicationState::CountToOwner);
+	}
+
+	if (AGYPlayerState* PS = Opener->GetPlayerState<AGYPlayerState>())
+	{
+		if (ULootViewerComponent* LootViewer = PS->GetLootViewerComponent())
+		{
+			LootViewer->Client_PlayLootBoxSound(GYGameplayTags::Sound_Interaction_LootBox_Close);
+		}
+	}
+}
+
+void ALootBoxActor::PlayFirstEffect(APawn* Opener)
+{
+	if (AGYPlayerState* PS = Opener->GetPlayerState<AGYPlayerState>())
+	{
+		if (ULootViewerComponent* LootViewer = PS->GetLootViewerComponent())
+		{
+			LootViewer->Client_PlayLootBoxSound(GYGameplayTags::Sound_Interaction_LootBox_First);
+		}
+	}
 }

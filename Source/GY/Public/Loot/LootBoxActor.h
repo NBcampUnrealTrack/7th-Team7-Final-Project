@@ -73,4 +73,8 @@ private:
 
 	// 갱신 GMS 브로드캐스트 (데디 서버 제외)
 	void BroadcastStateChanged();
+
+	void PlayOpenEffect(APawn* Opener);
+	void PlayCloseEffect(APawn* Opener);
+	void PlayFirstEffect(APawn* Opener);
 };
