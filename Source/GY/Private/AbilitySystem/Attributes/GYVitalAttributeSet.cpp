@@ -10,8 +10,8 @@ UGYVitalAttributeSet::UGYVitalAttributeSet()
 {
 	InitCurrentStagger(0.f);
 	InitMaxStagger(0.f);
-	InitCurrentStun(150.f);
-	InitMaxStun(150.f);
+	InitCurrentStun(0.f);
+	InitMaxStun(0.f);
 }
 
 void UGYVitalAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -103,31 +103,8 @@ void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 		return;
 	}
 
-	UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(GetOwningAbilitySystemComponent());
-	if (!GYASC) return;
-
-	for (const FGYAttributeThresholdEvent& Entry : GYASC->AttributeThresholdEvents)
+	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(GetOwningAbilitySystemComponent()))
 	{
-		if (Entry.Attribute != Data.EvaluatedData.Attribute || !Entry.EventTag.IsValid()) continue;
-
-		bool bFire = false;
-		if (Entry.Threshold == EGYAttributeThreshold::AtMax)
-		{
-			if (Entry.MaxAttribute.IsValid())
-			{
-				const float MaxValue = GYASC->GetNumericAttributeBase(Entry.MaxAttribute);
-				bFire = MaxValue > 0.f && CurrentValue >= MaxValue;
-			}
-		}
-		else
-		{
-			bFire = CurrentValue <= 0.f;
-		}
-
-		if (bFire)
-		{
-			FGameplayEventData Payload;
-			GYASC->Multicast_SendGameplayEvent(Entry.EventTag, Payload);
-		}
+		GYASC->HandleVitalAccumulation(Data.EvaluatedData.Attribute, CurrentValue);
 	}
 }

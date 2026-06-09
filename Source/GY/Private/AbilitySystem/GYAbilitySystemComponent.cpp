@@ -314,6 +314,43 @@ void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute&
 		RescheduleStunRegen();
 }
 
+void UGYAbilitySystemComponent::HandleVitalAccumulation(const FGameplayAttribute& ChangedAttribute, float CurrentValue)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	for (const FGYDisableThreshold& Threshold : DisableThresholds)
+	{
+		if (Threshold.CurrentAttribute != ChangedAttribute) continue;
+
+		// 이미 발동 상태면 재발동하지 않는다 (latch).
+		if (Threshold.StateTag.IsValid() && HasMatchingGameplayTag(Threshold.StateTag)) continue;
+
+		const float MaxValue = Threshold.MaxAttribute.IsValid() ? GetNumericAttributeBase(Threshold.MaxAttribute) : 0.f;
+		if (MaxValue <= 0.f || CurrentValue < MaxValue) continue;
+
+		// 통 리셋
+		SetNumericAttributeBase(Threshold.CurrentAttribute, 0.f);
+
+		// 진행 중 공격 등 취소
+		if (!Threshold.CancelAbilityTags.IsEmpty())
+		{
+			FGameplayTagContainer CancelTags = Threshold.CancelAbilityTags;
+			CancelAbilities(&CancelTags);
+		}
+
+		// 지속형 GE 적용 → StateTag 부여 (Duration이 곧 CC 지속시간)
+		if (IsValid(Threshold.DisableEffect))
+		{
+			FGameplayEffectContextHandle Context = MakeEffectContext();
+			FGameplayEffectSpecHandle Spec = MakeOutgoingSpec(Threshold.DisableEffect, 1.f, Context);
+			if (Spec.IsValid())
+			{
+				ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+			}
+		}
+	}
+}
+
 void UGYAbilitySystemComponent::OnCombatTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
 	ScheduleEffect(StaminaRegenEffect, StaminaRegenGEHandle, StaminaRegenDelayHandle, &UGYAbilitySystemComponent::StartStaminaRegen);

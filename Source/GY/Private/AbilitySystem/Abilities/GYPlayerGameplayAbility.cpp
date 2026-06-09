@@ -19,7 +19,6 @@
 #include "Equipment/EquipmentInstance.h"
 #include "Items/ItemDefinition.h"
 #include "Items/Fragments/ItemFragment_Weapon.h"
-#include "AbilitySystem/Abilities/Logic/GYForceExecuteLogic.h"
 
 UGYPlayerGameplayAbility::UGYPlayerGameplayAbility()
 {
@@ -39,20 +38,17 @@ bool UGYPlayerGameplayAbility::CanActivateAbility(
 
 	if (const UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
 	{
-		if (!GetLogic<UGYForceExecuteLogic>())
+		for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
 		{
-			for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
-			{
-				if (Spec.Handle == Handle) continue;
-				if (Spec.IsActive() && Cast<UGYPlayerGameplayAbility>(Spec.Ability))
-					return false;
-			}
+			if (Spec.Handle == Handle) continue;
+			if (Spec.IsActive() && Cast<UGYPlayerGameplayAbility>(Spec.Ability))
+				return false;
+		}
 
-			if (const UGYPlayerVitalAttributeSet* Attrs = ASC->GetSet<UGYPlayerVitalAttributeSet>())
-			{
-				if (Attrs->GetCurrentStamina() <= 0.f)
-					return false;
-			}
+		if (const UGYPlayerVitalAttributeSet* Attrs = ASC->GetSet<UGYPlayerVitalAttributeSet>())
+		{
+			if (Attrs->GetCurrentStamina() <= 0.f)
+				return false;
 		}
 	}
 
@@ -65,25 +61,6 @@ void UGYPlayerGameplayAbility::ActivateAbility(
 	const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
-	if (GetLogic<UGYForceExecuteLogic>())
-	{
-		if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
-		{
-			TArray<FGameplayAbilitySpecHandle> ToCancel;
-			for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
-			{
-				if (Spec.Handle == Handle || !Spec.IsActive()) continue;
-				if (Cast<UGYPlayerGameplayAbility>(Spec.Ability))
-					ToCancel.Add(Spec.Handle);
-			}
-			for (const FGameplayAbilitySpecHandle& CancelHandle : ToCancel)
-			{
-				if (FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(CancelHandle))
-					if (Spec->Ability) ASC->CancelAbility(Spec->Ability);
-			}
-		}
-	}
-
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))

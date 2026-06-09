@@ -103,10 +103,11 @@ void AGYPlayerState::InitGAS(APawn* Avatar)
 		AbilitySystemComponent->SetNumericAttributeBase(UGYCoreStatAttributeSet::GetStrengthAttribute(),       InitData->Strength);
 		AbilitySystemComponent->SetNumericAttributeBase(UGYCoreStatAttributeSet::GetDexterityAttribute(),      InitData->Dexterity);
 
+		// 경직/무력화는 누적 통: 0에서 시작해 피격으로 차오르고, Max 도달 시 발동.
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxStaggerAttribute(),     InitData->MaxStagger);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentStaggerAttribute(), InitData->MaxStagger);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentStaggerAttribute(), 0.f);
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxStunAttribute(),        InitData->MaxStun);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentStunAttribute(),    InitData->MaxStun);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentStunAttribute(),    0.f);
 	}
 }
 
