@@ -227,9 +227,16 @@ void UAltarStorageComponent::Server_RequestDisassemble_Implementation()
 	UDisassembleService* Disassemble = GI->GetSubsystem<UDisassembleService>();
 	if (!IsValid(Disassemble)) return;
 
-	for (FInventoryEntry Entry : Storage.Entries)
+	TArray<FGuid> InstanceIds;
+	InstanceIds.Reserve(Storage.Entries.Num());
+	for (const FInventoryEntry& Entry : Storage.Entries)
 	{
-		Disassemble->TryDisassemble(this, Currency, Entry.InstanceId);
+		InstanceIds.Add(Entry.InstanceId);
+	}
+
+	for (const FGuid& InstanceId : InstanceIds)
+	{
+		Disassemble->TryDisassemble(this, Currency, InstanceId);
 	}
 }
 
