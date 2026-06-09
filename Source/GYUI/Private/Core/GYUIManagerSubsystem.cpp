@@ -470,11 +470,18 @@ void UGYUIManagerSubsystem::HandleRegionEntered(FGameplayTag, const FGYRegionEnt
 
 	ActiveRegionId = Msg.RegionId;
 
-    AGYEnemyCharacterBase* Boss = Cast<AGYEnemyCharacterBase>(Msg.BossActor.LoadSynchronous());
+    AGYEnemyCharacterBase* Boss = Cast<AGYEnemyCharacterBase>(Msg.BossActor);
     if (!Boss || Boss->IsDead()) return;
     if (CurrentBoss.Get() == Boss) return;
 
-    BindBoss(Boss);
+	if (Boss->IsEnemyReady())
+	{
+		BindBoss(Boss); // 이미 준비가 끝났다면 즉시 UI 바인딩
+	}
+	else
+	{
+		Boss->OnEnemyReady.AddUniqueDynamic(this, &UGYUIManagerSubsystem::OnBossReadyToBind);
+	}
 }
 
 void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegionExitedMessage& Msg)
@@ -583,4 +590,16 @@ void UGYUIManagerSubsystem::BroadcastBossPoise()
 	Msg.MaxValue = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetMaxStunAttribute());
 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_Stat_Poise, Msg);
+}
+
+void UGYUIManagerSubsystem::OnBossReadyToBind(AGYEnemyCharacterBase* Boss)
+{
+	if (!Boss) return;
+	Boss->OnEnemyReady.RemoveDynamic(this, &UGYUIManagerSubsystem::OnBossReadyToBind);
+
+	if (!ActiveRegionId.IsValid())
+	{
+		return;
+	}
+	BindBoss(Boss);
 }

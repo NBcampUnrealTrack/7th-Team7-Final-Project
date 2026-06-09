@@ -138,6 +138,8 @@ private:
 
 	UFUNCTION()
 	void HandleBossDead(AGYEnemyCharacterBase* Boss);
+	UFUNCTION()
+	void OnBossReadyToBind(AGYEnemyCharacterBase* Boss);
 
 	TWeakObjectPtr<AGYEnemyCharacterBase> CurrentBoss;
 	TWeakObjectPtr<UAbilitySystemComponent> BossASC;
