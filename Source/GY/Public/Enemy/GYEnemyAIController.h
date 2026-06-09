@@ -72,6 +72,11 @@ public:
 
 	float GetLoseSightRadius() const;
 	void RemoveOutOfRangeActors(const FVector& EnemyLocation, float LoseSightDist);
+
+	void RemoveAllPerceivedActor();
+
+	void StopPerception();
+	void StartPerception();
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;

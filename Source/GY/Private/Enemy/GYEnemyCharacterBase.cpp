@@ -25,6 +25,8 @@
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Player/GYPlayerState.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "Character/GYCharacter.h"
+#include "Character/LockOn/LockOnComponent.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 {
@@ -48,6 +50,7 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 	AIControllerClass = AGYEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
+	bNetLoadOnClient = false;
 }
 
 UAbilitySystemComponent* AGYEnemyCharacterBase::GetAbilitySystemComponent() const
@@ -418,6 +421,7 @@ void AGYEnemyCharacterBase::HandleDeathAuthority()
 			BB->SetValueAsBool(EnemyBBKeys::IsDead, true);
 		}
 		AIC->StopBehaviorTree();
+		AIC->StopPerception();
 	}
 
 	GrantRewards();
@@ -583,6 +587,13 @@ void AGYEnemyCharacterBase::Deactivate()
 
 	SetActorHiddenInGame(true);
 
+	if (HasAuthority())
+	{
+		if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+		{
+			AIC->StopPerception();
+		}
+	}
 	//TODO 은서: 로드 중일 때 로드 취소 Handler 통해서 하면 되지 않을까??
 	GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorDeactivated(this);
 }
@@ -629,6 +640,7 @@ void AGYEnemyCharacterBase::Activate()
 			{
 				BB->SetValueAsBool(EnemyBBKeys::IsDead, false);
 			}
+			AIC->StartPerception();
 		}
 	}
 }
@@ -830,7 +842,6 @@ void AGYEnemyCharacterBase::CachedWeaponTraceSockets()
 	});
 
 	WeaponTraceSockets = Found;
-
 }
 
 void AGYEnemyCharacterBase::FaceToTarget(AActor* Target)

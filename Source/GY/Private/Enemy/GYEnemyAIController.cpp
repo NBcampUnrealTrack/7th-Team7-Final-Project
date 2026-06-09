@@ -282,7 +282,6 @@ void AGYEnemyAIController::AddPerceivedActor(AActor* Actor, const FAIStimulus& S
 
 void AGYEnemyAIController::RemovePerceivedActor(AActor* Actor)
 {
-
 	for (auto It = PerceivedActors.CreateIterator(); It; ++It)
 	{
 		if (It->Actor == Actor)
@@ -308,6 +307,65 @@ void AGYEnemyAIController::RemovePerceivedActor(AActor* Actor)
 			It.RemoveCurrent();
 		}
 	}
+}
+
+void AGYEnemyAIController::RemoveAllPerceivedActor()
+{
+	for (auto It = PerceivedActors.CreateIterator(); It; ++It)
+	{
+		UGYAbilitySystemComponent* ASC = nullptr;
+		AActor* Actor = It->Actor.Get();
+
+		if (APawn* TargetPawn = Cast<APawn>(Actor))
+		{
+			if (AGYPlayerState* GYPlayerState = Cast<AGYPlayerState>(TargetPawn->GetPlayerState()))
+			{
+				ASC = GYPlayerState->GetGYAbilitySystemComponent();
+			}
+		}
+		if (!ASC && Actor)
+		{
+			ASC = Actor->FindComponentByClass<UGYAbilitySystemComponent>();
+		}
+		if (ASC)
+		{
+			ASC->RemoveCombatTag();
+		}
+		It.RemoveCurrent();
+	}
+}
+
+void AGYEnemyAIController::StopPerception()
+{
+	if (!AIPerceptionComponent) return;
+
+	RemoveAllPerceivedActor();
+
+	AIPerceptionComponent->OnTargetPerceptionUpdated.RemoveDynamic(
+		this, &AGYEnemyAIController::OnTargetPerceptionUpdated);
+	AIPerceptionComponent->OnTargetPerceptionForgotten.RemoveDynamic(
+		this, &AGYEnemyAIController::OnTargetPerceptionForgotten);
+
+	AIPerceptionComponent->Deactivate();
+}
+
+void AGYEnemyAIController::StartPerception()
+{
+	if (!AIPerceptionComponent) return;
+
+	AIPerceptionComponent->Activate();
+
+	AIPerceptionComponent->OnTargetPerceptionUpdated.RemoveDynamic(
+		this, &AGYEnemyAIController::OnTargetPerceptionUpdated);
+	AIPerceptionComponent->OnTargetPerceptionForgotten.RemoveDynamic(
+		this, &AGYEnemyAIController::OnTargetPerceptionForgotten);
+
+	AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(
+		this, &AGYEnemyAIController::OnTargetPerceptionUpdated);
+	AIPerceptionComponent->OnTargetPerceptionForgotten.AddDynamic(
+		this, &AGYEnemyAIController::OnTargetPerceptionForgotten);
+
+	AIPerceptionComponent->RequestStimuliListenerUpdate();
 }
 
 void AGYEnemyAIController::RemoveOutOfRangeActors(const FVector& EnemyLocation, float LoseSightDist)
