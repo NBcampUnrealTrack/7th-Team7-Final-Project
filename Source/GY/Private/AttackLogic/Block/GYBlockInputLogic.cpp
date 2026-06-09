@@ -16,10 +16,6 @@ void UGYBlockInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo();
 	if (ASC) ASC->GetOwnedGameplayTags(OwnedTags);
 
-	FGameplayTagContainer FallbackTags;
-	if (Ability->DefaultWeaponTypeTag.IsValid())
-		FallbackTags.AddTag(Ability->DefaultWeaponTypeTag);
-
 	const UGYBlockFragment* Fragment = Ability->GetFragment<UGYBlockFragment>();
 	const UGYBlockMontageFragment* MontageFragment = Ability->GetFragment<UGYBlockMontageFragment>();
 
@@ -34,8 +30,6 @@ void UGYBlockInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	}
 
 	const FGYBlockData* BlockData = Fragment->GetBestMatchingData(OwnedTags);
-	if (!BlockData && !FallbackTags.IsEmpty())
-		BlockData = Fragment->GetBestMatchingData(FallbackTags);
 
 	if (!BlockData)
 	{
@@ -50,8 +44,6 @@ void UGYBlockInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	if (MontageFragment)
 	{
 		CachedMontageSet = MontageFragment->GetBestMatchingSet(OwnedTags);
-		if (!CachedMontageSet && !FallbackTags.IsEmpty())
-			CachedMontageSet = MontageFragment->GetBestMatchingSet(FallbackTags);
 	}
 
 	CachedBlockAppliedTag = Fragment->BlockAppliedTag;

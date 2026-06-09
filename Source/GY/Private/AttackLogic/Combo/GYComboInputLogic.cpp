@@ -26,19 +26,9 @@ void UGYComboInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		ASC->GetOwnedGameplayTags(OwnedTags);
 	}
 
-	FGameplayTagContainer FallbackTags;
-	if (Ability->DefaultWeaponTypeTag.IsValid())
-	{
-		FallbackTags.AddTag(Ability->DefaultWeaponTypeTag);
-	}
-
 	if (const UGYComboMontageFragment* MF = Ability->GetFragment<UGYComboMontageFragment>())
 	{
 		CachedMontages = MF->GetBestMatchingMontages(OwnedTags);
-		if (!CachedMontages && !FallbackTags.IsEmpty())
-		{
-			CachedMontages = MF->GetBestMatchingMontages(FallbackTags);
-		}
 		if (CachedMontages)
 		{
 			MaxComboCount = FMath::Min(MaxComboCount, CachedMontages->Num());
@@ -48,10 +38,6 @@ void UGYComboInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	if (const UGYCollisionFragment* CF = Ability->GetFragment<UGYCollisionFragment>())
 	{
 		CachedCollisions = CF->GetBestMatchingShapes(OwnedTags);
-		if (!CachedCollisions && !FallbackTags.IsEmpty())
-		{
-			CachedCollisions = CF->GetBestMatchingShapes(FallbackTags);
-		}
 	}
 
 	if (!CachedMontages)
@@ -160,17 +146,7 @@ void UGYComboInputLogic::PlayCurrentMontage()
 			ASC->GetOwnedGameplayTags(OwnedTags);
 		}
 
-		FGameplayTagContainer FallbackTags;
-		if (CachedAbility->DefaultWeaponTypeTag.IsValid())
-		{
-			FallbackTags.AddTag(CachedAbility->DefaultWeaponTypeTag);
-		}
-
 		const TArray<FGYComboStepData>* Steps = Fragment->GetBestMatchingSteps(OwnedTags);
-		if (!Steps && !FallbackTags.IsEmpty())
-		{
-			Steps = Fragment->GetBestMatchingSteps(FallbackTags);
-		}
 
 		float Multiplier = 1.f;
 		if (Steps && Steps->IsValidIndex(ComboIndex))

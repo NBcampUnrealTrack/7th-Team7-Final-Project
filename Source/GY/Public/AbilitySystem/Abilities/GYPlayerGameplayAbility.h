@@ -127,9 +127,6 @@ protected:
 
 #pragma endregion
 public:
-	UPROPERTY(EditDefaultsOnly, Category = "Ability")
-	FGameplayTag DefaultWeaponTypeTag;
-
 	float GetDamageMultiplier() const { return CurrentDamageMultiplier; }
 	void SetDamageMultiplier(float Multiplier) { CurrentDamageMultiplier = Multiplier; }
 

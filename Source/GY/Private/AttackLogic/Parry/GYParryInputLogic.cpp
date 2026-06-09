@@ -25,28 +25,14 @@ void UGYParryInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		ASC->GetOwnedGameplayTags(OwnedTags);
 	}
 
-	FGameplayTagContainer FallbackTags;
-	if (Ability->DefaultWeaponTypeTag.IsValid())
-	{
-		FallbackTags.AddTag(Ability->DefaultWeaponTypeTag);
-	}
-
 	if (const UGYParryMontageFragment* MF = Ability->GetFragment<UGYParryMontageFragment>())
 	{
 		CachedMontageSet = MF->GetBestMatchingSet(OwnedTags);
-		if (!CachedMontageSet && !FallbackTags.IsEmpty())
-		{
-			CachedMontageSet = MF->GetBestMatchingSet(FallbackTags);
-		}
 	}
 
 	if (const UGYParryFragment* PF = Ability->GetFragment<UGYParryFragment>())
 	{
 		CachedParryData = PF->GetBestMatchingData(OwnedTags);
-		if (!CachedParryData && !FallbackTags.IsEmpty())
-		{
-			CachedParryData = PF->GetBestMatchingData(FallbackTags);
-		}
 	}
 
 	if (!CachedMontageSet || !CachedParryData)
