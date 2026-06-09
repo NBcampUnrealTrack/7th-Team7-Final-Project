@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Core/GYUserWidget.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "GYBossHUDWidget.generated.h"
 
@@ -17,6 +18,9 @@ UCLASS(Abstract, Blueprintable)
 class GYUI_API UGYBossHUDWidget : public UGYUserWidget
 {
 	GENERATED_BODY()
+
+public:
+	UGYBossHUDWidget(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	virtual void NativeConstruct() override;
@@ -40,4 +44,21 @@ private:
 	FGameplayMessageListenerHandle StateHandle;
 	FGameplayMessageListenerHandle HealthHandle;
 	FGameplayMessageListenerHandle PoiseHandle;
+
+	FTimerHandle InterpTimerHandle;
+
+	bool bHealthInitialized = false;
+	bool bPoiseInitialized = false;
+
+	float TargetHealthPercent = 1.0f;
+	float CurrentHealthPercent = 1.0f;
+	float TargetPoisePercent = 1.0f;
+	float CurrentPoisePercent = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "UI|Animation")
+	float InterpSpeed = 5.0f;
+	const float InterpTimerRate = 0.016f;
+
+	void StartInterpTimer();
+	void ProcessInterp();
 };

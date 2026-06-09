@@ -4,6 +4,13 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "UI/GYUIMessages.h"
+#include "TimerManager.h"
+
+UGYBossHUDWidget::UGYBossHUDWidget(const FObjectInitializer& ObjectInitializer)
+: Super(ObjectInitializer)
+{
+	bHasScriptImplementedTick = false;
+}
 
 void UGYBossHUDWidget::NativeConstruct()
 {
@@ -40,6 +47,12 @@ void UGYBossHUDWidget::NativeDestruct()
 
 void UGYBossHUDWidget::HandleState(FGameplayTag, const FGYBossStateMessage& Msg)
 {
+	if (Msg.bVisible)
+	{
+		bHealthInitialized = false;
+		bPoiseInitialized = false;
+	}
+
 	if (BossNameText)
 	{
 		BossNameText->SetText(Msg.BossName);
@@ -48,14 +61,96 @@ void UGYBossHUDWidget::HandleState(FGameplayTag, const FGYBossStateMessage& Msg)
 	OnBossStateReceived(Msg.bVisible);
 }
 
-void UGYBossHUDWidget::HandleHealth(FGameplayTag, const FGYAttributeValueMessage& Msg)
+void UGYBossHUDWidget::HandleHealth(FGameplayTag Channel, const FGYAttributeValueMessage& Msg)
 {
-	if (HealthBar)
-		HealthBar->SetPercent(Msg.MaxValue > 0.f ? Msg.CurrentValue / Msg.MaxValue : 0.f);
+    TargetHealthPercent = Msg.MaxValue > 0.f ? (Msg.CurrentValue / Msg.MaxValue) : 0.f;
+	if (!bHealthInitialized)
+	{
+		bHealthInitialized = true;
+		CurrentHealthPercent = TargetHealthPercent;
+		if (HealthBar)
+		{
+			HealthBar->SetPercent(CurrentHealthPercent);
+		}
+		return;
+	}
+    StartInterpTimer();
 }
 
-void UGYBossHUDWidget::HandlePoise(FGameplayTag, const FGYAttributeValueMessage& Msg)
+void UGYBossHUDWidget::HandlePoise(FGameplayTag Channel, const FGYAttributeValueMessage& Msg)
 {
-	if (PoiseBar)
-		PoiseBar->SetPercent(Msg.MaxValue > 0.f ? Msg.CurrentValue / Msg.MaxValue : 0.f);
+    TargetPoisePercent = Msg.MaxValue > 0.f ? (Msg.CurrentValue / Msg.MaxValue) : 0.f;
+
+	if (!bPoiseInitialized)
+	{
+		bPoiseInitialized = true;
+		CurrentPoisePercent = TargetPoisePercent;
+		if (PoiseBar)
+		{
+			PoiseBar->SetPercent(CurrentPoisePercent);
+		}
+		return;
+	}
+
+    StartInterpTimer();
+}
+
+void UGYBossHUDWidget::StartInterpTimer()
+{
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    if (!World->GetTimerManager().IsTimerActive(InterpTimerHandle))
+    {
+        World->GetTimerManager().SetTimer(
+            InterpTimerHandle,
+            this,
+            &UGYBossHUDWidget::ProcessInterp,
+            InterpTimerRate,
+            true
+        );
+    }
+}
+
+void UGYBossHUDWidget::ProcessInterp()
+{
+    bool bHealthDone = true;
+    bool bPoiseDone = true;
+
+    if (HealthBar)
+    {
+        if (!FMath::IsNearlyEqual(CurrentHealthPercent, TargetHealthPercent, 0.001f))
+        {
+            CurrentHealthPercent = FMath::FInterpTo(CurrentHealthPercent, TargetHealthPercent, InterpTimerRate, InterpSpeed);
+            HealthBar->SetPercent(CurrentHealthPercent);
+            bHealthDone = false;
+        }
+        else
+        {
+            CurrentHealthPercent = TargetHealthPercent;
+            HealthBar->SetPercent(CurrentHealthPercent);
+        }
+    }
+
+    if (PoiseBar)
+    {
+        if (!FMath::IsNearlyEqual(CurrentPoisePercent, TargetPoisePercent, 0.001f))
+        {
+            CurrentPoisePercent = FMath::FInterpTo(CurrentPoisePercent, TargetPoisePercent, InterpTimerRate, InterpSpeed);
+            PoiseBar->SetPercent(CurrentPoisePercent);
+            bPoiseDone = false;
+        }
+        else
+        {
+            CurrentPoisePercent = TargetPoisePercent;
+            PoiseBar->SetPercent(CurrentPoisePercent);
+        }
+    }
+    if (bHealthDone && bPoiseDone) // 최적화 - 체력과 체간이 모두 목표치에 도달했다면 타이머 끔
+     {
+        if (UWorld* World = GetWorld())
+        {
+            World->GetTimerManager().ClearTimer(InterpTimerHandle);
+        }
+    }
 }
