@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "GYCharacter.generated.h"
 
+class UMotionWarpingComponent;
 class ULockOnComponent;
 class UGYPawnExtensionComponent;
 class UAbilitySystemComponent;
@@ -27,12 +28,16 @@ public:
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+
 	UFUNCTION(BlueprintPure)
 	UActiveEquipmentComponent* GetActiveEquipmentComponent() const { return ActiveEquipmentComponent; }
 
 	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
 
 	ULockOnComponent* GetLockOnComponent() const { return LockOnComponent; }
+
+
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -59,6 +64,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<ULockOnComponent> LockOnComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "AI")
 	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSource;

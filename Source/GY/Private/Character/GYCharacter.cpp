@@ -1,12 +1,14 @@
 #include "Character/GYCharacter.h"
 
 #include "AbilitySystemComponent.h"
+#include "MotionWarpingComponent.h"
 #include "Logging/GYLogManager.h"
 
 #include "Character/GYPawnExtensionComponent.h"
 #include "Character/LockOn/LockOnComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -23,6 +25,7 @@ AGYCharacter::AGYCharacter()
 	PawnExtComponent = CreateDefaultSubobject<UGYPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 	LockOnComponent = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 	GetCharacterMovement()->MaxWalkSpeed = 300.f;
 
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
@@ -104,7 +107,6 @@ void AGYCharacter::OnRep_PlayerState()
 }
 
 
-
 UAbilitySystemComponent* AGYCharacter::GetAbilitySystemComponent() const
 {
 	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
@@ -112,6 +114,28 @@ UAbilitySystemComponent* AGYCharacter::GetAbilitySystemComponent() const
 		return PS->GetAbilitySystemComponent();
 	}
 	return nullptr;
+}
+
+void AGYCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
+	{
+		UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+
+		if (!ASC) return;
+
+		if (GetCharacterMovement()->IsFalling())
+		{
+
+			ASC->AddLooseGameplayTag(GYStateTags::State_Falling);
+		}
+		else
+		{
+			
+			ASC->RemoveLooseGameplayTag(GYStateTags::State_Falling);
+		}
+	}
 }
 
 void AGYCharacter::Server_SetFacingYaw_Implementation(float Yaw)
@@ -125,7 +149,8 @@ void AGYCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	GY_LOG(Player, KHB, "SetupPlayerInputComponent 호출됨. IC: %s", PlayerInputComponent ? *PlayerInputComponent->GetClass()->GetName() : TEXT("null"));
+	GY_LOG(Player, KHB, "SetupPlayerInputComponent 호출됨. IC: %s",
+	       PlayerInputComponent ? *PlayerInputComponent->GetClass()->GetName() : TEXT("null"));
 	InputComponent = PlayerInputComponent;
 
 	if (PawnExtComponent)
@@ -144,7 +169,7 @@ void AGYCharacter::MakeFootstepNoise()
 		this,
 		800.f,
 		FName("Footstep")
-		);
+	);
 }
 
 void AGYCharacter::MakeSkillNoise(float Loudness, float MaxRange)
@@ -156,7 +181,7 @@ void AGYCharacter::MakeSkillNoise(float Loudness, float MaxRange)
 		this,
 		MaxRange,
 		FName("Skill")
-		);
+	);
 }
 
 void AGYCharacter::PreInitializeComponents()
@@ -169,7 +194,8 @@ void AGYCharacter::PreInitializeComponents()
 void AGYCharacter::BeginPlay()
 {
 	// 2. 확장을 기다리는 다른 플러그인들에게 이 액터가 게임플레이 준비가 되었다고 알립니다.
-	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(this, UGameFrameworkComponentManager::NAME_GameActorReady);
+	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(
+		this, UGameFrameworkComponentManager::NAME_GameActorReady);
 	Super::BeginPlay();
 }
 
@@ -190,5 +216,5 @@ void AGYCharacter::BroadcastCharacterReady()
 	FGYCharacterReadyMessage Msg;
 	Msg.OwnerActor = this;
 
-	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Character_Ready,Msg);
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Character_Ready, Msg);
 }

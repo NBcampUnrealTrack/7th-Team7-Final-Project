@@ -150,6 +150,8 @@ void UGYPlayerGameplayAbility::InputReleased(
 	}
 }
 
+
+
 void UGYPlayerGameplayAbility::ScanAndApplyGEModifiers()
 {
 	//로직 리셋, Fragment build
@@ -356,10 +358,13 @@ float UGYPlayerGameplayAbility::PlayMontageForLogic(UAnimMontage* Montage, float
 
 	UAbilityTask_PlayMontageAndWait* Task = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this, NAME_None, Montage, PlayRate, NAME_None, true);
-	Task->ReadyForActivation();
 
+
+	Task->ReadyForActivation();
 	return Montage->GetPlayLength() / FMath::Max(PlayRate, KINDA_SMALL_NUMBER);
 }
+
+
 
 AGYCharacter* UGYPlayerGameplayAbility::GetGYCharacter() const
 {
