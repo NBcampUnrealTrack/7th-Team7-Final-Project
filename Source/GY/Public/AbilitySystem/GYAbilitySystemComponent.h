@@ -1,12 +1,38 @@
 #pragma once
 
 #include "AbilitySystemComponent.h"
+#include "AttributeSet.h"
 #include "GameplayTagContainer.h"
 #include "GYAbilitySystemComponent.generated.h"
 
 class UGYPeriodicAttributeEffect;
 class UAnimInstance;
 class UAnimMontage;
+
+UENUM(BlueprintType)
+enum class EGYAttributeThreshold : uint8
+{
+	AtMax,
+	AtZero
+};
+
+USTRUCT(BlueprintType)
+struct GY_API FGYAttributeThresholdEvent
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayAttribute Attribute;
+
+	UPROPERTY(EditDefaultsOnly)
+	EGYAttributeThreshold Threshold = EGYAttributeThreshold::AtMax;
+
+	UPROPERTY(EditDefaultsOnly, meta=(EditCondition="Threshold==EGYAttributeThreshold::AtMax", EditConditionHides))
+	FGameplayAttribute MaxAttribute;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag EventTag;
+};
 
 UCLASS()
 class GY_API UGYAbilitySystemComponent : public UAbilitySystemComponent
@@ -55,6 +81,9 @@ public:
 	TSubclassOf<UGYPeriodicAttributeEffect> StunRegenEffect;
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UGameplayEffect> CombatStateEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category="GAS")
+	TArray<FGYAttributeThresholdEvent> AttributeThresholdEvents;
 
 
 protected:

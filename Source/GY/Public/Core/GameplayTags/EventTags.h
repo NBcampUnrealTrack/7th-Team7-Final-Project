@@ -53,4 +53,8 @@ namespace GYGameplayTags
 	//SkillTree
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_SkillTree_Unlock)
 
+	// Disable events
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Hit_Stagger)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Hit_Stun)
+
 }

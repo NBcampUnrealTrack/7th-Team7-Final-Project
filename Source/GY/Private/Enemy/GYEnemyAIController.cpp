@@ -377,28 +377,34 @@ void AGYEnemyAIController::RemoveOutOfRangeActors(const FVector& EnemyLocation, 
 	{
 		bool bShouldRemove = !It->Actor.IsValid();
 
-		bool bOutOfRange = FVector::Dist(EnemyLocation, It->Actor->GetActorLocation()) > LoseSightDist;
-		bool bExpired = (CurrentTime - It->LastPerceivedTime) > LoseSightDelay;
+		if (!bShouldRemove)
+		{
+			bool bOutOfRange = FVector::Dist(EnemyLocation, It->Actor->GetActorLocation()) > LoseSightDist;
+			bool bExpired = (CurrentTime - It->LastPerceivedTime) > LoseSightDelay;
+			bShouldRemove = bOutOfRange && bExpired;
+		}
 
-		bShouldRemove |= bOutOfRange && bExpired;
 		if (bShouldRemove)
 		{
-			UGYAbilitySystemComponent* ASC = nullptr;
+			if (It->Actor.IsValid())
+			{
+				UGYAbilitySystemComponent* ASC = nullptr;
 
-			if (APawn* TargetPawn = Cast<APawn>(It->Actor))
-			{
-				if (AGYPlayerState* GYPlayerState = Cast<AGYPlayerState>(TargetPawn->GetPlayerState()))
+				if (APawn* TargetPawn = Cast<APawn>(It->Actor))
 				{
-					ASC = GYPlayerState->GetGYAbilitySystemComponent();
+					if (AGYPlayerState* GYPlayerState = Cast<AGYPlayerState>(TargetPawn->GetPlayerState()))
+					{
+						ASC = GYPlayerState->GetGYAbilitySystemComponent();
+					}
 				}
-			}
-			if (!ASC)
-			{
-				ASC = It->Actor->FindComponentByClass<UGYAbilitySystemComponent>();
-			}
-			if (ASC)
-			{
-				ASC->RemoveCombatTag();
+				if (!ASC)
+				{
+					ASC = It->Actor->FindComponentByClass<UGYAbilitySystemComponent>();
+				}
+				if (ASC)
+				{
+					ASC->RemoveCombatTag();
+				}
 			}
 			It.RemoveCurrent();
 		}

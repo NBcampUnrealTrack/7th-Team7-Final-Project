@@ -1,4 +1,5 @@
 #include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
@@ -71,15 +72,48 @@ void UGYAdditionalAttribute::PostGameplayEffectExecute(const FGameplayEffectModC
 {
 	Super::PostGameplayEffectExecute(Data);
 
+	float CurrentValue = 0.f;
+
 	if (Data.EvaluatedData.Attribute == GetCurrentStaggerAttribute())
 	{
 		SetCurrentStagger(FMath::Clamp(GetCurrentStagger(), 0.f, GetMaxStagger()));
+		CurrentValue = GetCurrentStagger();
+	}
+	else if (Data.EvaluatedData.Attribute == GetCurrentStunAttribute())
+	{
+		SetCurrentStun(FMath::Clamp(GetCurrentStun(), 0.f, GetMaxStun()));
+		CurrentValue = GetCurrentStun();
+	}
+	else
+	{
 		return;
 	}
 
-	if (Data.EvaluatedData.Attribute == GetCurrentStunAttribute())
+	UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(GetOwningAbilitySystemComponent());
+	if (!GYASC) return;
+
+	for (const FGYAttributeThresholdEvent& Entry : GYASC->AttributeThresholdEvents)
 	{
-		SetCurrentStun(FMath::Clamp(GetCurrentStun(), 0.f, GetMaxStun()));
-		return;
+		if (Entry.Attribute != Data.EvaluatedData.Attribute || !Entry.EventTag.IsValid()) continue;
+
+		bool bFire = false;
+		if (Entry.Threshold == EGYAttributeThreshold::AtMax)
+		{
+			if (Entry.MaxAttribute.IsValid())
+			{
+				const float MaxValue = GYASC->GetNumericAttributeBase(Entry.MaxAttribute);
+				bFire = MaxValue > 0.f && CurrentValue >= MaxValue;
+			}
+		}
+		else
+		{
+			bFire = CurrentValue <= 0.f;
+		}
+
+		if (bFire)
+		{
+			FGameplayEventData Payload;
+			GYASC->Multicast_SendGameplayEvent(Entry.EventTag, Payload);
+		}
 	}
 }
