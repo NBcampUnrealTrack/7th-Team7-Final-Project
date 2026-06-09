@@ -45,8 +45,5 @@ public:
 	// true면 각 탄 데미지를 1/ProjectileCount로 분산
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Projectile|Damage")
 	bool bDistributeDamage = true;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (Categories = "GameplayCue"))
-	FGameplayTag HitCueTag;
 };
 

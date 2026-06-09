@@ -417,8 +417,8 @@ void UGYCameraComponent::PushCameraEffect(const FGYCameraEffectContext& Context)
 	{
 		return;
 	}
-	GY_WARN(Player, CYS, "카메라 이펙트 전달");
-
+	GY_WARN(Player, CYS, "카메라 이펙트 전달: %s",
+	        *StaticEnum<EGYCameraEffectType>()->GetNameStringByValue((int64)Context.Type));
 	NewEffect->Initialize(Context);
 
 	ActiveEffects.Add(NewEffect);

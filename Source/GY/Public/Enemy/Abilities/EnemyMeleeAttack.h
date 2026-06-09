@@ -18,8 +18,7 @@ private:
 	UFUNCTION()
 	void OnWeaponHit(FGameplayEventData Payload);
 public:
-	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (Categories = "GameplayCue"))
-	FGameplayTag HitCueTag;
+
 private:
 	int32 HitCount = 0;
 

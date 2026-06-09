@@ -72,4 +72,10 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Damage")
 	TArray<FHitDamageWeight> HitDamageWeights;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (Categories = "GameplayCue"))
+	FGameplayTag HitCueTag; // 피격 시 카메라 이펙트
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (Categories = "GameplayCue"))
+	FGameplayTag AttackCueTag; // 사운드 비주얼 FX 용
 };
