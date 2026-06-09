@@ -1,5 +1,6 @@
 #include "AbilitySystem/GYCombatStatics.h"
-#include "AbilitySystem/Attributes/GYBaseAttribute.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
+#include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/FactionTags.h"
 #include "Core/GameplayTags/AbilityTags.h"
@@ -46,7 +47,7 @@ void UGYCombatStatics::ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float
 
 	if (SourceASC && IsSameFaction(SourceASC, TargetASC)) return;
 
-	ApplyInstantGEToAttribute(TargetASC, UGYBaseAttribute::GetCurrentHealthAttribute(), -RawDamage);
+	ApplyInstantGEToAttribute(TargetASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(), -RawDamage);
 
 	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
 	{
@@ -164,8 +165,8 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 	float ReductionMultiplier = 0.f;
 	const bool bBlocked = HandleBlockCheck(TargetASC, SourceASC, ReductionMultiplier);
 
-	const UGYBaseAttribute* Base = TargetASC->GetSet<UGYBaseAttribute>();
-	const float Defense = Base ? Base->GetDefense() : 0.f;
+	const UGYDamageAttributeSet* Damage = TargetASC->GetSet<UGYDamageAttributeSet>();
+	const float Defense = Damage ? Damage->GetDefense() : 0.f;
 	const float DamageAfterDefense = FMath::Max(0.f, RawDamage - Defense);
 	const float Effective = DamageAfterDefense * (1.f - ReductionMultiplier);
 
@@ -178,7 +179,7 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 		TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Block_Hit, &Payload);
 	}
 
-	ApplyInstantGEToAttribute(TargetASC, UGYBaseAttribute::GetCurrentHealthAttribute(), -Effective);
+	ApplyInstantGEToAttribute(TargetASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(), -Effective);
 
 	UGYAdditionalResourceStatics::IncreaseStagger(TargetASC, Effective);
 	UGYAdditionalResourceStatics::IncreaseStun(TargetASC, Effective);
@@ -186,21 +187,21 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 
 void UGYCombatStatics::ApplyHeal(UAbilitySystemComponent* ASC, float HealAmount)
 {
-	ApplyInstantGEToAttribute(ASC, UGYBaseAttribute::GetCurrentHealthAttribute(), HealAmount);
+	ApplyInstantGEToAttribute(ASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(), HealAmount);
 }
 
 float UGYCombatStatics::GetCurrentHealth(const UAbilitySystemComponent* ASC)
 {
 	if (!ASC) return 0.f;
-	const UGYBaseAttribute* Base = ASC->GetSet<UGYBaseAttribute>();
-	return Base ? Base->GetCurrentHealth() : 0.f;
+	const UGYVitalAttributeSet* Vital = ASC->GetSet<UGYVitalAttributeSet>();
+	return Vital ? Vital->GetCurrentHealth() : 0.f;
 }
 
 float UGYCombatStatics::GetMaxHealth(const UAbilitySystemComponent* ASC)
 {
 	if (!ASC) return 0.f;
-	const UGYBaseAttribute* Base = ASC->GetSet<UGYBaseAttribute>();
-	return Base ? Base->GetMaxHealth() : 0.f;
+	const UGYVitalAttributeSet* Vital = ASC->GetSet<UGYVitalAttributeSet>();
+	return Vital ? Vital->GetMaxHealth() : 0.f;
 }
 
 bool UGYCombatStatics::IsAlive(const UAbilitySystemComponent* ASC)

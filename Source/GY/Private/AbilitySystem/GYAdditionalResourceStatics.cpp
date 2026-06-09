@@ -1,7 +1,7 @@
 ﻿#include "AbilitySystem/GYAdditionalResourceStatics.h"
 #include "AbilitySystem/GYPlayerResourceStatics.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
-#include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "AbilitySystemComponent.h"
 
 static void AdditionalResource_ApplyInstantGE(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Magnitude)
@@ -21,28 +21,28 @@ static void AdditionalResource_ApplyInstantGE(UAbilitySystemComponent* ASC, cons
 
 void UGYAdditionalResourceStatics::ApplyStaggerUse(UAbilitySystemComponent* ASC, float Amount)
 {
-	AdditionalResource_ApplyInstantGE(ASC, UGYAdditionalAttribute::GetCurrentStaggerAttribute(), Amount);
+	AdditionalResource_ApplyInstantGE(ASC, UGYVitalAttributeSet::GetCurrentStaggerAttribute(), Amount);
 }
 
 void UGYAdditionalResourceStatics::IncreaseStagger(UAbilitySystemComponent* ASC, float Amount)
 {
 	if (!ASC) return;
-	const UGYAdditionalAttribute* AdditionalAttr = ASC->GetSet<UGYAdditionalAttribute>();
-	if (!AdditionalAttr || AdditionalAttr->GetCurrentStagger() >= AdditionalAttr->GetMaxStagger()) return;
+	const UGYVitalAttributeSet* VitalAttr = ASC->GetSet<UGYVitalAttributeSet>();
+	if (!VitalAttr || VitalAttr->GetCurrentStagger() >= VitalAttr->GetMaxStagger()) return;
 
 	ApplyStaggerUse(ASC, Amount);
 }
 
 void UGYAdditionalResourceStatics::ApplyStunUse(UAbilitySystemComponent* ASC, float Amount)
 {
-	AdditionalResource_ApplyInstantGE(ASC, UGYAdditionalAttribute::GetCurrentStunAttribute(), Amount);
+	AdditionalResource_ApplyInstantGE(ASC, UGYVitalAttributeSet::GetCurrentStunAttribute(), Amount);
 }
 
 void UGYAdditionalResourceStatics::IncreaseStun(UAbilitySystemComponent* ASC, float Amount)
 {
 	if (!ASC) return;
-	const UGYAdditionalAttribute* AdditionalAttr = ASC->GetSet<UGYAdditionalAttribute>();
-	if (!AdditionalAttr || AdditionalAttr->GetCurrentStun() >= AdditionalAttr->GetMaxStun()) return;
+	const UGYVitalAttributeSet* VitalAttr = ASC->GetSet<UGYVitalAttributeSet>();
+	if (!VitalAttr || VitalAttr->GetCurrentStun() >= VitalAttr->GetMaxStun()) return;
 
 	ApplyStunUse(ASC, Amount);
 }

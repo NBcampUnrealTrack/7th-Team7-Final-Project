@@ -6,8 +6,8 @@
 
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
-#include "AbilitySystem/Attributes/Enemy/GYEnemyAdditionalAttribute.h"
-#include "AbilitySystem/Attributes/Enemy/GYEnemyBaseAttribute.h"
+#include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
+#include "AbilitySystem/Attributes/Enemy/GYEnemyDamageAttributeSet.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -39,8 +39,8 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
-	BaseAttribute = CreateDefaultSubobject<UGYEnemyBaseAttribute>(TEXT("BaseAttribute"));
-	AdditionalAttribute = CreateDefaultSubobject<UGYEnemyAdditionalAttribute>(TEXT("AdditionalAttribute"));
+	VitalAttribute = CreateDefaultSubobject<UGYEnemyVitalAttributeSet>(TEXT("VitalAttribute"));
+	DamageAttribute = CreateDefaultSubobject<UGYEnemyDamageAttributeSet>(TEXT("DamageAttribute"));
 
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -191,7 +191,7 @@ void AGYEnemyCharacterBase::InitGAS()
 	if (!bAttributeDelegatesBound)
 	{
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
-			UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
+			UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute())
 				.AddUObject(this, &AGYEnemyCharacterBase::OnHealthChanged);
 
 		AbilitySystemComponent->RegisterGameplayTagEvent(
@@ -292,22 +292,22 @@ FEnemyComputedStats AGYEnemyCharacterBase::ComputeInitialStats(float MapLevel) c
 
 void AGYEnemyCharacterBase::ApplyInitialStats(const FEnemyComputedStats& Stats)
 {
-	if (BaseAttribute)
+	if (VitalAttribute)
 	{
-		BaseAttribute->SetMaxHealth(Stats.MaxHealth);
-		BaseAttribute->SetCurrentHealth(Stats.MaxHealth);
-		BaseAttribute->SetAttack(Stats.Attack);
-		BaseAttribute->SetDefense(Stats.Defense);
+		VitalAttribute->SetMaxHealth(Stats.MaxHealth);
+		VitalAttribute->SetCurrentHealth(Stats.MaxHealth);
+		VitalAttribute->SetMaxStagger(Stats.MaxStagger);
+		VitalAttribute->SetCurrentStagger(0.f);
+		VitalAttribute->SetMaxStun(Stats.MaxStun);
+		VitalAttribute->SetCurrentStun(0.f);
 	}
 
-	if (AdditionalAttribute)
+	if (DamageAttribute)
 	{
-		AdditionalAttribute->SetMaxStagger(Stats.MaxStagger);
-		AdditionalAttribute->SetCurrentStagger(0.f);
-		AdditionalAttribute->SetMaxStun(Stats.MaxStun);
-		AdditionalAttribute->SetCurrentStun(0.f);
-		AdditionalAttribute->SetCriticalRate(Stats.CriticalRate);
-		AdditionalAttribute->SetCriticalMultiplier(Stats.CriticalMultiplier);
+		DamageAttribute->SetAttack(Stats.Attack);
+		DamageAttribute->SetDefense(Stats.Defense);
+		DamageAttribute->SetCriticalRate(Stats.CriticalRate);
+		DamageAttribute->SetCriticalMultiplier(Stats.CriticalMultiplier);
 	}
 
 	//TODO 은서 : MoveSpeed와 AttackSpeed가 분리되어서 Attribute 추가되면 이쪽으로 이관

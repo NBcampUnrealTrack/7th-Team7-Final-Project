@@ -6,7 +6,6 @@
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystem/Abilities/Sprint/GYSprintFragment.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Logging/GYLogManager.h"

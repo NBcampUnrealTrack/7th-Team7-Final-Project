@@ -1,6 +1,6 @@
 #include "AttackLogic/Shared/GYMeleeHitLogic.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
-#include "AbilitySystem/Attributes/GYBaseAttribute.h"
+#include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYWeaponAttribute.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "Core/GameplayTags/EventTags.h"
@@ -34,7 +34,7 @@ void UGYMeleeHitLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEve
 	UAbilitySystemComponent* InstigatorASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
 	if (InstigatorASC)
 	{
-		if (const UGYBaseAttribute* Attrs = InstigatorASC->GetSet<UGYBaseAttribute>())
+		if (const UGYDamageAttributeSet* Attrs = InstigatorASC->GetSet<UGYDamageAttributeSet>())
 		{
 			Damage = Attrs->GetAttack() * CachedAbility->GetDamageMultiplier();
 		}

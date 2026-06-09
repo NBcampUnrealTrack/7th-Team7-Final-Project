@@ -2,7 +2,7 @@
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "AbilitySystem/GYPeriodicAttributeEffect.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
-#include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Animation/AnimInstance.h"
@@ -308,9 +308,9 @@ void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute&
 {
 	if (Attribute == UGYPlayerAttribute::GetCurrentStaminaAttribute())
 		RescheduleStaminaRegen();
-	else if (Attribute == UGYAdditionalAttribute::GetCurrentStaggerAttribute())
+	else if (Attribute == UGYVitalAttributeSet::GetCurrentStaggerAttribute())
 		RescheduleStaggerRegen();
-	else if (Attribute == UGYAdditionalAttribute::GetCurrentStunAttribute())
+	else if (Attribute == UGYVitalAttributeSet::GetCurrentStunAttribute())
 		RescheduleStunRegen();
 }
 

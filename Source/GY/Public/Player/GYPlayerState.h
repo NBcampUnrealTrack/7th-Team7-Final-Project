@@ -18,8 +18,8 @@ class UGYPlayerInitData;
 class UInventoryComponent;
 class UItemTransactionComponent;
 class ULootViewerComponent;
-class UGYPlayerBaseAttribute;
-class UGYPlayerAdditionalAttribute;
+class UGYPlayerVitalAttributeSet;
+class UGYPlayerDamageAttributeSet;
 class UGYPlayerAttribute;
 
 UCLASS()
@@ -105,10 +105,10 @@ protected:
 	TObjectPtr<USkillTreeComponent> SkillTreeComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
-	TObjectPtr<UGYPlayerBaseAttribute> BaseAttribute;
+	TObjectPtr<UGYPlayerVitalAttributeSet> VitalAttribute;
 
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
-	TObjectPtr<UGYPlayerAdditionalAttribute> AdditionalAttribute;
+	TObjectPtr<UGYPlayerDamageAttributeSet> DamageAttribute;
 
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UGYPlayerAttribute> PlayerAttribute;

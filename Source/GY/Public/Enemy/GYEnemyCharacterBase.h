@@ -8,8 +8,8 @@
 #include "World/ActorManagement/WorldPartitionLevelPlacedActor.h"
 #include "GYEnemyCharacterBase.generated.h"
 
-class UGYEnemyAdditionalAttribute;
-class UGYEnemyBaseAttribute;
+class UGYEnemyVitalAttributeSet;
+class UGYEnemyDamageAttributeSet;
 class UEnemyAnimInstance;
 class UAbilitySystemComponent;
 
@@ -169,10 +169,10 @@ protected:
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
-	TObjectPtr<UGYEnemyBaseAttribute> BaseAttribute;
+	TObjectPtr<UGYEnemyVitalAttributeSet> VitalAttribute;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
-	TObjectPtr<UGYEnemyAdditionalAttribute> AdditionalAttribute;
+	TObjectPtr<UGYEnemyDamageAttributeSet> DamageAttribute;
 
 	UPROPERTY(Replicated)
 	bool bIsDead = false;

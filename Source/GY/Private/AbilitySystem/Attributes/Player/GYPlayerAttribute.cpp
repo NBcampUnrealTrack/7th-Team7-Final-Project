@@ -1,7 +1,7 @@
 ﻿#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
 #include "Data/GYStatScalingData.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAdditionalAttribute.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
+#include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYWeaponAttribute.h"
 #include "GameplayTagContainer.h"
 #include "AbilitySystemComponent.h"
@@ -106,8 +106,8 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
 	const float Magnitude = Data.EvaluatedData.Magnitude;
 
-	UGYPlayerBaseAttribute* Base = const_cast<UGYPlayerBaseAttribute*>(ASC->GetSet<UGYPlayerBaseAttribute>());
-	UGYPlayerAdditionalAttribute* Additional = const_cast<UGYPlayerAdditionalAttribute*>(ASC->GetSet<UGYPlayerAdditionalAttribute>());
+	UGYVitalAttributeSet* Vital = const_cast<UGYVitalAttributeSet*>(ASC->GetSet<UGYVitalAttributeSet>());
+	UGYDamageAttributeSet* Damage = const_cast<UGYDamageAttributeSet*>(ASC->GetSet<UGYDamageAttributeSet>());
 	UGYWeaponAttribute* Weapon = const_cast<UGYWeaponAttribute*>(ASC->GetSet<UGYWeaponAttribute>());
 
 	if (Data.EvaluatedData.Attribute == GetCurrentStaminaAttribute())
@@ -143,14 +143,11 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 	if (Data.EvaluatedData.Attribute == GetLevelAttribute())
 	{
 		// 레벨업시 전부 회복
-		if (Base)
+		if (Vital)
 		{
-			Base->SetCurrentHealth(Base->GetMaxHealth());
-		}
-		if (Additional)
-		{
-			Additional->SetCurrentStagger(Additional->GetMaxStagger());
-			Additional->SetCurrentStun(Additional->GetMaxStun());
+			Vital->SetCurrentHealth(Vital->GetMaxHealth());
+			Vital->SetCurrentStagger(Vital->GetMaxStagger());
+			Vital->SetCurrentStun(Vital->GetMaxStun());
 		}
 		SetCurrentStamina(GetMaxStamina());
 		return;
@@ -159,23 +156,23 @@ void UGYPlayerAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallb
 
 	if (Data.EvaluatedData.Attribute == GetStrengthAttribute())
 	{
-		if (Base)
+		if (Vital)
 		{
-			const float OldMax = Base->GetMaxHealth();
+			const float OldMax = Vital->GetMaxHealth();
 			const float NewMax = OldMax + Magnitude * StatScalingData->StrengthToMaxHealth;
-			Base->SetMaxHealth(NewMax);
+			Vital->SetMaxHealth(NewMax);
 			if (OldMax > 0.f)
 			{
-				Base->SetCurrentHealth(FMath::Clamp(Base->GetCurrentHealth() * NewMax / OldMax, 0.f, NewMax));
+				Vital->SetCurrentHealth(FMath::Clamp(Vital->GetCurrentHealth() * NewMax / OldMax, 0.f, NewMax));
 			}
 		}
 		RecalculateWeaponMultiplier(ASC, Weapon);
 	}
 	else if (Data.EvaluatedData.Attribute == GetDexterityAttribute())
 	{
-		if (Additional)
+		if (Damage)
 		{
-			Additional->SetCriticalRate(Additional->GetCriticalRate() + Magnitude * StatScalingData->DexterityToCriticalRate);
+			Damage->SetCriticalRate(Damage->GetCriticalRate() + Magnitude * StatScalingData->DexterityToCriticalRate);
 		}
 		SetEvasionInvincibilityTime(GetEvasionInvincibilityTime() + Magnitude * StatScalingData->DexterityToEvasionInvincibilityTime);
 		RecalculateWeaponMultiplier(ASC, Weapon);

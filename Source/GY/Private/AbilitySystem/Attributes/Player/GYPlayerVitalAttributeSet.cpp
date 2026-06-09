@@ -1,8 +1,14 @@
-﻿#include "AbilitySystem/Attributes/Enemy/GYEnemyBaseAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
 
-void UGYEnemyBaseAttribute::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+UGYPlayerVitalAttributeSet::UGYPlayerVitalAttributeSet()
+{
+	InitCurrentHealth(100.f);
+	InitMaxHealth(100.f);
+}
+
+void UGYPlayerVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
 
@@ -12,7 +18,7 @@ void UGYEnemyBaseAttribute::PreAttributeChange(const FGameplayAttribute& Attribu
 	}
 }
 
-void UGYEnemyBaseAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+void UGYPlayerVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
 

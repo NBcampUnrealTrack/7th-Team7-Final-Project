@@ -1,17 +1,15 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
-#include "GYPlayerAdditionalAttribute.generated.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
+#include "GYEnemyVitalAttributeSet.generated.h"
 
 UCLASS()
-class GY_API UGYPlayerAdditionalAttribute : public UGYAdditionalAttribute
+class GY_API UGYEnemyVitalAttributeSet : public UGYVitalAttributeSet
 {
 	GENERATED_BODY()
 
 public:
-	UGYPlayerAdditionalAttribute();
-
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 };

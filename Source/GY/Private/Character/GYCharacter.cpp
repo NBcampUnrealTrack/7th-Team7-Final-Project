@@ -8,7 +8,7 @@
 #include "Character/GYPawnExtensionComponent.h"
 #include "Character/GYPlayerActionConfig.h"
 #include "Character/LockOn/LockOnComponent.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "GameModes/GYGameMode.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
@@ -234,7 +234,7 @@ void AGYCharacter::SubscribeHealthDelegate()
 	if (!ASC) return;
 
 	ASC->GetGameplayAttributeValueChangeDelegate(
-		UGYPlayerBaseAttribute::GetCurrentHealthAttribute())
+		UGYPlayerVitalAttributeSet::GetCurrentHealthAttribute())
 		.AddUObject(this, &AGYCharacter::OnHealthChanged);
 
 	bHealthDelegateBound = true;
