@@ -1,6 +1,5 @@
 #include "Player/GYPlayerState.h"
 
-#include "AbilitySystem/Attributes/CombatAttributeSet.h"
 #include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
 #include "AbilitySystem/Attributes/GYBaseAttribute.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerAdditionalAttribute.h"
@@ -26,8 +25,6 @@ AGYPlayerState::AGYPlayerState()
 	AbilitySystemComponent = CreateDefaultSubobject<UGYAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
-
-	CreateDefaultSubobject<UCombatAttributeSet>(TEXT("CombatAttributeSet"));
 
 	BaseAttribute = CreateDefaultSubobject<UGYPlayerBaseAttribute>(TEXT("BaseAttribute"));
 	AdditionalAttribute = CreateDefaultSubobject<UGYPlayerAdditionalAttribute>(TEXT("AdditionalAttribute"));
