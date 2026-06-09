@@ -41,5 +41,7 @@ namespace GYGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_SkillTree_Unlock, "Event.SkillTree.Unlock");
 
+	UE_DEFINE_GAMEPLAY_TAG(Event_Hit_Stagger, "Event.Hit.Stagger");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Hit_Stun, "Event.Hit.Stun");
 
 }
