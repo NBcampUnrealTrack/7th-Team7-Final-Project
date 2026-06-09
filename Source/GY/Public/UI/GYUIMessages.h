@@ -106,7 +106,7 @@ struct GY_API FGYRegionEnteredMessage
 	UPROPERTY(BlueprintReadWrite) FText RegionDisplayName;
 	UPROPERTY(BlueprintReadWrite) int32 RegionLevel = 1;
 	UPROPERTY(BlueprintReadWrite) TSoftObjectPtr<UTexture2D> RegionIcon;
-	UPROPERTY() TSoftObjectPtr<AActor> BossActor;
+	UPROPERTY(BlueprintReadWrite) TObjectPtr<AActor> BossActor;
 	UPROPERTY() TWeakObjectPtr<APawn> Pawn;
 };
 
