@@ -18,13 +18,13 @@ public:
 	static void ApplyStaggerUse(UAbilitySystemComponent* ASC, float BaseAmount);
 
 	UFUNCTION(BlueprintCallable, Category="GY|AdditionalResource")
-	static void IncreaseStagger(UGYAbilitySystemComponent* ASC, float Amount);
+	static void IncreaseStagger(UAbilitySystemComponent* ASC, float Amount);
 
 	UFUNCTION(BlueprintCallable, Category="GY|PlayerResource")
 	static void ApplyStunUse(UAbilitySystemComponent* ASC, float BaseAmount);
 
 	UFUNCTION(BlueprintCallable, Category="GY|AdditionalResource")
-	static void IncreaseStun(UGYAbilitySystemComponent* ASC, float Amount);
+	static void IncreaseStun(UAbilitySystemComponent* ASC, float Amount);
 
 	UFUNCTION(BlueprintCallable, Category="GY|AdditionalResource")
 	static void ApplyAttributeDelta(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Amount);

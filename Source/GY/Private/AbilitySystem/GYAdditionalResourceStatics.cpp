@@ -24,14 +24,13 @@ void UGYAdditionalResourceStatics::ApplyStaggerUse(UAbilitySystemComponent* ASC,
 	AdditionalResource_ApplyInstantGE(ASC, UGYAdditionalAttribute::GetCurrentStaggerAttribute(), Amount);
 }
 
-void UGYAdditionalResourceStatics::IncreaseStagger(UGYAbilitySystemComponent* ASC, float Amount)
+void UGYAdditionalResourceStatics::IncreaseStagger(UAbilitySystemComponent* ASC, float Amount)
 {
 	if (!ASC) return;
 	const UGYAdditionalAttribute* AdditionalAttr = ASC->GetSet<UGYAdditionalAttribute>();
 	if (!AdditionalAttr || AdditionalAttr->GetCurrentStagger() >= AdditionalAttr->GetMaxStagger()) return;
 
 	ApplyStaggerUse(ASC, Amount);
-	ASC->NotifyAttributeChanged(UGYAdditionalAttribute::GetCurrentStaggerAttribute());
 }
 
 void UGYAdditionalResourceStatics::ApplyStunUse(UAbilitySystemComponent* ASC, float Amount)
@@ -39,14 +38,13 @@ void UGYAdditionalResourceStatics::ApplyStunUse(UAbilitySystemComponent* ASC, fl
 	AdditionalResource_ApplyInstantGE(ASC, UGYAdditionalAttribute::GetCurrentStunAttribute(), Amount);
 }
 
-void UGYAdditionalResourceStatics::IncreaseStun(UGYAbilitySystemComponent* ASC, float Amount)
+void UGYAdditionalResourceStatics::IncreaseStun(UAbilitySystemComponent* ASC, float Amount)
 {
 	if (!ASC) return;
 	const UGYAdditionalAttribute* AdditionalAttr = ASC->GetSet<UGYAdditionalAttribute>();
 	if (!AdditionalAttr || AdditionalAttr->GetCurrentStun() >= AdditionalAttr->GetMaxStun()) return;
 
 	ApplyStunUse(ASC, Amount);
-	ASC->NotifyAttributeChanged(UGYAdditionalAttribute::GetCurrentStunAttribute());
 }
 
 void UGYAdditionalResourceStatics::ApplyAttributeDelta(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Amount)
