@@ -236,4 +236,8 @@ void ALadder::UpdateCollision()
 
 	float TopBoxLocation = LadderHeight + TopBoxCollisionOffset;
 	TopBoxCollision->SetRelativeLocation(FVector(0, 0, TopBoxLocation));
+
+	ClimbIntoFromTopBoxCollision->SetRelativeLocation(FVector(-75, 0, TopBoxLocation));
+	
+
 }

@@ -112,10 +112,6 @@ public:
 	void CreateTopLadder();
 	void UpdateCollision();
 
-
-	Overlapbegin
-
-
 protected:
 	int32 PoleMeshHeight;
 	int32 LastRungsIndex;
