@@ -24,6 +24,22 @@
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
 
+static FGameplayTag GetWeaponTypeTag(const UItemDefinition* ItemDefinition)
+{
+	if (!IsValid(ItemDefinition))
+	{
+		return FGameplayTag();
+	}
+
+	const UItemFragment_Weapon* WeaponFragment = ItemDefinition->FindFragment<UItemFragment_Weapon>();
+	if (WeaponFragment == nullptr)
+	{
+		return FGameplayTag();
+	}
+
+	return WeaponFragment->WeaponTypeTag;
+}
+
 UActiveEquipmentComponent::UActiveEquipmentComponent()
 {
 	SetIsReplicatedByDefault(true);
@@ -77,10 +93,10 @@ UEquipmentInstance* UActiveEquipmentComponent::EquipItem(const FInventoryEntry& 
 {
 	if (!GetOwner()->HasAuthority()) return nullptr;
 
-	UItemDefinition* Def = Entry.Definition.LoadSynchronous();
-	if (!IsValid(Def)) return nullptr;
+	UItemDefinition* ItemDefinition = Entry.Definition.LoadSynchronous();
+	if (!IsValid(ItemDefinition)) return nullptr;
 
-	const UItemFragment_Equippable* EquippableFragment = Def->FindFragment<UItemFragment_Equippable>();
+	const UItemFragment_Equippable* EquippableFragment = ItemDefinition->FindFragment<UItemFragment_Equippable>();
 	if (EquippableFragment == nullptr) return nullptr;
 
 	const FGameplayTag SlotTag = EquippableFragment->SlotTag;
@@ -94,6 +110,15 @@ UEquipmentInstance* UActiveEquipmentComponent::EquipItem(const FInventoryEntry& 
 	NewInstance->Initialize(Entry.InstanceId, Entry.Definition);
 	NewInstance->OnEquipped(Pawn);
 	ApplyAbilitySetsFromEntry(NewInstance, Entry);
+
+	const FGameplayTag WeaponTypeTag = GetWeaponTypeTag(ItemDefinition);
+	if (WeaponTypeTag.IsValid())
+	{
+		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
+		{
+			ASC->AddLooseGameplayTag(WeaponTypeTag, 1, EGameplayTagReplicationState::TagOnly);
+		}
+	}
 
 	FEquipmentEntry NewEntry;
 	NewEntry.SlotTag = SlotTag;
@@ -128,6 +153,15 @@ bool UActiveEquipmentComponent::UnequipItem(FGameplayTag SlotTag)
 		RevokeAbilitySets(Instance);
 		Instance->OnUnequipped(Pawn);
 		RemoveReplicatedSubObject(Instance);
+
+		const FGameplayTag WeaponTypeTag = GetWeaponTypeTag(Instance->GetItemDefinition());
+		if (WeaponTypeTag.IsValid())
+		{
+			if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
+			{
+				ASC->RemoveLooseGameplayTag(WeaponTypeTag, 1, EGameplayTagReplicationState::TagOnly);
+			}
+		}
 	}
 
 	EquippedItems.Entries.RemoveAt(Index);
