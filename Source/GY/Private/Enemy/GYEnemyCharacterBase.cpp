@@ -138,6 +138,10 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 	TryGrantGASFromDataAsset();
 
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+
+	// 브로드캐스트
+	bIsInitialized = true;
+	OnEnemyReady.Broadcast(this);
 }
 
 void AGYEnemyCharacterBase::ApplyVisualConfig(const FEnemyVisualConfig& Config)
@@ -897,3 +901,11 @@ void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+void AGYEnemyCharacterBase::OnRep_IsDead()
+{
+	if (bIsDead)
+	{
+		DisableGameplay();
+		OnEnemyDead.Broadcast(this);
+	}
+}
