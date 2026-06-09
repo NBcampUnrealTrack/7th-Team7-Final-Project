@@ -49,6 +49,18 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "AI|Noise")
 	void MakeSkillNoise(float Loudness = 1.0f, float MaxRange = 2000.f);
+
+	UFUNCTION(BlueprintPure)
+	bool IsDead() const { return bIsDead; }
+
+protected:
+	void HandleDeath();
+	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
+	void SubscribeHealthDelegate();
+
+	bool bIsDead = false;
+	bool bHealthDelegateBound = false;
+
 protected:
 	// 컴포넌트 매니저 통신을 위한 생명주기 함수 오버라이드
 	virtual void PreInitializeComponents() override;

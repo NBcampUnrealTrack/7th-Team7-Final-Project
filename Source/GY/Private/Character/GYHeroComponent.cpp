@@ -8,6 +8,7 @@
 #include "Character/GYInputComponent.h"
 #include "Character/GYPawnData.h"
 #include "Character/GYPawnExtensionComponent.h"
+#include "Character/GYPlayerActionConfig.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
@@ -124,6 +125,7 @@ void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 		{
 			if (UGYAbilitySystemComponent* ASC = GYPlayerState->GetGYAbilitySystemComponent())
 			{
+				CachedASC = ASC;
 				UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
 				if (ExtComp && ExtComp->PawnData)
 				{
@@ -225,9 +227,27 @@ void UGYHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompone
 
 }
 
+bool UGYHeroComponent::IsInputBlocked() const
+{
+	APawn* Pawn = GetPawn<APawn>();
+	if (!Pawn) return false;
+
+	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
+	if (!PS) return false;
+
+	UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
+	if (!ASC) return false;
+
+	UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
+	if (!ExtComp || !ExtComp->PawnData || !ExtComp->PawnData->ActionConfig) return false;
+
+	return ASC->HasAnyMatchingGameplayTags(ExtComp->PawnData->ActionConfig->InputBlockTags);
+}
+
 void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 {
-	//GY_LOG(Player, KHB, "Input_Move 호출됨");
+	if (IsInputBlocked()) return;
+
 	APawn* Pawn = GetPawn<APawn>();
 	AController* Controller = Pawn ? Pawn->GetController() : nullptr;
 
@@ -254,6 +274,8 @@ void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 
 void UGYHeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
 {
+	if (IsInputBlocked()) return;
+
 	APawn* Pawn = GetPawn<APawn>();
 
 	SendGameplayEventLocal(InputTag);
@@ -473,6 +495,11 @@ void UGYHeroComponent::BeginPlay()
 
 void UGYHeroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (CachedASC.IsValid())
+	{
+		GrantedHandles.TakeFromAbilitySystem(CachedASC.Get());
+		CachedASC.Reset();
+	}
 	UnregisterInitStateFeature();
 	Super::EndPlay(EndPlayReason);
 }

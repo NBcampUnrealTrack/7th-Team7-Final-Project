@@ -8,6 +8,7 @@
 
 class UAbilitySet;
 class UGYInputConfig;
+class UGYPlayerActionConfig;
 class UInputMappingContext;
 
 UCLASS(BlueprintType, Const, Meta = (DisplayName = "GY Pawn Data", ShortTooltip = "Pawn을 정의하기 위해 사용되는 에셋"))
@@ -25,4 +26,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Abilities")
 	TArray<TObjectPtr<UAbilitySet>> AbilitySets;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Actions")
+	TObjectPtr<UGYPlayerActionConfig> ActionConfig;
 };
