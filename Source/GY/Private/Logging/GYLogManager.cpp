@@ -65,10 +65,10 @@ static TAutoConsoleVariable<int32> CVarGYLog_KH(
 	TEXT("Enable/Disable KH logs")
 );
 
-static TAutoConsoleVariable<int32> CVarGYLog_KES(
-	TEXT("gy.log.KES"),
+static TAutoConsoleVariable<int32> CVarGYLog_ESK(
+	TEXT("gy.log.ESK"),
 	1,
-	TEXT("Enable/Disable KES logs")
+	TEXT("Enable/Disable ESK logs")
 );
 
 // =============================
