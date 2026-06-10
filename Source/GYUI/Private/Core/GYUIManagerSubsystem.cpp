@@ -9,9 +9,9 @@
 #include "Blueprint/UserWidget.h"
 #include "GY/Public/Player/GYPlayerController.h"
 #include "GY/Public/Player/GYPlayerState.h"
-#include "AbilitySystem/Attributes/GYBaseAttribute.h"
-#include "AbilitySystem/Attributes/GYAdditionalAttribute.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
+#include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "UI/GYUIMessages.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
@@ -19,8 +19,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Enemy/Config/EnemyDataAsset.h"
-#include "AbilitySystem/Attributes/Enemy/GYEnemyBaseAttribute.h"
-#include "AbilitySystem/Attributes/Enemy/GYEnemyAdditionalAttribute.h"
+#include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 
 void UGYUIManagerSubsystem::Deinitialize()
 {
@@ -132,16 +131,16 @@ void UGYUIManagerSubsystem::RegisterStatBroadcast(UAbilitySystemComponent* ASC)
 	};
 
 	// 속성 매핑해서 등록
-	Add(GYGameplayTags::Message_Stat_Health, UGYBaseAttribute::GetCurrentHealthAttribute(),
-	    UGYBaseAttribute::GetMaxHealthAttribute());
-	Add(GYGameplayTags::Message_Stat_Stamina, UGYPlayerAttribute::GetCurrentStaminaAttribute(),
-	    UGYPlayerAttribute::GetMaxStaminaAttribute());
-	Add(GYGameplayTags::Message_Stat_Poise, UGYAdditionalAttribute::GetCurrentStunAttribute(),
-	    UGYAdditionalAttribute::GetMaxStunAttribute());
+	Add(GYGameplayTags::Message_Stat_Health, UGYVitalAttributeSet::GetCurrentHealthAttribute(),
+	    UGYVitalAttributeSet::GetMaxHealthAttribute());
+	Add(GYGameplayTags::Message_Stat_Stamina, UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute(),
+	    UGYPlayerVitalAttributeSet::GetMaxStaminaAttribute());
+	Add(GYGameplayTags::Message_Stat_Poise, UGYVitalAttributeSet::GetCurrentStunAttribute(),
+	    UGYVitalAttributeSet::GetMaxStunAttribute());
 
-	LevelHandle = ASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetLevelAttribute()).AddUObject(
+	LevelHandle = ASC->GetGameplayAttributeValueChangeDelegate(UGYProgressionAttributeSet::GetLevelAttribute()).AddUObject(
 		this, &UGYUIManagerSubsystem::OnXPRelatedChanged);
-	XPHandle = ASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetXPAttribute()).AddUObject(
+	XPHandle = ASC->GetGameplayAttributeValueChangeDelegate(UGYProgressionAttributeSet::GetXPAttribute()).AddUObject(
 		this, &UGYUIManagerSubsystem::OnXPRelatedChanged);
 
 	// 연동 후 현재 값들 바로 전달
@@ -161,8 +160,8 @@ void UGYUIManagerSubsystem::UnregisterStatBroadcast()
 			BoundASC->GetGameplayAttributeValueChangeDelegate(Entry.CurrentAttribute).Remove(Entry.CurrentHandle);
 			BoundASC->GetGameplayAttributeValueChangeDelegate(Entry.MaxAttribute).Remove(Entry.MaxHandle);
 		}
-		BoundASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetLevelAttribute()).Remove(LevelHandle);
-		BoundASC->GetGameplayAttributeValueChangeDelegate(UGYPlayerAttribute::GetXPAttribute()).Remove(XPHandle);
+		BoundASC->GetGameplayAttributeValueChangeDelegate(UGYProgressionAttributeSet::GetLevelAttribute()).Remove(LevelHandle);
+		BoundASC->GetGameplayAttributeValueChangeDelegate(UGYProgressionAttributeSet::GetXPAttribute()).Remove(XPHandle);
 	}
 	StatBroadcastEntries.Reset();
 }
@@ -197,7 +196,7 @@ void UGYUIManagerSubsystem::BroadcastXP()
 {
 	if (!BoundASC.IsValid() || !GetWorld()) return;
 
-	const UGYPlayerAttribute* PA = BoundASC->GetSet<UGYPlayerAttribute>();
+	const UGYProgressionAttributeSet* PA = BoundASC->GetSet<UGYProgressionAttributeSet>();
 	if (!PA) return;
 
 	FGYXPProgressMessage Msg;
@@ -502,16 +501,16 @@ void UGYUIManagerSubsystem::BindBoss(AGYEnemyCharacterBase* Boss)
 	BossASC = ASC;
 
 	BossHealthHandle = ASC->GetGameplayAttributeValueChangeDelegate(
-		UGYEnemyBaseAttribute::GetCurrentHealthAttribute()).AddWeakLambda(this,
+		UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute()).AddWeakLambda(this,
 			[this](const FOnAttributeChangeData&) { BroadcastBossHealth(); });
 	BossMaxHealthHandle = ASC->GetGameplayAttributeValueChangeDelegate(
-		UGYEnemyBaseAttribute::GetMaxHealthAttribute()).AddWeakLambda(this,
+		UGYEnemyVitalAttributeSet::GetMaxHealthAttribute()).AddWeakLambda(this,
 			[this](const FOnAttributeChangeData&) { BroadcastBossHealth(); });
 	BossPoiseHandle = ASC->GetGameplayAttributeValueChangeDelegate(
-		UGYEnemyAdditionalAttribute::GetCurrentStunAttribute()).AddWeakLambda(this,
+		UGYEnemyVitalAttributeSet::GetCurrentStunAttribute()).AddWeakLambda(this,
 			[this](const FOnAttributeChangeData&) { BroadcastBossPoise(); });
 	BossMaxPoiseHandle = ASC->GetGameplayAttributeValueChangeDelegate(
-		UGYEnemyAdditionalAttribute::GetMaxStunAttribute()).AddWeakLambda(this,
+		UGYEnemyVitalAttributeSet::GetMaxStunAttribute()).AddWeakLambda(this,
 			[this](const FOnAttributeChangeData&) { BroadcastBossPoise(); });
 
 	Boss->OnEnemyDead.AddUniqueDynamic(this, &UGYUIManagerSubsystem::HandleBossDead);
@@ -532,13 +531,13 @@ void UGYUIManagerSubsystem::UnbindBoss()
 {
 	if (UAbilitySystemComponent* ASC = BossASC.Get())
 	{
-		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyBaseAttribute::GetCurrentHealthAttribute())
+		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute())
 		.Remove(BossHealthHandle);
-		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyBaseAttribute::GetMaxHealthAttribute())
+		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetMaxHealthAttribute())
 		.Remove(BossMaxHealthHandle);
-		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyAdditionalAttribute::GetCurrentStunAttribute())
+		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetCurrentStunAttribute())
 		.Remove(BossPoiseHandle);
-		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyAdditionalAttribute::GetMaxStunAttribute())
+		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetMaxStunAttribute())
 		.Remove(BossMaxPoiseHandle);
 	}
 	if (AGYEnemyCharacterBase* Boss = CurrentBoss.Get())
@@ -568,8 +567,8 @@ void UGYUIManagerSubsystem::BroadcastBossHealth()
 	if (!ASC || !GetWorld()) return;
 
 	FGYAttributeValueMessage Msg;
-	Msg.CurrentValue = ASC->GetNumericAttribute(UGYEnemyBaseAttribute::GetCurrentHealthAttribute());
-	Msg.MaxValue = ASC->GetNumericAttribute(UGYEnemyBaseAttribute::GetMaxHealthAttribute());
+	Msg.CurrentValue = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute());
+	Msg.MaxValue = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetMaxHealthAttribute());
 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_Stat_Health, Msg);
 }
@@ -580,8 +579,8 @@ void UGYUIManagerSubsystem::BroadcastBossPoise()
 	if (!ASC || !GetWorld()) return;
 
 	FGYAttributeValueMessage Msg;
-	Msg.CurrentValue = ASC->GetNumericAttribute(UGYEnemyAdditionalAttribute::GetCurrentStunAttribute());
-	Msg.MaxValue = ASC->GetNumericAttribute(UGYEnemyAdditionalAttribute::GetMaxStunAttribute());
+	Msg.CurrentValue = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetCurrentStunAttribute());
+	Msg.MaxValue = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetMaxStunAttribute());
 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_Stat_Poise, Msg);
 }

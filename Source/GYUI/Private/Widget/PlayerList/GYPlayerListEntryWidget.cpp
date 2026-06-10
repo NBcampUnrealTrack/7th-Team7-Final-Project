@@ -1,8 +1,8 @@
 #include "Widget/PlayerList/GYPlayerListEntryWidget.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "AbilitySystem/Attributes/GYBaseAttribute.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
+#include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Components/ProgressBar.h"
 #include "CommonTextBlock.h"
 #include "GameFramework/PlayerState.h"
@@ -62,11 +62,11 @@ void UGYPlayerListEntryWidget::BindToASC(UAbilitySystemComponent* InASC)
 	if (!InASC || BoundASC.Get() == InASC) return;
 	BoundASC = InASC;
 
-	ListenForAttributeChange(InASC, UGYBaseAttribute::GetCurrentHealthAttribute(),
+	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(),
 		[this](const FOnAttributeChangeData&) { RefreshAll(); });
-	ListenForAttributeChange(InASC, UGYBaseAttribute::GetMaxHealthAttribute(),
+	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetMaxHealthAttribute(),
 		[this](const FOnAttributeChangeData&) { RefreshAll(); });
-	ListenForAttributeChange(InASC, UGYPlayerAttribute::GetLevelAttribute(),
+	ListenForAttributeChange(InASC, UGYProgressionAttributeSet::GetLevelAttribute(),
 		[this](const FOnAttributeChangeData&) { RefreshAll(); });
 
 	RefreshAll();
@@ -89,9 +89,9 @@ void UGYPlayerListEntryWidget::RefreshAll()
 
 	if (UAbilitySystemComponent* ASC = BoundASC.Get())
 	{
-		Cur = ASC->GetNumericAttribute(UGYBaseAttribute::GetCurrentHealthAttribute());
-		Max = ASC->GetNumericAttribute(UGYBaseAttribute::GetMaxHealthAttribute());
-		Level = FMath::RoundToInt(ASC->GetNumericAttribute(UGYPlayerAttribute::GetLevelAttribute()));
+		Cur = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetCurrentHealthAttribute());
+		Max = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetMaxHealthAttribute());
+		Level = FMath::RoundToInt(ASC->GetNumericAttribute(UGYProgressionAttributeSet::GetLevelAttribute()));
 	}
 
 	if (LevelText) LevelText->SetText(FText::AsNumber(Level));

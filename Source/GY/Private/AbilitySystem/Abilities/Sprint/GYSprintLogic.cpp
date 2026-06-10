@@ -5,8 +5,7 @@
 
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystem/Abilities/Sprint/GYSprintFragment.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Logging/GYLogManager.h"
@@ -29,7 +28,7 @@ void UGYSprintLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo();
 	if (!ASC) return;
 
-	const float CurrentStamina = ASC->GetNumericAttribute(UGYPlayerAttribute::GetCurrentStaminaAttribute());
+	const float CurrentStamina = ASC->GetNumericAttribute(UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute());
 
 	if (CurrentStamina < CachedFragment->MinStaminaToStart)
 	{
@@ -137,7 +136,7 @@ void UGYSprintLogic::CheckStamina()
 	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
 	if (!ASC) return;
 
-	const float CurrentStamina = ASC->GetNumericAttribute(UGYPlayerAttribute::GetCurrentStaminaAttribute());
+	const float CurrentStamina = ASC->GetNumericAttribute(UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute());
 
 
 	//CMC = CharacterMovementComponent

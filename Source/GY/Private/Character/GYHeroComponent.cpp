@@ -419,13 +419,6 @@ bool UGYHeroComponent::HasChargeDataForCurrentWeapon() const
 			if (!CF) continue;
 
 			if (CF->GetBestMatchingData(OwnedTags)) return true;
-
-			if (PA->DefaultWeaponTypeTag.IsValid())
-			{
-				FGameplayTagContainer Fallback;
-				Fallback.AddTag(PA->DefaultWeaponTypeTag);
-				if (CF->GetBestMatchingData(Fallback)) return true;
-			}
 		}
 	}
 	return false;

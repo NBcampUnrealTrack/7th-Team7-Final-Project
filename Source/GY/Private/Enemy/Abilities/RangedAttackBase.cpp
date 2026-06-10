@@ -6,7 +6,7 @@
 #include "AIController.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystem/GYCombatStatics.h"
-#include "AbilitySystem/Attributes/GYBaseAttribute.h"
+#include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
@@ -66,7 +66,7 @@ void URangedAttackBase::OnProjectileHit(FGameplayEventData Payload)
 	UAbilitySystemComponent* OwnerASC = GetAbilitySystemComponentFromActorInfo();
 	if (!OwnerASC) return;
 
-	float AttackValue = OwnerASC->GetNumericAttribute(UGYBaseAttribute::GetAttackAttribute());
+	float AttackValue = OwnerASC->GetNumericAttribute(UGYDamageAttributeSet::GetAttackAttribute());
 	float FinalDamage = AttackValue;
 
 	if (HitDamageWeights.IsValidIndex(0))

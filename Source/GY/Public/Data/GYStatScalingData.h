@@ -35,6 +35,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Dexterity")
 	float DexterityToEvasionInvincibilityTime = 0.005f;
 
-	UPROPERTY(EditDefaultsOnly, Category="WeaponStyle", meta=(Categories="Combat.Style"))
+	UPROPERTY(EditDefaultsOnly, Category="WeaponStyle", meta=(Categories="Weapon.Type"))
 	TMap<FGameplayTag, FWeaponStyleScalingFactors> WeaponStyleFactors;
 };

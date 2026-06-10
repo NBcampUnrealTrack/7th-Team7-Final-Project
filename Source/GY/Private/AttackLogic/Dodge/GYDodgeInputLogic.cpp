@@ -19,31 +19,17 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		ASC->GetOwnedGameplayTags(OwnedTags);
 	}
 
-	FGameplayTagContainer FallbackTags;
-	if (Ability->DefaultWeaponTypeTag.IsValid())
-	{
-		FallbackTags.AddTag(Ability->DefaultWeaponTypeTag);
-	}
-
 	const FGYDodgeData* DodgeData = nullptr;
 	const FGYDodgeMontageSet* MontageSet = nullptr;
 
 	if (const UGYDodgeFragment* DF = Ability->GetFragment<UGYDodgeFragment>())
 	{
 		DodgeData = DF->GetBestMatchingData(OwnedTags);
-		if (!DodgeData && !FallbackTags.IsEmpty())
-		{
-			DodgeData = DF->GetBestMatchingData(FallbackTags);
-		}
 	}
 
 	if (const UGYDodgeMontageFragment* MF = Ability->GetFragment<UGYDodgeMontageFragment>())
 	{
 		MontageSet = MF->GetBestMatchingSet(OwnedTags);
-		if (!MontageSet && !FallbackTags.IsEmpty())
-		{
-			MontageSet = MF->GetBestMatchingSet(FallbackTags);
-		}
 	}
 
 	if (!DodgeData || !MontageSet)

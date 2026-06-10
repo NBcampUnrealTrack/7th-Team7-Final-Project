@@ -6,6 +6,9 @@
 #include "KismetAnimationLibrary.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Core/GameplayTags/StateTags.h"
 
 
 void UGYCharacterAnimInstance::NativeInitializeAnimation()
@@ -16,6 +19,7 @@ void UGYCharacterAnimInstance::NativeInitializeAnimation()
 	if (OwnerCharacter != nullptr)
 	{
 		MovementComponent = OwnerCharacter->GetCharacterMovement();
+		AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwnerCharacter);
 
 		RunningSpeed = 600.f;
 	}
@@ -49,9 +53,17 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		}
 
 		bIsFalling = MovementComponent->IsFalling();
+	}
 
+	if (AbilitySystemComponent == nullptr && OwnerCharacter != nullptr)
+	{
+		AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwnerCharacter);
+	}
 
-
+	if (AbilitySystemComponent != nullptr)
+	{
+		bIsStunned = AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Hit_Stun);
+		bIsStaggered = AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Hit_Stagger);
 	}
 }
 

@@ -1,6 +1,6 @@
 ﻿#include "Cheats/GYServerCheatProxy.h"
 
-#include "AbilitySystem/Attributes/Player/GYPlayerAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Core/GameplayTags/CurrencyTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
@@ -46,7 +46,7 @@ void AGYServerCheatProxy::Server_AddXP_Implementation(float Amount)
 	Effect->DurationPolicy = EGameplayEffectDurationType::Instant;
 
 	FGameplayModifierInfo Modifier;
-	Modifier.Attribute = UGYPlayerAttribute::GetXPAttribute();
+	Modifier.Attribute = UGYProgressionAttributeSet::GetXPAttribute();
 	Modifier.ModifierOp = EGameplayModOp::Additive;
 	Modifier.ModifierMagnitude = FScalableFloat(Amount);
 	Effect->Modifiers.Add(Modifier);

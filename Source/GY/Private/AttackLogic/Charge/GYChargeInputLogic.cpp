@@ -23,28 +23,14 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		ASC->GetOwnedGameplayTags(OwnedTags);
 	}
 
-	FGameplayTagContainer FallbackTags;
-	if (Ability->DefaultWeaponTypeTag.IsValid())
-	{
-		FallbackTags.AddTag(Ability->DefaultWeaponTypeTag);
-	}
-
 	if (const UGYChargeMontageFragment* MF = Ability->GetFragment<UGYChargeMontageFragment>())
 	{
 		CachedMontageSet = MF->GetBestMatchingSet(OwnedTags);
-		if (!CachedMontageSet && !FallbackTags.IsEmpty())
-		{
-			CachedMontageSet = MF->GetBestMatchingSet(FallbackTags);
-		}
 	}
 
 	if (const UGYCollisionFragment* CF = Ability->GetFragment<UGYCollisionFragment>())
 	{
 		CachedCollisions = CF->GetBestMatchingShapes(OwnedTags);
-		if (!CachedCollisions && !FallbackTags.IsEmpty())
-		{
-			CachedCollisions = CF->GetBestMatchingShapes(FallbackTags);
-		}
 	}
 
 	const UGYChargeFragment* ChargeFragment = Ability->GetFragment<UGYChargeFragment>();
@@ -52,10 +38,6 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	if (ChargeFragment)
 	{
 		ChargeData = ChargeFragment->GetBestMatchingData(OwnedTags);
-		if (!ChargeData && !FallbackTags.IsEmpty())
-		{
-			ChargeData = ChargeFragment->GetBestMatchingData(FallbackTags);
-		}
 	}
 
 	if (CachedMontageSet && CachedMontageSet->ChargeMontage)
@@ -149,19 +131,9 @@ void UGYChargeInputLogic::ExecuteAttack()
 		ASC->GetOwnedGameplayTags(OwnedTags);
 	}
 
-	FGameplayTagContainer FallbackTags;
-	if (CachedAbility->DefaultWeaponTypeTag.IsValid())
-	{
-		FallbackTags.AddTag(CachedAbility->DefaultWeaponTypeTag);
-	}
-
 	if (const UGYChargeFragment* ChargeFragment = CachedAbility->GetFragment<UGYChargeFragment>())
 	{
 		const FGYChargeData* ChargeData = ChargeFragment->GetBestMatchingData(OwnedTags);
-		if (!ChargeData && !FallbackTags.IsEmpty())
-		{
-			ChargeData = ChargeFragment->GetBestMatchingData(FallbackTags);
-		}
 
 		if (ChargeData)
 		{
@@ -183,10 +155,6 @@ void UGYChargeInputLogic::ExecuteAttack()
 	if (const UGYChargeFragment* CostFragment = CachedAbility->GetFragment<UGYChargeFragment>())
 	{
 		const FGYChargeData* CostData = CostFragment->GetBestMatchingData(OwnedTags);
-		if (!CostData && !FallbackTags.IsEmpty())
-		{
-			CostData = CostFragment->GetBestMatchingData(FallbackTags);
-		}
 
 		if (CostData && CostData->AttackCost.Attribute.IsValid() && CostData->AttackCost.Amount > 0.f)
 		{

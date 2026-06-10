@@ -6,7 +6,7 @@
 #include "Character/GYPawnData.h"
 #include "Character/GYPawnExtensionComponent.h"
 #include "Character/GYPlayerActionConfig.h"
-#include "AbilitySystem/Attributes/Player/GYPlayerBaseAttribute.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "GameStates/GYGameState.h"
 #include "Misc/TrackedActivity.h"
 #include "Player/GYPlayerController.h"
@@ -133,6 +133,6 @@ void AGYGameMode::PerformRespawn(APlayerController* PC)
 
 	RestartPlayerAtTransform(PC, SpawnTransform);
 
-	const float MaxHP = ASC->GetNumericAttribute(UGYPlayerBaseAttribute::GetMaxHealthAttribute());
-	ASC->SetNumericAttributeBase(UGYPlayerBaseAttribute::GetCurrentHealthAttribute(), MaxHP);
+	const float MaxHP = ASC->GetNumericAttribute(UGYPlayerVitalAttributeSet::GetMaxHealthAttribute());
+	ASC->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetCurrentHealthAttribute(), MaxHP);
 }

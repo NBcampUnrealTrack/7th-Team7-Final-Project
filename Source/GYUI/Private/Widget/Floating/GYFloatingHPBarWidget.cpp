@@ -5,7 +5,7 @@
 #include "GameFramework/PlayerState.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystem/Attributes/GYBaseAttribute.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "Core/GYUIManagerSubsystem.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "UI/GYUIMessages.h"
@@ -46,14 +46,14 @@ void UGYFloatingHPBarWidget::BindToASC(UAbilitySystemComponent* InASC)
 	}
 
 	// 델리게이트에서 값 변경 폭을 체크하여 데미지인지 판별
-	ListenForAttributeChange(InASC, UGYBaseAttribute::GetCurrentHealthAttribute(),
+	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(),
 		[this](const FOnAttributeChangeData& Data)
 		{
 			const bool bDamaged = Data.NewValue < (Data.OldValue - KINDA_SMALL_NUMBER);
 			RefreshHealth(bDamaged);
 		});
 
-	ListenForAttributeChange(InASC, UGYBaseAttribute::GetMaxHealthAttribute(),
+	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetMaxHealthAttribute(),
 		[this](const FOnAttributeChangeData&)
 		{
 			RefreshHealth(false);
@@ -67,8 +67,8 @@ void UGYFloatingHPBarWidget::RefreshHealth(bool bShowBar)
 	UAbilitySystemComponent* ASC = TargetASC.Get();
 	if (!ASC) return;
 
-	const float Cur = ASC->GetNumericAttribute(UGYBaseAttribute::GetCurrentHealthAttribute());
-	const float Max = ASC->GetNumericAttribute(UGYBaseAttribute::GetMaxHealthAttribute());
+	const float Cur = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetCurrentHealthAttribute());
+	const float Max = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetMaxHealthAttribute());
 
 	if (HealthBar && Max > 0.f)
 	{

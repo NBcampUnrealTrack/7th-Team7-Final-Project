@@ -28,8 +28,6 @@ namespace GYGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Block, "Ability.Fragment.Block");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_BlockMontage, "Ability.Fragment.BlockMontage");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_SDisable, "Ability.Fragment.SDisable");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_SDisableMontage, "Ability.Fragment.SDisableMontage");
 	// State
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Parrying, "Ability.State.Parrying");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow, "Ability.State.CancelWindow");

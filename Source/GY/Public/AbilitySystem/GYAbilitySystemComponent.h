@@ -9,29 +9,33 @@ class UGYPeriodicAttributeEffect;
 class UAnimInstance;
 class UAnimMontage;
 
-UENUM(BlueprintType)
-enum class EGYAttributeThreshold : uint8
-{
-	AtMax,
-	AtZero
-};
-
+// 경직/무력화 누적 통이 가득 차면(Current >= Max) 발동되는 행동불능(CC) 설정.
+// 발동 시 DisableEffect(지속형 GE)를 적용해 StateTag를 부여하고, 통을 0으로 리셋한다.
+// StateTag가 이미 있으면 재발동하지 않는다(latch).
 USTRUCT(BlueprintType)
-struct GY_API FGYAttributeThresholdEvent
+struct GY_API FGYDisableThreshold
 {
 	GENERATED_BODY()
 
+	// 누적 통 (예: CurrentStun)
 	UPROPERTY(EditDefaultsOnly)
-	FGameplayAttribute Attribute;
+	FGameplayAttribute CurrentAttribute;
 
+	// 통의 최대치 (예: MaxStun)
 	UPROPERTY(EditDefaultsOnly)
-	EGYAttributeThreshold Threshold = EGYAttributeThreshold::AtMax;
-
-	UPROPERTY(EditDefaultsOnly, meta=(EditCondition="Threshold==EGYAttributeThreshold::AtMax", EditConditionHides))
 	FGameplayAttribute MaxAttribute;
 
+	// 발동 중임을 나타내는 상태 태그 (예: State.Hit.Stun). 재발동 방지 래치로도 사용.
 	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag EventTag;
+	FGameplayTag StateTag;
+
+	// 발동 시 자신에게 적용할 지속형 GE. GrantedTags로 StateTag를 부여하고 Duration이 곧 CC 지속시간.
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> DisableEffect;
+
+	// 발동 시 취소할 진행 중 어빌리티 태그 (예: Ability.Attack)
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer CancelAbilityTags;
 };
 
 UCLASS()
@@ -83,7 +87,10 @@ public:
 	TSubclassOf<UGameplayEffect> CombatStateEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
-	TArray<FGYAttributeThresholdEvent> AttributeThresholdEvents;
+	TArray<FGYDisableThreshold> DisableThresholds;
+
+	// 누적 통이 변할 때 GYVitalAttributeSet이 호출. 가득 차면 해당 CC를 발동한다. [SERVER]
+	void HandleVitalAccumulation(const FGameplayAttribute& ChangedAttribute, float CurrentValue);
 
 
 protected:

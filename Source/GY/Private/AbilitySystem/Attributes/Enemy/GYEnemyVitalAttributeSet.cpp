@@ -1,8 +1,8 @@
-﻿#include "AbilitySystem/Attributes/Enemy/GYEnemyBaseAttribute.h"
+#include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
 
-void UGYEnemyBaseAttribute::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+void UGYEnemyVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
 
@@ -12,7 +12,7 @@ void UGYEnemyBaseAttribute::PreAttributeChange(const FGameplayAttribute& Attribu
 	}
 }
 
-void UGYEnemyBaseAttribute::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
 

@@ -8,6 +8,7 @@
 
 class UCharacterMovementComponent;
 class ACharacter;
+class UAbilitySystemComponent;
 /**
  *
  */
@@ -29,6 +30,16 @@ protected:
 	ACharacter* OwnerCharacter;
 	UPROPERTY()
 	UCharacterMovementComponent* MovementComponent;
+
+	UPROPERTY()
+	UAbilitySystemComponent* AbilitySystemComponent;
+
+	// 행동불능(CC) 상태 — State.Hit.Stun / State.Hit.Stagger 태그를 반영. State Machine 전이에 사용.
+	UPROPERTY(BlueprintReadOnly, Category = "CC", meta = (BlueprintThreadSafe))
+	bool bIsStunned;
+
+	UPROPERTY(BlueprintReadOnly, Category = "CC", meta = (BlueprintThreadSafe))
+	bool bIsStaggered;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Locomotion", meta = (BlueprintThreadSafe))
 	FVector Velocity;

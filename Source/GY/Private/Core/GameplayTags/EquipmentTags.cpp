@@ -11,8 +11,6 @@ namespace GYGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_Sword, "Weapon.Type.Sword");
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_Greatsword, "Weapon.Type.Greatsword");
-
-	// TODO: Weapon Type -> Combat Style 이나 다른 용어로 변경
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_Unarmed, "Weapon.Type.Unarmed");
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_SwordAndShield, "Weapon.Type.SwordAndShield");
 }
