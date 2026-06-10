@@ -20,6 +20,12 @@ namespace GYGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Run, "GameplayCue.Player.Run");
 
+	// 상호 작용
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_LootBox, "GameplayCue.Interaction.LootBox");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_Door_Open, "GameplayCue.Interaction.Door.Open");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_Door_Close, "GameplayCue.Interaction.Door.Close");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_TimeRift, "GameplayCue.Interaction.TimeRift");
+
 
 	// 상태 이상
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Stun, "GameplayCue.Status.Stun");

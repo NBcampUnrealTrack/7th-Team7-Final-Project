@@ -20,6 +20,11 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Player_Parry);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Player_Ultimate);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Run);
+	/* 상호 작용*/
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_LootBox);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_Door_Open);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_Door_Close);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_TimeRift);
 	/* 상태 이상 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Stun);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Burn);
