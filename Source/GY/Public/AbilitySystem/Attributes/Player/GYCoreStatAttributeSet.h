@@ -6,9 +6,6 @@
 #include "AbilitySystem/Attributes/AttributeMacros.h"
 #include "GYCoreStatAttributeSet.generated.h"
 
-class UGYStatScalingData;
-class UGYWeaponAttribute;
-
 UCLASS()
 class GY_API UGYCoreStatAttributeSet : public UAttributeSet
 {
@@ -39,12 +36,4 @@ public:
 
 	UFUNCTION()
 	virtual void OnRep_EvasionInvincibilityTime(const FGameplayAttributeData& OldEvasionInvincibilityTime);
-
-	UPROPERTY(EditDefaultsOnly, Category="Attributes")
-	TObjectPtr<UGYStatScalingData> StatScalingData;
-
-	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
-
-private:
-	void RecalculateWeaponMultiplier(UAbilitySystemComponent* ASC, UGYWeaponAttribute* Weapon);
 };

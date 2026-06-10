@@ -72,6 +72,14 @@ void UGYVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribut
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxStun());
 	}
+	else if (Attribute == GetMaxHealthAttribute())
+	{
+		// MaxHealth 감소(예: STR 하향) 시 CurrentHealth가 초과하지 않도록 클램프. 증가 시엔 여유만 늘어남.
+		if (NewValue < GetCurrentHealth())
+		{
+			SetCurrentHealth(NewValue);
+		}
+	}
 }
 
 void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)

@@ -2,7 +2,6 @@
 
 #include "AbilitySystemInterface.h"
 #include "CoreMinimal.h"
-#include "AbilitySystem/Attributes/Player/GYWeaponAttribute.h"
 #include "GameFramework/PlayerState.h"
 #include "GYPlayerState.generated.h"
 
@@ -71,6 +70,11 @@ public:
 	void SetLastCheckpointId(const FGuid& Id);
 
 
+	// 1차 스탯(STR/DEX)에서 파생 스탯(MaxHealth/MaxStagger/CritRate/Evasion)을 계산하는 무한 GE.
+	// AttributeBased 모디파이어라 STR/DEX 변경 시 자동 재평가.
+	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
+	TSubclassOf<class UGameplayEffect> DerivedStatsEffect;
+
 protected:
 	UFUNCTION()
 	void OnRep_PawnData();
@@ -114,11 +118,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UGYProgressionAttributeSet> ProgressionAttribute;
 
-	UPROPERTY(VisibleAnywhere, Category = "GAS")
-	TObjectPtr<UGYWeaponAttribute> WeaponAttribute;
-
 	//TODO: 저장해야함
 	UPROPERTY(Replicated)
 	FGuid LastCheckpointId;
-
 };

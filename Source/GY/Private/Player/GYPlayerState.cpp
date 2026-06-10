@@ -7,6 +7,7 @@
 #include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "GameplayEffect.h"
 #include "Character/GYPawnData.h"
 #include "Core/GameplayTags/FactionTags.h"
 #include "Currency/CurrencyComponent.h"
@@ -31,13 +32,11 @@ AGYPlayerState::AGYPlayerState()
 	DamageAttribute = CreateDefaultSubobject<UGYPlayerDamageAttributeSet>(TEXT("DamageAttribute"));
 	CoreStatAttribute = CreateDefaultSubobject<UGYCoreStatAttributeSet>(TEXT("CoreStatAttribute"));
 	ProgressionAttribute = CreateDefaultSubobject<UGYProgressionAttributeSet>(TEXT("ProgressionAttribute"));
-	WeaponAttribute = CreateDefaultSubobject<UGYWeaponAttribute>(TEXT("WeaponAttribute"));
 
 	AbilitySystemComponent->AddAttributeSetSubobject(VitalAttribute.Get());
 	AbilitySystemComponent->AddAttributeSetSubobject(DamageAttribute.Get());
 	AbilitySystemComponent->AddAttributeSetSubobject(CoreStatAttribute.Get());
 	AbilitySystemComponent->AddAttributeSetSubobject(ProgressionAttribute.Get());
-	AbilitySystemComponent->AddAttributeSetSubobject(WeaponAttribute.Get());
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	AltarStorageComponent = CreateDefaultSubobject<UAltarStorageComponent>(TEXT("AltarStorageComponent"));
@@ -111,6 +110,17 @@ void AGYPlayerState::InitGAS(APawn* Avatar)
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentStaggerAttribute(), 0.f);
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxStunAttribute(),        InitData->MaxStun);
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentStunAttribute(),    0.f);
+	}
+
+	// 파생 스탯(STR/DEX 기반) 무한 GE 적용. 1차 스탯 base 세팅 이후에 적용해야 캡처값이 맞음.
+	if (DerivedStatsEffect)
+	{
+		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
+		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(DerivedStatsEffect, 1.f, Context);
+		if (Spec.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+		}
 	}
 }
 
