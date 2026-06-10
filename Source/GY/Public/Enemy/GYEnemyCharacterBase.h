@@ -111,6 +111,8 @@ protected:
 	void ApplyPassiveEffects();
 
 	FEnemyComputedStats ComputeInitialStats(float MapLevel) const;
+	virtual float GetStatScaleValue() const;
+
 	void ApplyInitialStats(const FEnemyComputedStats& Stats);
 
 	void TryGrantGASFromDataAsset();

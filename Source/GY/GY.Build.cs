@@ -26,6 +26,8 @@ public class GY : ModuleRules
 			"GameFeatures",
 			"AnimationBlueprintLibrary",
 			"MotionWarping",
+			"StateTreeModule",
+			"GameplayStateTreeModule",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "Niagara" });
