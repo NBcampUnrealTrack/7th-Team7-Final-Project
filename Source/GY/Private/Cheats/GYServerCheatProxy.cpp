@@ -1,6 +1,7 @@
 ﻿#include "Cheats/GYServerCheatProxy.h"
 
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
+#include "AbilitySystem/GYCombatStatics.h"
 #include "Core/GameplayTags/CurrencyTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
@@ -33,6 +34,15 @@ AGYServerCheatProxy::AGYServerCheatProxy()
 	bAlwaysRelevant = true;
 	bNetUseOwnerRelevancy = true;
 	PrimaryActorTick.bCanEverTick = false;
+}
+
+void AGYServerCheatProxy::Server_Suicide_Implementation()
+{
+	AGYPlayerState* PS = GetGYPlayerState(this);
+	if (!PS) return;
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	if (!ASC) return;
+	UGYCombatStatics::ApplyTrueDamage(ASC,987564321.f, nullptr);
 }
 
 void AGYServerCheatProxy::Server_AddXP_Implementation(float Amount)

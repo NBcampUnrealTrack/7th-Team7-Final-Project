@@ -55,6 +55,7 @@ void ATimeRift::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionO
 	Option.InteractionAbilityToGrant = SitAbilityClass;
 	Option.Text = NSLOCTEXT("TimeRift", "Sit", "앉기");
 	Option.OptionTag = InteractTag;
+	Option.SourceObject = const_cast<ATimeRift*>(this);
 	OutOptions.Add(Option);
 
 	RegisterAsCheckpoint(PlayerState);

@@ -48,6 +48,9 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_AddXP(float Amount);
+
+	UFUNCTION(Server, Reliable)
+	void Server_Suicide();
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Debug")
 	TMap<EEnemyType, TSoftClassPtr<AGYEnemyCharacterBase>> EnemyClassMap;

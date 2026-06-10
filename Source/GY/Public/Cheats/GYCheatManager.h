@@ -86,4 +86,7 @@ public:
 
 	UFUNCTION(Exec)
 	void GY_TestHitCue();
+
+	UFUNCTION(Exec)
+	void GY_Suicide();
 };
