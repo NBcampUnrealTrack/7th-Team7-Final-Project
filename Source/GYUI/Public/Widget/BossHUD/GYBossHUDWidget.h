@@ -4,6 +4,7 @@
 #include "Core/GYUserWidget.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
+#include "GameplayEffectTypes.h"
 #include "GYBossHUDWidget.generated.h"
 
 class UProgressBar;
@@ -38,12 +39,30 @@ protected:
 
 private:
 	void HandleState(FGameplayTag, const FGYBossStateMessage& Msg);
-	void HandleHealth(FGameplayTag, const FGYAttributeValueMessage& Msg);
-	void HandlePoise(FGameplayTag, const FGYAttributeValueMessage& Msg);
+	void BindToBoss(AActor* BossActor);
+	void UnbindFromBoss();
+	void UpdateHealthUI();
+	void UpdatePoiseUI();
+
+	void OnHealthChanged(const FOnAttributeChangeData& Data);
+	void OnPoiseChanged(const FOnAttributeChangeData& Data);
+
+	UFUNCTION()
+	void OnBossReady(AGYEnemyCharacterBase* Boss);
+	UFUNCTION()
+	void OnBossDead(AGYEnemyCharacterBase* Boss);
+
+	void InitializeBossData(AGYEnemyCharacterBase* Boss);
 
 	FGameplayMessageListenerHandle StateHandle;
-	FGameplayMessageListenerHandle HealthHandle;
-	FGameplayMessageListenerHandle PoiseHandle;
+
+	TWeakObjectPtr<UAbilitySystemComponent> BossASC;
+	TWeakObjectPtr<AGYEnemyCharacterBase> CurrentBoss;
+
+	FDelegateHandle BossHealthHandle;
+	FDelegateHandle BossMaxHealthHandle;
+	FDelegateHandle BossPoiseHandle;
+	FDelegateHandle BossMaxPoiseHandle;
 
 	FTimerHandle InterpTimerHandle;
 
