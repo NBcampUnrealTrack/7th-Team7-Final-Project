@@ -57,8 +57,7 @@ void AGYPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGYPlayerState, PawnData);
-	DOREPLIFETIME(AGYPlayerState, LastCheckpointLocation);
-	DOREPLIFETIME(AGYPlayerState, bHasCheckpoint);
+	DOREPLIFETIME(AGYPlayerState, LastCheckpointId);
 }
 
 void AGYPlayerState::SetPawnData(const UGYPawnData* InPawnData)
@@ -69,6 +68,13 @@ void AGYPlayerState::SetPawnData(const UGYPawnData* InPawnData)
 	if (PawnData) return;
 
 	PawnData = InPawnData;
+	ForceNetUpdate();
+}
+
+void AGYPlayerState::SetLastCheckpointId(const FGuid& Id)
+{
+	if (!HasAuthority()) return;
+	LastCheckpointId = Id;
 	ForceNetUpdate();
 }
 
@@ -83,9 +89,6 @@ void AGYPlayerState::InitGAS(APawn* Avatar)
 	AbilitySystemComponent->InitAbilityActorInfo(this, Avatar);
 
 	if (GetLocalRole() != ROLE_Authority) return;
-	if (bAttributesInitialized) return;
-	bAttributesInitialized = true;
-	InitialSpawnLocation = Avatar->GetActorLocation();
 
 	AbilitySystemComponent->AddLooseGameplayTag(
 		GYFactionTags::Character_Faction_Player, 1,
@@ -109,11 +112,5 @@ void AGYPlayerState::InitGAS(APawn* Avatar)
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxStunAttribute(),        InitData->MaxStun);
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentStunAttribute(),    0.f);
 	}
-}
-
-void AGYPlayerState::Server_SetCheckpoint_Implementation(FVector Location)
-{
-	LastCheckpointLocation = Location;
-	bHasCheckpoint = true;
 }
 

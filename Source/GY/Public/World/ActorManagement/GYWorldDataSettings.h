@@ -25,6 +25,9 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "ActorGuid")
 	TSoftObjectPtr<UDataLayerAsset> DataLayerAsset;
 
+	UPROPERTY(EditAnywhere, Config, Category="Respawn")
+	TSoftObjectPtr<UDataTable> RespawnCheckpointTable;
+
 	UPROPERTY(EditAnywhere, Config, Category = "WorldTime")
 	float StartOfDayHour = 6.f;
 	UPROPERTY(EditAnywhere, Config, Category = "WorldTime")

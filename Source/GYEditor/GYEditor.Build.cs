@@ -9,7 +9,7 @@ public class GYEditor : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core",
+                "Core", "GY",
             }
         );
 

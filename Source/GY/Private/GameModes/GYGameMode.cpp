@@ -13,6 +13,7 @@
 #include "Player/GYPlayerState.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
+#include "WorldGimmick/TimeRift/TimeRiftSubsystem.h"
 
 AGYGameMode::AGYGameMode()
 {
@@ -116,13 +117,10 @@ void AGYGameMode::PerformRespawn(APlayerController* PC)
 	}
 
 	FTransform SpawnTransform = FTransform::Identity;
-	if (PS->HasCheckpoint())
+
+	if (UTimeRiftSubsystem* TimeRiftSubsystem = GetGameInstance()->GetSubsystem<UTimeRiftSubsystem>())
 	{
-		SpawnTransform.SetLocation(PS->GetCheckpointLocation());
-	}
-	else
-	{
-		SpawnTransform.SetLocation(PS->GetInitialSpawnLocation());
+		TimeRiftSubsystem->TryGetRespawnTransform(PS->GetLastCheckpointId(), SpawnTransform);
 	}
 
 	if (APawn* OldPawn = PC->GetPawn())

@@ -57,6 +57,7 @@ void UGA_Interact::ActivateAbility(
 		{
 			if (FGameplayAbilitySpec* GrantedSpec = ASC->FindAbilitySpecFromClass(Best->InteractionAbilityToGrant))
 			{
+				GrantedSpec->SourceObject = Best->SourceObject;
 				ASC->TryActivateAbility(GrantedSpec->Handle);
 			}
 		}

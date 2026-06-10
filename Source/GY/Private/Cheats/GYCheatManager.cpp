@@ -633,3 +633,12 @@ void UGYCheatManager::GY_TestHitCue()
 		Params);
 }
 
+void UGYCheatManager::GY_Suicide()
+{
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_Suicide();
+}
+

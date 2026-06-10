@@ -5,6 +5,7 @@
 #include "Templates/SubclassOf.h"
 #include "InteractionOption.generated.h"
 
+class IInteractable;
 class UGameplayAbility;
 
 USTRUCT(BlueprintType)
@@ -23,4 +24,7 @@ struct GY_API FInteractionOption
 
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<UGameplayAbility> InteractionAbilityToGrant;
+
+	UPROPERTY(BlueprintReadWrite)
+	TObjectPtr<UObject> SourceObject;
 };
