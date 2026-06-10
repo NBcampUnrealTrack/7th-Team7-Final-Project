@@ -25,6 +25,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_Door_Open, "GameplayCue.Interaction.Door.Open");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_Door_Close, "GameplayCue.Interaction.Door.Close");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_TimeRift, "GameplayCue.Interaction.TimeRift");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_TimeRift_Rest, "GameplayCue.Interaction.TimeRift.Rest");
 
 
 	// 상태 이상
