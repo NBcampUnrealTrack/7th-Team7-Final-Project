@@ -66,7 +66,11 @@ namespace
 		{
 			FRolledMagnitude Magnitude;
 			Magnitude.MagnitudeTag = Def.MagnitudeTag;
-			Magnitude.Value = bUseMax ? Def.Max : Stream.FRandRange(Def.Min, Def.Max);
+
+			const float Raw = bUseMax ? Def.Max : Stream.FRandRange(Def.Min, Def.Max);
+			const float Factor = FMath::Pow(10.f, static_cast<float>(Def.Decimals));
+			Magnitude.Value = FMath::RoundToFloat(Raw * Factor) / Factor;
+
 			Result.Magnitudes.Add(Magnitude);
 		}
 

@@ -198,11 +198,10 @@ FText UGYItemInfoWidget::FormatMagnitude(const FRolledMagnitude& Magnitude, UDat
 		? DisplayTable->FindRow<FEnchantMagnitudeDisplayRow>(Magnitude.MagnitudeTag.GetTagName(), TEXT("FormatMagnitude"), false)
 		: nullptr;
 
-	const int32 Decimals = (Display != nullptr) ? Display->Decimals : 0;
-
+	// 롤값은 이미 매그니튜드 자리수로 양자화됨 → 불필요한 0만 떼고 그대로 표시
 	FNumberFormattingOptions NumberOptions;
-	NumberOptions.MinimumFractionalDigits = Decimals;
-	NumberOptions.MaximumFractionalDigits = Decimals;
+	NumberOptions.MinimumFractionalDigits = 0;
+	NumberOptions.MaximumFractionalDigits = 3;
 	const FText ValueText = FText::AsNumber(Magnitude.Value, &NumberOptions);
 
 	if (Display != nullptr && !Display->Format.IsEmpty())
