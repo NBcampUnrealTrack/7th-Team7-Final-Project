@@ -115,7 +115,7 @@ void UGYPlayerGameplayAbility::EndAbility(
 	InjectedLogics.Empty();
 	RuntimeFragments.Empty();
 	EventListenerTasks.Empty();
-	CurrentDamageMultiplier = 1.f;
+	CurrentHitImpact = FGYHitImpact();
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }

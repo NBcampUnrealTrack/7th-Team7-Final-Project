@@ -148,11 +148,11 @@ void UGYComboInputLogic::PlayCurrentMontage()
 
 		const TArray<FGYComboStepData>* Steps = Fragment->GetBestMatchingSteps(OwnedTags);
 
-		float Multiplier = 1.f;
+		FGYHitImpact Impact;
 		if (Steps && Steps->IsValidIndex(ComboIndex))
 		{
 			const FGYComboStepData& Step = (*Steps)[ComboIndex];
-			Multiplier = Step.DamageMultiplier;
+			Impact = Step.Impact;
 
 			UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
 			if (ASC && Step.StaminaCost.Attribute.IsValid() && Step.StaminaCost.Amount > 0.f)
@@ -163,7 +163,7 @@ void UGYComboInputLogic::PlayCurrentMontage()
 					GYASC->NotifyAttributeChanged(Step.StaminaCost.Attribute);
 			}
 		}
-		CachedAbility->SetDamageMultiplier(Multiplier);
+		CachedAbility->SetCurrentHitImpact(Impact);
 	}
 
 	UAnimMontage* Montage = (*CachedMontages)[ComboIndex].Get();

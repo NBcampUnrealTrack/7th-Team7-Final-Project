@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Fragment/AbilityFragment.h"
 #include "AttackLogic/Shared/GYAttributeCost.h"
+#include "AttackLogic/Shared/GYHitImpact.h"
 #include "GameplayTagContainer.h"
 #include "GYComboFragment.generated.h"
 
@@ -11,8 +12,8 @@ struct GY_API FGYComboStepData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0"))
-	float DamageMultiplier = 1.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGYHitImpact Impact;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGYAttributeCost StaminaCost;
