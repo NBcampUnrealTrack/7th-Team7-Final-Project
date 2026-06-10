@@ -294,6 +294,13 @@ FEnemyComputedStats AGYEnemyCharacterBase::ComputeInitialStats(float MapLevel) c
 	return Out;
 }
 
+float AGYEnemyCharacterBase::GetStatScaleValue() const
+{
+	if (const AGYGameState* GS = GetWorld()->GetGameState<AGYGameState>())
+		return GS->GetWorldLevel();
+	return 1.f;
+}
+
 void AGYEnemyCharacterBase::ApplyInitialStats(const FEnemyComputedStats& Stats)
 {
 	if (VitalAttribute)
@@ -332,13 +339,9 @@ void AGYEnemyCharacterBase::TryGrantGASFromDataAsset()
 		return;
 	}
 
-	float WorldLevel = 1.f;
-	if (const AGYGameState* GS = GetWorld()->GetGameState<AGYGameState>())
-	{
-		WorldLevel = GS->GetWorldLevel();
-	}
+	const float Scale = GetStatScaleValue();
 
-	const FEnemyComputedStats Stats = ComputeInitialStats(WorldLevel);
+	const FEnemyComputedStats Stats = ComputeInitialStats(Scale);
 	ApplyInitialStats(Stats);
 
 	//ApplyPassiveEffects();
