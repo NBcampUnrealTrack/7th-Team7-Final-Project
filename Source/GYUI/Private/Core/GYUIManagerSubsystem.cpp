@@ -35,6 +35,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 			}
 		}
 		UnbindBoss();
+		UnbindASC();
 	}
 	RemovePrimaryGameLayout();
 	Super::Deinitialize();
@@ -75,6 +76,7 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 
 	if (AGYPlayerController* GYPC = Cast<AGYPlayerController>(NewPlayerController))
 	{
+		GYPC->OnPlayerStateInitialized.RemoveAll(this); // 기존 바인딩 해제
 		GYPC->OnPlayerStateInitialized.AddUObject(this, &UGYUIManagerSubsystem::HandlePlayerStateInitialized);
 	}
 
@@ -92,10 +94,20 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 	if (UWorld* World = GetWorld())
 	{
 		UGameplayMessageSubsystem& MSG = UGameplayMessageSubsystem::Get(World);
+
+		// 등록 리스너 해제, 바인딩 중복 방지
+		if (RegionEnterListenerHandle.IsValid())
+		{
+			MSG.UnregisterListener(RegionEnterListenerHandle);
+		}
+		if (RegionExitListenerHandle.IsValid())
+		{
+			MSG.UnregisterListener(RegionExitListenerHandle);
+		}
 		RegionEnterListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Region_Entered, this, &UGYUIManagerSubsystem::HandleRegionEntered);
 		RegionExitListenerHandle = MSG.RegisterListener(
-			GYGameplayTags::Message_Region_Exited,  this, &UGYUIManagerSubsystem::HandleRegionExited);
+			GYGameplayTags::Message_Region_Exited, this, &UGYUIManagerSubsystem::HandleRegionExited);
 	}
 }
 
@@ -112,6 +124,7 @@ void UGYUIManagerSubsystem::HandlePlayerStateInitialized(AGYPlayerController* PC
 
 void UGYUIManagerSubsystem::RegisterStatBroadcast(UAbilitySystemComponent* ASC)
 {
+	UnregisterStatBroadcast();
 	StatBroadcastEntries.Reset();
 
 	auto Add = [&](FGameplayTag Channel, const FGameplayAttribute& Cur, const FGameplayAttribute& Max)
@@ -164,6 +177,8 @@ void UGYUIManagerSubsystem::UnregisterStatBroadcast()
 		BoundASC->GetGameplayAttributeValueChangeDelegate(UGYProgressionAttributeSet::GetXPAttribute()).Remove(XPHandle);
 	}
 	StatBroadcastEntries.Reset();
+	LevelHandle.Reset();
+	XPHandle.Reset();
 }
 
 void UGYUIManagerSubsystem::OnStatAttributeChanged(const FOnAttributeChangeData& Data)
@@ -215,23 +230,9 @@ void UGYUIManagerSubsystem::OnXPRelatedChanged(const FOnAttributeChangeData& Dat
 
 void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 {
-	if (!InASC || BoundASC == InASC)
-	{
-		return;
-	}
+	if (!InASC || BoundASC == InASC) return;
 
-	if (BoundASC.IsValid())
-	{
-		for (auto& Pair : TagWidgetMap)
-		{
-			BoundASC->UnregisterGameplayTagEvent(
-				Pair.Value.DelegateHandle,
-				Pair.Key,
-				EGameplayTagEventType::NewOrRemoved);
-		}
-		UnregisterStatBroadcast();
-	}
-
+	UnbindASC();
 	BoundASC = InASC;
 
 	// 등록된 태그 전부 재구독
@@ -249,6 +250,16 @@ void UGYUIManagerSubsystem::RegisterTagDrivenWidget(
 	FGameplayTag LayerTag,
 	TSubclassOf<UCommonActivatableWidget> WidgetClass)
 {
+	// 똑같은 태그 존재 시 기존 구독 취소
+	if (FTagWidgetEntry* ExistingEntry = TagWidgetMap.Find(StateTag))
+	{
+		if (BoundASC.IsValid() && ExistingEntry->DelegateHandle.IsValid())
+		{
+			BoundASC->UnregisterGameplayTagEvent(ExistingEntry->DelegateHandle, StateTag,
+			                                     EGameplayTagEventType::NewOrRemoved);
+		}
+	}
+
 	FTagWidgetEntry Entry;
 	Entry.LayerTag = LayerTag;
 	Entry.WidgetClass = WidgetClass;
@@ -367,6 +378,32 @@ TArray<APlayerState*> UGYUIManagerSubsystem::GetKnownPlayerStates() const
 		}
 	}
 	return Result;
+}
+
+void UGYUIManagerSubsystem::UnbindASC()
+{
+	if (BoundASC.IsValid())
+	{
+		// 델리게이트 해제
+		for (auto& Pair : TagWidgetMap)
+		{
+			if (Pair.Value.DelegateHandle.IsValid()) // 이벤트 구독 해제
+			{
+				BoundASC->UnregisterGameplayTagEvent(Pair.Value.DelegateHandle, Pair.Key,
+				                                     EGameplayTagEventType::NewOrRemoved);
+				Pair.Value.DelegateHandle.Reset();
+			}
+			// 남아 있는 위젯 닫기
+			if (Pair.Value.ActiveWidget.IsValid())
+			{
+				PopWidget(Pair.Value.ActiveWidget.Get());
+				Pair.Value.ActiveWidget = nullptr;
+			}
+		}
+		// 스탯 브로드캐스트 델리게이트 해제
+		UnregisterStatBroadcast();
+	}
+	BoundASC = nullptr;
 }
 
 APlayerState* UGYUIManagerSubsystem::GetLocalPlayerState() const
@@ -547,11 +584,27 @@ void UGYUIManagerSubsystem::UnbindBoss()
 		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetMaxStunAttribute())
 		.Remove(BossMaxPoiseHandle);
 	}
+
+	// 델리게이트 중 삭제로 인한 크래시 방지
 	if (AGYEnemyCharacterBase* Boss = CurrentBoss.Get())
 	{
-		Boss->OnEnemyDead.RemoveDynamic(this, &UGYUIManagerSubsystem::HandleBossDead);
-	}
+		TWeakObjectPtr<UGYUIManagerSubsystem> WeakThis(this);
+		TWeakObjectPtr<AGYEnemyCharacterBase> WeakBoss(Boss);
 
+		if (GetWorld())
+		{
+			GetWorld()->GetTimerManager().SetTimerForNextTick([WeakThis, WeakBoss]()
+			{
+				if (WeakThis.IsValid() && WeakBoss.IsValid())
+				{
+					// 죽음 이벤트 델리게이트 해제
+					WeakBoss->OnEnemyDead.RemoveDynamic(WeakThis.Get(), &UGYUIManagerSubsystem::HandleBossDead);
+					// 보스 준비 완료 이벤트 델리게이트 해제
+					WeakBoss->OnEnemyReady.RemoveDynamic(WeakThis.Get(), &UGYUIManagerSubsystem::OnBossReadyToBind);
+				}
+			});
+		}
+	}
 	const bool bWasBound = CurrentBoss.IsValid();
 	CurrentBoss = nullptr;
 	BossASC = nullptr;

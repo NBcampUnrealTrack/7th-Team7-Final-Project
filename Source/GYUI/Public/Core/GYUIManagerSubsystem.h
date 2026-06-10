@@ -71,6 +71,8 @@ public:
 	TArray<APlayerState*> GetKnownPlayerStates() const;
 
 protected:
+	void UnbindASC();
+
 	UPROPERTY(Transient)
 	TObjectPtr<UGYPrimaryGameLayout> PrimaryGameLayout;
 
