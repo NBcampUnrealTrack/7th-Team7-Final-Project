@@ -3,6 +3,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Core/Sound/GYSoundManager.h"
 #include "GameFramework/Character.h"
+#include "Logging/GYLogManager.h"
 
 bool UGYGameplayCueNotify_FX::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
 {
@@ -32,19 +33,19 @@ void UGYGameplayCueNotify_FX::PlaySound(AActor* TargetActor,
 	}
 	// 월드 사운드만 재생
 
-	if (USceneComponent* AttachComponent =
-		GetAttachComponent(TargetActor))
+	if (USceneComponent* AttachComponent = GetAttachComponent(TargetActor))
 	{
 		SoundManager->PlaySoundAttached(
 			SoundTag,
 			AttachComponent,
 			AttachSocket
 		);
-
+		GY_LOG(Content, CYS, "GC: Attached SFX");
 		return;
 	}
 
-	SoundManager->PlaySoundAtLocation(SoundTag, Parameters.Location);
+	GY_LOG(Content, CYS, "GC: Location SFX");
+	SoundManager->PlaySoundAtLocation(SoundTag, Parameters.Location + LocationOffset);
 }
 
 void UGYGameplayCueNotify_FX::SpawnEffect(AActor* TargetActor,
@@ -75,14 +76,14 @@ void UGYGameplayCueNotify_FX::SpawnEffect(AActor* TargetActor,
 			true,
 			ENCPoolMethod::AutoRelease
 		);
-
+		GY_LOG(Content, CYS, "GC: Attached VFX");
 		return;
 	}
-
+	GY_LOG(Content, CYS, "GC: Location VFX");
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		TargetActor,
 		Effect,
-		Parameters.Location,
+		Parameters.Location + LocationOffset,
 		Rotation,
 		EffectScale);
 }
@@ -91,6 +92,10 @@ USceneComponent* UGYGameplayCueNotify_FX::GetAttachComponent(
 	AActor* TargetActor) const
 {
 	if (!TargetActor)
+	{
+		return nullptr;
+	}
+	if (bIsLocation)
 	{
 		return nullptr;
 	}
