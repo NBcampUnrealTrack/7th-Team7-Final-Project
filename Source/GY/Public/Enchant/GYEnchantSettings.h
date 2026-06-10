@@ -22,7 +22,4 @@ public:
 
 	UPROPERTY(EditAnywhere, Config, Category = "Enchant")
 	TSoftObjectPtr<UDataTable> PenaltyOptionTable;
-
-	UPROPERTY(EditAnywhere, Config, Category = "Enchant")
-	TSoftObjectPtr<UDataTable> EnchantMagnitudeTable;
 };

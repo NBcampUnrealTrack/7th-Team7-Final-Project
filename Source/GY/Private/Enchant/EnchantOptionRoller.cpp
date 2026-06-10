@@ -4,7 +4,6 @@
 #include "Enchant/EnchantSlotPolicy.h"
 #include "Enchant/GYEnchantSettings.h"
 #include "Engine/DataTable.h"
-#include "Items/EnchantMagnitudeRow.h"
 #include "Items/EnchantOptionRow.h"
 #include "Items/Fragments/ItemFragment_Enchantable.h"
 #include "Items/ItemDefinition.h"
@@ -51,29 +50,25 @@ namespace
 		return Candidates.Last().Id;
 	}
 
-	// OptionId에 매칭되는 magnitude 행들을 롤해서 FRolledEnchantOption 구성.
+	// 옵션 풀 테이블에서 OptionId 행을 찾아 그 안의 Magnitudes를 롤해서 FRolledEnchantOption 구성.
 	// bUseMax면 Max 고정, 아니면 RandRange(Min, Max) 균등.
-	FRolledEnchantOption RollMagnitudes(FName OptionId, bool bUseMax, FRandomStream& Stream)
+	FRolledEnchantOption RollMagnitudes(UDataTable* Pool, FName OptionId, bool bUseMax, FRandomStream& Stream)
 	{
 		FRolledEnchantOption Result;
 		Result.OptionId = OptionId;
 
-		const UGYEnchantSettings* Settings = GetDefault<UGYEnchantSettings>();
-		if (!IsValid(Settings)) return Result;
+		if (!IsValid(Pool)) return Result;
 
-		UDataTable* MagnitudeTable = Settings->EnchantMagnitudeTable.LoadSynchronous();
-		if (!IsValid(MagnitudeTable)) return Result;
+		const FEnchantOptionRow* Row = Pool->FindRow<FEnchantOptionRow>(OptionId, TEXT("EnchantOptionRoller::RollMagnitudes"));
+		if (Row == nullptr) return Result;
 
-		MagnitudeTable->ForeachRow<FEnchantMagnitudeRow>(TEXT("EnchantOptionRoller::RollMagnitudes"),
-			[&Result, OptionId, bUseMax, &Stream](const FName&, const FEnchantMagnitudeRow& Row)
-			{
-				if (Row.OptionId != OptionId) return;
-
-				FRolledMagnitude Magnitude;
-				Magnitude.MagnitudeTag = Row.MagnitudeTag;
-				Magnitude.Value = bUseMax ? Row.Max : Stream.FRandRange(Row.Min, Row.Max);
-				Result.Magnitudes.Add(Magnitude);
-			});
+		for (const FEnchantMagnitudeDef& Def : Row->Magnitudes)
+		{
+			FRolledMagnitude Magnitude;
+			Magnitude.MagnitudeTag = Def.MagnitudeTag;
+			Magnitude.Value = bUseMax ? Def.Max : Stream.FRandRange(Def.Min, Def.Max);
+			Result.Magnitudes.Add(Magnitude);
+		}
 
 		return Result;
 	}
@@ -103,7 +98,7 @@ TArray<FRolledEnchantOption> EnchantOptionRoller::RollOptions(UItemDefinition* D
 		const FName Picked = PickWeighted(Candidates, Stream);
 		if (Picked.IsNone()) break;
 
-		Result.Add(RollMagnitudes(Picked, bEngraved, Stream));
+		Result.Add(RollMagnitudes(Pool, Picked, bEngraved, Stream));
 		Candidates.RemoveAll([&Picked](const FRollCandidate& Candidate)
 		{
 			return Candidate.Id == Picked;
@@ -128,7 +123,7 @@ TArray<FRolledEnchantOption> EnchantOptionRoller::RollAllOptions(UItemDefinition
 			if (!PenaltyId.IsNone())
 			{
 				// 페널티는 각인이어도 랜덤
-				Result.Add(RollMagnitudes(PenaltyId, false, Stream));
+				Result.Add(RollMagnitudes(PenaltyPool, PenaltyId, false, Stream));
 			}
 		}
 	}
