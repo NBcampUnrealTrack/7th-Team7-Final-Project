@@ -42,7 +42,7 @@ protected:
 	void RevokeAbilitySets(UEquipmentInstance* Instance);
 
 	void ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC);
-	void ApplyEnchantOptions(UEquipmentInstance* Instance, UItemDefinition* Def, const struct FInventoryEntry& Entry, UAbilitySystemComponent* ASC);
+	void ApplyEnchantOptions(UEquipmentInstance* Instance, const struct FInventoryEntry& Entry, UAbilitySystemComponent* ASC);
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Equipment")
 	FEquipmentList EquippedItems;

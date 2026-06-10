@@ -4,8 +4,9 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/OptionTags.h"
-#include "Enchant/EnchantOptionResolver.h"
+#include "Enchant/EnchantMagnitudeEffectRow.h"
 #include "Enchant/EnchantService.h"
+#include "Enchant/GYEnchantSettings.h"
 #include "Engine/DataTable.h"
 #include "Engine/GameInstance.h"
 #include "Equipment/EquipmentInstance.h"
@@ -14,7 +15,6 @@
 #include "GameplayEffect.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
-#include "Items/EnchantOptionRow.h"
 #include "Items/Fragments/ItemFragment_Equippable.h"
 #include "Items/Fragments/ItemFragment_GrantedAbilitySet.h"
 #include "Items/Fragments/ItemFragment_Weapon.h"
@@ -223,7 +223,7 @@ void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* In
 	}
 
 	ApplyWeaponBaseStats(Instance, Def, ASC);
-	ApplyEnchantOptions(Instance, Def, Entry, ASC);
+	ApplyEnchantOptions(Instance, Entry, ASC);
 
 	// TODO: SetByCaller(Stat.Modifier.Deviation = 1 + Entry.StatDeviation) 주입 — Template GE 인프라 후
 	// TODO: Entry.SocketedGemInstanceIds 순회 → 각 Gem의 AbilitySet 부여 — GemSocketService 후
@@ -231,31 +231,37 @@ void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* In
 	// TODO: ApplyMasteryPenaltyIfNeeded — MasteryComponent (character 도메인) 후
 }
 
-void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance, UItemDefinition* Def, const FInventoryEntry& Entry, UAbilitySystemComponent* ASC)
+void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance, const FInventoryEntry& Entry, UAbilitySystemComponent* ASC)
 {
 	if (Entry.RolledOptions.IsEmpty()) return;
 
-	// TODO (combat 도메인): 조건부/프록 옵션(약공 한정·출혈·흡혈 등)은 GE 템플릿으로 표현 불가 → 부여 어빌리티로 분기 필요.
-	// 여기선 롤된 수치를 MagnitudeTag 키로 SetByCaller 주입하는 plumbing만 처리.
+	const UGYEnchantSettings* Settings = GetDefault<UGYEnchantSettings>();
+	UDataTable* EffectTable = IsValid(Settings) ? Settings->MagnitudeEffectTable.LoadSynchronous() : nullptr;
+	if (!IsValid(EffectTable)) return;
+
+	// 매그니튜드 단위로 적용. 매핑(DT_EnchantMagnitudeEffect)에 있는 단순 어트리뷰트 가산만 GE로 처리.
+	// 매핑 없는 매그니튜드(조건부 타격·프록·이동속도 등)는 각 도메인(전투/어빌리티)에서 별도 처리.
 	for (const FRolledEnchantOption& Option : Entry.RolledOptions)
 	{
-		const FEnchantOptionRow* Row = EnchantOptionResolver::FindRow(Def, Option.OptionId);
-		if (Row == nullptr) continue;
-		if (!IsValid(Row->TemplateGE)) continue;
-
-		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
-		Context.AddSourceObject(Instance);
-
-		FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(Row->TemplateGE, 1.f, Context);
-		if (!Spec.IsValid()) continue;
-
 		for (const FRolledMagnitude& Magnitude : Option.Magnitudes)
 		{
-			Spec.Data->SetSetByCallerMagnitude(Magnitude.MagnitudeTag, Magnitude.Value);
-		}
+			const FEnchantMagnitudeEffectRow* EffectRow = EffectTable->FindRow<FEnchantMagnitudeEffectRow>(
+				Magnitude.MagnitudeTag.GetTagName(), TEXT("ApplyEnchantOptions"), false);
+			if (EffectRow == nullptr) continue;
+			if (!IsValid(EffectRow->Effect)) continue;
 
-		const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
-		Instance->GetMutableGrantedHandles().GameplayEffectHandles.Add(Handle);
+			FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+			Context.AddSourceObject(Instance);
+
+			FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(EffectRow->Effect, 1.f, Context);
+			if (!Spec.IsValid()) continue;
+
+			Spec.Data->SetSetByCallerMagnitude(
+				GYGameplayTags::Stat_Modifier_OptionMagnitude1, Magnitude.Value * EffectRow->ValueScale);
+
+			const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
+			Instance->GetMutableGrantedHandles().GameplayEffectHandles.Add(Handle);
+		}
 	}
 }
 
