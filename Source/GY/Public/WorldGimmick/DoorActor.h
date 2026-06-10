@@ -46,4 +46,7 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Open)
 	bool bIsOpen = false;
+
+	void PlayOpenEffect(APawn* Interactor);
+	void PlayCloseEffect(APawn* Interactor);
 };
