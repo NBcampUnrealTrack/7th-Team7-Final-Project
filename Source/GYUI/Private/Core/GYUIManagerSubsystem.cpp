@@ -17,9 +17,6 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Curves/CurveFloat.h"
 #include "GameFramework/GameStateBase.h"
-#include "Enemy/GYEnemyCharacterBase.h"
-#include "Enemy/Config/EnemyDataAsset.h"
-#include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 
 void UGYUIManagerSubsystem::Deinitialize()
 {
@@ -34,7 +31,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 				MSG->UnregisterListener(RegionExitListenerHandle);
 			}
 		}
-		UnbindBoss();
+		UnbindASC();
 	}
 	RemovePrimaryGameLayout();
 	Super::Deinitialize();
@@ -75,6 +72,7 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 
 	if (AGYPlayerController* GYPC = Cast<AGYPlayerController>(NewPlayerController))
 	{
+		GYPC->OnPlayerStateInitialized.RemoveAll(this); // 기존 바인딩 해제
 		GYPC->OnPlayerStateInitialized.AddUObject(this, &UGYUIManagerSubsystem::HandlePlayerStateInitialized);
 	}
 
@@ -92,10 +90,20 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 	if (UWorld* World = GetWorld())
 	{
 		UGameplayMessageSubsystem& MSG = UGameplayMessageSubsystem::Get(World);
+
+		// 등록 리스너 해제, 바인딩 중복 방지
+		if (RegionEnterListenerHandle.IsValid())
+		{
+			MSG.UnregisterListener(RegionEnterListenerHandle);
+		}
+		if (RegionExitListenerHandle.IsValid())
+		{
+			MSG.UnregisterListener(RegionExitListenerHandle);
+		}
 		RegionEnterListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Region_Entered, this, &UGYUIManagerSubsystem::HandleRegionEntered);
 		RegionExitListenerHandle = MSG.RegisterListener(
-			GYGameplayTags::Message_Region_Exited,  this, &UGYUIManagerSubsystem::HandleRegionExited);
+			GYGameplayTags::Message_Region_Exited, this, &UGYUIManagerSubsystem::HandleRegionExited);
 	}
 }
 
@@ -112,6 +120,7 @@ void UGYUIManagerSubsystem::HandlePlayerStateInitialized(AGYPlayerController* PC
 
 void UGYUIManagerSubsystem::RegisterStatBroadcast(UAbilitySystemComponent* ASC)
 {
+	UnregisterStatBroadcast();
 	StatBroadcastEntries.Reset();
 
 	auto Add = [&](FGameplayTag Channel, const FGameplayAttribute& Cur, const FGameplayAttribute& Max)
@@ -164,6 +173,8 @@ void UGYUIManagerSubsystem::UnregisterStatBroadcast()
 		BoundASC->GetGameplayAttributeValueChangeDelegate(UGYProgressionAttributeSet::GetXPAttribute()).Remove(XPHandle);
 	}
 	StatBroadcastEntries.Reset();
+	LevelHandle.Reset();
+	XPHandle.Reset();
 }
 
 void UGYUIManagerSubsystem::OnStatAttributeChanged(const FOnAttributeChangeData& Data)
@@ -215,23 +226,9 @@ void UGYUIManagerSubsystem::OnXPRelatedChanged(const FOnAttributeChangeData& Dat
 
 void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 {
-	if (!InASC || BoundASC == InASC)
-	{
-		return;
-	}
+	if (!InASC || BoundASC == InASC) return;
 
-	if (BoundASC.IsValid())
-	{
-		for (auto& Pair : TagWidgetMap)
-		{
-			BoundASC->UnregisterGameplayTagEvent(
-				Pair.Value.DelegateHandle,
-				Pair.Key,
-				EGameplayTagEventType::NewOrRemoved);
-		}
-		UnregisterStatBroadcast();
-	}
-
+	UnbindASC();
 	BoundASC = InASC;
 
 	// 등록된 태그 전부 재구독
@@ -249,6 +246,16 @@ void UGYUIManagerSubsystem::RegisterTagDrivenWidget(
 	FGameplayTag LayerTag,
 	TSubclassOf<UCommonActivatableWidget> WidgetClass)
 {
+	// 똑같은 태그 존재 시 기존 구독 취소
+	if (FTagWidgetEntry* ExistingEntry = TagWidgetMap.Find(StateTag))
+	{
+		if (BoundASC.IsValid() && ExistingEntry->DelegateHandle.IsValid())
+		{
+			BoundASC->UnregisterGameplayTagEvent(ExistingEntry->DelegateHandle, StateTag,
+			                                     EGameplayTagEventType::NewOrRemoved);
+		}
+	}
+
 	FTagWidgetEntry Entry;
 	Entry.LayerTag = LayerTag;
 	Entry.WidgetClass = WidgetClass;
@@ -369,6 +376,32 @@ TArray<APlayerState*> UGYUIManagerSubsystem::GetKnownPlayerStates() const
 	return Result;
 }
 
+void UGYUIManagerSubsystem::UnbindASC()
+{
+	if (BoundASC.IsValid())
+	{
+		// 델리게이트 해제
+		for (auto& Pair : TagWidgetMap)
+		{
+			if (Pair.Value.DelegateHandle.IsValid()) // 이벤트 구독 해제
+			{
+				BoundASC->UnregisterGameplayTagEvent(Pair.Value.DelegateHandle, Pair.Key,
+				                                     EGameplayTagEventType::NewOrRemoved);
+				Pair.Value.DelegateHandle.Reset();
+			}
+			// 남아 있는 위젯 닫기
+			if (Pair.Value.ActiveWidget.IsValid())
+			{
+				PopWidget(Pair.Value.ActiveWidget.Get());
+				Pair.Value.ActiveWidget = nullptr;
+			}
+		}
+		// 스탯 브로드캐스트 델리게이트 해제
+		UnregisterStatBroadcast();
+	}
+	BoundASC = nullptr;
+}
+
 APlayerState* UGYUIManagerSubsystem::GetLocalPlayerState() const
 {
 	ULocalPlayer* LP = GetLocalPlayer();
@@ -469,12 +502,14 @@ void UGYUIManagerSubsystem::HandleRegionEntered(FGameplayTag, const FGYRegionEnt
     if (!LocalPawn || Msg.Pawn.Get() != LocalPawn) return;
 
 	ActiveRegionId = Msg.RegionId;
+	if (IsValid(Msg.BossActor))
+	{
+		FGYBossStateMessage State;
+		State.bVisible = true;
+		State.TargetBoss = Msg.BossActor;
 
-    AGYEnemyCharacterBase* Boss = Cast<AGYEnemyCharacterBase>(Msg.BossActor.LoadSynchronous());
-    if (!Boss || Boss->IsDead()) return;
-    if (CurrentBoss.Get() == Boss) return;
-
-    BindBoss(Boss);
+		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
+	}
 }
 
 void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegionExitedMessage& Msg)
@@ -485,102 +520,11 @@ void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegion
 	if (Msg.RegionId == ActiveRegionId)
 	{
 		ActiveRegionId = FGameplayTag(); // 지역 정보 초기화
-		UnbindBoss();
-	}
-}
 
-void UGYUIManagerSubsystem::BindBoss(AGYEnemyCharacterBase* Boss)
-{
-	if (CurrentBoss.Get() == Boss) return;
-	UnbindBoss();
-
-	UAbilitySystemComponent* ASC = Boss ? Boss->GetAbilitySystemComponent() : nullptr;
-	if (!ASC) return;
-
-	CurrentBoss = Boss;
-	BossASC = ASC;
-
-	BossHealthHandle = ASC->GetGameplayAttributeValueChangeDelegate(
-		UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute()).AddWeakLambda(this,
-			[this](const FOnAttributeChangeData&) { BroadcastBossHealth(); });
-	BossMaxHealthHandle = ASC->GetGameplayAttributeValueChangeDelegate(
-		UGYEnemyVitalAttributeSet::GetMaxHealthAttribute()).AddWeakLambda(this,
-			[this](const FOnAttributeChangeData&) { BroadcastBossHealth(); });
-	BossPoiseHandle = ASC->GetGameplayAttributeValueChangeDelegate(
-		UGYEnemyVitalAttributeSet::GetCurrentStunAttribute()).AddWeakLambda(this,
-			[this](const FOnAttributeChangeData&) { BroadcastBossPoise(); });
-	BossMaxPoiseHandle = ASC->GetGameplayAttributeValueChangeDelegate(
-		UGYEnemyVitalAttributeSet::GetMaxStunAttribute()).AddWeakLambda(this,
-			[this](const FOnAttributeChangeData&) { BroadcastBossPoise(); });
-
-	Boss->OnEnemyDead.AddUniqueDynamic(this, &UGYUIManagerSubsystem::HandleBossDead);
-
-	// 상태, 이름 송신
-	FGYBossStateMessage State;
-	State.bVisible = true;
-	if (UEnemyDataAsset* Data = Boss->GetEnemyData())
-		State.BossName = Data->EnemyName;
-	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
-
-	// 현재 Rep 값 즉시 송신
-	BroadcastBossHealth();
-	BroadcastBossPoise();
-}
-
-void UGYUIManagerSubsystem::UnbindBoss()
-{
-	if (UAbilitySystemComponent* ASC = BossASC.Get())
-	{
-		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute())
-		.Remove(BossHealthHandle);
-		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetMaxHealthAttribute())
-		.Remove(BossMaxHealthHandle);
-		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetCurrentStunAttribute())
-		.Remove(BossPoiseHandle);
-		ASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetMaxStunAttribute())
-		.Remove(BossMaxPoiseHandle);
-	}
-	if (AGYEnemyCharacterBase* Boss = CurrentBoss.Get())
-	{
-		Boss->OnEnemyDead.RemoveDynamic(this, &UGYUIManagerSubsystem::HandleBossDead);
-	}
-
-	const bool bWasBound = CurrentBoss.IsValid();
-	CurrentBoss = nullptr;
-	BossASC = nullptr;
-
-	if (bWasBound && GetWorld())
-	{
+		// UI 끄기
 		FGYBossStateMessage State;
+		State.bVisible = false;
+		State.TargetBoss = nullptr;
 		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
 	}
-}
-
-void UGYUIManagerSubsystem::HandleBossDead(AGYEnemyCharacterBase*)
-{
-	UnbindBoss();
-}
-
-void UGYUIManagerSubsystem::BroadcastBossHealth()
-{
-	UAbilitySystemComponent* ASC = BossASC.Get();
-	if (!ASC || !GetWorld()) return;
-
-	FGYAttributeValueMessage Msg;
-	Msg.CurrentValue = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute());
-	Msg.MaxValue = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetMaxHealthAttribute());
-
-	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_Stat_Health, Msg);
-}
-
-void UGYUIManagerSubsystem::BroadcastBossPoise()
-{
-	UAbilitySystemComponent* ASC = BossASC.Get();
-	if (!ASC || !GetWorld()) return;
-
-	FGYAttributeValueMessage Msg;
-	Msg.CurrentValue = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetCurrentStunAttribute());
-	Msg.MaxValue = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetMaxStunAttribute());
-
-	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_Stat_Poise, Msg);
 }

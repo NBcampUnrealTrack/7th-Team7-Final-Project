@@ -15,6 +15,7 @@ class UAbilitySystemComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDead, AGYEnemyCharacterBase*, Enemy);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AGYEnemyCharacterBase*, Enemy, float, DamageAmount);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyReady, AGYEnemyCharacterBase*, Enemy);
 
 USTRUCT()
 struct FEnemyComputedStats
@@ -58,6 +59,9 @@ public:
 	bool IsDead() const { return bIsDead; }
 
 	UFUNCTION(BlueprintPure, Category = "Enemy")
+	bool IsEnemyReady() const { return bIsInitialized; }
+
+	UFUNCTION(BlueprintPure, Category = "Enemy")
 	bool IsStunned() const;
 
 	UFUNCTION(BlueprintPure, Category = "Enemy")
@@ -68,6 +72,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	virtual void Die();
+
+	UFUNCTION()
+	void OnRep_IsDead();
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -141,6 +148,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyHit OnEnemyHit;
 
+	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
+	FOnEnemyReady OnEnemyReady;
+
 public:
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	TArray<FName> WeaponTraceSockets;
@@ -174,10 +184,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
 	TObjectPtr<UGYEnemyDamageAttributeSet> DamageAttribute;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
 	bool bIsDead = false;
 
 	bool bGASGrantedFromDataAsset = false;
+
+	bool bIsInitialized = false;
 
 	bool bAttributeDelegatesBound = false;
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category ="Enemy|Anim")

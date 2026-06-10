@@ -5,6 +5,10 @@
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "UI/GYUIMessages.h"
 #include "TimerManager.h"
+#include "AbilitySystemInterface.h"
+#include "AbilitySystemComponent.h"
+#include "Enemy/GYEnemyCharacterBase.h"
+#include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 
 UGYBossHUDWidget::UGYBossHUDWidget(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -20,11 +24,7 @@ void UGYBossHUDWidget::NativeConstruct()
 	if (!World) return;
 
 	UGameplayMessageSubsystem& MSG = UGameplayMessageSubsystem::Get(World);
-
-	// 리스너 등록
 	StateHandle = MSG.RegisterListener(GYGameplayTags::Message_Boss_State,this, &UGYBossHUDWidget::HandleState);
-	HealthHandle = MSG.RegisterListener(GYGameplayTags::Message_Boss_Stat_Health,this, &UGYBossHUDWidget::HandleHealth);
-	PoiseHandle = MSG.RegisterListener(GYGameplayTags::Message_Boss_Stat_Poise,this, &UGYBossHUDWidget::HandlePoise);
 }
 
 void UGYBossHUDWidget::NativeDestruct()
@@ -37,62 +37,167 @@ void UGYBossHUDWidget::NativeDestruct()
 			if (UGameplayMessageSubsystem* MSG = GI->GetSubsystem<UGameplayMessageSubsystem>())
 			{
 				MSG->UnregisterListener(StateHandle);
-				MSG->UnregisterListener(HealthHandle);
-				MSG->UnregisterListener(PoiseHandle);
 			}
 		}
 	}
+	UnbindFromBoss();
 	Super::NativeDestruct();
 }
 
 void UGYBossHUDWidget::HandleState(FGameplayTag, const FGYBossStateMessage& Msg)
 {
-	if (Msg.bVisible)
+	if (Msg.bVisible && Msg.TargetBoss.IsValid())
 	{
 		bHealthInitialized = false;
 		bPoiseInitialized = false;
+		BindToBoss(Msg.TargetBoss.Get());
+	}
+	else
+	{
+		UnbindFromBoss();
 	}
 
-	if (BossNameText)
-	{
-		BossNameText->SetText(Msg.BossName);
-	}
 	SetVisibility(Msg.bVisible ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 	OnBossStateReceived(Msg.bVisible);
 }
 
-void UGYBossHUDWidget::HandleHealth(FGameplayTag Channel, const FGYAttributeValueMessage& Msg)
+void UGYBossHUDWidget::BindToBoss(AActor* BossActor)
 {
-    TargetHealthPercent = Msg.MaxValue > 0.f ? (Msg.CurrentValue / Msg.MaxValue) : 0.f;
+	UnbindFromBoss(); // 기존 연결 초기화
+
+	if (!BossActor) return;
+
+	CurrentBoss = Cast<AGYEnemyCharacterBase>(BossActor);
+	if (CurrentBoss.IsValid())
+	{
+		// 사망 이벤트 구독
+		CurrentBoss->OnEnemyDead.AddDynamic(this, &UGYBossHUDWidget::OnBossDead);
+		if (CurrentBoss->IsEnemyReady())
+		{
+			InitializeBossData(CurrentBoss.Get());
+		}
+		else
+		{
+			CurrentBoss->OnEnemyReady.AddDynamic(this, &UGYBossHUDWidget::OnBossReady);
+		}
+	}
+
+	IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(BossActor);
+	if (!ASI) return;
+
+	BossASC = ASI->GetAbilitySystemComponent();
+	if (!BossASC.IsValid()) return;
+
+	BossHealthHandle = BossASC->GetGameplayAttributeValueChangeDelegate(
+		UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute()).AddUObject(this, &UGYBossHUDWidget::OnHealthChanged);
+	BossMaxHealthHandle = BossASC->GetGameplayAttributeValueChangeDelegate(
+		UGYEnemyVitalAttributeSet::GetMaxHealthAttribute()).AddUObject(this, &UGYBossHUDWidget::OnHealthChanged);
+	BossPoiseHandle = BossASC->GetGameplayAttributeValueChangeDelegate(
+		UGYEnemyVitalAttributeSet::GetCurrentStunAttribute()).AddUObject(this, &UGYBossHUDWidget::OnPoiseChanged);
+	BossMaxPoiseHandle = BossASC->GetGameplayAttributeValueChangeDelegate(
+		UGYEnemyVitalAttributeSet::GetMaxStunAttribute()).AddUObject(this, &UGYBossHUDWidget::OnPoiseChanged);
+
+	UpdateHealthUI();
+	UpdatePoiseUI();
+}
+
+void UGYBossHUDWidget::UnbindFromBoss()
+{
+	if (BossASC.IsValid())
+	{
+		BossASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute()).Remove(BossHealthHandle);
+		BossASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetMaxHealthAttribute()).Remove(BossMaxHealthHandle);
+		BossASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetCurrentStunAttribute()).Remove(BossPoiseHandle);
+		BossASC->GetGameplayAttributeValueChangeDelegate(UGYEnemyVitalAttributeSet::GetMaxStunAttribute()).Remove(BossMaxPoiseHandle);
+	}
+
+	if (CurrentBoss.IsValid())
+	{
+		CurrentBoss->OnEnemyDead.RemoveDynamic(this, &UGYBossHUDWidget::OnBossDead);
+		CurrentBoss->OnEnemyReady.RemoveDynamic(this, &UGYBossHUDWidget::OnBossReady);
+	}
+
+	BossASC = nullptr;
+	CurrentBoss = nullptr;
+}
+
+void UGYBossHUDWidget::UpdateHealthUI()
+{
+	if (!BossASC.IsValid()) return;
+
+	float CurHealth = BossASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute());
+	float MaxHealth = BossASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetMaxHealthAttribute());
+
+	TargetHealthPercent = MaxHealth > 0.f ? (CurHealth / MaxHealth) : 0.f;
+
 	if (!bHealthInitialized)
 	{
 		bHealthInitialized = true;
 		CurrentHealthPercent = TargetHealthPercent;
-		if (HealthBar)
-		{
-			HealthBar->SetPercent(CurrentHealthPercent);
-		}
+		if (HealthBar) HealthBar->SetPercent(CurrentHealthPercent);
 		return;
 	}
-    StartInterpTimer();
+	StartInterpTimer();
 }
 
-void UGYBossHUDWidget::HandlePoise(FGameplayTag Channel, const FGYAttributeValueMessage& Msg)
+void UGYBossHUDWidget::UpdatePoiseUI()
 {
-    TargetPoisePercent = Msg.MaxValue > 0.f ? (Msg.CurrentValue / Msg.MaxValue) : 0.f;
+	if (!BossASC.IsValid()) return;
+
+	float CurPoise = BossASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetCurrentStunAttribute());
+	float MaxPoise = BossASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetMaxStunAttribute());
+
+	TargetPoisePercent = MaxPoise > 0.f ? (CurPoise / MaxPoise) : 0.f;
 
 	if (!bPoiseInitialized)
 	{
 		bPoiseInitialized = true;
 		CurrentPoisePercent = TargetPoisePercent;
-		if (PoiseBar)
-		{
-			PoiseBar->SetPercent(CurrentPoisePercent);
-		}
+		if (PoiseBar) PoiseBar->SetPercent(CurrentPoisePercent);
 		return;
 	}
+	StartInterpTimer();
+}
 
-    StartInterpTimer();
+void UGYBossHUDWidget::OnHealthChanged(const FOnAttributeChangeData& Data)
+{
+	UpdateHealthUI();
+}
+
+void UGYBossHUDWidget::OnPoiseChanged(const FOnAttributeChangeData& Data)
+{
+	UpdatePoiseUI();
+}
+
+void UGYBossHUDWidget::OnBossDead(AGYEnemyCharacterBase* Boss)
+{
+	UnbindFromBoss();
+	SetVisibility(ESlateVisibility::Collapsed);
+	OnBossStateReceived(false);
+}
+
+void UGYBossHUDWidget::OnBossReady(AGYEnemyCharacterBase* Boss)
+{
+	if (Boss == CurrentBoss.Get())
+	{
+		InitializeBossData(Boss);
+	}
+}
+
+void UGYBossHUDWidget::InitializeBossData(AGYEnemyCharacterBase* Boss)
+{
+	if (!Boss) return;
+
+	// 이름 가져오기
+	if (UEnemyDataAsset* Data = Boss->GetEnemyData())
+	{
+		if (BossNameText)
+		{
+			BossNameText->SetText(Data->EnemyName);
+		}
+	}
+	UpdateHealthUI();
+	UpdatePoiseUI();
 }
 
 void UGYBossHUDWidget::StartInterpTimer()

@@ -7,10 +7,12 @@
 #include "UI/GYUIMessages.h"
 #include "Loot/RegionLootData.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
+#include "Net/UnrealNetwork.h"
 
 AGYRegionVolume::AGYRegionVolume()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 
 	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
 	RootComponent = TriggerBox;
@@ -23,20 +25,6 @@ void AGYRegionVolume::BeginPlay()
 	Super::BeginPlay();
 	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AGYRegionVolume::OnOverlapBegin);
 	TriggerBox->OnComponentEndOverlap.AddDynamic(this, &AGYRegionVolume::OnOverlapEnd);
-
-	// 0.1초 뒤에 체크하여 초기화 시간 확보
-	FTimerHandle TimerHandle;
-	GetWorldTimerManager().SetTimer(TimerHandle, [this]()
-	{
-		if (!IsValid(this)) return;
-
-		TArray<AActor*> Overlapping;
-		TriggerBox->GetOverlappingActors(Overlapping, APawn::StaticClass());
-		for (AActor* Actor : Overlapping)
-		{
-		   OnOverlapBegin(TriggerBox, Actor, nullptr, 0, false, FHitResult());
-		}
-	}, 0.1f, false);
 }
 
 bool AGYRegionVolume::IsLocationInside(const FVector& WorldLocation) const
@@ -57,13 +45,14 @@ void AGYRegionVolume::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
 	APawn* Pawn = Cast<APawn>(OtherActor);
 	if (!Pawn) return;
 
+	if (!IsValid(TargetBossActor)) return; // Actor 유효성 체크
+
 	URegionLootData* Region = RegionData.LoadSynchronous();
 	if (!Region) return;
 
 	if (Region->RegionId.IsValid()) // 지역 태그 갱신
 	{
-		if (UAbilitySystemComponent* ASC =
-			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
+		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
 		{
 			FGameplayTag RegionParentTag = FGameplayTag::RequestGameplayTag(TEXT("Region"));
 			FGameplayTagContainer OwnedTags;
@@ -93,7 +82,7 @@ void AGYRegionVolume::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* 
 {
 	APawn* Pawn = Cast<APawn>(OtherActor);
 	if (!Pawn) return;
-	if (TriggerBox->IsOverlappingActor(Pawn))
+	if (TriggerBox->IsOverlappingActor(Pawn)) // 경계 걸친 경우 오작동 방지
 	{
 		return;
 	}
@@ -101,9 +90,21 @@ void AGYRegionVolume::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* 
 	URegionLootData* Region = RegionData.LoadSynchronous();
 	if (!Region) return;
 
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
+	if (ASC)
+	{
+		if (!ASC->HasMatchingGameplayTag(Region->RegionId)) return;
+		ASC->RemoveLooseGameplayTag(Region->RegionId); // 태그 회수
+	}
 	FGYRegionExitedMessage ExitMsg;
 	ExitMsg.RegionId = Region->RegionId;
 	ExitMsg.Pawn = Pawn;
 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Region_Exited, ExitMsg);
+}
+
+void AGYRegionVolume::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGYRegionVolume, TargetBossActor); // 서버에서 복제한 액터 클라이언트로 동기화
 }
