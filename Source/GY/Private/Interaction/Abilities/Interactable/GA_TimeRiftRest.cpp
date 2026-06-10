@@ -5,10 +5,12 @@
 
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "GameModes/GYGameMode.h"
 #include "Inventory/InventoryComponent.h"
 #include "Items/ItemDefinition.h"
+#include "Logging/GYLogManager.h"
 #include "Player/GYPlayerState.h"
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
 
@@ -46,6 +48,9 @@ void UGA_TimeRiftRest::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 				if (SpecHandle.IsValid())
 				{
 					ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
+
+					// 이펙트 게임플레이 큐
+					ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Interaction_TimeRift_Rest);
 				}
 			}
 		}
@@ -100,7 +105,7 @@ void UGA_TimeRiftRest::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		}
 
 	}
-
+	GY_LOG(Content,CYS,"GA 휴식");
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

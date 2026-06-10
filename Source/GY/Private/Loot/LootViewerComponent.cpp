@@ -1,6 +1,8 @@
 #include "Loot/LootViewerComponent.h"
 
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/SoundTags.h"
+#include "Core/Sound/GYSoundManager.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
@@ -25,6 +27,14 @@ void ULootViewerComponent::Client_ShowLootBox_Implementation(ALootBoxActor* Box)
 	Msg.bOpened = Box->IsOpened();
 	Msg.RemainingDrops = Box->GetPendingDrops().Num();
 	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Loot_ShowBox, Msg);
+}
+
+void ULootViewerComponent::Client_PlayLootBoxSound_Implementation(FGameplayTag SoundTag)
+{
+	if (UGYSoundManager* SoundManager = UGYSoundManager::Get(this))
+	{
+		SoundManager->PlaySound2D(SoundTag);
+	}
 }
 
 void ULootViewerComponent::Server_TakeLootItem_Implementation(ALootBoxActor* Box, int32 DropIndex)

@@ -7,6 +7,7 @@
 #include "LootBoxActor.generated.h"
 
 class APlayerState;
+class UDoorMovementComponent;
 class URegionLootData;
 class UStaticMeshComponent;
 
@@ -64,6 +65,8 @@ protected:
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Loot")
 	TObjectPtr<APlayerState> CurrentViewer;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Loot")
+	TArray<TObjectPtr<UDoorMovementComponent>> MovementComponent;
 private:
 	// 점유자 본인이 아니면 true (열기 차단 조건)
 	bool IsOccupiedByOther(APawn* Interactor) const;
@@ -73,4 +76,8 @@ private:
 
 	// 갱신 GMS 브로드캐스트 (데디 서버 제외)
 	void BroadcastStateChanged();
+
+	void PlayOpenEffect(APawn* Opener);
+	void PlayCloseEffect(APawn* Opener);
+	void PlayFirstEffect(APawn* Opener);
 };

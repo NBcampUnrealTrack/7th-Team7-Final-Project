@@ -2,7 +2,12 @@
 
 
 #include "WorldGimmick/DoorActor.h"
+
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemGlobals.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/InteractionTags.h"
+#include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 
 ADoorActor::ADoorActor()
@@ -22,7 +27,6 @@ void ADoorActor::BeginPlay()
 	Super::BeginPlay();
 
 	GetComponents<UDoorMovementComponent>(DoorComponents);
-
 }
 
 void ADoorActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOption) const
@@ -41,6 +45,16 @@ void ADoorActor::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 	}
 
 	DoorMove();
+	if (bIsOpen)
+	{
+		// 열림
+		PlayOpenEffect(Interactor);
+	}
+	else
+	{
+		// 닫힘
+		PlayCloseEffect(Interactor);
+	}
 }
 
 bool ADoorActor::GetDoorState() const
@@ -75,4 +89,32 @@ void ADoorActor::OnRep_Open()
 	{
 		DoorComp->SetOpen(bIsOpen);
 	}
+}
+
+void ADoorActor::PlayOpenEffect(APawn* Interactor)
+{
+	GY_LOG(Content, CYS, "문 열림 이펙트");
+	if (!IsValid(Interactor)) return;
+
+	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Interactor);
+	if (!ASC) return;
+
+	FGameplayCueParameters CueParameters;
+	CueParameters.Location = GetActorLocation();
+	CueParameters.Normal = GetActorForwardVector();
+	ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Interaction_Door_Open, CueParameters);
+	ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Camera_Shake, CueParameters);
+}
+
+void ADoorActor::PlayCloseEffect(APawn* Interactor)
+{
+	GY_LOG(Content, CYS, "문 닫힘 이펙트");
+	if (!IsValid(Interactor)) return;
+
+	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Interactor);
+	if (!ASC) return;
+
+	FGameplayCueParameters CueParameters;
+	CueParameters.Location = GetActorLocation();
+	ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Interaction_Door_Close, CueParameters);
 }

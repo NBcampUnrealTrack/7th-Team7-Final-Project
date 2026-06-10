@@ -39,6 +39,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ItemCue|VFX")
 	bool bUseHitNormalRotation = false;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ItemCue|Location")
+	bool bIsLocation = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ItemCue|Location")
+	FVector LocationOffset = FVector::ZeroVector;
+
 private:
 	// void PlayAnimation(const FGameplayCueParameters& Parameters) const;
 	void PlaySound(AActor* TargetActor, const FGameplayCueParameters& Parameters) const;

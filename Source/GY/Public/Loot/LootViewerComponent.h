@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "GameplayTagContainer.h"
 #include "LootViewerComponent.generated.h"
 
 class ALootBoxActor;
@@ -20,6 +21,10 @@ public:
 	// [SERVER→OWNER CLIENT] opener에게만 UI 표시. LootBoxActor가 호출
 	UFUNCTION(Client, Reliable)
 	void Client_ShowLootBox(ALootBoxActor* Box);
+
+	// [SERVER→OWNER CLIENT] opener에게만 사운드 재생
+	UFUNCTION(Client, Reliable)
+	void Client_PlayLootBoxSound(FGameplayTag SoundTag);
 
 	// [CLIENT→SERVER] 드롭 슬롯 클릭 — 단건 줍기
 	UFUNCTION(Server, Reliable)
