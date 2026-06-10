@@ -1,6 +1,7 @@
 #include "Loot/LootBoxActor.h"
 
 #include "AbilitySystemGlobals.h"
+#include "WorldGimmick/DoorMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Core/GameplayTags/CameraTags.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
@@ -12,6 +13,7 @@
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
 #include "Kismet/GameplayStatics.h"
+#include "Logging/GYLogManager.h"
 #include "Loot/LootService.h"
 #include "Loot/LootViewerComponent.h"
 #include "Loot/RegionLootData.h"
@@ -32,6 +34,8 @@ ALootBoxActor::ALootBoxActor()
 void ALootBoxActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetComponents<UDoorMovementComponent>(MovementComponent);
 
 	if (!HasAuthority()) return;
 
@@ -163,6 +167,7 @@ void ALootBoxActor::OpenBox(APawn* Opener)
 
 	PendingDrops = Result.Drops;
 	bOpened = true;
+	OnRep_Opened(); // 서버는 OnRep가 자동 호출되지 않으므로 직접 호출
 
 	FGYLootBoxStateMessage OpenMsg;
 	OpenMsg.Box = this;
@@ -233,6 +238,14 @@ void ALootBoxActor::OnRep_PendingDrops()
 
 void ALootBoxActor::OnRep_Opened()
 {
+	if (bOpened)
+	{
+		for (UDoorMovementComponent* MovementComp : MovementComponent)
+		{
+			MovementComp->SetOpen(true);
+			GY_LOG(Content, CYS, "열려라 참깨");
+		}
+	}
 	BroadcastStateChanged();
 }
 
@@ -276,7 +289,8 @@ void ALootBoxActor::PlayCloseEffect(APawn* Opener)
 	const int32 Count = ASC->GetGameplayTagCount(GYGameplayTags::Camera_Mode_ZoomIn);
 	if (Count > 0)
 	{
-		ASC->RemoveLooseGameplayTag(GYGameplayTags::Camera_Mode_ZoomIn, Count, EGameplayTagReplicationState::CountToOwner);
+		ASC->RemoveLooseGameplayTag(GYGameplayTags::Camera_Mode_ZoomIn, Count,
+		                            EGameplayTagReplicationState::CountToOwner);
 	}
 
 	if (AGYPlayerState* PS = Opener->GetPlayerState<AGYPlayerState>())
@@ -290,6 +304,13 @@ void ALootBoxActor::PlayCloseEffect(APawn* Opener)
 
 void ALootBoxActor::PlayFirstEffect(APawn* Opener)
 {
+	if (!IsValid(Opener)) return;
+
+	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Opener);
+	if (!ASC) return;
+	FGameplayCueParameters Parameters;
+	Parameters.Location = GetActorLocation();
+	ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Interaction_LootBox, Parameters);
 	if (AGYPlayerState* PS = Opener->GetPlayerState<AGYPlayerState>())
 	{
 		if (ULootViewerComponent* LootViewer = PS->GetLootViewerComponent())
