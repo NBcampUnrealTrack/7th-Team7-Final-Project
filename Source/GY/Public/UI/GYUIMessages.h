@@ -126,6 +126,7 @@ struct FGYBossStateMessage
 	GENERATED_BODY()
 	UPROPERTY() bool bVisible = false;
 	UPROPERTY() FText BossName;
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<AActor> TargetBoss;
 };
 
 /** 채팅 */

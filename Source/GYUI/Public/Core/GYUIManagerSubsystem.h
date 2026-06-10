@@ -133,22 +133,6 @@ private:
 	void HandleRegionEntered(FGameplayTag, const FGYRegionEnteredMessage& Msg);
 	void HandleRegionExited(FGameplayTag, const FGYRegionExitedMessage& Msg);
 
-	void BindBoss(AGYEnemyCharacterBase* Boss);
-	void UnbindBoss();
-	void BroadcastBossHealth();
-	void BroadcastBossPoise();
-
-	UFUNCTION()
-	void HandleBossDead(AGYEnemyCharacterBase* Boss);
-	UFUNCTION()
-	void OnBossReadyToBind(AGYEnemyCharacterBase* Boss);
-
-	TWeakObjectPtr<AGYEnemyCharacterBase> CurrentBoss;
-	TWeakObjectPtr<UAbilitySystemComponent> BossASC;
-
-	FDelegateHandle BossHealthHandle, BossMaxHealthHandle;
-	FDelegateHandle BossPoiseHandle, BossMaxPoiseHandle;
-
 	FGameplayMessageListenerHandle RegionEnterListenerHandle;
 	FGameplayMessageListenerHandle RegionExitListenerHandle;
 
