@@ -18,6 +18,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Interaction_Door_Open)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Interaction_Door_Close)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Interaction_TimeRift)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Interaction_TimeRift_Rest)
 
 	/* BGM */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_BGM_Combat)
