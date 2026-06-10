@@ -7,6 +7,7 @@
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/PlayerState.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Enemy/GYEnemyCharacterBase.h"
 #include "Engine/OverlapResult.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -73,9 +74,9 @@ void ULockOnComponent::BindToASC(AGYPlayerState* PlayerState)
 
 	BoundASC = ASC;
 	InCombatTagHandle = ASC->RegisterGameplayTagEvent(
-		                         GYStateTags::State_Combat_InCombat,
-		                         EGameplayTagEventType::NewOrRemoved)
-	                         .AddUObject(this, &ULockOnComponent::OnInCombatTagChanged);
+		                       GYStateTags::State_Combat_InCombat,
+		                       EGameplayTagEventType::NewOrRemoved)
+	                       .AddUObject(this, &ULockOnComponent::OnInCombatTagChanged);
 
 	if (ASC->HasMatchingGameplayTag(GYStateTags::State_Combat_InCombat))
 	{
@@ -122,8 +123,10 @@ void ULockOnComponent::StartLockOn()
 	if (BoundASC.IsValid())
 	{
 		BoundASC->AddLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
-									  EGameplayTagReplicationState::CountToOwner);
+		                              EGameplayTagReplicationState::CountToOwner);
 	}
+
+	BindTargetDeathListener(Target);
 
 	CurrentTarget = Target;
 	OnRep_CurrentTarget();
@@ -138,13 +141,15 @@ void ULockOnComponent::StopLockOn()
 		World->GetTimerManager().ClearTimer(RetryTargetHandle);
 	}
 
-	CurrentTarget = nullptr;
 	if (BoundASC.IsValid())
 	{
 		BoundASC->RemoveLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
 		                                 EGameplayTagReplicationState::CountToOwner);
 	}
 
+	UnbindTargetDeathListener(CurrentTarget.Get());
+
+	CurrentTarget = nullptr;
 	OnRep_CurrentTarget();
 }
 
@@ -180,7 +185,6 @@ void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	if (!CurrentTarget.IsValid())
 	{
-		if (GetOwner()->HasAuthority()) StopLockOn();
 		SetComponentTickEnabled(false);
 		return;
 	}
@@ -189,9 +193,26 @@ void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	if (GetOwner()->HasAuthority())
 	{
-		const float DistSq = FVector::DistSquared(
-			GetOwner()->GetActorLocation(),
-			CurrentTarget->GetActorLocation());
+		bool bTargetInvalid = false;
+		if (!IsValid(CurrentTarget.Get()))
+		{
+			bTargetInvalid = true;
+		}
+		else if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(CurrentTarget.Get()))
+		{
+			if (Enemy->IsDead())
+			{
+				bTargetInvalid = true;
+			}
+		}
+
+		if (bTargetInvalid)
+		{
+			SwitchToBestTarget();
+			return;
+		}
+
+		const float DistSq = FVector::DistSquared(GetOwner()->GetActorLocation(), CurrentTarget->GetActorLocation());
 		if (DistSq > MaxLockOnDistance * MaxLockOnDistance)
 		{
 			StopLockOn();
@@ -230,6 +251,12 @@ AActor* ULockOnComponent::FindBestTarget() const
 	{
 		AActor* Candidate = Overlap.GetActor();
 		if (!Candidate || Candidate == Owner) continue;
+
+		if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Candidate))
+		{
+			if (Enemy->IsDead()) continue;
+		}
+
 		//TODO 팀 판정
 		const float DistSq = FVector::DistSquared(OwnerLoc, Candidate->GetActorLocation());
 		if (DistSq < BestDistSq)
@@ -271,7 +298,6 @@ void ULockOnComponent::BroadcastLockOnMessage()
 	LockOnMessage.Owner = GetOwner();
 	LockOnMessage.Target = CurrentTarget;
 	MS.BroadcastMessage(GYGameplayTags::Message_LockOn_Changed, LockOnMessage);
-
 }
 
 
@@ -292,8 +318,53 @@ void ULockOnComponent::RetryFindTarget()
 	if (BoundASC.IsValid())
 	{
 		BoundASC->AddLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
-			EGameplayTagReplicationState::CountToOwner);
+		                              EGameplayTagReplicationState::CountToOwner);
 	}
 	CurrentTarget = Target;
 	OnRep_CurrentTarget();
+}
+
+void ULockOnComponent::HandleTargetDied(AGYEnemyCharacterBase* DeadEnemy)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	if (CurrentTarget.Get() != DeadEnemy) return;
+
+	SwitchToBestTarget();
+}
+
+void ULockOnComponent::SwitchToBestTarget()
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	AActor* PrevTarget = CurrentTarget.Get();
+	UnbindTargetDeathListener(PrevTarget);
+
+	AActor* NewTarget = FindBestTarget();
+	if (!NewTarget)
+	{
+		StopLockOn();
+		return;
+	}
+
+	BindTargetDeathListener(NewTarget);
+
+	CurrentTarget = NewTarget;
+	OnRep_CurrentTarget();
+}
+
+void ULockOnComponent::BindTargetDeathListener(AActor* Target)
+{
+	//TODO Interface 뽑는게 나을듯
+	if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Target))
+	{
+		Enemy->OnEnemyDead.AddDynamic(this, &ULockOnComponent::HandleTargetDied);
+	}
+}
+
+void ULockOnComponent::UnbindTargetDeathListener(AActor* Target)
+{
+	if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Target))
+	{
+		Enemy->OnEnemyDead.RemoveDynamic(this, &ULockOnComponent::HandleTargetDied);
+	}
 }

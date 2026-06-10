@@ -56,6 +56,14 @@ private:
 	void BroadcastLockOnMessage();
 	void RetryFindTarget();
 
+	UFUNCTION()
+	void HandleTargetDied(AGYEnemyCharacterBase* DeadEnemy);
+
+	void SwitchToBestTarget();
+
+	void BindTargetDeathListener(AActor* Target);
+	void UnbindTargetDeathListener(AActor* Target);
+
 
 	FDelegateHandle InCombatTagHandle;
 	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
