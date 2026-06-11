@@ -99,6 +99,8 @@ public:
 	// 누적 통이 변할 때 GYVitalAttributeSet이 호출. 가득 차면 해당 CC를 발동한다. [SERVER]
 	void HandleVitalAccumulation(const FGameplayAttribute& ChangedAttribute, float CurrentValue);
 
+	UGameplayAbility* GetActiveAbilityByTag(const FGameplayTag& AbilityTag) const;
+
 
 protected:
 	virtual void OnRep_ReplicatedAnimMontage() override;
