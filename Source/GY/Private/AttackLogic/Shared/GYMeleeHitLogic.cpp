@@ -40,8 +40,8 @@ void UGYMeleeHitLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEve
 	HitContext.SourceASC = InstigatorASC;
 	HitContext.TargetASC = TargetASC;
 	HitContext.MotionMultiplier = Impact.DamageMultiplier;
-	HitContext.StaggerDamage = Impact.StaggerDamage;
-	HitContext.StunDamage = Impact.StunDamage;
+	HitContext.StaggerAmount = Impact.StaggerAmount;
+	HitContext.StunAmount = Impact.StunAmount;
 
 	UGYCombatStatics::ApplyHitImpact(HitContext);
 }

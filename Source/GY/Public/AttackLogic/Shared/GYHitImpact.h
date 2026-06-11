@@ -12,8 +12,8 @@ struct GY_API FGYHitImpact
 	float DamageMultiplier = 1.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0"))
-	float StaggerDamage = 25.f;
+	float StaggerAmount = 25.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0"))
-	float StunDamage = 10.f;
+	float StunAmount = 10.f;
 };

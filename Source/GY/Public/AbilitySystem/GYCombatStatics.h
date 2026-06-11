@@ -13,8 +13,8 @@ struct FGYHitContext
 	UAbilitySystemComponent* SourceASC = nullptr;
 	UAbilitySystemComponent* TargetASC = nullptr;
 	float MotionMultiplier = 1.f;
-	float StaggerDamage = 0.f;
-	float StunDamage = 0.f;
+	float StaggerAmount = 0.f;
+	float StunAmount = 0.f;
 };
 
 UCLASS()
