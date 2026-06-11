@@ -43,6 +43,9 @@ protected:
 	UFUNCTION()
 	void OnRep_ParticipantCount();
 
+	void HandleStaggerBegin() override;
+	void HandleStunBegin() override;
+	void Die() override;
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_ParticipantCount, VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Encounter")
 	int32 ParticipantCount = 0;
@@ -54,3 +57,4 @@ protected:
 	bool bEncounterStarted = false;
 
 };
+

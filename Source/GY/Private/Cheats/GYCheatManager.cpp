@@ -537,7 +537,6 @@ void UGYCheatManager::GY_SpawnEnemy(const FString& EnemyTypeName)
 	EEnemyType Type = EEnemyType::None;
 	if (EnemyTypeName.Equals(TEXT("Melee"),  ESearchCase::IgnoreCase)) Type = EEnemyType::Melee;
 	else if (EnemyTypeName.Equals(TEXT("Ranged"), ESearchCase::IgnoreCase)) Type = EEnemyType::Ranged;
-	else if (EnemyTypeName.Equals(TEXT("Boss"),   ESearchCase::IgnoreCase)) Type = EEnemyType::Boss;
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("GY_SpawnEnemy: 알 수 없는 타입 '%s'. Melee / Ranged / Boss 중 선택"), *EnemyTypeName);

@@ -16,6 +16,7 @@ void UBossPatternSelectorComponent::InitializePatterns(const TArray<FBossPattern
 	LastUsedTime.Reset();
 	LastSelectedTag = FGameplayTag::EmptyTag;
 	LastSelectedAbility = nullptr;
+	PendingAbility = nullptr;
 	bPreviousFinished = false;
 }
 
@@ -66,6 +67,18 @@ TSubclassOf<UGameplayAbility> UBossPatternSelectorComponent::SelectNextPattern(A
 	}
 
 	return SelectedByWeightedRandom(Distance);
+}
+
+TSubclassOf<UGameplayAbility> UBossPatternSelectorComponent::ConsumePendingAbility()
+{
+	TSubclassOf<UGameplayAbility> Result = PendingAbility;
+	PendingAbility = nullptr;
+	return Result;
+}
+
+void UBossPatternSelectorComponent::SetPendingAbility(TSubclassOf<UGameplayAbility> Ability)
+{
+	PendingAbility = Ability;
 }
 
 void UBossPatternSelectorComponent::NotifyPatternFinished(TSubclassOf<UGameplayAbility> AbilityClass)
@@ -208,6 +221,7 @@ void UBossPatternSelectorComponent::RegisterSelected(const FBossPatternEntry& Se
 	LastUsedTime.FindOrAdd(Selected.AbilityClass) = GetWorld()->GetTimeSeconds();
 	LastSelectedTag = Selected.PatternTag;
 	LastSelectedAbility = Selected.AbilityClass;
+	PendingAbility = Selected.AbilityClass;
 	bPreviousFinished = false;
 
 	OnPatternChosen.Broadcast(Selected.AbilityClass);
