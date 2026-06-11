@@ -6,6 +6,7 @@
 #include "GYAbilitySystemComponent.generated.h"
 
 class UGYPeriodicAttributeEffect;
+class UGYRegenDelayEffect;
 class UAnimInstance;
 class UAnimMontage;
 
@@ -69,10 +70,6 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SendGameplayEvent(FGameplayTag EventTag, FGameplayEventData Payload);
 
-	void RescheduleStaminaRegen();
-	void RescheduleStaggerRegen();
-	void RescheduleStunRegen();
-
 	void ApplyCombatTag();
 	void RemoveCombatTag();
 	void NotifyAttributeChanged(const FGameplayAttribute& Attribute);
@@ -85,6 +82,16 @@ public:
 	TSubclassOf<UGYPeriodicAttributeEffect> StunRegenEffect;
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UGameplayEffect> CombatStateEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category="GAS|Regen")
+	TSubclassOf<UGYRegenDelayEffect> RegenDelayEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category="GAS|Regen")
+	float StaminaRegenDelayDuration = 2.f;
+	UPROPERTY(EditDefaultsOnly, Category="GAS|Regen")
+	float StaggerRegenDelayDuration = 2.f;
+	UPROPERTY(EditDefaultsOnly, Category="GAS|Regen")
+	float StunRegenDelayDuration = 2.f;
 
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TArray<FGYDisableThreshold> DisableThresholds;
@@ -101,26 +108,19 @@ private:
 	FTimerHandle CatchUpTimerHandle;
 
 	void ApplyMontageCorrection(UAnimInstance* AnimInst, UAnimMontage* Montage, float StartTime);
-	void OnCombatTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void TryActivateAbilitiesOnSpawn();
 
 	TArray<FGameplayAbilitySpecHandle> InputPressedSpecHandles;
 	TArray<FGameplayAbilitySpecHandle> InputReleasedSpecHandles;
 	TArray<FGameplayAbilitySpecHandle> InputHeldSpecHandles;
 
-	void ScheduleEffect(TSubclassOf<UGYPeriodicAttributeEffect> EffectClass, FActiveGameplayEffectHandle& Handle, FTimerHandle& DelayHandle, void(UGYAbilitySystemComponent::* StartFunc)());
 	void ApplyEffect(TSubclassOf<UGYPeriodicAttributeEffect> EffectClass, FActiveGameplayEffectHandle& Handle);
-	void StopEffect(FActiveGameplayEffectHandle& Handle, FTimerHandle& DelayHandle);
 
-	void StartStaminaRegen();
-	void StartStaggerRegen();
-	void StartStunRegen();
+	void RefreshRegenDelay(const FGameplayTag& DelayTag, float Duration);
+	void ResetRegenDelays();
 
-	FTimerHandle StaminaRegenDelayHandle;
 	FActiveGameplayEffectHandle StaminaRegenGEHandle;
-	FTimerHandle StaggerRegenDelayHandle;
 	FActiveGameplayEffectHandle StaggerRegenGEHandle;
-	FTimerHandle StunRegenDelayHandle;
 	FActiveGameplayEffectHandle StunRegenGEHandle;
 
 	FActiveGameplayEffectHandle CombatStateEffectHandle;
