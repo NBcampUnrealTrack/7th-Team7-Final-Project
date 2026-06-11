@@ -142,6 +142,11 @@ void ALootBoxActor::ReleaseViewer(APlayerState* Viewer)
 	if (!HasAuthority()) return;
 	if (CurrentViewer != Viewer) return;
 
+	if (APawn* Pawn = Viewer->GetPawn())
+	{
+		PlayCloseEffect(Pawn);
+	}
+
 	CurrentViewer = nullptr;
 	// 빈 상자도 파괴하지 않고 월드에 유지 — 다른 플레이어가 열면 빈 그리드를 봄
 }
