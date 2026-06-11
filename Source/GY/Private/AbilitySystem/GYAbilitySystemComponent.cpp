@@ -1,6 +1,7 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "AbilitySystem/GYPeriodicAttributeEffect.h"
+#include "AbilitySystem/GYRegenDelayEffect.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "Core/GameplayTags/StateTags.h"
@@ -292,11 +293,11 @@ void UGYAbilitySystemComponent::RemoveCombatTag()
 void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute& Attribute)
 {
 	if (Attribute == UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute())
-		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stamina, StaminaRegenDelayTimerHandle, StaminaRegenDelayDuration);
+		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stamina, StaminaRegenDelayDuration);
 	else if (Attribute == UGYVitalAttributeSet::GetCurrentStaggerAttribute())
-		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stagger, StaggerRegenDelayTimerHandle, StaggerRegenDelayDuration);
+		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stagger, StaggerRegenDelayDuration);
 	else if (Attribute == UGYVitalAttributeSet::GetCurrentStunAttribute())
-		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stun, StunRegenDelayTimerHandle, StunRegenDelayDuration);
+		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stun, StunRegenDelayDuration);
 }
 
 void UGYAbilitySystemComponent::HandleVitalAccumulation(const FGameplayAttribute& ChangedAttribute, float CurrentValue)
@@ -343,30 +344,27 @@ void UGYAbilitySystemComponent::ApplyEffect(TSubclassOf<UGYPeriodicAttributeEffe
 	Handle = ApplyGameplayEffectSpecToSelf(Spec);
 }
 
-void UGYAbilitySystemComponent::RefreshRegenDelay(const FGameplayTag& DelayTag, FTimerHandle& TimerHandle, float Duration)
+void UGYAbilitySystemComponent::RefreshRegenDelay(const FGameplayTag& DelayTag, float Duration)
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	if (!HasMatchingGameplayTag(GYStateTags::State_Combat_InCombat)) return;
-	if (Duration <= 0.f || !DelayTag.IsValid()) return;
+	if (!RegenDelayEffect || Duration <= 0.f || !DelayTag.IsValid()) return;
 
-	SetLooseGameplayTagCount(DelayTag, 1);
+	FGameplayEffectContextHandle Context = MakeEffectContext();
+	FGameplayEffectSpecHandle Spec = MakeOutgoingSpec(RegenDelayEffect, 1.f, Context);
+	if (!Spec.IsValid()) return;
 
-	TWeakObjectPtr<UGYAbilitySystemComponent> WeakThis(this);
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([WeakThis, DelayTag]()
-	{
-		if (WeakThis.IsValid())
-			WeakThis->SetLooseGameplayTagCount(DelayTag, 0);
-	}), Duration, false);
+	Spec.Data->SetDuration(Duration, true);
+	Spec.Data->DynamicGrantedTags.AddTag(DelayTag);
+
+	ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
 }
 
 void UGYAbilitySystemComponent::ResetRegenDelays()
 {
-	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
-	TimerManager.ClearTimer(StaminaRegenDelayTimerHandle);
-	TimerManager.ClearTimer(StaggerRegenDelayTimerHandle);
-	TimerManager.ClearTimer(StunRegenDelayTimerHandle);
-
-	SetLooseGameplayTagCount(GYStateTags::State_Regen_Delay_Stamina, 0);
-	SetLooseGameplayTagCount(GYStateTags::State_Regen_Delay_Stagger, 0);
-	SetLooseGameplayTagCount(GYStateTags::State_Regen_Delay_Stun, 0);
+	FGameplayTagContainer DelayTags;
+	DelayTags.AddTag(GYStateTags::State_Regen_Delay_Stamina);
+	DelayTags.AddTag(GYStateTags::State_Regen_Delay_Stagger);
+	DelayTags.AddTag(GYStateTags::State_Regen_Delay_Stun);
+	RemoveActiveEffectsWithGrantedTags(DelayTags);
 }

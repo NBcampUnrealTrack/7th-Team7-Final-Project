@@ -6,6 +6,7 @@
 #include "GYAbilitySystemComponent.generated.h"
 
 class UGYPeriodicAttributeEffect;
+class UGYRegenDelayEffect;
 class UAnimInstance;
 class UAnimMontage;
 
@@ -83,6 +84,9 @@ public:
 	TSubclassOf<UGameplayEffect> CombatStateEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category="GAS|Regen")
+	TSubclassOf<UGYRegenDelayEffect> RegenDelayEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category="GAS|Regen")
 	float StaminaRegenDelayDuration = 2.f;
 	UPROPERTY(EditDefaultsOnly, Category="GAS|Regen")
 	float StaggerRegenDelayDuration = 2.f;
@@ -112,16 +116,12 @@ private:
 
 	void ApplyEffect(TSubclassOf<UGYPeriodicAttributeEffect> EffectClass, FActiveGameplayEffectHandle& Handle);
 
-	void RefreshRegenDelay(const FGameplayTag& DelayTag, FTimerHandle& TimerHandle, float Duration);
+	void RefreshRegenDelay(const FGameplayTag& DelayTag, float Duration);
 	void ResetRegenDelays();
 
 	FActiveGameplayEffectHandle StaminaRegenGEHandle;
 	FActiveGameplayEffectHandle StaggerRegenGEHandle;
 	FActiveGameplayEffectHandle StunRegenGEHandle;
-
-	FTimerHandle StaminaRegenDelayTimerHandle;
-	FTimerHandle StaggerRegenDelayTimerHandle;
-	FTimerHandle StunRegenDelayTimerHandle;
 
 	FActiveGameplayEffectHandle CombatStateEffectHandle;
 
