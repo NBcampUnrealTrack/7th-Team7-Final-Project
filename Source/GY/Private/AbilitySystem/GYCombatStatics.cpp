@@ -14,6 +14,7 @@
 #include "AbilitySystem/GYAdditionalResourceStatics.h"
 #include "AbilitySystem/GYCombatSettings.h"
 #include "Core/GameplayTags/OptionTags.h"
+#include "Character/HitReactionComponent.h"
 #include "Logging/GYLogManager.h"
 
 static bool IsSameFaction(UAbilitySystemComponent* A, UAbilitySystemComponent* B)
