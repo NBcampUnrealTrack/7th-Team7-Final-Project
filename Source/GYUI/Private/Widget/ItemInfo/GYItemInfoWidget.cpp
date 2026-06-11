@@ -10,6 +10,9 @@
 #include "Items/ItemDefinition.h"
 #include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
+#include "Widget/ItemInfo/EnchantMagnitudeDisplayRow.h"
+#include "Enchant/RolledEnchantOption.h"
+#include "Engine/DataTable.h"
 
 void UGYItemInfoWidget::NativeConstruct()
 {
@@ -158,22 +161,28 @@ void UGYItemInfoWidget::ApplyView(const FGYItemViewData& Item)
 
 	if (Text_EnchantOptions)
 	{
+		UDataTable* DisplayTable = MagnitudeDisplayTable.LoadSynchronous();
+
 		TArray<FText> Lines;
 		for (const FRolledEnchantOption& Option : Item.RolledOptions)
 		{
 			const FEnchantOptionRow* Row = EnchantOptionResolver::FindRow(Def, Option.OptionId);
 			const FText Label = (Row != nullptr && !Row->DisplayName.IsEmpty()) ? Row->DisplayName : FText::FromName(Option.OptionId);
 
-			FString ValueText;
+			TArray<FText> Phrases;
 			for (const FRolledMagnitude& Magnitude : Option.Magnitudes)
 			{
-				if (!ValueText.IsEmpty()) ValueText += TEXT(", ");
-				ValueText += FString::Printf(TEXT("+%g"), Magnitude.Value);
+				Phrases.Add(FormatMagnitude(Magnitude, DisplayTable));
 			}
 
-			Lines.Add(ValueText.IsEmpty()
-				? Label
-				: FText::Format(INVTEXT("{0} {1}"), Label, FText::FromString(ValueText)));
+			if (Phrases.IsEmpty())
+			{
+				Lines.Add(Label);
+				continue;
+			}
+
+			const FText Joined = FText::Join(INVTEXT(", "), Phrases);
+			Lines.Add(Label.IsEmpty() ? Joined : FText::Format(INVTEXT("{0}:   {1}"), Label, Joined));
 		}
 
 		Text_EnchantOptions->SetText(FText::Join(INVTEXT("\n"), Lines));
@@ -181,4 +190,31 @@ void UGYItemInfoWidget::ApplyView(const FGYItemViewData& Item)
 	}
 
 	OnItemInfoUpdated(Item.GradeTag);
+}
+
+FText UGYItemInfoWidget::FormatMagnitude(const FRolledMagnitude& Magnitude, UDataTable* DisplayTable) const
+{
+	const FEnchantMagnitudeDisplayRow* Display = IsValid(DisplayTable)
+		? DisplayTable->FindRow<FEnchantMagnitudeDisplayRow>(Magnitude.MagnitudeTag.GetTagName(), TEXT("FormatMagnitude"), false)
+		: nullptr;
+
+	// 롤값은 이미 매그니튜드 자리수로 양자화됨 → 불필요한 0만 떼고 그대로 표시
+	FNumberFormattingOptions NumberOptions;
+	NumberOptions.MinimumFractionalDigits = 0;
+	NumberOptions.MaximumFractionalDigits = 3;
+	const FText ValueText = FText::AsNumber(Magnitude.Value, &NumberOptions);
+
+	if (Display != nullptr && !Display->Format.IsEmpty())
+	{
+		return FText::Format(Display->Format, ValueText);
+	}
+
+	// 매핑 없으면 태그 마지막 세그먼트 + 값
+	FString TagString = Magnitude.MagnitudeTag.GetTagName().ToString();
+	FString TagLeaf;
+	if (TagString.IsEmpty() || !TagString.Split(TEXT("."), nullptr, &TagLeaf, ESearchCase::IgnoreCase, ESearchDir::FromEnd))
+	{
+		TagLeaf = TagString;
+	}
+	return FText::Format(INVTEXT("{0} {1}"), FText::FromString(TagLeaf), ValueText);
 }

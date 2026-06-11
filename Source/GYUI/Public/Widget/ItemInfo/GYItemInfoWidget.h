@@ -8,8 +8,10 @@
 
 class UImage;
 class UCommonTextBlock;
+class UDataTable;
 struct FGYItemViewData;
 struct FGYInventoryEntryMessage;
+struct FRolledMagnitude;
 
 // 아이템 정보 패널. Message.UI.ShowItemInfo 구독 → 우클릭한 아이템 정보 표시.
 // 각 화면(인벤/루트/장비/인첸트)에 임베드해서 부모가 닫히면 함께 사라진다.
@@ -49,6 +51,10 @@ protected:
 	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
 	TObjectPtr<UCommonTextBlock> Text_EnchantOptions;
 
+	// MagnitudeTag → 표기 포맷/소수자리. 행 키 = MagnitudeTag 전체 이름 (DT_EnchantMagnitudeDisplay)
+	UPROPERTY(EditDefaultsOnly, Category = "GY|ItemInfo")
+	TSoftObjectPtr<UDataTable> MagnitudeDisplayTable;
+
 	// 등급 색상 등 연출은 BP에서 (슬롯과 동일 패턴)
 	UFUNCTION(BlueprintImplementableEvent, Category = "GY|ItemInfo")
 	void OnItemInfoUpdated(FGameplayTag GradeTag);
@@ -59,6 +65,8 @@ private:
 	void HandleEntryChanged(FGameplayTag Channel, const FGYInventoryEntryMessage& Msg);
 	// 실제 위젯 채우기 (토글/검증 없이)
 	void ApplyView(const FGYItemViewData& Item);
+	// 롤된 수치 1개를 MagnitudeDisplayTable 포맷으로 표기. 매핑 없으면 "+숫자" 폴백
+	FText FormatMagnitude(const FRolledMagnitude& Magnitude, UDataTable* DisplayTable) const;
 
 	// 현재 표시 중인 아이템의 출처 슬롯. 같은 소스 재우클릭 시 토글로 닫기
 	TWeakObjectPtr<UObject> CurrentSource;

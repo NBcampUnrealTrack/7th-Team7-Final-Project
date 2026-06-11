@@ -41,6 +41,20 @@ static void ApplyInstantGEToAttribute(UAbilitySystemComponent* ASC, const FGamep
 	ASC->ApplyGameplayEffectSpecToSelf(Spec);
 }
 
+// 공격자의 CritRate로 치명타를 굴려 성공 시 데미지에 CritMultiplier를 곱한다. 치명타 발생 여부 반환.
+static bool TryApplyCritical(UAbilitySystemComponent* SourceASC, float& InOutDamage)
+{
+	if (!SourceASC) return false;
+
+	const UGYDamageAttributeSet* SourceDamage = SourceASC->GetSet<UGYDamageAttributeSet>();
+	if (!SourceDamage) return false;
+
+	if (FMath::FRand() >= SourceDamage->GetCriticalRate()) return false;
+
+	InOutDamage *= SourceDamage->GetCriticalMultiplier();
+	return true;
+}
+
 void UGYCombatStatics::ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC)
 {
 	if (!TargetASC || RawDamage <= 0.f) return;
@@ -161,6 +175,9 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 
 	if (HandleDodgeCheck(TargetASC)) return;
 	if (HandleParryCheck(TargetASC, SourceASC)) return;
+
+	// 치명타 굴림 (공격자 기준, 플레이어/적 공용). 반환 bool은 전투 피드백(데미지 색/히트스톱) 연동 시 사용.
+	TryApplyCritical(SourceASC, RawDamage);
 
 	float ReductionMultiplier = 0.f;
 	const bool bBlocked = HandleBlockCheck(TargetASC, SourceASC, ReductionMultiplier);
