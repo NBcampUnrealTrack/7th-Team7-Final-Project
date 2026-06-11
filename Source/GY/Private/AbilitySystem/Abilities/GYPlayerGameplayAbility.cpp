@@ -38,13 +38,6 @@ bool UGYPlayerGameplayAbility::CanActivateAbility(
 
 	if (const UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
 	{
-		for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
-		{
-			if (Spec.Handle == Handle) continue;
-			if (Spec.IsActive() && Cast<UGYPlayerGameplayAbility>(Spec.Ability))
-				return false;
-		}
-
 		if (const UGYPlayerVitalAttributeSet* Attrs = ASC->GetSet<UGYPlayerVitalAttributeSet>())
 		{
 			if (Attrs->GetCurrentStamina() <= 0.f)
