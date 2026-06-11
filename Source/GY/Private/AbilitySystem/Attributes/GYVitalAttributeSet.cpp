@@ -114,5 +114,10 @@ void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(GetOwningAbilitySystemComponent()))
 	{
 		GYASC->HandleVitalAccumulation(Data.EvaluatedData.Attribute, CurrentValue);
+
+		if (Data.EvaluatedData.Magnitude > 0.f)
+		{
+			GYASC->NotifyAttributeChanged(Data.EvaluatedData.Attribute);
+		}
 	}
 }
