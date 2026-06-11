@@ -1,6 +1,7 @@
 #include "Loot/LootBoxActor.h"
 
 #include "AbilitySystemGlobals.h"
+#include "AbilitySystemComponent.h"
 #include "WorldGimmick/DoorMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Core/GameplayTags/CameraTags.h"
