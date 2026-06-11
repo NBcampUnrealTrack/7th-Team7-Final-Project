@@ -10,6 +10,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Dodge, "Ability.Dodge");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Sprint, "Ability.Sprint");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Parkour, "Ability.Parkour");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Block, "Ability.Block");
 
 	// Fragment Type
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Charge, "Ability.Fragment.Charge");
@@ -17,7 +18,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ComboMontage, "Ability.Fragment.ComboMontage");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ChargeMontage, "Ability.Fragment.ChargeMontage");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Collision, "Ability.Fragment.Collision");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Cancel, "Ability.Fragment.Cancel");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Parry, "Ability.Fragment.Parry");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ParryMontage, "Ability.Fragment.ParryMontage");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Dodge, "Ability.Fragment.Dodge");
@@ -32,11 +32,14 @@ namespace GYGameplayTags
 
 	// State
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Parrying, "Ability.State.Parrying");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow, "Ability.State.CancelWindow");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Dodging, "Ability.State.Dodging");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Sprint, "Ability.State.Sprint");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_Block, "Ability.Block");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Blocking, "Ability.State.Blocking");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow_Combo, "Ability.State.CancelWindow.Combo");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow_Charge, "Ability.State.CancelWindow.Charge");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow_Parry, "Ability.State.CancelWindow.Parry");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow_Block, "Ability.State.CancelWindow.Block");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow_Dodge, "Ability.State.CancelWindow.Dodge");
 
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Attack_Enemy, "Ability.Attack.Enemy");
 }
