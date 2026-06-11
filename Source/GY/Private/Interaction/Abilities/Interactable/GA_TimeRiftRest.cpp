@@ -48,9 +48,10 @@ void UGA_TimeRiftRest::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 				if (SpecHandle.IsValid())
 				{
 					ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
-
+					FGameplayCueParameters Parameters;
+					Parameters.Instigator = GetAvatarActorFromActorInfo();
 					// 이펙트 게임플레이 큐
-					ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Interaction_TimeRift_Rest);
+					ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Interaction_TimeRift_Rest, Parameters);
 				}
 			}
 		}
