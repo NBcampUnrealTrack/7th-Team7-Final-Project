@@ -1,7 +1,11 @@
 #include "Enemy/GYBossCharacterBase.h"
 
 #include "Enemy/GYBossAIController.h"
+#include "Enemy/GYBossAIController.h"
+#include "Enemy/GYBossAIController.h"
 #include "Enemy/Component/BossPhaseComponent.h"
+#include "Components/StateTreeAIComponent.h"
+#include "Core/GameplayTags/StateTags.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -79,4 +83,48 @@ float AGYBossCharacterBase::GetStatScaleValue() const
 void AGYBossCharacterBase::OnRep_ParticipantCount()
 {
 	OnParticipantCountChanged.Broadcast(ParticipantCount);
+}
+
+void AGYBossCharacterBase::HandleStaggerBegin()
+{
+	Super::HandleStaggerBegin();
+
+	if (AAIController* AI = Cast<AAIController>(GetController()))
+	{
+		if (UStateTreeAIComponent* ST = AI->FindComponentByClass<UStateTreeAIComponent>())
+		{
+			FStateTreeEvent Event;
+			Event.Tag = GYStateTags::State_Hit_Stagger;
+			ST->SendStateTreeEvent(Event);
+		}
+	}
+}
+
+void AGYBossCharacterBase::HandleStunBegin()
+{
+	Super::HandleStunBegin();
+	if (AAIController* AI = Cast<AAIController>(GetController()))
+	{
+		if (UStateTreeAIComponent* ST = AI->FindComponentByClass<UStateTreeAIComponent>())
+		{
+			FStateTreeEvent Event;
+			Event.Tag = GYStateTags::State_Hit_Stun;
+			ST->SendStateTreeEvent(Event);
+		}
+	}
+}
+
+void AGYBossCharacterBase::Die()
+{
+	if (AAIController* AI = Cast<AAIController>(GetController()))
+	{
+		if (UStateTreeAIComponent* ST = AI->FindComponentByClass<UStateTreeAIComponent>())
+		{
+			FStateTreeEvent Event;
+			Event.Tag = GYStateTags::State_Life_Dead;
+			ST->SendStateTreeEvent(Event);
+		}
+	}
+
+	Super::Die();
 }

@@ -93,6 +93,11 @@ public:
 	bool HasReadyPattern(AActor* Target) const;
 
 	TSubclassOf<UGameplayAbility> SelectNextPattern(AActor* Target);
+	TSubclassOf<UGameplayAbility> GetPendingAbility() const { return PendingAbility; }
+	TSubclassOf<UGameplayAbility> ConsumePendingAbility();
+
+	UFUNCTION(BlueprintCallable, Category = "Boss|Pattern")
+	void SetPendingAbility(TSubclassOf<UGameplayAbility> Ability);
 
 	UFUNCTION(BlueprintCallable, Category = "Boss|Pattern")
 	void NotifyPatternFinished(TSubclassOf<UGameplayAbility> AbilityClass);
@@ -125,4 +130,7 @@ protected:
 
 	UPROPERTY(Transient)
 	bool bPreviousFinished = false;
+
+	UPROPERTY(Transient)
+	TSubclassOf<UGameplayAbility> PendingAbility;
 };

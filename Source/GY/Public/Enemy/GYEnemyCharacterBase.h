@@ -121,9 +121,9 @@ protected:
 	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void OnStaggerTagChanged(const FGameplayTag Tag, int32 NewCount);
 
-	void HandleStunBegin();
+	virtual void HandleStunBegin();
 	void HandleStunEnd();
-	void HandleStaggerBegin();
+	virtual void HandleStaggerBegin();
 	void HandleStaggerEnd();
 
 	void DisableGameplay();
