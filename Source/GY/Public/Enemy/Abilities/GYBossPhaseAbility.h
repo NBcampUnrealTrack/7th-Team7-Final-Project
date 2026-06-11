@@ -4,6 +4,8 @@
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "GYBossPhaseAbility.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSubAbilityFinished, TSubclassOf<UGameplayAbility>, AbilityClass);
+
 UCLASS()
 class GY_API UGYBossPhaseAbility : public UGYGameplayAbility
 {
@@ -25,6 +27,12 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		bool bReplicateEndAbility,
 		bool bWasCancelled) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Boss|Phase|SubAbility")
+	bool ActivateSubAbility(TSubclassOf<UGameplayAbility> AbilityClass);
+
+	UPROPERTY(BlueprintAssignable, Category = "Boss|Phase|SubAbility")
+	FOnSubAbilityFinished OnSubAbilityFinished;
 
 	void CachingParticipants();
 
@@ -63,6 +71,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Boss|Phase|Self")
 	void RemoveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities);
+private:
+	UFUNCTION()
+	void HandleSubAbilityEnded(UGameplayAbility* Ability);
 protected:
 	/** 진입 시 부여할 무적/슈퍼아머 태그 */
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Entry")
@@ -112,6 +123,10 @@ protected:
 	/** Exit에서 Grant할 GA Spec Handle */
 	UPROPERTY(Transient)
 	TArray<FGameplayAbilitySpecHandle> GrantedAbilitySpecHandles;
+
+	/** 페이즈 동안 Grant한 임시 GA 핸들 */
+	UPROPERTY(Transient)
+	TArray<FGameplayAbilitySpecHandle> TemporaryGrantedHandles;
 
 	bool bPhaseFinished = false;
 

@@ -47,6 +47,37 @@ void UGYBossPhaseAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
+bool UGYBossPhaseAbility::ActivateSubAbility(TSubclassOf<UGameplayAbility> AbilityClass)
+{
+	if (!AbilityClass) return false;
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return false;
+
+	if (!ASC->FindAbilitySpecFromClass(AbilityClass))
+	{
+		FGameplayAbilitySpec Spec(AbilityClass, 1, INDEX_NONE, GetCurrentSourceObject());
+		FGameplayAbilitySpecHandle Handle = ASC->GiveAbility(Spec);
+		if (Handle.IsValid())
+		{
+			TemporaryGrantedHandles.Add(Handle);
+		}
+	}
+
+	if (!ASC->TryActivateAbilityByClass(AbilityClass)) return false;
+
+	if (FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromClass(AbilityClass))
+	{
+		for (UGameplayAbility* Instance : Spec->GetAbilityInstances())
+		{
+			Instance->OnGameplayAbilityEnded.AddUObject(
+				this, &UGYBossPhaseAbility::HandleSubAbilityEnded);
+			break;
+		}
+	}
+	return true;
+}
+
 void UGYBossPhaseAbility::CachingParticipants()
 {
 	CachedParticipants.Reset();
@@ -133,6 +164,16 @@ void UGYBossPhaseAbility::ApplyPhaseExit()
 		Params.SourceObject = BossASC->GetAvatarActor();
 		BossASC->ExecuteGameplayCue(ExitCueTag, Params);
 	}
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (ASC)
+	{
+		for (const FGameplayAbilitySpecHandle& Handle : TemporaryGrantedHandles)
+		{
+			ASC->ClearAbility(Handle);
+		}
+	}
+	TemporaryGrantedHandles.Reset();
 }
 
 void UGYBossPhaseAbility::FinishPhase()
@@ -289,4 +330,11 @@ void UGYBossPhaseAbility::RemoveAbilities(const TArray<TSubclassOf<UGameplayAbil
 	{
 		ASC->ClearAbility(Handle);
 	}
+}
+
+void UGYBossPhaseAbility::HandleSubAbilityEnded(UGameplayAbility* Ability)
+{
+	if (!Ability) return;
+
+	OnSubAbilityFinished.Broadcast(Ability->GetClass());
 }
