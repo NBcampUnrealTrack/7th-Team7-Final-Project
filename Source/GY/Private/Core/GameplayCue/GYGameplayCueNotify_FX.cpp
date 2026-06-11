@@ -5,6 +5,12 @@
 #include "GameFramework/Character.h"
 #include "Logging/GYLogManager.h"
 
+/* 필요한 큐 파라미터 */
+/* 몽타주 재생: Parameters.Instigator - 재생 할 대상
+ * 위치: Parameters.Location - SFX,VFX 위치 기반 시 필요
+ * 방향: Parameters.Normal - VFX 회전 시 필요
+ */
+
 bool UGYGameplayCueNotify_FX::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
 {
 	if (!MyTarget)
@@ -12,10 +18,50 @@ bool UGYGameplayCueNotify_FX::OnExecute_Implementation(AActor* MyTarget, const F
 		return false;
 	}
 
+	PlayAnimation(Parameters);
 	PlaySound(MyTarget, Parameters);
 	SpawnEffect(MyTarget, Parameters);
 
 	return true;
+}
+
+void UGYGameplayCueNotify_FX::PlayAnimation(const FGameplayCueParameters& Parameters) const
+{
+	if (!Montage)
+	{
+		return;
+	}
+
+	AActor* Instigator = Parameters.GetInstigator(); // 주체
+	if (!Instigator)
+	{
+		GY_WARN(Content, CYS, "No Instigator");
+		return;
+	}
+
+	USkeletalMeshComponent* MeshComponent = Instigator->FindComponentByClass<USkeletalMeshComponent>();
+	if (!MeshComponent)
+	{
+		return;
+	}
+
+	UAnimInstance* AnimInstance = MeshComponent->GetAnimInstance();
+	if (!AnimInstance)
+	{
+		return;
+	}
+
+	const float MontageLength = AnimInstance->Montage_Play(Montage, PlayRate);
+	if (MontageLength <= 0.f)
+	{
+		return;
+	}
+
+	if (!MontageStartSection.IsNone())
+	{
+		AnimInstance->Montage_JumpToSection(MontageStartSection, Montage);
+	}
+
 }
 
 void UGYGameplayCueNotify_FX::PlaySound(AActor* TargetActor,
