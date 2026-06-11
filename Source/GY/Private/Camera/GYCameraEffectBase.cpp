@@ -9,6 +9,7 @@ void UGYCameraEffectBase::Initialize(const FGYCameraEffectContext& InContext)
 
 void UGYCameraEffectBase::UpdateEffect(float DeltaTime, FGYCameraView& InOutView)
 {
+
 	ElapsedTime += DeltaTime;
 }
 

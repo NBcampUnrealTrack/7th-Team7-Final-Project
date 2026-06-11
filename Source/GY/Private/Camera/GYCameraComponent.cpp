@@ -152,6 +152,9 @@ void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                        FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	const float RealDelta = (GetOwner()->CustomTimeDilation > 0.f)
+		                        ? GetWorld()->GetDeltaSeconds() / GetOwner()->CustomTimeDilation
+		                        : GetWorld()->GetDeltaSeconds();
 
 	APawn* Pawn = GetPawn<APawn>();
 
@@ -169,7 +172,7 @@ void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	FGYCameraView NewView;
 
 	CurrentCameraMode->UpdateCamera(
-		DeltaTime,
+		RealDelta,
 		NewView);
 
 	// 현재 > 목표 까지 보간
@@ -177,28 +180,28 @@ void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		FMath::VInterpTo(
 			CurrentView.PivotLocation,
 			NewView.PivotLocation,
-			DeltaTime,
+			RealDelta,
 			NewView.LocationInterpSpeed);
 
 	CurrentView.TargetArmLength =
 		FMath::FInterpTo(
 			CurrentView.TargetArmLength,
 			NewView.TargetArmLength,
-			DeltaTime,
+			RealDelta,
 			NewView.ZoomInterpSpeed);
 
 	CurrentView.FOV =
 		FMath::FInterpTo(
 			CurrentView.FOV,
 			NewView.FOV,
-			DeltaTime,
+			RealDelta,
 			NewView.FOVInterpSpeed);
 
 	CurrentView.SocketOffset =
 		FMath::VInterpTo(
 			CurrentView.SocketOffset,
 			NewView.SocketOffset,
-			DeltaTime,
+			RealDelta,
 			10.f);
 
 	// 이펙트 적용
@@ -213,7 +216,7 @@ void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		}
 
 		Effect->UpdateEffect(
-			DeltaTime,
+			RealDelta,
 			CurrentView);
 
 		if (Effect->IsFinished())
