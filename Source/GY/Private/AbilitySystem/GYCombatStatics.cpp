@@ -212,23 +212,34 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 
 	if (IsSameFaction(SourceASC, TargetASC)) return;
 
-	// HP 데미지: GE_Damage(UGYDamageExecution)로. 공격자 ATK/Crit/STR/DEX + 대상 DEF 캡처.
-	const UGYCombatSettings* Settings = GetDefault<UGYCombatSettings>();
-	TSubclassOf<UGameplayEffect> DamageEffect = Settings ? Settings->DamageEffect.LoadSynchronous() : nullptr;
-	if (DamageEffect)
+	// 패리: 반응 이벤트 발행 + 회피(데미지·poise skip). 반응(적 무력 차감·자기 통 리셋)은
+	// Event_Parry_Hit 핸들러가 처리. (닷지는 GE_Damage의 ApplicationRequirement로 차단됨)
+	if (TargetASC->HasMatchingGameplayTag(GYGameplayTags::Ability_State_Parrying))
 	{
-		FGameplayEffectContextHandle Context = SourceASC->MakeEffectContext();
-		FGameplayEffectSpecHandle Spec = SourceASC->MakeOutgoingSpec(DamageEffect, 1.f, Context);
-		if (Spec.IsValid())
-		{
-			Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Damage_SetByCaller_MotionMultiplier, HitContext.MotionMultiplier);
-			SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), TargetASC);
-		}
+		FGameplayEventData Payload;
+		Payload.EventTag = GYGameplayTags::Event_Parry_Hit;
+		Payload.Instigator = SourceASC->GetAvatarActor();
+		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
+			GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_Parry_Hit, Payload);
+		else
+			TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Parry_Hit, &Payload);
+		return;
 	}
 
-	// poise(경직/무력)는 데미지와 분리 — 공격별 고정값
-	UGYAdditionalResourceStatics::IncreaseStagger(TargetASC, HitContext.StaggerDamage);
-	UGYAdditionalResourceStatics::IncreaseStun(TargetASC, HitContext.StunDamage);
+	// HP + 경직/무력을 한 GE_Damage로 적용. HP는 execution(공격자 ATK/Crit/STR/DEX + 대상 DEF 캡처),
+	// 경직/무력은 SetByCaller 모디파이어. 닷지(Ability.State.Dodging)는 GE의 ApplicationRequirement로 차단.
+	const UGYCombatSettings* Settings = GetDefault<UGYCombatSettings>();
+	TSubclassOf<UGameplayEffect> HitImpactEffect = Settings ? Settings->HitImpactEffect.LoadSynchronous() : nullptr;
+	if (!HitImpactEffect) return;
+
+	FGameplayEffectContextHandle Context = SourceASC->MakeEffectContext();
+	FGameplayEffectSpecHandle Spec = SourceASC->MakeOutgoingSpec(HitImpactEffect, 1.f, Context);
+	if (!Spec.IsValid()) return;
+
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Damage_SetByCaller_MotionMultiplier, HitContext.MotionMultiplier);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Damage_SetByCaller_StaggerAmount, HitContext.StaggerAmount);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Damage_SetByCaller_StunAmount, HitContext.StunAmount);
+	SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), TargetASC);
 }
 
 void UGYCombatStatics::ApplyHeal(UAbilitySystemComponent* ASC, float HealAmount)

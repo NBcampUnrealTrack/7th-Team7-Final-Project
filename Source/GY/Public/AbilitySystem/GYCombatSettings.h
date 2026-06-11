@@ -14,7 +14,7 @@ class GY_API UGYCombatSettings : public UDeveloperSettings
 public:
 	virtual FName GetCategoryName() const override { return FName("Game"); }
 
-	// 플레이어 공격 데미지 GE (UGYDamageExecution 사용). ApplyHitImpact가 적용.
+	// 플레이어 타격 GE (HP는 UGYDamageExecution, 경직/무력은 SetByCaller 모디파이어). ApplyHitImpact가 적용.
 	UPROPERTY(EditAnywhere, Config, Category = "Combat")
-	TSoftClassPtr<UGameplayEffect> DamageEffect;
+	TSoftClassPtr<UGameplayEffect> HitImpactEffect;
 };

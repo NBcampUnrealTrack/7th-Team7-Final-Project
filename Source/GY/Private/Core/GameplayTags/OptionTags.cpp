@@ -8,4 +8,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Stat_Modifier_OptionMagnitude3, "Stat.Modifier.OptionMagnitude3");
 
 	UE_DEFINE_GAMEPLAY_TAG(Damage_SetByCaller_MotionMultiplier, "Damage.SetByCaller.MotionMultiplier");
+	UE_DEFINE_GAMEPLAY_TAG(Damage_SetByCaller_StaggerAmount, "Damage.SetByCaller.StaggerAmount");
+	UE_DEFINE_GAMEPLAY_TAG(Damage_SetByCaller_StunAmount, "Damage.SetByCaller.StunAmount");
 }
