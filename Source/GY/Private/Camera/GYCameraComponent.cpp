@@ -84,7 +84,7 @@ void UGYCameraComponent::HandleChangeInitState(UGameFrameworkComponentManager* M
 
 			SpringArmComponent->SetUsingAbsoluteRotation(true);
 			SpringArmComponent->SetUsingAbsoluteLocation(true);
-			SpringArmComponent->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));
+			SpringArmComponent->SetRelativeRotation(FRotator(-45.f, 0.f, 0.f));
 			SpringArmComponent->bDoCollisionTest = false;
 
 			// 캐릭터(Pawn)가 회전할 때 카메라가 따라서 빙글빙글 돌지 않도록 고정합니다.
