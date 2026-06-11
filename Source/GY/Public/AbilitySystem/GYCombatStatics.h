@@ -27,6 +27,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GY|Combat")
 	static void ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC = nullptr);
 
+	// DEPRECATED: ApplyHitImpact 사용. 테스트 경로만 잔존
 	UFUNCTION(BlueprintCallable, Category="GY|Combat", meta = (AdvancedDisplay = "SourceASC"))
 	static void ApplyDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC = nullptr);
 

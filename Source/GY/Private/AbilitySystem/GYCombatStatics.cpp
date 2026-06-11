@@ -191,6 +191,7 @@ bool UGYCombatStatics::HandleBlockCheck(UAbilitySystemComponent* TargetASC, UAbi
 	return false;
 }
 
+// DEPRECATED: ApplyHitImpact 사용. 테스트 경로만 잔존
 void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC)
 {
 	if (!TargetASC) return;
