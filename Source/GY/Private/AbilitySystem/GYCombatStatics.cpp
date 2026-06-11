@@ -252,6 +252,7 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	// HP는 BlockReduction을 execution이 ×(1-r), 경직/무력도 같은 비율로 축소해 넘김.
 	const FGYBlockData* ActiveBlock = GetActiveBlock(TargetASC, SourceASC);
 	const float BlockReduction = ActiveBlock ? ActiveBlock->DamageReductionMultiplier : 0.f;
+	const float BlockHitCostMultiplier = ActiveBlock ? ActiveBlock->BlockHitCostMultiplier : 0.f;
 
 	const float StaggerAmount = ActiveBlock ? HitContext.StaggerAmount * (1.f - BlockReduction) : HitContext.StaggerAmount;
 	const float StunAmount = ActiveBlock ? HitContext.StunAmount * (1.f - BlockReduction) : HitContext.StunAmount;
@@ -270,6 +271,7 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_StaggerAmount, StaggerAmount);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_StunAmount, StunAmount);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockReduction, BlockReduction);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockHitCostMultiplier, BlockHitCostMultiplier);
 	SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), TargetASC);
 }
 

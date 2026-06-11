@@ -3,6 +3,7 @@
 #include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
+#include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "Core/GameplayTags/OptionTags.h"
 
 namespace
@@ -72,6 +73,7 @@ void UGYDamageExecution::Execute_Implementation(
 
 	const float Motion = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_MotionMultiplier, false, 1.f);
 	const float BlockReduction = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockReduction, false, 0.f);
+	const float BlockHitCostMultiplier = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockHitCostMultiplier, false, 0.f);
 
 	float Damage = Attack * Motion * (1.f + (Strength + Dexterity) * StatToWeaponDamage);
 	if (FMath::FRand() < CriticalRate)
@@ -85,5 +87,13 @@ void UGYDamageExecution::Execute_Implementation(
 	{
 		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(
 			UGYVitalAttributeSet::GetCurrentHealthAttribute(), EGameplayModOp::Additive, -FinalDamage));
+	}
+
+	// 블록 시 흡수량에 비례해 스태미나 차감 (흡수량 = DEF 적용 후 데미지 × 감산율)
+	const float StaminaCost = DamageAfterDefense * BlockReduction * BlockHitCostMultiplier;
+	if (StaminaCost > 0.f)
+	{
+		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(
+			UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute(), EGameplayModOp::Additive, -StaminaCost));
 	}
 }
