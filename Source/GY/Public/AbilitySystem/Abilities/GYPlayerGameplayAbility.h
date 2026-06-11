@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GYGameplayAbility.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "AttackLogic/Shared/GYHitImpact.h"
 #include "GYPlayerGameplayAbility.generated.h"
 
 class UEquipmentInstance;
@@ -127,8 +128,11 @@ protected:
 
 #pragma endregion
 public:
-	float GetDamageMultiplier() const { return CurrentDamageMultiplier; }
-	void SetDamageMultiplier(float Multiplier) { CurrentDamageMultiplier = Multiplier; }
+	const FGYHitImpact& GetCurrentHitImpact() const { return CurrentHitImpact; }
+	void SetCurrentHitImpact(const FGYHitImpact& InImpact) { CurrentHitImpact = InImpact; }
+
+	float GetDamageMultiplier() const { return CurrentHitImpact.DamageMultiplier; }
+	void SetDamageMultiplier(float Multiplier) { CurrentHitImpact.DamageMultiplier = Multiplier; }
 
 	AGYCharacter* GetGYCharacter() const;
 	UEquipmentInstance* GetCurrentWeapon() const;
@@ -141,7 +145,7 @@ public:
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, bWasCancelled);
 	}
 private:
-	float CurrentDamageMultiplier = 1.f;
+	FGYHitImpact CurrentHitImpact;
 
 protected:
 

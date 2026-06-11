@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Fragment/AbilityFragment.h"
 #include "AttackLogic/Shared/GYAttributeCost.h"
+#include "AttackLogic/Shared/GYHitImpact.h"
 #include "GameplayTagContainer.h"
 #include "GYChargeFragment.generated.h"
 
@@ -17,8 +18,9 @@ struct GY_API FGYChargeData
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0", Units = "s"))
 	float MaxChargeTime = 2.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1.0"))
-	float DamageMultiplier = 2.0f;
+	// 최대 차지 시 임팩트. 차지량(alpha)에 따라 Lerp됨
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGYHitImpact Impact;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cost")
 	FGYAttributeCost ChargeCost;

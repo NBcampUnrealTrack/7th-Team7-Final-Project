@@ -123,7 +123,7 @@ void UGYChargeInputLogic::ExecuteAttack()
 
 	const float ElapsedTime = CachedAbility->GetWorld()->GetTimeSeconds() - ChargeStartTime;
 
-	float DamageMultiplier = 1.f;
+	FGYHitImpact Impact;
 
 	FGameplayTagContainer OwnedTags;
 	if (UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo())
@@ -137,20 +137,24 @@ void UGYChargeInputLogic::ExecuteAttack()
 
 		if (ChargeData)
 		{
+			// 차지 Impact(최대치) 기준 + 멀티플라이어만 차지량으로 Lerp
+			Impact = ChargeData->Impact;
+			float Multiplier = 1.f;
 			if (ElapsedTime >= ChargeData->MaxChargeTime)
 			{
-				DamageMultiplier = ChargeData->DamageMultiplier;
+				Multiplier = ChargeData->Impact.DamageMultiplier;
 			}
 			else if (ElapsedTime >= ChargeData->MinChargeTime)
 			{
 				const float Range = FMath::Max(ChargeData->MaxChargeTime - ChargeData->MinChargeTime, KINDA_SMALL_NUMBER);
 				const float Alpha = (ElapsedTime - ChargeData->MinChargeTime) / Range;
-				DamageMultiplier = FMath::Lerp(1.f, ChargeData->DamageMultiplier, Alpha);
+				Multiplier = FMath::Lerp(1.f, ChargeData->Impact.DamageMultiplier, Alpha);
 			}
+			Impact.DamageMultiplier = Multiplier;
 		}
 	}
 
-	CachedAbility->SetDamageMultiplier(DamageMultiplier);
+	CachedAbility->SetCurrentHitImpact(Impact);
 
 	if (const UGYChargeFragment* CostFragment = CachedAbility->GetFragment<UGYChargeFragment>())
 	{
