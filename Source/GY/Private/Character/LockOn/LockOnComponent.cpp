@@ -357,6 +357,7 @@ void ULockOnComponent::BindTargetDeathListener(AActor* Target)
 	//TODO Interface 뽑는게 나을듯
 	if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Target))
 	{
+		Enemy->OnEnemyDead.RemoveDynamic(this, &ULockOnComponent::HandleTargetDied);
 		Enemy->OnEnemyDead.AddDynamic(this, &ULockOnComponent::HandleTargetDied);
 	}
 }
