@@ -18,7 +18,7 @@ enum class EEnemyType : uint8
 	Sparrow		UMETA(DisplayName = "Sparrow"),
 	Melee		UMETA(DisplayName = "Melee"),
 	Ranged		UMETA(DisplayName = "Ranged"),
-	Boss		UMETA(DisplayName = "Boss"),
+	Flower		UMETA(DisplayName = "Flower"),
 };
 
 USTRUCT(BlueprintType)
