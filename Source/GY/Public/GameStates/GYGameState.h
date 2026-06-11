@@ -29,6 +29,8 @@ public:
 	void OnRep_TimeScale();
 	UFUNCTION()
 	void OnRep_ClearedQuests();
+	UFUNCTION()
+	void OnRep_ActiveQuests();
 
 	// 모든 목표 달성 여부 확인
 	UFUNCTION(BlueprintCallable, Category="Quest")
@@ -37,6 +39,9 @@ public:
 	// 퀘스트 클리어 추가
 	UFUNCTION(BlueprintCallable, Category="Quest")
 	void AddCompletedQuest(FGameplayTag QuestTag);
+
+	void AddActiveQuest(FGameplayTag QuestTag);
+	void RemoveActiveQuest(FGameplayTag QuestTag);
 
 	FORCEINLINE const TArray<FGameplayTag>& GetCompletedQuests() const { return ClearedQuests; }
 protected:
@@ -62,4 +67,9 @@ private:
 	TArray<FGameplayTag> ClearedQuests;
 
 	int32 PreviousClearedCount = 0;
+
+	UPROPERTY(ReplicatedUsing=OnRep_ActiveQuests)
+	TArray<FGameplayTag> ActiveQuestTags;
+
+	TArray<FGameplayTag> PreviousActiveQuestTags;
 };

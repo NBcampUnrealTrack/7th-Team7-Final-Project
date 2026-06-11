@@ -71,9 +71,11 @@ private:
 
 	void BuildCache(const UDataTable* DataTable);
 	void OnLootBoxOpened(FGameplayTag Channel, const FGYLootBoxStateMessage& Message);
+	void OnQuestStartedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message);
 	void OnQuestCompletedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message);
 
 	FGameplayMessageListenerHandle LootBoxOpenedListenerHandle;
+	FGameplayMessageListenerHandle QuestStartedListenerHandle;
 	FGameplayMessageListenerHandle QuestCompletedListenerHandle;
 
 public:

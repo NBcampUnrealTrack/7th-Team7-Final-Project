@@ -41,6 +41,10 @@ void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 			GYGameplayTags::Message_Loot_BoxOpened,
 			this, &UQuestSubsystem::OnLootBoxOpened);
 
+		QuestStartedListenerHandle = MsgSubsystem->RegisterListener<FGYQuestProgressMessage>(
+			GYGameplayTags::Message_Quest_Started,
+			this, &UQuestSubsystem::OnQuestStartedFromServer);
+
 		QuestCompletedListenerHandle = MsgSubsystem->RegisterListener<FGYQuestProgressMessage>(
 			GYGameplayTags::Message_Quest_Completed,
 			this, &UQuestSubsystem::OnQuestCompletedFromServer);
@@ -50,6 +54,7 @@ void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void UQuestSubsystem::Deinitialize()
 {
 	LootBoxOpenedListenerHandle.Unregister();
+	QuestStartedListenerHandle.Unregister();
 	QuestCompletedListenerHandle.Unregister();
 	Super::Deinitialize();
 }
@@ -87,10 +92,12 @@ bool UQuestSubsystem::ArePrerequisitesMet(FGameplayTag QuestTag) const
 	const FQuestTableRow* Row = FindQuestRow(QuestTag);
 	if (!Row)
 	{
-		GY_WARN(Content, CYS, "ArePrerequisitesMet - QuestCache에 없음 (캐시 크기=%d): %s", QuestCache.Num(), *QuestTag.ToString());
+		GY_WARN(Content, CYS, "ArePrerequisitesMet - QuestCache에 없음 (캐시 크기=%d): %s", QuestCache.Num(),
+		        *QuestTag.ToString());
 		return false;
 	}
-	GY_LOG(Content, CYS, "ArePrerequisitesMet - PrerequisiteTag=[%s] IsValid=%d", *Row->PrerequisiteTag.ToString(), Row->PrerequisiteTag.IsValid() ? 1 : 0);
+	GY_LOG(Content, CYS, "ArePrerequisitesMet - PrerequisiteTag=[%s] IsValid=%d", *Row->PrerequisiteTag.ToString(),
+	       Row->PrerequisiteTag.IsValid() ? 1 : 0);
 	if (!Row->PrerequisiteTag.IsValid())
 	{
 		return true;
@@ -153,6 +160,10 @@ bool UQuestSubsystem::StartQuest(FGameplayTag QuestTag)
 	RuntimeData.ObjectiveProgress = 0;
 
 	GY_LOG(Content, CYS, "퀘스트 시작: %s", *Row->QuestName.ToString());
+
+	GameState->AddActiveQuest(QuestTag);
+
+
 	OnQuestStarted.Broadcast(QuestTag);
 
 	return true;
@@ -180,12 +191,13 @@ void UQuestSubsystem::ProcessObjectiveProgress(const FQuestEventData& EventData)
 		}
 
 		const FQuestObjective& Objective = Row->Objective;
-		GY_LOG(Content, CYS, "ProcessObjective - Quest=%s ObjectiveTag=[%s] EventTag=[%s] ObjTargetId=%s EventTargetId=%s",
-			*QuestTag.ToString(),
-			*Objective.ObjectiveEventTag.ToString(),
-			*EventData.EventTag.ToString(),
-			*Objective.TargetId.ToString(),
-			*EventData.TargetId.ToString());
+		GY_LOG(Content, CYS,
+		       "ProcessObjective - Quest=%s ObjectiveTag=[%s] EventTag=[%s] ObjTargetId=%s EventTargetId=%s",
+		       *QuestTag.ToString(),
+		       *Objective.ObjectiveEventTag.ToString(),
+		       *EventData.EventTag.ToString(),
+		       *Objective.TargetId.ToString(),
+		       *EventData.TargetId.ToString());
 		if (Objective.ObjectiveEventTag != EventData.EventTag || Objective.TargetId != EventData.TargetId)
 		{
 			continue;
@@ -227,10 +239,12 @@ void UQuestSubsystem::CompleteQuest(FGameplayTag QuestTag)
 	if (GameState)
 	{
 		GameState->AddCompletedQuest(QuestTag);
+		GameState->RemoveActiveQuest(QuestTag);
 	}
 
 	const FQuestTableRow* Row = FindQuestRow(QuestTag);
 	GY_LOG(Content, CYS, "퀘스트 완료: %s", Row ? *Row->QuestName.ToString() : *QuestTag.ToString());
+
 	OnQuestCompleted.Broadcast(QuestTag);
 
 	ActiveQuests.Remove(QuestTag);
@@ -273,9 +287,27 @@ void UQuestSubsystem::BroadcastNarrativeDialogue(FGameplayTag NarrativeTag)
 	OnNarrativeDialogueStarted.Broadcast(Filtered);
 }
 
+void UQuestSubsystem::OnQuestStartedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message)
+{
+	// 클라이언트 전용: ActiveQuests 채우기 + UI 델리게이트 브로드캐스트
+	// 서버(호스트)는 StartQuest()에서 이미 처리하므로 중복 방지
+	if (ActiveQuests.Contains(Message.QuestId)) return;
+
+	const FQuestTableRow* Row = FindQuestRow(Message.QuestId);
+	if (!Row) return;
+
+	FQuestRuntimeData& RuntimeData = ActiveQuests.Add(Message.QuestId);
+	RuntimeData.QuestTag = Message.QuestId;
+	RuntimeData.State = EQuestState::InProgress;
+	RuntimeData.ObjectiveProgress = 0;
+
+	OnQuestStarted.Broadcast(Message.QuestId);
+}
+
 void UQuestSubsystem::OnQuestCompletedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message)
 {
-	// 클라이언트 전용: ActiveQuests 없이 UI 델리게이트만 브로드캐스트
+	// 클라이언트 전용: ActiveQuests 정리 + UI 델리게이트 브로드캐스트
+	ActiveQuests.Remove(Message.QuestId);
 	OnQuestCompleted.Broadcast(Message.QuestId);
 }
 
