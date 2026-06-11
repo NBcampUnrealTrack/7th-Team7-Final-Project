@@ -12,6 +12,7 @@ namespace GYGameplayTags
 
 	// 타격 GE(GE_HitImpact) SetByCaller 키
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact_SetByCaller_MotionMultiplier)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact_SetByCaller_Additive)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact_SetByCaller_StaggerAmount)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact_SetByCaller_StunAmount)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact_SetByCaller_BlockReduction)

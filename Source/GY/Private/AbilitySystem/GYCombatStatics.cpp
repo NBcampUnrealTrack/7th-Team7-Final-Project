@@ -268,6 +268,7 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	if (!Spec.IsValid()) return;
 
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_MotionMultiplier, HitContext.MotionMultiplier);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_Additive, HitContext.Additive);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_StaggerAmount, StaggerAmount);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_StunAmount, StunAmount);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockReduction, BlockReduction);

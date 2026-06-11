@@ -72,10 +72,11 @@ void UGYDamageExecution::Execute_Implementation(
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageCapture().DexterityDef, EvalParams, Dexterity);
 
 	const float Motion = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_MotionMultiplier, false, 1.f);
+	const float Additive = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_Additive, false, 0.f);
 	const float BlockReduction = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockReduction, false, 0.f);
 	const float BlockHitCostMultiplier = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockHitCostMultiplier, false, 0.f);
 
-	float Damage = Attack * Motion * (1.f + (Strength + Dexterity) * StatToWeaponDamage);
+	float Damage = (Attack + Additive) * Motion * (1.f + (Strength + Dexterity) * StatToWeaponDamage);
 	if (FMath::FRand() < CriticalRate)
 	{
 		Damage *= CriticalMultiplier;
