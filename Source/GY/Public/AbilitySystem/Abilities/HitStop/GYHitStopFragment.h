@@ -10,7 +10,7 @@
 /**
  *
  */
-UCLASS()
+UCLASS(EditInlineNew, DefaultToInstanced)
 class GY_API UGYHitStopFragment : public UAbilityFragment
 {
 	GENERATED_BODY()
@@ -19,7 +19,7 @@ public:
 
 
 	UPROPERTY(EditDefaultsOnly, Category="HitStop")
-	float Duration = 1.08f;
+	float Duration = 0.08f;
 
 	UPROPERTY(EditDefaultsOnly, Category="HitStop")
 	float AttackerTimeDilation = 0.05f;
