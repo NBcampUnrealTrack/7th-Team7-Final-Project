@@ -12,6 +12,8 @@
 #include "GameplayEffect.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/GYAdditionalResourceStatics.h"
+#include "AbilitySystem/GYCombatSettings.h"
+#include "Core/GameplayTags/OptionTags.h"
 #include "Logging/GYLogManager.h"
 
 static bool IsSameFaction(UAbilitySystemComponent* A, UAbilitySystemComponent* B)
@@ -200,6 +202,33 @@ void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float Raw
 
 	UGYAdditionalResourceStatics::IncreaseStagger(TargetASC, Effective);
 	UGYAdditionalResourceStatics::IncreaseStun(TargetASC, Effective);
+}
+
+void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
+{
+	UAbilitySystemComponent* TargetASC = HitContext.TargetASC;
+	UAbilitySystemComponent* SourceASC = HitContext.SourceASC;
+	if (!TargetASC || !SourceASC) return;
+
+	if (IsSameFaction(SourceASC, TargetASC)) return;
+
+	// HP 데미지: GE_Damage(UGYDamageExecution)로. 공격자 ATK/Crit/STR/DEX + 대상 DEF 캡처.
+	const UGYCombatSettings* Settings = GetDefault<UGYCombatSettings>();
+	TSubclassOf<UGameplayEffect> DamageEffect = Settings ? Settings->DamageEffect.LoadSynchronous() : nullptr;
+	if (DamageEffect)
+	{
+		FGameplayEffectContextHandle Context = SourceASC->MakeEffectContext();
+		FGameplayEffectSpecHandle Spec = SourceASC->MakeOutgoingSpec(DamageEffect, 1.f, Context);
+		if (Spec.IsValid())
+		{
+			Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Damage_SetByCaller_MotionMultiplier, HitContext.MotionMultiplier);
+			SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), TargetASC);
+		}
+	}
+
+	// poise(경직/무력)는 데미지와 분리 — 공격별 고정값
+	UGYAdditionalResourceStatics::IncreaseStagger(TargetASC, HitContext.StaggerDamage);
+	UGYAdditionalResourceStatics::IncreaseStun(TargetASC, HitContext.StunDamage);
 }
 
 void UGYCombatStatics::ApplyHeal(UAbilitySystemComponent* ASC, float HealAmount)
