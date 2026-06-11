@@ -3,6 +3,12 @@
 #include "Camera/GYCameraComponent.h"
 #include "Logging/GYLogManager.h"
 
+/* 필요한 큐 파라미터 */
+/* 대상: Parameters.Instigator
+ * 위치: Parameters.Location
+ * 방향: Parameters.Normal
+ */
+
 bool UGYGameplayCueNotify_Camera::OnExecute_Implementation(AActor* MyTarget,
                                                            const FGameplayCueParameters& Parameters) const
 {
@@ -39,10 +45,10 @@ bool UGYGameplayCueNotify_Camera::OnExecute_Implementation(AActor* MyTarget,
 	// 방향 계산
 	switch (DirectionSource)
 	{
-	case EGYCameraDirectionSource::HitNormal:
+	case EGYCameraDirectionSource::HitNormal: //파라미터 노멀값 기준
 		Context.Direction = Parameters.Normal;
 		break;
-	case EGYCameraDirectionSource::Instigator:
+	case EGYCameraDirectionSource::Instigator: //대상이 바라보는 방향
 		if (Parameters.Instigator.IsValid())
 		{
 			Context.Direction =
