@@ -7,7 +7,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Stat_Modifier_OptionMagnitude2, "Stat.Modifier.OptionMagnitude2");
 	UE_DEFINE_GAMEPLAY_TAG(Stat_Modifier_OptionMagnitude3, "Stat.Modifier.OptionMagnitude3");
 
-	UE_DEFINE_GAMEPLAY_TAG(Damage_SetByCaller_MotionMultiplier, "Damage.SetByCaller.MotionMultiplier");
-	UE_DEFINE_GAMEPLAY_TAG(Damage_SetByCaller_StaggerAmount, "Damage.SetByCaller.StaggerAmount");
-	UE_DEFINE_GAMEPLAY_TAG(Damage_SetByCaller_StunAmount, "Damage.SetByCaller.StunAmount");
+	UE_DEFINE_GAMEPLAY_TAG(HitImpact_SetByCaller_MotionMultiplier, "HitImpact.SetByCaller.MotionMultiplier");
+	UE_DEFINE_GAMEPLAY_TAG(HitImpact_SetByCaller_StaggerAmount, "HitImpact.SetByCaller.StaggerAmount");
+	UE_DEFINE_GAMEPLAY_TAG(HitImpact_SetByCaller_StunAmount, "HitImpact.SetByCaller.StunAmount");
+	UE_DEFINE_GAMEPLAY_TAG(HitImpact_SetByCaller_BlockReduction, "HitImpact.SetByCaller.BlockReduction");
 }

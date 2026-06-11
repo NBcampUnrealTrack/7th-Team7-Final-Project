@@ -88,6 +88,28 @@ static bool IsWithinAngle(UAbilitySystemComponent* TargetASC, UAbilitySystemComp
 	return AngleDeg <= AngleDegrees * 0.5f;
 }
 
+// 새 타격 경로(ApplyHitImpact) 전용 — 타깃이 각도 안에서 활성 블록 중이면 매칭된 블록 데이터를 반환.
+// 공유 HandleBlockCheck(옛 ApplyDamage 경로)와 분리
+static const FGYBlockData* GetActiveBlock(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC)
+{
+	UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC);
+	if (!GYASC) return nullptr;
+
+	UGYPlayerGameplayAbility* GA = Cast<UGYPlayerGameplayAbility>(GYASC->GetActiveAbilityByTag(GYGameplayTags::Ability_Block));
+	if (!GA) return nullptr;
+
+	const UGYBlockFragment* BlockFragment = GA->GetFragment<UGYBlockFragment>();
+	if (!BlockFragment || !BlockFragment->BlockAppliedTag.IsValid()) return nullptr;
+	if (!TargetASC->HasMatchingGameplayTag(BlockFragment->BlockAppliedTag)) return nullptr;
+
+	FGameplayTagContainer OwnedTags;
+	TargetASC->GetOwnedGameplayTags(OwnedTags);
+	const FGYBlockData* Data = BlockFragment->GetBestMatchingData(OwnedTags);
+	if (!Data) return nullptr;
+	if (!IsWithinAngle(TargetASC, SourceASC, Data->BlockAngle)) return nullptr;
+	return Data;
+}
+
 bool UGYCombatStatics::HandleDodgeCheck(UAbilitySystemComponent* TargetASC)
 {
 	if (!TargetASC) return false;
@@ -226,7 +248,15 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 		return;
 	}
 
-	// HP + 경직/무력을 한 GE_Damage로 적용. HP는 execution(공격자 ATK/Crit/STR/DEX + 대상 DEF 캡처),
+	// 블록: 부분 감산(닷지처럼 전부 무효 아님). 각도/활성 판정은 GetActiveBlock(새 경로 전용, 공유 HandleBlockCheck 미사용).
+	// HP는 BlockReduction을 execution이 ×(1-r), 경직/무력도 같은 비율로 축소해 넘김.
+	const FGYBlockData* ActiveBlock = GetActiveBlock(TargetASC, SourceASC);
+	const float BlockReduction = ActiveBlock ? ActiveBlock->DamageReductionMultiplier : 0.f;
+
+	const float StaggerAmount = ActiveBlock ? HitContext.StaggerAmount * (1.f - BlockReduction) : HitContext.StaggerAmount;
+	const float StunAmount = ActiveBlock ? HitContext.StunAmount * (1.f - BlockReduction) : HitContext.StunAmount;
+
+	// HP + 경직/무력을 GE_HitImpact로 적용. HP는 execution(공격자 ATK/Crit/STR/DEX + 대상 DEF, 블록 시 ×(1-BlockReduction)),
 	// 경직/무력은 SetByCaller 모디파이어. 닷지(Ability.State.Dodging)는 GE의 ApplicationRequirement로 차단.
 	const UGYCombatSettings* Settings = GetDefault<UGYCombatSettings>();
 	TSubclassOf<UGameplayEffect> HitImpactEffect = Settings ? Settings->HitImpactEffect.LoadSynchronous() : nullptr;
@@ -236,9 +266,10 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	FGameplayEffectSpecHandle Spec = SourceASC->MakeOutgoingSpec(HitImpactEffect, 1.f, Context);
 	if (!Spec.IsValid()) return;
 
-	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Damage_SetByCaller_MotionMultiplier, HitContext.MotionMultiplier);
-	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Damage_SetByCaller_StaggerAmount, HitContext.StaggerAmount);
-	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Damage_SetByCaller_StunAmount, HitContext.StunAmount);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_MotionMultiplier, HitContext.MotionMultiplier);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_StaggerAmount, StaggerAmount);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_StunAmount, StunAmount);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockReduction, BlockReduction);
 	SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), TargetASC);
 }
 
