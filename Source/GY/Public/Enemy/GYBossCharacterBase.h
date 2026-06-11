@@ -20,10 +20,16 @@ public:
 	AGYBossCharacterBase();
 
 	UFUNCTION(BlueprintCallable, Category = "Boss|Encounter")
-	void SetParticipantCount(int32 NewCount);
+	void SetParticipants(const TArray<APlayerState*>& InParticipants);
 
 	UFUNCTION(BlueprintPure, Category = "Boss|Encounter")
-	int32 GetParticipantCount() const { return ParticipantCount;}
+	TArray<APlayerState*> GetParticipants() const;
+
+	UFUNCTION(BlueprintPure, Category = "Boss|Encounter")
+	TArray<APawn*> GetParticipantPawns() const;
+
+	UFUNCTION(BlueprintPure)
+	int32 GetParticipantCount() const { return Participants.Num(); }
 
 	UFUNCTION(BlueprintPure, Category = "Boss|Encounter")
 	bool HasEncounterStarted() const { return bEncounterStarted; }
@@ -41,14 +47,14 @@ protected:
 	virtual float GetStatScaleValue() const override;
 
 	UFUNCTION()
-	void OnRep_ParticipantCount();
+	void OnRep_Participants();
 
 	void HandleStaggerBegin() override;
 	void HandleStunBegin() override;
 	void Die() override;
 protected:
-	UPROPERTY(ReplicatedUsing = OnRep_ParticipantCount, VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Encounter")
-	int32 ParticipantCount = 0;
+	UPROPERTY(ReplicatedUsing = OnRep_Participants, VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Encounter")
+	TArray<TObjectPtr<APlayerState>> Participants;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Components")
 	TObjectPtr<UBossPhaseComponent> PhaseComponent;

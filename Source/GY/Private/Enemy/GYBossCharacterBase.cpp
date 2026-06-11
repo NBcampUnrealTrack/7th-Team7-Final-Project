@@ -1,11 +1,10 @@
 #include "Enemy/GYBossCharacterBase.h"
 
 #include "Enemy/GYBossAIController.h"
-#include "Enemy/GYBossAIController.h"
-#include "Enemy/GYBossAIController.h"
 #include "Enemy/Component/BossPhaseComponent.h"
 #include "Components/StateTreeAIComponent.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "GameFramework/PlayerState.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -20,15 +19,36 @@ AGYBossCharacterBase::AGYBossCharacterBase()
 	bIsActivate = false;
 }
 
-void AGYBossCharacterBase::SetParticipantCount(int32 NewCount)
+void AGYBossCharacterBase::SetParticipants(const TArray<APlayerState*>& InParticipants)
 {
 	if (!HasAuthority()) return;
 
-	NewCount = FMath::Max(1, NewCount);
-	if (ParticipantCount == NewCount && bEncounterStarted) return;
+	TArray<TObjectPtr<APlayerState>> NewList;
+	NewList.Reserve(InParticipants.Num());
+	for (APlayerState* PS : InParticipants)
+	{
+		if (PS && !NewList.Contains(PS))
+		{
+			NewList.Add(PS);
+		}
+	}
 
-	ParticipantCount = NewCount;
-	MARK_PROPERTY_DIRTY_FROM_NAME(AGYBossCharacterBase, ParticipantCount, this);
+	if (bEncounterStarted && NewList.Num() == Participants.Num())
+	{
+		bool bSame = true;
+		for (int32 i = 0; i < NewList.Num(); ++i)
+		{
+			if (NewList[i] != Participants[i])
+			{
+				bSame = false;
+				break;
+			}
+			if (bSame) return;
+		}
+	}
+
+	Participants = MoveTemp(NewList);
+	MARK_PROPERTY_DIRTY_FROM_NAME(AGYBossCharacterBase, Participants, this);
 
 	if (!bEncounterStarted)
 	{
@@ -42,26 +62,40 @@ void AGYBossCharacterBase::SetParticipantCount(int32 NewCount)
 			if (UBossDataAsset* BossData = GetBossData())
 			{
 				PhaseComponent->InitializeForEncounter(BossData->PhaseTriggers);
-				if (AGYBossAIController* AI = Cast<AGYBossAIController>(GetController()))
-				{
-					if (UBossPatternSelectorComponent* Selector = AI->GetPatternSelector())
-					{
-						Selector->InitializePatterns(BossData->NormalPatterns);
-					}
-				}
-			}
-			else
-			{
-				PhaseComponent->InitializeForEncounter(TArray<FBossPhaseTrigger>());
 			}
 		}
-		OnEncounterStarted.Broadcast(ParticipantCount);
+		OnEncounterStarted.Broadcast(Participants.Num());
 	}
-	else
+
+	OnParticipantCountChanged.Broadcast(Participants.Num());
+}
+
+TArray<APlayerState*> AGYBossCharacterBase::GetParticipants() const
+{
+	TArray<APlayerState*> Result;
+	Result.Reserve(Participants.Num());
+	for (const TObjectPtr<APlayerState>& PS : Participants)
 	{
-		//TODO 은서 : 플레이어 수를 동적으로 받는경우 추가 필요
+		if (PS) Result.Add(PS);
 	}
-	OnParticipantCountChanged.Broadcast(ParticipantCount);
+	return Result;
+}
+
+TArray<APawn*> AGYBossCharacterBase::GetParticipantPawns() const
+{
+	TArray<APawn*> Result;
+	Result.Reserve(Participants.Num());
+	for (APlayerState* PS : Participants)
+	{
+		if (PS)
+		{
+			if (APawn* Pawn = PS->GetPawn())
+			{
+				Result.Add(Pawn);
+			}
+		}
+	}
+	return Result;
 }
 
 void AGYBossCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -71,18 +105,18 @@ void AGYBossCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProp
 	FDoRepLifetimeParams Params;
 	Params.bIsPushBased = true;
 
-	DOREPLIFETIME_WITH_PARAMS_FAST(AGYBossCharacterBase, ParticipantCount, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(AGYBossCharacterBase, Participants, Params);
 
 }
 
 float AGYBossCharacterBase::GetStatScaleValue() const
 {
-	return static_cast<float>(FMath::Max(1, ParticipantCount));
+	return static_cast<float>(FMath::Max(1, Participants.Num()));
 }
 
-void AGYBossCharacterBase::OnRep_ParticipantCount()
+void AGYBossCharacterBase::OnRep_Participants()
 {
-	OnParticipantCountChanged.Broadcast(ParticipantCount);
+	OnParticipantCountChanged.Broadcast(Participants.Num());
 }
 
 void AGYBossCharacterBase::HandleStaggerBegin()
