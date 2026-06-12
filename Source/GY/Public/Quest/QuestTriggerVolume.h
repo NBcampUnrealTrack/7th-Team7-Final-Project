@@ -22,11 +22,14 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* BoxComponent;
 
-	UPROPERTY(EditAnywhere, Category="GameplayTag")
-	FGameplayTag QuestTag;
+	UPROPERTY(EditAnywhere, Category="GY")
+	TArray<FGameplayTag> QuestTags;
 
 	UPROPERTY(VisibleAnywhere)
 	bool bTriggered = false;
+
+	UPROPERTY(EditAnywhere, Category="GY")
+	bool bIsLoop = false;
 
 	UFUNCTION()
 	void OnMeshBeginOverlap(
@@ -39,5 +42,6 @@ protected:
 
 private:
 	UQuestSubsystem* GetQuestSubsystem() const;
-	void PlayNarrativeDialogue() const;
+	void PlayNarrativeDialogue(FGameplayTag DialogueTag) const;
+	FGameplayTag GetRandomQuestTag() const;
 };

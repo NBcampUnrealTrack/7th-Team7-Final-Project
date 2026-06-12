@@ -41,30 +41,48 @@ void AQuestTriggerVolume::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp
 	// 서버: 퀘스트 시작만 (한 번)
 	if (HasAuthority())
 	{
+		if (!GetQuestSubsystem()->ArePrerequisitesMet(QuestTags[0]))
+			return; // 선행 퀘스트 완료 체크
 		if (!bTriggered)
 		{
 			bTriggered = true;
-			GetQuestSubsystem()->StartQuest(QuestTag);
-			GY_LOG(Content, CYS, "퀘스트 활성화:%s", *QuestTag.ToString());
+			GetQuestSubsystem()->StartQuest(QuestTags[0]);
+			GY_LOG(Content, CYS, "퀘스트 활성화:%s", *QuestTags[0].ToString());
 		}
 		return;
 	}
 
 	// 클라이언트: 자신의 캐릭터만, 각 플레이어 독립적으로 한 번
 	if (!Character->IsLocallyControlled()) return;
-	if (bTriggered) return;
+	if (bTriggered && !bIsLoop) return;
 
 	bTriggered = true;
 	GY_LOG(Content, CYS, "NPC와의 대화");
-	PlayNarrativeDialogue();
+	PlayNarrativeDialogue(GetRandomQuestTag());
 }
 
-void AQuestTriggerVolume::PlayNarrativeDialogue() const
+void AQuestTriggerVolume::PlayNarrativeDialogue(FGameplayTag DialogueTag) const
 {
+	if (!DialogueTag.IsValid())
+	{
+		return;
+	}
 	if (UQuestSubsystem* QS = GetQuestSubsystem())
 	{
-		QS->BroadcastNarrativeDialogue(QuestTag);
+		QS->BroadcastNarrativeDialogue(DialogueTag);
 	}
+}
+
+FGameplayTag AQuestTriggerVolume::GetRandomQuestTag() const
+{
+	if (QuestTags.IsEmpty())
+	{
+		return FGameplayTag();
+	}
+
+	const int32 RandomIndex = FMath::RandRange(0, QuestTags.Num() - 1);
+	GY_LOG(Content, CYS, "다이얼로그: ", QuestTags[RandomIndex]);
+	return QuestTags[RandomIndex];
 }
 
 UQuestSubsystem* AQuestTriggerVolume::GetQuestSubsystem() const
