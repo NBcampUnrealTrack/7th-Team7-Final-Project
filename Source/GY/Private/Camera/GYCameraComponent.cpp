@@ -84,7 +84,7 @@ void UGYCameraComponent::HandleChangeInitState(UGameFrameworkComponentManager* M
 
 			SpringArmComponent->SetUsingAbsoluteRotation(true);
 			SpringArmComponent->SetUsingAbsoluteLocation(true);
-			SpringArmComponent->SetRelativeRotation(FRotator(-45.f, 0.f, 0.f));
+			// 로테이션 DA로 빼기
 			SpringArmComponent->bDoCollisionTest = false;
 
 			// 캐릭터(Pawn)가 회전할 때 카메라가 따라서 빙글빙글 돌지 않도록 고정합니다.
@@ -203,6 +203,13 @@ void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 			NewView.SocketOffset,
 			RealDelta,
 			10.f);
+
+	CurrentView.TargetArmRotation =
+		FMath::RInterpTo(
+			CurrentView.TargetArmRotation,
+			NewView.TargetArmRotation,
+			RealDelta,
+			NewView.RotationInterpSpeed);
 
 	// 이펙트 적용
 	for (int32 i = ActiveEffects.Num() - 1; i >= 0; --i)
@@ -367,10 +374,10 @@ void UGYCameraComponent::ApplyCameraView(const FGYCameraView& View) const
 	{
 		return;
 	}
-
 	SpringArmComponent->TargetArmLength = View.TargetArmLength;
 	SpringArmComponent->SocketOffset = View.SocketOffset;
 	SpringArmComponent->SetWorldLocation(View.PivotLocation);
+	SpringArmComponent->SetWorldRotation(View.TargetArmRotation);
 
 	CameraComponent->SetFieldOfView(View.FOV);
 }

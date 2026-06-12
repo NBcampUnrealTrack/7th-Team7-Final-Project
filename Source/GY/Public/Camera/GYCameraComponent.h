@@ -42,6 +42,12 @@ struct FGYCameraView
 
 	UPROPERTY()
 	float FOVInterpSpeed = 5.f;
+
+	UPROPERTY()
+	FRotator TargetArmRotation=FRotator(-45.f,0.f,0.f);
+
+	UPROPERTY()
+	float RotationInterpSpeed = 8.f;
 };
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))

@@ -49,6 +49,10 @@ void UGYCameraModeBase::UpdateCamera(
 	OutView.ZoomInterpSpeed = CameraData->ZoomInterpSpeed;
 
 	OutView.FOVInterpSpeed = CameraData->FOVInterpSpeed;
+
+	OutView.TargetArmRotation = CameraData->TargetArmRotation;
+
+	OutView.RotationInterpSpeed = CameraData->RotationInterpSpeed;
 }
 
 APawn* UGYCameraModeBase::GetPawn() const

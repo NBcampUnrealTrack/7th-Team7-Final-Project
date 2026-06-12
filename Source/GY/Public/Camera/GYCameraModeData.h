@@ -64,4 +64,10 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float MaxArmLength = 900.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FRotator TargetArmRotation = FRotator(-45.f, 0.f, 0.f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float RotationInterpSpeed = 8.f;
 };
