@@ -263,3 +263,14 @@ struct GY_API FGYLockOnMessage
 	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<AActor> Owner;
 	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<AActor> Target;
 };
+
+/** 부활 진행 */
+USTRUCT(BlueprintType)
+struct GY_API FGYRevivalProgressMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) float CurrentValue = 0.f;
+	UPROPERTY(BlueprintReadWrite) float MaxValue = 1.f;
+	UPROPERTY(BlueprintReadWrite) FGameplayTag InputActionTag;
+};
