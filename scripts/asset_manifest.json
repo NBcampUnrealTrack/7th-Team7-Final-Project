@@ -6930,6 +6930,15 @@
                                                                                                             }
                                                                                                         ]
                                                                                         },
+                   "CarnivorousPlant/Mesh/PlantRoot/SKM_PlantRoot.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "CM",
+                                                                                                    "at":  "2026-06-13 01:57:38",
+                                                                                                    "note":  null
+                                                                                                }
+                                                                                            ]
+                                                                            },
                    "Medieval_Warrior/Animation/GreatSword/1H_Attack/UE5_1H_Attack_01_Seq.uasset":  {
                                                                                                        "history":  [
                                                                                                                        {
