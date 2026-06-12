@@ -4,6 +4,7 @@
 #include "AbilitySystem/Abilities/GYForceActivatableAbility.h"
 
 #include "AbilitySystemComponent.h"
+#include "AbilitySystemGlobals.h"
 
 bool UGYForceActivatableAbility::DoesAbilitySatisfyTagRequirements(
 	const UAbilitySystemComponent& AbilitySystemComponent,
@@ -11,23 +12,44 @@ bool UGYForceActivatableAbility::DoesAbilitySatisfyTagRequirements(
 	const FGameplayTagContainer* TargetTags,
 	FGameplayTagContainer* OptionalRelevantTags) const
 {
+	// 엔진 전체 검사를 먼저 수행(Source/Target·Required·OptionalRelevantTags 포함). 실패 사유는
+	// 로컬 버퍼로 받아 호출자 버퍼를 오염시키지 않는다(강제 통과 시 "성공"으로 정확히 인식되도록).
+	FGameplayTagContainer FailTags;
+	if (Super::DoesAbilitySatisfyTagRequirements(AbilitySystemComponent, SourceTags, TargetTags, &FailTags))
+	{
+		return true;
+	}
+
 	FGameplayTagContainer OwnedTags;
 	AbilitySystemComponent.GetOwnedGameplayTags(OwnedTags);
 
 	if (ForceActivateTags.IsEmpty() || !OwnedTags.HasAnyExact(ForceActivateTags))
 	{
-		return Super::DoesAbilitySatisfyTagRequirements(AbilitySystemComponent, SourceTags, TargetTags, OptionalRelevantTags);
+		if (OptionalRelevantTags)
+		{
+			OptionalRelevantTags->AppendTags(FailTags);
+		}
+		return false;
 	}
 
-	FGameplayTagContainer EffectiveBlockedAbilityTags = AbilitySystemComponent.GetBlockedAbilityTags();
-	EffectiveBlockedAbilityTags.RemoveTags(GetAssetTags());
+	// 자기 AssetTags 차단 때문에만 막힌 경우에 한해 강제 활성. Required 미충족(Missing)이나
+	// 그 외 차단이 섞여 있으면 강제하지 않는다.
+	const UAbilitySystemGlobals& Globals = UAbilitySystemGlobals::Get();
+	const bool bHasMissing = FailTags.HasTag(Globals.ActivateFailTagsMissingTag);
 
-	FGameplayTagContainer EffectiveActivationBlockedTags = ActivationBlockedTags;
-	EffectiveActivationBlockedTags.RemoveTags(GetAssetTags());
+	FGameplayTagContainer Remaining = FailTags;
+	Remaining.RemoveTag(Globals.ActivateFailTagsBlockedTag);
+	Remaining.RemoveTag(Globals.ActivateFailTagsMissingTag);
+	Remaining.RemoveTags(GetAssetTags());
 
-	const bool bBlocked = GetAssetTags().HasAny(EffectiveBlockedAbilityTags)
-		|| OwnedTags.HasAny(EffectiveActivationBlockedTags);
-	const bool bMissing = !OwnedTags.HasAll(ActivationRequiredTags);
+	if (!bHasMissing && Remaining.IsEmpty())
+	{
+		return true;
+	}
 
-	return !bBlocked && !bMissing;
+	if (OptionalRelevantTags)
+	{
+		OptionalRelevantTags->AppendTags(FailTags);
+	}
+	return false;
 }

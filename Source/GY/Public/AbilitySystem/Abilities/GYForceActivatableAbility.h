@@ -16,8 +16,8 @@ class GY_API UGYForceActivatableAbility : public UGYPlayerGameplayAbility
 
 public:
 	/**
-	 * ActivationTagExceptions에 등록된 ExceptionTag를 ASC가 보유 중이면
-	 * 어빌리티의 AssetTags를 무시하고 태그 요건을 재검사
+	 * ForceActivateTags 중 하나라도 ASC가 보유 중이면, 자기 AssetTags로 걸린 차단을
+	 * 무시하고 활성을 허용한다. 그 외 검사(Source/Target·Required 등)는 엔진에 위임.
 	 */
 	virtual bool DoesAbilitySatisfyTagRequirements(
 		const UAbilitySystemComponent& AbilitySystemComponent,
