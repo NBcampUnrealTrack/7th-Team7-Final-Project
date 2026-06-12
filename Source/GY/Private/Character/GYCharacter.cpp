@@ -9,6 +9,7 @@
 #include "Character/GYPlayerActionConfig.h"
 #include "Character/LockOn/LockOnComponent.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
+#include "Character/HitReactionComponent.h"
 #include "GameModes/GYGameMode.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
@@ -22,6 +23,7 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Hearing.h"
+#include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "UI/GYUIMessages.h"
 
 AGYCharacter::AGYCharacter()
@@ -31,6 +33,8 @@ AGYCharacter::AGYCharacter()
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 	LockOnComponent = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+	PhysicalAnimationComponent = CreateDefaultSubobject<UPhysicalAnimationComponent>(TEXT("PhysicalAnimation"));
+	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReaction"));
 	GetCharacterMovement()->MaxWalkSpeed = 300.f;
 
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
@@ -139,7 +143,7 @@ void AGYCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 P
 		}
 		else
 		{
-			
+
 			ASC->RemoveLooseGameplayTag(GYStateTags::State_Falling);
 		}
 	}

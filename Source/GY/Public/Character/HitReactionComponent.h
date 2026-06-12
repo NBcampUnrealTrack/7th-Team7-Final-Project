@@ -24,7 +24,7 @@ protected:
 	TWeakObjectPtr<UPhysicalAnimationComponent> PhysicalAnimation;
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
-	FName HitReactStartBone = TEXT("spine_01");
+	FName HitReactStartBone = TEXT("spine_02");
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
 	FName HitReactProfileName = TEXT("HitReaction");

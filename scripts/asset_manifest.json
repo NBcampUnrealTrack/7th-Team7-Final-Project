@@ -6894,6 +6894,42 @@
                                                                                                           }
                                                                                                       ]
                                                                                       },
+                   "CarnivorousPlant/Animatios/EnemyPlant/Anim_Attack_2.uasset":  {
+                                                                                      "history":  [
+                                                                                                      {
+                                                                                                          "by":  "CM",
+                                                                                                          "at":  "2026-06-12 20:10:39",
+                                                                                                          "note":  ""
+                                                                                                      }
+                                                                                                  ]
+                                                                                  },
+                   "CarnivorousPlant/Mesh/EnemyPlant/SKEL_EnemyPlant_Skeleton.uasset":  {
+                                                                                            "history":  [
+                                                                                                            {
+                                                                                                                "by":  "CM",
+                                                                                                                "at":  "2026-06-12 20:10:39",
+                                                                                                                "note":  ""
+                                                                                                            }
+                                                                                                        ]
+                                                                                        },
+                   "CarnivorousPlant/Mesh/EnemyPlant/SKM_EnemyPlant_Full.uasset":  {
+                                                                                       "history":  [
+                                                                                                       {
+                                                                                                           "by":  "CM",
+                                                                                                           "at":  "2026-06-12 20:10:39",
+                                                                                                           "note":  ""
+                                                                                                       }
+                                                                                                   ]
+                                                                                   },
+                   "CarnivorousPlant/Mesh/MainPlant/PA_MainPlant_Full_Physics.uasset":  {
+                                                                                            "history":  [
+                                                                                                            {
+                                                                                                                "by":  "CM",
+                                                                                                                "at":  "2026-06-12 16:19:44",
+                                                                                                                "note":  null
+                                                                                                            }
+                                                                                                        ]
+                                                                                        },
                    "Medieval_Warrior/Animation/GreatSword/1H_Attack/UE5_1H_Attack_01_Seq.uasset":  {
                                                                                                        "history":  [
                                                                                                                        {
