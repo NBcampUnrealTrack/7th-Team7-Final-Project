@@ -87,6 +87,17 @@ void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 {
 	Super::PostGameplayEffectExecute(Data);
 
+	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
+	{
+		const float LocalDamage = GetDamage();
+		SetDamage(0.f);
+		if (LocalDamage > 0.f)
+		{
+			SetCurrentHealth(FMath::Clamp(GetCurrentHealth() - LocalDamage, 0.f, GetMaxHealth()));
+		}
+		return;
+	}
+
 	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
 	{
 		GY_WARN(Combat, ESK, "HP 변경 (서버) %.1f / %.1f - Owner: %s",

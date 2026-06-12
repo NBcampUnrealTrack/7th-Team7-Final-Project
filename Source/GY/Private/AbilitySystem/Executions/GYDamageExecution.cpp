@@ -87,7 +87,7 @@ void UGYDamageExecution::Execute_Implementation(
 	if (FinalDamage > 0.f)
 	{
 		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(
-			UGYVitalAttributeSet::GetCurrentHealthAttribute(), EGameplayModOp::Additive, -FinalDamage));
+			UGYVitalAttributeSet::GetDamageAttribute(), EGameplayModOp::Additive, FinalDamage));
 	}
 
 	// 블록 시 흡수량에 비례해 스태미나 차감 (흡수량 = DEF 적용 후 데미지 × 감산율)
