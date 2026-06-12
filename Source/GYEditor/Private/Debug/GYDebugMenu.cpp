@@ -104,7 +104,7 @@ UGYAbilitySystemComponent* GetASC(const TWeakObjectPtr<AGYPlayerState>& PS)
 
 FReply SGYDebugMenu::GY_DebugDamagePlayer()
 {
-	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYCombatStatics::ApplyDamage(ASC, 25.f);
+	if (UGYAbilitySystemComponent* ASC = GetASC(PlayerState)) UGYCombatStatics::ApplyTrueDamage(ASC, 25.f);
 	return FReply::Handled();
 }
 

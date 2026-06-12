@@ -43,20 +43,6 @@ static void ApplyInstantGEToAttribute(UAbilitySystemComponent* ASC, const FGamep
 	ASC->ApplyGameplayEffectSpecToSelf(Spec);
 }
 
-// 공격자의 CritRate로 치명타를 굴려 성공 시 데미지에 CritMultiplier를 곱한다. 치명타 발생 여부 반환.
-static bool TryApplyCritical(UAbilitySystemComponent* SourceASC, float& InOutDamage)
-{
-	if (!SourceASC) return false;
-
-	const UGYDamageAttributeSet* SourceDamage = SourceASC->GetSet<UGYDamageAttributeSet>();
-	if (!SourceDamage) return false;
-
-	if (FMath::FRand() >= SourceDamage->GetCriticalRate()) return false;
-
-	InOutDamage *= SourceDamage->GetCriticalMultiplier();
-	return true;
-}
-
 void UGYCombatStatics::ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC)
 {
 	if (!TargetASC || RawDamage <= 0.f) return;
@@ -88,8 +74,7 @@ static bool IsWithinAngle(UAbilitySystemComponent* TargetASC, UAbilitySystemComp
 	return AngleDeg <= AngleDegrees * 0.5f;
 }
 
-// 새 타격 경로(ApplyHitImpact) 전용 — 타깃이 각도 안에서 활성 블록 중이면 매칭된 블록 데이터를 반환.
-// 공유 HandleBlockCheck(옛 ApplyDamage 경로)와 분리
+// 타깃이 각도 안에서 활성 블록 중이면 매칭된 블록 데이터를 반환.
 static const FGYBlockData* GetActiveBlock(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC)
 {
 	UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC);
@@ -108,123 +93,6 @@ static const FGYBlockData* GetActiveBlock(UAbilitySystemComponent* TargetASC, UA
 	if (!Data) return nullptr;
 	if (!IsWithinAngle(TargetASC, SourceASC, Data->BlockAngle)) return nullptr;
 	return Data;
-}
-
-bool UGYCombatStatics::HandleDodgeCheck(UAbilitySystemComponent* TargetASC)
-{
-	if (!TargetASC) return false;
-
-	for (const FGameplayAbilitySpec& Spec : TargetASC->GetActivatableAbilities())
-	{
-		for (UGameplayAbility* Instance : Spec.GetAbilityInstances())
-		{
-			UGYPlayerGameplayAbility* GA = Cast<UGYPlayerGameplayAbility>(Instance);
-			if (!GA || !GA->IsActive()) continue;
-			if (!GA->GetAssetTags().HasTag(GYGameplayTags::Ability_Dodge)) continue;
-			const UGYDodgeFragment* DF = GA->GetFragment<UGYDodgeFragment>();
-			if (!DF || !DF->DodgeAppliedTag.IsValid()) continue;
-			if (TargetASC->HasMatchingGameplayTag(DF->DodgeAppliedTag))
-				return true;
-		}
-	}
-	return false;
-}
-
-bool UGYCombatStatics::HandleParryCheck(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC)
-{
-	if (!TargetASC) return false;
-
-	FGameplayTagContainer TargetOwnedTags;
-	TargetASC->GetOwnedGameplayTags(TargetOwnedTags);
-
-	for (const FGameplayAbilitySpec& Spec : TargetASC->GetActivatableAbilities())
-	{
-		for (UGameplayAbility* Instance : Spec.GetAbilityInstances())
-		{
-			UGYPlayerGameplayAbility* GA = Cast<UGYPlayerGameplayAbility>(Instance);
-			if (!GA || !GA->IsActive()) continue;
-			if (!GA->GetAssetTags().HasTag(GYGameplayTags::Ability_Parry)) continue;
-			const UGYParryFragment* PF = GA->GetFragment<UGYParryFragment>();
-			if (!PF) continue;
-			const FGYParryData* Data = PF->GetBestMatchingData(TargetOwnedTags);
-			if (!Data || !TargetASC->HasAnyMatchingGameplayTags(Data->ParryAppliedTags)) continue;
-			if (!IsWithinAngle(TargetASC, SourceASC, Data->ParryAngle)) continue;
-
-			FGameplayEventData Payload;
-			Payload.EventTag = GYGameplayTags::Event_Parry_Hit;
-			if (SourceASC)
-				Payload.Instigator = SourceASC->GetAvatarActor();
-			if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
-				GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_Parry_Hit, Payload);
-			else
-				TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Parry_Hit, &Payload);
-			return true;
-		}
-	}
-	return false;
-}
-
-bool UGYCombatStatics::HandleBlockCheck(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC, float& OutReductionMultiplier)
-{
-	if (!TargetASC) return false;
-
-	FGameplayTagContainer OwnedTags;
-	TargetASC->GetOwnedGameplayTags(OwnedTags);
-
-	for (const FGameplayAbilitySpec& Spec : TargetASC->GetActivatableAbilities())
-	{
-		for (UGameplayAbility* Instance : Spec.GetAbilityInstances())
-		{
-			UGYPlayerGameplayAbility* GA = Cast<UGYPlayerGameplayAbility>(Instance);
-			if (!GA || !GA->IsActive()) continue;
-			if (!GA->GetAssetTags().HasTag(GYGameplayTags::Ability_Block)) continue;
-			const UGYBlockFragment* BF = GA->GetFragment<UGYBlockFragment>();
-			if (!BF || !BF->BlockAppliedTag.IsValid()) continue;
-			if (!TargetASC->HasMatchingGameplayTag(BF->BlockAppliedTag)) continue;
-			const FGYBlockData* Data = BF->GetBestMatchingData(OwnedTags);
-			if (!Data) continue;
-			if (!IsWithinAngle(TargetASC, SourceASC, Data->BlockAngle)) continue;
-			OutReductionMultiplier = Data->DamageReductionMultiplier;
-			return true;
-		}
-	}
-	return false;
-}
-
-// DEPRECATED: ApplyHitImpact 사용. 테스트 경로만 잔존
-void UGYCombatStatics::ApplyDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC)
-{
-	if (!TargetASC) return;
-
-	if (SourceASC && IsSameFaction(SourceASC, TargetASC)) return;
-
-	if (HandleDodgeCheck(TargetASC)) return;
-	if (HandleParryCheck(TargetASC, SourceASC)) return;
-
-	// 치명타 굴림 (공격자 기준, 플레이어/적 공용). 반환 bool은 전투 피드백(데미지 색/히트스톱) 연동 시 사용.
-	TryApplyCritical(SourceASC, RawDamage);
-
-	float ReductionMultiplier = 0.f;
-	const bool bBlocked = HandleBlockCheck(TargetASC, SourceASC, ReductionMultiplier);
-
-	const UGYDamageAttributeSet* Damage = TargetASC->GetSet<UGYDamageAttributeSet>();
-	const float Defense = Damage ? Damage->GetDefense() : 0.f;
-	const float DamageAfterDefense = FMath::Max(0.f, RawDamage - Defense);
-	const float Effective = DamageAfterDefense * (1.f - ReductionMultiplier);
-
-	if (bBlocked)
-	{
-		FGameplayEventData Payload;
-		Payload.EventTag = GYGameplayTags::Event_Block_Hit;
-		Payload.EventMagnitude = DamageAfterDefense * ReductionMultiplier;
-
-		TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Block_Hit, &Payload);
-	}
-
-	ApplyInstantGEToAttribute(TargetASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(), -Effective);
-
-	UGYAdditionalResourceStatics::IncreaseStagger(TargetASC, Effective);
-	UGYAdditionalResourceStatics::IncreaseStun(TargetASC, Effective);
 }
 
 void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)

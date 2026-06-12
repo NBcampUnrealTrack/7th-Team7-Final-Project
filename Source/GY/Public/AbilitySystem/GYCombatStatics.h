@@ -27,21 +27,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GY|Combat")
 	static void ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC = nullptr);
 
-	// DEPRECATED: ApplyHitImpact 사용. 테스트 경로만 잔존
-	UFUNCTION(BlueprintCallable, Category="GY|Combat", meta = (AdvancedDisplay = "SourceASC"))
-	static void ApplyDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC = nullptr);
-
 	// 컨텍스트 기반 타격 적용. HP 데미지 + 공격별 poise(경직/무력)를 분리 적용. (플레이어 멜리 경로)
 	static void ApplyHitImpact(const FGYHitContext& HitContext);
-
-	UFUNCTION(BlueprintCallable, Category="GY|Combat")
-	static bool HandleDodgeCheck(UAbilitySystemComponent* TargetASC);
-
-	UFUNCTION(BlueprintCallable, Category="GY|Combat")
-	static bool HandleParryCheck(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC = nullptr);
-
-	UFUNCTION(BlueprintCallable, Category="GY|Combat")
-	static bool HandleBlockCheck(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC, float& OutReductionMultiplier);
 
 	UFUNCTION(BlueprintCallable, Category="GY|Combat")
 	static void ApplyHeal(UAbilitySystemComponent* ASC, float HealAmount);
