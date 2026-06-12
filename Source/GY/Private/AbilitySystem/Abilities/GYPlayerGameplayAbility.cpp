@@ -48,47 +48,6 @@ bool UGYPlayerGameplayAbility::CanActivateAbility(
 	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 }
 
-bool UGYPlayerGameplayAbility::DoesAbilitySatisfyTagRequirements(
-	const UAbilitySystemComponent& AbilitySystemComponent,
-	const FGameplayTagContainer* SourceTags,
-	const FGameplayTagContainer* TargetTags,
-	FGameplayTagContainer* OptionalRelevantTags) const
-{
-	if (ActivationTagExceptions.IsEmpty())
-	{
-		return Super::DoesAbilitySatisfyTagRequirements(AbilitySystemComponent, SourceTags, TargetTags, OptionalRelevantTags);
-	}
-
-	FGameplayTagContainer OwnedTags;
-	AbilitySystemComponent.GetOwnedGameplayTags(OwnedTags);
-
-	FGameplayTagContainer TagsToIgnore;
-	for (const FGYActivationTagException& Exception : ActivationTagExceptions)
-	{
-		if (Exception.ExceptionTag.IsValid() && OwnedTags.HasTag(Exception.ExceptionTag))
-		{
-			TagsToIgnore.AppendTags(Exception.IgnoredBlockedTags);
-		}
-	}
-
-	if (TagsToIgnore.IsEmpty())
-	{
-		return Super::DoesAbilitySatisfyTagRequirements(AbilitySystemComponent, SourceTags, TargetTags, OptionalRelevantTags);
-	}
-
-	FGameplayTagContainer EffectiveBlockedAbilityTags = AbilitySystemComponent.GetBlockedAbilityTags();
-	EffectiveBlockedAbilityTags.RemoveTags(TagsToIgnore);
-
-	FGameplayTagContainer EffectiveActivationBlockedTags = ActivationBlockedTags;
-	EffectiveActivationBlockedTags.RemoveTags(TagsToIgnore);
-
-	const bool bBlocked = GetAssetTags().HasAny(EffectiveBlockedAbilityTags)
-		|| OwnedTags.HasAny(EffectiveActivationBlockedTags);
-	const bool bMissing = !OwnedTags.HasAll(ActivationRequiredTags);
-
-	return !bBlocked && !bMissing;
-}
-
 void UGYPlayerGameplayAbility::ActivateAbility(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo,
