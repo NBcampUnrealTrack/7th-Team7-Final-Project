@@ -69,11 +69,15 @@ void URangedAttackBase::OnProjectileHit(FGameplayEventData Payload)
 	// HP 데미지·DEF·크리 계산은 GE_HitImpact의 execution이 담당. 여기선 공격별 값만 컨텍스트로 전달.
 	float MotionMultiplier = 1.f;
 	float Additive = 0.f;
+	float StaggerAmount = 0.f;
+	float StunAmount = 0.f;
 	if (HitDamageWeights.IsValidIndex(0))
 	{
 		const FHitDamageWeight& W = HitDamageWeights[0];
 		MotionMultiplier = W.Multiplicative;
 		Additive = W.Additive;
+		StaggerAmount = W.Stagger;
+		StunAmount = W.Stun;
 	}
 
 	// 발사체 분산 시 데미지를 N분의 1로 — 배율에 흡수
@@ -87,9 +91,8 @@ void URangedAttackBase::OnProjectileHit(FGameplayEventData Payload)
 	HitContext.TargetASC = TargetASC;
 	HitContext.MotionMultiplier = MotionMultiplier;
 	HitContext.Additive = Additive;
-	// TODO: 적 공격별 경직/무력 값을 FHitDamageWeight에 추가해 전달. 지금은 예시용 임시 상수.
-	HitContext.StaggerAmount = 25.f;
-	HitContext.StunAmount = 10.f;
+	HitContext.StaggerAmount = StaggerAmount;
+	HitContext.StunAmount = StunAmount;
 
 	UGYCombatStatics::ApplyHitImpact(HitContext);
 

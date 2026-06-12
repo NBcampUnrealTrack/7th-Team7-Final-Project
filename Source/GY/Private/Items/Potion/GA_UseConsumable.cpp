@@ -6,6 +6,7 @@
 #include "Core/GameplayTags/ItemTags.h"
 #include "Inventory/InventoryComponent.h"
 #include "Items/ItemDefinition.h"
+#include "AbilitySystemComponent.h"
 #include "Items/Fragments/ItemFragment_Consumable.h"
 #include "Player/GYPlayerState.h"
 
