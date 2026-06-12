@@ -316,6 +316,7 @@ void ALootBoxActor::PlayFirstEffect(APawn* Opener)
 	if (!ASC) return;
 	FGameplayCueParameters Parameters;
 	Parameters.Location = GetActorLocation();
+	Parameters.Normal=GetActorForwardVector();
 	ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Interaction_LootBox, Parameters);
 	if (AGYPlayerState* PS = Opener->GetPlayerState<AGYPlayerState>())
 	{
