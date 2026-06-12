@@ -26,7 +26,9 @@
 #include "Player/GYPlayerState.h"
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Character/GYCharacter.h"
+#include "Character/HitReactionComponent.h"
 #include "Character/LockOn/LockOnComponent.h"
+#include "PhysicsEngine/PhysicalAnimationComponent.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 {
@@ -38,6 +40,10 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+
+	PhysicalAnimationComponent = CreateDefaultSubobject<UPhysicalAnimationComponent>(TEXT("PhysicalAnimation"));
+	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReaction"));
+
 
 	VitalAttribute = CreateDefaultSubobject<UGYEnemyVitalAttributeSet>(TEXT("VitalAttribute"));
 	DamageAttribute = CreateDefaultSubobject<UGYEnemyDamageAttributeSet>(TEXT("DamageAttribute"));
@@ -395,6 +401,7 @@ void AGYEnemyCharacterBase::EnableRagdoll()
 	if (USkeletalMeshComponent* SkeletalMesh = GetMesh())
 	{
 		SkeletalMesh->SetCollisionProfileName(TEXT("Ragdoll"));
+		SkeletalMesh->SetConstraintProfile(TEXT("pelvis"), TEXT("Ragdoll"));
 		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		SkeletalMesh->SetSimulatePhysics(true);
 	}
@@ -483,7 +490,9 @@ void AGYEnemyCharacterBase::DisableRagdoll()
 	SkeletalMesh->SetAllBodiesPhysicsBlendWeight(0.f);
 	SkeletalMesh->bBlendPhysics = false;
 
-	SkeletalMesh->SetCollisionProfileName(TEXT("CharacterMesh"));
+	SkeletalMesh->SetCollisionProfileName(TEXT("None"));
+	SkeletalMesh->SetConstraintProfile(TEXT("pelvis"), TEXT("None"));
+
 	SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
 	SkeletalMesh->AttachToComponent(
@@ -851,6 +860,7 @@ void AGYEnemyCharacterBase::CachedWeaponTraceSockets()
 	WeaponTraceSockets = Found;
 }
 
+
 void AGYEnemyCharacterBase::FaceToTarget(AActor* Target)
 {
 	if (!Target) return;
@@ -912,3 +922,4 @@ void AGYEnemyCharacterBase::OnRep_IsDead()
 		OnEnemyDead.Broadcast(this);
 	}
 }
+

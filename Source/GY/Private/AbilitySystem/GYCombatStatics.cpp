@@ -14,6 +14,7 @@
 #include "AbilitySystem/GYAdditionalResourceStatics.h"
 #include "AbilitySystem/GYCombatSettings.h"
 #include "Core/GameplayTags/OptionTags.h"
+#include "Character/HitReactionComponent.h"
 #include "Logging/GYLogManager.h"
 
 static bool IsSameFaction(UAbilitySystemComponent* A, UAbilitySystemComponent* B)
@@ -135,7 +136,7 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	FGameplayEffectContextHandle Context = SourceASC->MakeEffectContext();
 	FGameplayEffectSpecHandle Spec = SourceASC->MakeOutgoingSpec(HitImpactEffect, 1.f, Context);
 	if (!Spec.IsValid()) return;
-
+	
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_MotionMultiplier, HitContext.MotionMultiplier);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_Additive, HitContext.Additive);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_StaggerAmount, StaggerAmount);

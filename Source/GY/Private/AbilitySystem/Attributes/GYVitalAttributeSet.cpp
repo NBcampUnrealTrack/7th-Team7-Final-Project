@@ -4,6 +4,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "Logging/GYLogManager.h"
 
 UGYVitalAttributeSet::UGYVitalAttributeSet()
@@ -100,6 +101,8 @@ void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 	{
 		SetCurrentStagger(FMath::Clamp(GetCurrentStagger(), 0.f, GetMaxStagger()));
 		CurrentValue = GetCurrentStagger();
+		if (Data.EvaluatedData.Magnitude>0.f)
+			HandleHitReaction(Data, Data.EvaluatedData.Magnitude);
 	}
 	else if (Data.EvaluatedData.Attribute == GetCurrentStunAttribute())
 	{
@@ -120,4 +123,25 @@ void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 			GYASC->NotifyAttributeChanged(Data.EvaluatedData.Attribute);
 		}
 	}
+}
+
+void UGYVitalAttributeSet::HandleHitReaction(const FGameplayEffectModCallbackData& Data, float DamageDone)
+{
+	AActor* SourceActor = Data.EffectSpec.GetContext().GetInstigator();
+	AActor* TargetActor = GetOwningActor();
+	if (!SourceActor || !TargetActor || SourceActor == TargetActor) return;
+
+	UAbilitySystemComponent* TargetASC = Data.Target.AbilityActorInfo->AbilitySystemComponent.Get();
+	if (!TargetASC) return;
+
+	const FVector HitDir = (TargetActor->GetActorLocation() - SourceActor->GetActorLocation()).GetSafeNormal();
+
+	FGameplayCueParameters Params;
+	Params.Normal = HitDir;
+	Params.RawMagnitude = DamageDone * 100.f;
+	Params.Instigator = SourceActor;
+	Params.EffectCauser = TargetActor;
+	Params.Location = TargetActor->GetActorLocation();
+
+	TargetASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Combat_HitReaction, Params);
 }

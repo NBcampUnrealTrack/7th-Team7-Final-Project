@@ -8,6 +8,8 @@
 #include "World/ActorManagement/WorldPartitionLevelPlacedActor.h"
 #include "GYEnemyCharacterBase.generated.h"
 
+class UHitReactionComponent;
+class UPhysicalAnimationComponent;
 class UGYEnemyVitalAttributeSet;
 class UGYEnemyDamageAttributeSet;
 class UEnemyAnimInstance;
@@ -160,6 +162,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	float WeaponTraceRadius = 10.f;
 protected:
+	UPROPERTY(VisibleAnywhere, Category="Combat|HitReaction")
+	TObjectPtr<UPhysicalAnimationComponent> PhysicalAnimationComponent;
+
+	UPROPERTY(VisibleAnywhere, Category="Combat|HitReaction")
+	TObjectPtr<UHitReactionComponent> HitReactionComponent;
+
+
 	UPROPERTY(EditAnywhere,ReplicatedUsing = OnRep_EnemyType, BlueprintReadOnly, Category = "Enemy|Data")
 	EEnemyType EnemyType;
 
@@ -220,5 +229,6 @@ private:
 	FVector EnemySpawnLocation;
 	UPROPERTY()
 	FRotator EnemySpawnRotation;
+
 };
 
