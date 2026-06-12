@@ -59,9 +59,11 @@ namespace GYGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Message_LockOn_Changed, "Message.LockOn.Changed");
 
-	UE_DEFINE_GAMEPLAY_TAG(Message_Region_Exited,    "Message.Region.Exited");
+	UE_DEFINE_GAMEPLAY_TAG(Message_Region_Exited, "Message.Region.Exited");
 
-	UE_DEFINE_GAMEPLAY_TAG(Message_Boss_State,       "Message.Boss.State");
+	UE_DEFINE_GAMEPLAY_TAG(Message_Boss_State, "Message.Boss.State");
 	UE_DEFINE_GAMEPLAY_TAG(Message_Boss_Stat_Health, "Message.Boss.Stat.Health");
-	UE_DEFINE_GAMEPLAY_TAG(Message_Boss_Stat_Poise,  "Message.Boss.Stat.Poise");
+	UE_DEFINE_GAMEPLAY_TAG(Message_Boss_Stat_Poise, "Message.Boss.Stat.Poise");
+
+	UE_DEFINE_GAMEPLAY_TAG(Message_Player_RevivalProgress, "Message.Player.RevivalProgress");
 }
