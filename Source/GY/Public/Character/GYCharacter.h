@@ -5,6 +5,8 @@
 #include "GameFramework/Character.h"
 #include "GYCharacter.generated.h"
 
+class UHitReactionComponent;
+class UPhysicalAnimationComponent;
 class UMotionWarpingComponent;
 class ULockOnComponent;
 class UGYPawnExtensionComponent;
@@ -79,6 +81,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
+
+	UPROPERTY(VisibleAnywhere, Category="Combat|HitReaction")
+	TObjectPtr<UPhysicalAnimationComponent> PhysicalAnimationComponent;
+
+	UPROPERTY(VisibleAnywhere, Category="Combat|HitReaction")
+	TObjectPtr<UHitReactionComponent> HitReactionComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "AI")
 	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSource;
