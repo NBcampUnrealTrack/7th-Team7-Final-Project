@@ -1,9 +1,12 @@
 #include "Enemy/GYBossCharacterBase.h"
 
 #include "Enemy/GYBossAIController.h"
+#include "Enemy/EnemyAnimInstance.h"
 #include "Enemy/Component/BossPhaseComponent.h"
+#include "Enemy/Component/BossPatternSelectorComponent.h"
 #include "Components/StateTreeAIComponent.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Engine/AssetManager.h"
 #include "GameFramework/PlayerState.h"
 
 #include "Net/UnrealNetwork.h"
@@ -161,4 +164,133 @@ void AGYBossCharacterBase::Die()
 	}
 
 	Super::Die();
+}
+
+void AGYBossCharacterBase::OnDataAssetLoaded()
+{
+	Super::OnDataAssetLoaded();
+
+	if (PhaseComponent &&
+		!PhaseComponent->OnPhaseQueued.IsAlreadyBound(this, &AGYBossCharacterBase::OnPhaseQueued))
+	{
+		PhaseComponent->OnPhaseQueued.AddDynamic(this, &AGYBossCharacterBase::OnPhaseQueued);
+	}
+
+	if (UBossDataAsset* BossData = GetBossData())
+	{
+		if (const FBossPhaseSetup* Initial = BossData->GetInitialPhaseSetup())
+		{
+			ApplyPhaseSetup(*Initial);
+		}
+	}
+
+	RequestSummonablePreload();
+}
+
+void AGYBossCharacterBase::OnPhaseQueued(const FBossPhaseTrigger& Trigger)
+{
+	UBossDataAsset* BossData = GetBossData();
+	if (!BossData) return;
+
+	if (const FBossPhaseSetup* Setup = BossData->FindPhaseSetup(Trigger.DebugName))
+	{
+		ApplyPhaseSetup(*Setup);
+	}
+}
+
+void AGYBossCharacterBase::ApplyPhaseSetup(const FBossPhaseSetup& Setup)
+{
+	UBossDataAsset* BossData = GetBossData();
+	if (!BossData) return;
+
+	if (Setup.bOverrideVisual)
+	{
+		ApplyVisualConfig(Setup.VisualOverride);
+		CachedWeaponTraceSockets();
+	}
+
+	if (Setup.bOverrideAnimation)
+	{
+		ApplyAnimConfig(Setup.AnimationOverride);
+		BuildMontageMap(Setup.AnimationOverride);
+
+		if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance()))
+		{
+			InitAnimInstanceAssets(AnimInst, Setup.AnimationOverride);
+		}
+	}
+
+	if (HasAuthority())
+	{
+		if (AGYBossAIController* AIC = Cast<AGYBossAIController>(GetController()))
+		{
+			if (UBossPatternSelectorComponent* Selector = AIC->GetPatternSelector())
+			{
+				TArray<FBossPatternEntry> Pool;
+				Pool.Append(BossData->NormalPatterns);
+				Pool.Append(Setup.PhasePatterns);
+				Selector->InitializePatterns(Pool);
+			}
+		}
+	}
+}
+
+void AGYBossCharacterBase::RequestSummonablePreload()
+{
+	UBossDataAsset* BossData = GetBossData();
+	if (!BossData || BossData->SummonableEnemies.Num() == 0) return;
+
+	TArray<FSoftObjectPath> Paths;
+	Paths.Reserve(BossData->SummonableEnemies.Num() * 2);
+
+	for (const FBossSummonEntry& Entry : BossData->SummonableEnemies)
+	{
+		if (!Entry.DataAsset.IsNull())  Paths.Add(Entry.DataAsset.ToSoftObjectPath());
+		if (!Entry.ActorClass.IsNull()) Paths.Add(Entry.ActorClass.ToSoftObjectPath());
+	}
+	if (Paths.Num() == 0) return;
+
+	FStreamableManager& Streamable = UAssetManager::Get().GetStreamableManager();
+	Streamable.RequestAsyncLoad(Paths,
+		FStreamableDelegate::CreateWeakLambda(this, [this]()
+		{
+			OnSummonablesLoaded();
+		}));
+}
+
+void AGYBossCharacterBase::OnSummonablesLoaded()
+{
+	UBossDataAsset* BossData = GetBossData();
+	if (!BossData) return;
+
+	SummonCache.Reset();
+	for (const FBossSummonEntry& Entry : BossData->SummonableEnemies)
+	{
+		if (Entry.EnemyType == EEnemyType::None) continue;
+
+		FBossCachedSummonable Cached;
+		Cached.DataAsset  = Entry.DataAsset.Get();
+		Cached.ActorClass = Entry.ActorClass.Get();
+
+		if (Cached.DataAsset && Cached.ActorClass)
+		{
+			SummonCache.Add(Entry.EnemyType, Cached);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[Boss %s] Summonable entry incomplete for Type=%d"),
+				*GetName(), static_cast<int32>(Entry.EnemyType));
+		}
+	}
+}
+
+bool AGYBossCharacterBase::GetSummonable(EEnemyType Type, FBossCachedSummonable& Out) const
+{
+	if (const FBossCachedSummonable* Found = SummonCache.Find(Type))
+	{
+		Out = *Found;
+		return true;
+	}
+	return false;
 }

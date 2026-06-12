@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GYEnemyCharacterBase.h"
 #include "Config/BossDataAsset.h"
+#include "Component/BossPhaseComponent.h"
 #include "GYBossCharacterBase.generated.h"
 
 class UCurveTable;
@@ -10,6 +11,18 @@ class UBossPhaseComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBossEncounterStarted, int32, ParticipantCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBossParticipantCountChanged, int32, NewCount);
+
+USTRUCT()
+struct FBossCachedSummonable
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<UEnemyDataAsset> DataAsset;
+
+	UPROPERTY()
+	TSubclassOf<AGYEnemyCharacterBase> ActorClass;
+};
 
 UCLASS()
 class GY_API AGYBossCharacterBase : public AGYEnemyCharacterBase
@@ -42,9 +55,12 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Boss|Data")
 	UBossDataAsset* GetBossData() const { return Cast<UBossDataAsset>(LoadedDataAsset); }
+
+	bool GetSummonable(EEnemyType Type, FBossCachedSummonable& Out) const;
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual float GetStatScaleValue() const override;
+	virtual void OnDataAssetLoaded() override;
 
 	UFUNCTION()
 	void OnRep_Participants();
@@ -52,6 +68,14 @@ protected:
 	void HandleStaggerBegin() override;
 	void HandleStunBegin() override;
 	void Die() override;
+
+	UFUNCTION()
+	void OnPhaseQueued(const FBossPhaseTrigger& Trigger);
+
+	void ApplyPhaseSetup(const FBossPhaseSetup& Setup);
+
+	void RequestSummonablePreload();
+	void OnSummonablesLoaded();
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Participants, VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Encounter")
 	TArray<TObjectPtr<APlayerState>> Participants;
@@ -62,5 +86,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Encounter")
 	bool bEncounterStarted = false;
 
+	UPROPERTY(Transient)
+	TMap<EEnemyType, FBossCachedSummonable> SummonCache;
 };
-

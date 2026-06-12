@@ -120,6 +120,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Info")
 	FText EnemyName;
 
+	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
+	FName HitReactStartBone = TEXT("spine_01");
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Visual")
 	FEnemyVisualConfig VisualConfig;
 

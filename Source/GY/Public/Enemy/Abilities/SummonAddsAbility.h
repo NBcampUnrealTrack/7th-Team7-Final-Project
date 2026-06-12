@@ -14,9 +14,6 @@ struct FSummonEntry
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AGYEnemyCharacterBase> EnemyClass;
-
-	UPROPERTY(EditDefaultsOnly)
 	EEnemyType EnemyType = EEnemyType::None;
 
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = "0"))

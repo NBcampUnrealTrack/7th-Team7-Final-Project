@@ -49,7 +49,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	void InitWithType(const EEnemyType& InEnemyType);
 
+	void InitWithLoadedData(EEnemyType InEnemyType, UEnemyDataAsset* InDataAsset);
+
 	void InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance);
+	void InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance, const FEnemyAnimationConfig& Config);
 
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	UEnemyDataAsset* GetEnemyData() const { return LoadedDataAsset; }
@@ -101,7 +104,7 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void LoadDataAssetAndApply();
-	void OnDataAssetLoaded();
+	virtual void OnDataAssetLoaded();
 
 	void ApplyVisualConfig(const FEnemyVisualConfig& Config);
 	void ApplyAIConfig(const FEnemyAIConfig& Config);
@@ -142,7 +145,7 @@ protected:
 
 	UFUNCTION()
 	void OnRep_IsActivate();
-private:
+
 	void CachedWeaponTraceSockets();
 public:
 	/** UI, 퀘스트 쪽에 쓸 수도있어서 남겨두는 용 */

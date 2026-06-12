@@ -1,5 +1,6 @@
 #include "Enemy/Abilities/SummonAddsAbility.h"
 #include "Enemy/GYEnemyCharacterBase.h"
+#include "Enemy/GYBossCharacterBase.h"
 #include "AbilitySystemComponent.h"
 #include "AIController.h"
 #include "Enemy/Component/BossAggroComponent.h"
@@ -42,11 +43,10 @@ void USummonAddsAbility::ExecuteSummonAt(FVector CenterLocation)
 
 	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
 
-	int32 Spawned = 0;
 	for (int32 i = 0; i < MinionCount; ++i)
 	{
 		const FSummonEntry* Entry = PickRandomEntry();
-		if (!Entry || !Entry->EnemyClass) continue;
+		if (!Entry) continue;
 
 		const float Angle = FMath::FRandRange(0.f, 2.f * PI);
 		const float Radius = FMath::FRandRange(SpawnRadiusMin, SpawnRadiusMax);
@@ -55,8 +55,6 @@ void USummonAddsAbility::ExecuteSummonAt(FVector CenterLocation)
 
 		AGYEnemyCharacterBase* Minion = SpawnAndInitMinion(*Entry, SpawnLoc, FRotator::ZeroRotator);
 		if (!Minion) continue;
-
-		++Spawned;
 
 		if (SummonCueTag.IsValid() && SourceASC)
 		{
@@ -74,7 +72,7 @@ const FSummonEntry* USummonAddsAbility::PickRandomEntry() const
 	float TotalWeight = 0.f;
 	for (const FSummonEntry& Entry : SummonPool)
 	{
-		if (Entry.EnemyClass && Entry.Weight > 0.f)
+		if (Entry.EnemyType != EEnemyType::None && Entry.Weight > 0.f)
 			TotalWeight += Entry.Weight;
 	}
 
@@ -84,7 +82,7 @@ const FSummonEntry* USummonAddsAbility::PickRandomEntry() const
 	float Acc = 0.f;
 	for (const FSummonEntry& Entry : SummonPool)
 	{
-		if (!Entry.EnemyClass || Entry.Weight <= 0.f) continue;
+		if (Entry.EnemyType == EEnemyType::None || Entry.Weight <= 0.f) continue;
 		Acc += Entry.Weight;
 		if (Roll <= Acc) return &Entry;
 	}
@@ -94,24 +92,32 @@ const FSummonEntry* USummonAddsAbility::PickRandomEntry() const
 AGYEnemyCharacterBase* USummonAddsAbility::SpawnAndInitMinion(const FSummonEntry& Entry, const FVector& Location,
 	const FRotator& Rotation) const
 {
+	if (Entry.EnemyType == EEnemyType::None) return nullptr;
+
 	UWorld* World = GetWorld();
-	if (!World) return nullptr;
+	AActor* BossActor = GetAvatarActorFromActorInfo();
+	AGYBossCharacterBase* Boss = Cast<AGYBossCharacterBase>(BossActor);
+	if (!World || !Boss) return nullptr;
 
-	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
-	AActor* BossActor = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
+	FBossCachedSummonable Cached;
+	if (!Boss->GetSummonable(Entry.EnemyType, Cached))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Summon failed: type=%d not in boss cache"),
+			   static_cast<int32>(Entry.EnemyType));
+		return nullptr;
+	}
+	if (!Cached.ActorClass || !Cached.DataAsset) return nullptr;
 
-	FTransform SpawnTM(Rotation, Location);
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	Params.Owner = BossActor;
-	Params.Instigator = Cast<APawn>(BossActor);
+	Params.Owner = Boss;
+	Params.Instigator = Boss;
 
-	AGYEnemyCharacterBase* Minion = World->SpawnActorDeferred<AGYEnemyCharacterBase>(
-		Entry.EnemyClass, SpawnTM, BossActor, Params.Instigator,
-		Params.SpawnCollisionHandlingOverride);
+	AGYEnemyCharacterBase* Minion = World->SpawnActor<AGYEnemyCharacterBase>(
+		Cached.ActorClass, Location, Rotation, Params);
 	if (!Minion) return nullptr;
 
+	Minion->InitWithLoadedData(Entry.EnemyType, Cached.DataAsset);
 	Minion->Activate();
-
 	return Minion;
 }

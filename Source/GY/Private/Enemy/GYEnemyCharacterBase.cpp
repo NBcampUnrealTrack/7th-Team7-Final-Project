@@ -73,8 +73,13 @@ void AGYEnemyCharacterBase::InitWithType(const EEnemyType& InEnemyType)
 void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance)
 {
 	if (!LoadedDataAsset || !AnimInstance) return;
+	InitAnimInstanceAssets(AnimInstance, LoadedDataAsset->AnimationConfig);
+}
 
-	const FEnemyAnimationConfig& Config = LoadedDataAsset->AnimationConfig;
+void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance,
+												   const FEnemyAnimationConfig& Config)
+{
+	if (!AnimInstance) return;
 
 	if (UBlendSpace* LocBS = Config.LocomotionBlendSpace.LoadSynchronous())
 	{
@@ -88,6 +93,26 @@ void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInsta
 	{
 		AnimInstance->SetDeadSequence(DeadSeq);
 	}
+}
+
+void AGYEnemyCharacterBase::InitWithLoadedData(EEnemyType InEnemyType, UEnemyDataAsset* InDataAsset)
+{
+	if (!InDataAsset) return;
+
+	EnemyType = InEnemyType;
+	LoadedDataAsset = InDataAsset;
+
+	if (UDataTable* TypeTable = EnemyTypeTable.LoadSynchronous())
+	{
+		const FName RowKey = *UEnum::GetDisplayValueAsText(EnemyType).ToString();
+		if (const FEnemyTypeTableRow* Row =
+			TypeTable->FindRow<FEnemyTypeTableRow>(RowKey, TEXT("InitWithLoadedData")))
+		{
+			CachedStatRowName = Row->StatRowName;
+		}
+	}
+
+	OnDataAssetLoaded();
 }
 
 void AGYEnemyCharacterBase::OnRep_Controller()
