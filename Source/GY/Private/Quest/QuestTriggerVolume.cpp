@@ -41,12 +41,20 @@ void AQuestTriggerVolume::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp
 	// 서버: 퀘스트 시작만 (한 번)
 	if (HasAuthority())
 	{
-		if (!GetQuestSubsystem()->ArePrerequisitesMet(QuestTags[0]))
+		UQuestSubsystem* QS = GetQuestSubsystem();
+		if (!QS) return;
+		if (QuestTags.IsEmpty())
+		{
+			GY_ERROR(Content,CYS,"퀘스트 트리거 볼륨 태그 빠짐. 에디터 수정 필수");
+			return;
+		}
+
+		if (!QS->ArePrerequisitesMet(QuestTags[0]))
 			return; // 선행 퀘스트 완료 체크
 		if (!bTriggered)
 		{
 			bTriggered = true;
-			GetQuestSubsystem()->StartQuest(QuestTags[0]);
+			QS->StartQuest(QuestTags[0]);
 			GY_LOG(Content, CYS, "퀘스트 활성화:%s", *QuestTags[0].ToString());
 		}
 		return;
