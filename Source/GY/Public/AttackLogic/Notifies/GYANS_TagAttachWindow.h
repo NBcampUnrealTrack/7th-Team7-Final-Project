@@ -3,16 +3,16 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
 #include "GameplayTagContainer.h"
-#include "GYANS_CancelWindow.generated.h"
+#include "GYANS_TagAttachWindow.generated.h"
 
 UCLASS()
-class GY_API UGYANS_CancelWindow : public UAnimNotifyState
+class GY_API UGYANS_TagAttachWindow : public UAnimNotifyState
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, Category = "Cancel")
-	FGameplayTag WindowTag;
+	UPROPERTY(EditAnywhere, Category = "TagAttach")
+	FGameplayTagContainer Tags;
 
 	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 		float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
