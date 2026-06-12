@@ -85,4 +85,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Boss_State);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Boss_Stat_Health);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Boss_Stat_Poise);
+
+	// 부활
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Player_RevivalProgress);
 }
