@@ -1,4 +1,5 @@
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
@@ -54,5 +55,12 @@ void UGYPlayerVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffect
 	else if (Data.EvaluatedData.Attribute == GetCurrentStaminaAttribute())
 	{
 		SetCurrentStamina(FMath::Clamp(GetCurrentStamina(), -GetMaxStamina(), GetMaxStamina()));
+
+		// 소모(음수)일 때만 회복 딜레이 리셋 — 회복 GE(양수)에 걸면 regen이 자기 딜레이를 리셋해 영영 안 참
+		if (Data.EvaluatedData.Magnitude < 0.f)
+		{
+			if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(GetOwningAbilitySystemComponent()))
+				GYASC->NotifyAttributeChanged(GetCurrentStaminaAttribute());
+		}
 	}
 }

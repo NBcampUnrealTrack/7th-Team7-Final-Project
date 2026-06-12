@@ -50,23 +50,27 @@ void UEnemyMeleeAttack::OnWeaponHit(FGameplayEventData Payload)
 	UAbilitySystemComponent* OwnerASC = GetAbilitySystemComponentFromActorInfo();
 	if (!OwnerASC) return;
 
-	float AttackValue = OwnerASC->GetNumericAttribute(UGYDamageAttributeSet::GetAttackAttribute());
-
-	float FinalDamage = AttackValue;
+	// HP 데미지·DEF·크리 계산은 GE_HitImpact의 execution이 담당. 여기선 공격별 값만 컨텍스트로 전달.
+	FGYHitContext HitContext;
+	HitContext.SourceASC = OwnerASC;
+	HitContext.TargetASC = TargetASC;
 	if (HitDamageWeights.IsValidIndex(HitCount))
 	{
 		const FHitDamageWeight& W = HitDamageWeights[HitCount];
-		FinalDamage = (AttackValue + W.Additive) * W.Multiplicative;
+		HitContext.MotionMultiplier = W.Multiplicative;
+		HitContext.Additive = W.Additive;
 	}
+	// TODO: 적 공격별 경직/무력 값을 FHitDamageWeight에 추가해 전달. 지금은 예시용 임시 상수.
+	HitContext.StaggerAmount = 25.f;
+	HitContext.StunAmount = 10.f;
 
-	UGYCombatStatics::ApplyDamage(TargetASC, FinalDamage, OwnerASC);
+	UGYCombatStatics::ApplyHitImpact(HitContext);
 
 	if (HitCueTag.IsValid())
 	{
 		FGameplayCueParameters CueParams;
 		CueParams.Normal = HitResult.ImpactNormal;
 		CueParams.Location = HitResult.ImpactPoint;
-		CueParams.RawMagnitude = FinalDamage;
 		CueParams.SourceObject = Instigator;
 
 		TargetASC->ExecuteGameplayCue(HitCueTag, CueParams);

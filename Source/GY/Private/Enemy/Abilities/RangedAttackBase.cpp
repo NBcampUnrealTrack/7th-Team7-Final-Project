@@ -66,28 +66,38 @@ void URangedAttackBase::OnProjectileHit(FGameplayEventData Payload)
 	UAbilitySystemComponent* OwnerASC = GetAbilitySystemComponentFromActorInfo();
 	if (!OwnerASC) return;
 
-	float AttackValue = OwnerASC->GetNumericAttribute(UGYDamageAttributeSet::GetAttackAttribute());
-	float FinalDamage = AttackValue;
-
+	// HP 데미지·DEF·크리 계산은 GE_HitImpact의 execution이 담당. 여기선 공격별 값만 컨텍스트로 전달.
+	float MotionMultiplier = 1.f;
+	float Additive = 0.f;
 	if (HitDamageWeights.IsValidIndex(0))
 	{
 		const FHitDamageWeight& W = HitDamageWeights[0];
-		FinalDamage = (AttackValue + W.Additive) * W.Multiplicative;
+		MotionMultiplier = W.Multiplicative;
+		Additive = W.Additive;
 	}
 
+	// 발사체 분산 시 데미지를 N분의 1로 — 배율에 흡수
 	if (bDistributeDamage && ProjectileCount > 1)
 	{
-		FinalDamage /= static_cast<float>(ProjectileCount);
+		MotionMultiplier /= static_cast<float>(ProjectileCount);
 	}
 
-	UGYCombatStatics::ApplyDamage(TargetASC, FinalDamage, OwnerASC);
+	FGYHitContext HitContext;
+	HitContext.SourceASC = OwnerASC;
+	HitContext.TargetASC = TargetASC;
+	HitContext.MotionMultiplier = MotionMultiplier;
+	HitContext.Additive = Additive;
+	// TODO: 적 공격별 경직/무력 값을 FHitDamageWeight에 추가해 전달. 지금은 예시용 임시 상수.
+	HitContext.StaggerAmount = 25.f;
+	HitContext.StunAmount = 10.f;
+
+	UGYCombatStatics::ApplyHitImpact(HitContext);
 
 	if (HitCueTag.IsValid())
 	{
 		FGameplayCueParameters CueParameters;
 		CueParameters.Normal = HitResult.ImpactNormal;
 		CueParameters.Location = HitResult.ImpactPoint;
-		CueParameters.RawMagnitude = FinalDamage;
 		CueParameters.SourceObject = Instigator;
 
 		TargetASC->ExecuteGameplayCue(HitCueTag, CueParameters);

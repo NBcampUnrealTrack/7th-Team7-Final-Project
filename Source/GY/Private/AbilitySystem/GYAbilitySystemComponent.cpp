@@ -300,6 +300,22 @@ void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute&
 		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stun, StunRegenDelayDuration);
 }
 
+UGameplayAbility* UGYAbilitySystemComponent::GetActiveAbilityByTag(const FGameplayTag& AbilityTag) const
+{
+	TArray<FGameplayAbilitySpec*> Specs;
+	GetActivatableGameplayAbilitySpecsByAllMatchingTags(FGameplayTagContainer(AbilityTag), Specs, false);
+
+	for (const FGameplayAbilitySpec* Spec : Specs)
+	{
+		for (UGameplayAbility* Instance : Spec->GetAbilityInstances())
+		{
+			if (Instance && Instance->IsActive())
+				return Instance;
+		}
+	}
+	return nullptr;
+}
+
 void UGYAbilitySystemComponent::HandleVitalAccumulation(const FGameplayAttribute& ChangedAttribute, float CurrentValue)
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
