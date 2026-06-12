@@ -13,10 +13,13 @@
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "UI/GYUIMessages.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Curves/CurveFloat.h"
 #include "GameFramework/GameStateBase.h"
+#include "Character/GYPawnData.h"
+#include "Character/GYPlayerActionConfig.h"
 
 void UGYUIManagerSubsystem::Deinitialize()
 {
@@ -59,6 +62,10 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		if (UClass* HUDClass = Settings->HUDWidgetClass.LoadSynchronous())
 		{
 			PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDClass);
+		}
+		if (UClass* ReviveClass = Settings->RevivalWidgetClass.LoadSynchronous())
+		{
+			RegisterTagDrivenWidget(GYStateTags::State_Life_Dead,GYUILayerTags::UI_Layer_Modal, ReviveClass);
 		}
 	}
 
@@ -239,6 +246,25 @@ void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 			     .AddUObject(this, &UGYUIManagerSubsystem::OnTagChanged);
 	}
 	RegisterStatBroadcast(InASC);
+
+	// 부활 진행도 브로드캐스트 트리거
+	DeathTagHandle = InASC->RegisterGameplayTagEvent(GYStateTags::State_Life_Dead, EGameplayTagEventType::NewOrRemoved)
+	.AddWeakLambda(this, [this](const FGameplayTag, int32 NewCount)
+		{
+		if (NewCount > 0) StartRevivalBroadcast(); // 사망 시 부활 브로드캐스트
+		else StopRevivalBroadcast(); // 부활 시 브로드캐스트
+		});
+
+	for (const auto& Pair : TagWidgetMap)
+	{
+		const int32 Count = InASC->GetTagCount(Pair.Key);
+		if (Count > 0) OnTagChanged(Pair.Key, Count);
+	}
+
+	if (InASC->GetTagCount(GYStateTags::State_Life_Dead) > 0)
+	{
+		StartRevivalBroadcast();
+	}
 }
 
 void UGYUIManagerSubsystem::RegisterTagDrivenWidget(
@@ -396,7 +422,14 @@ void UGYUIManagerSubsystem::UnbindASC()
 				Pair.Value.ActiveWidget = nullptr;
 			}
 		}
-		// 스탯 브로드캐스트 델리게이트 해제
+
+		if (DeathTagHandle.IsValid())
+		{
+			BoundASC->UnregisterGameplayTagEvent(DeathTagHandle, GYStateTags::State_Life_Dead,
+			                                     EGameplayTagEventType::NewOrRemoved);
+			DeathTagHandle.Reset();
+		}
+		StopRevivalBroadcast();
 		UnregisterStatBroadcast();
 	}
 	BoundASC = nullptr;
@@ -527,4 +560,72 @@ void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegion
 		State.TargetBoss = nullptr;
 		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
 	}
+}
+
+void UGYUIManagerSubsystem::StartRevivalBroadcast()
+{
+	if (bRevivalActive) return;
+
+	RevivalDuration = 5.f;
+	if (APlayerState* PS = GetLocalPlayerState())
+	{
+		if (const AGYPlayerState* GYPS = Cast<AGYPlayerState>(PS))
+		{
+			if (const UGYPawnData* Data = GYPS->GetPawnData())
+			{
+				if (Data->ActionConfig)
+				{
+					RevivalDuration = FMath::Max(Data->ActionConfig->RespawnDelay, 0.01f);
+				}
+			}
+		}
+	}
+	RevivalElapsed = 0.f;
+	bRevivalActive = true;
+
+	BroadcastRevivalProgress(0.f, RevivalDuration);
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			RevivalTickHandle,FTimerDelegate::CreateUObject(
+			this, &UGYUIManagerSubsystem::TickRevivalBroadcast),RevivalBroadcastInterval, true);
+	}
+}
+
+void UGYUIManagerSubsystem::StopRevivalBroadcast()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(RevivalTickHandle);
+	}
+	bRevivalActive = false;
+	RevivalElapsed = 0.f;
+	RevivalDuration = 0.f;
+}
+
+void UGYUIManagerSubsystem::TickRevivalBroadcast()
+{
+	if (!bRevivalActive) return;
+
+	RevivalElapsed = FMath::Min(RevivalElapsed + RevivalBroadcastInterval, RevivalDuration);
+	BroadcastRevivalProgress(RevivalElapsed, RevivalDuration);
+	if (RevivalElapsed >= RevivalDuration)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(RevivalTickHandle);
+		}
+		bRevivalActive = false;
+	}
+}
+
+void UGYUIManagerSubsystem::BroadcastRevivalProgress(float Current, float Max) const
+{
+	if (!GetWorld()) return;
+	FGYRevivalProgressMessage Msg;
+	Msg.CurrentValue = Current;
+	Msg.MaxValue = Max;
+	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(
+		GYGameplayTags::Message_Player_RevivalProgress, Msg);
 }

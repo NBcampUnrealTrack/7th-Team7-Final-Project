@@ -137,4 +137,19 @@ private:
 	FGameplayMessageListenerHandle RegionExitListenerHandle;
 
 	FGameplayTag ActiveRegionId;
+
+	/** 부활 브로드캐스트 */
+	void StartRevivalBroadcast();
+	void StopRevivalBroadcast();
+	void TickRevivalBroadcast();
+	void BroadcastRevivalProgress(float Current, float Max) const;
+
+	FDelegateHandle DeathTagHandle;
+	FTimerHandle RevivalTickHandle;
+	float RevivalElapsed = 0.f;
+	float RevivalDuration = 0.f;
+	bool bRevivalActive = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI")
+	float RevivalBroadcastInterval = 0.05f;
 };
