@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "GYCombatStatics.generated.h"
 
@@ -16,6 +17,12 @@ struct FGYHitContext
 	float Additive = 0.f;
 	float StaggerAmount = 0.f;
 	float StunAmount = 0.f;
+
+	// 공격 어빌리티 타입(Ability.Attack.Combo/Charge). 조건부 인첸트(약/강공) 매칭에 사용.
+	FGameplayTag AttackAbilityTag;
+
+	// 데미지 속성(불·얼음 등). 미설정=무속성.
+	FGameplayTag ElementTag;
 };
 
 UCLASS()
