@@ -6,6 +6,9 @@ namespace GYGameplayTags
 {
 	// GameplayCue - 일단 임시 구조, 추후 수정 가능
 
+	/* 피격 리액션 */
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_HitReaction);
+
 	/* 플레이어 피격 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Hit_Light);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Hit_Heavy);

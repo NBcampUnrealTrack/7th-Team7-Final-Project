@@ -136,7 +136,7 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	FGameplayEffectContextHandle Context = SourceASC->MakeEffectContext();
 	FGameplayEffectSpecHandle Spec = SourceASC->MakeOutgoingSpec(HitImpactEffect, 1.f, Context);
 	if (!Spec.IsValid()) return;
-
+	
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_MotionMultiplier, HitContext.MotionMultiplier);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_Additive, HitContext.Additive);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_StaggerAmount, StaggerAmount);
