@@ -35,11 +35,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Dodging, "Ability.State.Dodging");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Sprint, "Ability.State.Sprint");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Blocking, "Ability.State.Blocking");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow_Combo, "Ability.State.CancelWindow.Combo");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow_Charge, "Ability.State.CancelWindow.Charge");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow_Parry, "Ability.State.CancelWindow.Parry");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow_Block, "Ability.State.CancelWindow.Block");
-	UE_DEFINE_GAMEPLAY_TAG(Ability_State_CancelWindow_Dodge, "Ability.State.CancelWindow.Dodge");
 
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Attack_Enemy, "Ability.Attack.Enemy");
 }
