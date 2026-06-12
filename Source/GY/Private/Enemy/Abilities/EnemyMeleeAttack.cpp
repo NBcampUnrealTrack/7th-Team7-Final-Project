@@ -59,10 +59,9 @@ void UEnemyMeleeAttack::OnWeaponHit(FGameplayEventData Payload)
 		const FHitDamageWeight& W = HitDamageWeights[HitCount];
 		HitContext.MotionMultiplier = W.Multiplicative;
 		HitContext.Additive = W.Additive;
+		HitContext.StaggerAmount = W.Stagger;
+		HitContext.StunAmount = W.Stun;
 	}
-	// TODO: 적 공격별 경직/무력 값을 FHitDamageWeight에 추가해 전달. 지금은 예시용 임시 상수.
-	HitContext.StaggerAmount = 25.f;
-	HitContext.StunAmount = 10.f;
 
 	UGYCombatStatics::ApplyHitImpact(HitContext);
 
