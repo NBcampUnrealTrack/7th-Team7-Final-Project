@@ -21,4 +21,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI")
 	TSoftClassPtr<UGYLootBoxScreenWidget> LootBoxScreenClass;
+
+	UPROPERTY(EditDefaultsOnly, Config, Category="UI")
+	TSoftClassPtr<UCommonActivatableWidget> RevivalWidgetClass;
 };
