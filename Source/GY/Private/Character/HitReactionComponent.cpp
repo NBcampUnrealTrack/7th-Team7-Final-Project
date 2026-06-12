@@ -11,7 +11,12 @@
 #include "PhysicsEngine/PhysicsAsset.h"
 
 
-#pragma region HitReaction
+UHitReactionComponent::UHitReactionComponent()
+{
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
+}
+
 void UHitReactionComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -26,9 +31,39 @@ void UHitReactionComponent::BeginPlay()
 			MeshComp = Owner->FindComponentByClass<USkeletalMeshComponent>();
 		}
 		PhysicalAnimation = Owner->FindComponentByClass<UPhysicalAnimationComponent>();
-		PhysicalAnimation->SetSkeletalMeshComponent(MeshComp.Get());
+		if (PhysicalAnimation.IsValid() && MeshComp.IsValid())
+		{
+			PhysicalAnimation->SetSkeletalMeshComponent(MeshComp.Get());
+		}
 
 	}
+}
+
+void UHitReactionComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+
+	if (!bBlendingOut || !MeshComp.IsValid())
+	{
+		SetComponentTickEnabled(false);
+		return;
+	}
+
+	const float DecayPerSecond = HitReactBlendInWeight / FMath::Max(HitReactBlendOutTime, KINDA_SMALL_NUMBER);
+	CurrentBlendWeight = FMath::Max(0.f, CurrentBlendWeight - DecayPerSecond * DeltaTime);
+	MeshComp->SetAllBodiesBelowPhysicsBlendWeight(HitReactStartBone, CurrentBlendWeight);
+
+	if (CurrentBlendWeight <= 0.f)
+	{
+		bBlendingOut = false;
+		SetComponentTickEnabled(false);
+
+		MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, false, true);
+		MeshComp->bBlendPhysics = false;
+	}
+
 }
 
 void UHitReactionComponent::ApplyHitReaction(const FVector& HitDirection, float Strength, FName HitBone)
@@ -47,7 +82,8 @@ void UHitReactionComponent::ApplyHitReaction(const FVector& HitDirection, float 
 	MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, true, true);
 
 	MeshComp->bBlendPhysics = true;
-	MeshComp->SetAllBodiesBelowPhysicsBlendWeight(HitReactStartBone, 0.5f);
+	CurrentBlendWeight = HitReactBlendInWeight;
+	MeshComp->SetAllBodiesBelowPhysicsBlendWeight(HitReactStartBone, CurrentBlendWeight);
 
 	PhysicalAnimation->ApplyPhysicalAnimationProfileBelow(
 		HitReactStartBone, HitReactProfileName, true);
@@ -62,8 +98,10 @@ void UHitReactionComponent::ApplyHitReaction(const FVector& HitDirection, float 
 		MeshComp->AddImpulse(ImpulseVec, HitBone);
 	}
 
+	bBlendingOut = false;
+	SetComponentTickEnabled(false);
+
 	World->GetTimerManager().ClearTimer(HitReactTimerHandle);
-	World->GetTimerManager().ClearTimer(HitReactBlendOutTimerHandle);
 	World->GetTimerManager().SetTimer(HitReactTimerHandle,
 		this, &UHitReactionComponent::EndHitReaction,
 		HitReactDuration, false);
@@ -78,18 +116,9 @@ void UHitReactionComponent::EndHitReaction()
 	if (!World) return;
 
 	PhysicalAnimation->ApplyPhysicalAnimationProfileBelow(HitReactStartBone, NAME_None);
-	World->GetTimerManager().SetTimer(HitReactBlendOutTimerHandle,
-		this, &UHitReactionComponent::FinishHitReactBlendOut,
-		HitReactBlendOutTime, false);
+	bBlendingOut = true;
+	SetComponentTickEnabled(true);
 
 }
 
-void UHitReactionComponent::FinishHitReactBlendOut()
-{
-	if (!MeshComp.IsValid()) return;
 
-	MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, false, true);
-	MeshComp->SetAllBodiesBelowPhysicsBlendWeight(HitReactStartBone, 0.f);
-	MeshComp->bBlendPhysics = false;
-}
-#pragma endregion

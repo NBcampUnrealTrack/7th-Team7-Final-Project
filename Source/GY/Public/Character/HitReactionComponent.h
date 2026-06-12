@@ -14,16 +14,17 @@ class GY_API UHitReactionComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-#pragma region HitReaction
 public:
+	UHitReactionComponent();
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ApplyHitReaction(const FVector& HitDirection, float Strength = -1.f, FName HitBone = NAME_None);
 
 protected:
 	TWeakObjectPtr<UPhysicalAnimationComponent> PhysicalAnimation;
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
-	FName HitReactStartBone = TEXT("pelvis");
+	FName HitReactStartBone = TEXT("spine_01");
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
 	FName HitReactProfileName = TEXT("HitReaction");
@@ -35,14 +36,17 @@ protected:
 	float HitReactBlendOutTime = 0.2f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
-	float DefaultHitImpulse = 5000.f;
+	float HitReactBlendInWeight = 0.5f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
+	float DefaultHitImpulse = 1000.f;
 
 	void EndHitReaction();
-	void FinishHitReactBlendOut();
 
 private:
 	FTimerHandle HitReactTimerHandle;
-	FTimerHandle HitReactBlendOutTimerHandle;
 	TWeakObjectPtr<USkeletalMeshComponent> MeshComp;
-#pragma endregion
+
+	bool bBlendingOut = false;
+	float CurrentBlendWeight = 0.f;
 };
