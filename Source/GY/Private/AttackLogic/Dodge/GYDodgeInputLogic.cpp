@@ -3,6 +3,7 @@
 #include "AttackLogic/Dodge/GYDodgeMontageFragment.h"
 #include "AttackLogic/Shared/GYAttributeCostHelpers.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
+#include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
 
@@ -52,7 +53,13 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 
 	const float Duration = Ability->PlayMontageForLogic(MontageSet->DodgeMontage, 1.f);
 
-	if (ASC && CachedDodgeAppliedTag.IsValid() && DodgeData->InvincibilityDuration > 0.f)
+	float InvincibilityDuration = DodgeData->InvincibilityDuration;
+	if (const UGYCoreStatAttributeSet* CoreStats = ASC ? ASC->GetSet<UGYCoreStatAttributeSet>() : nullptr)
+	{
+		InvincibilityDuration += CoreStats->GetEvasionInvincibilityTime();
+	}
+
+	if (ASC && CachedDodgeAppliedTag.IsValid() && InvincibilityDuration > 0.f)
 	{
 		ASC->AddLooseGameplayTag(CachedDodgeAppliedTag);
 
@@ -66,7 +73,7 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 					Self->RemoveDodgeTag();
 				}
 			},
-			FMath::Max(DodgeData->InvincibilityDuration, KINDA_SMALL_NUMBER),
+			FMath::Max(InvincibilityDuration, KINDA_SMALL_NUMBER),
 			false
 		);
 	}
