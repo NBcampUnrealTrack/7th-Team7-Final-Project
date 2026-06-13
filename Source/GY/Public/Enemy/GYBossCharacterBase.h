@@ -22,6 +22,8 @@ struct FBossCachedSummonable
 
 	UPROPERTY()
 	TSubclassOf<AGYEnemyCharacterBase> ActorClass;
+
+	float HealthBleedRatio  = 1.f;
 };
 
 UCLASS()
@@ -57,6 +59,8 @@ public:
 	UBossDataAsset* GetBossData() const { return Cast<UBossDataAsset>(LoadedDataAsset); }
 
 	bool GetSummonable(EEnemyType Type, FBossCachedSummonable& Out) const;
+
+	void RegisterMinion(AGYEnemyCharacterBase* Minion, float HealthBleedRatio);
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual float GetStatScaleValue() const override;
@@ -76,6 +80,12 @@ protected:
 
 	void RequestSummonablePreload();
 	void OnSummonablesLoaded();
+
+	UFUNCTION()
+	void HandleMinionDamaged(AGYEnemyCharacterBase* Minion, float DamageAmount);
+
+	UFUNCTION()
+	void HandleMinionDead(AGYEnemyCharacterBase* Minion);
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Participants, VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Encounter")
 	TArray<TObjectPtr<APlayerState>> Participants;
@@ -88,4 +98,7 @@ protected:
 
 	UPROPERTY(Transient)
 	TMap<EEnemyType, FBossCachedSummonable> SummonCache;
+
+	UPROPERTY(Transient)
+	TMap<TObjectPtr<AGYEnemyCharacterBase>, float> ActiveMinionRatios;
 };

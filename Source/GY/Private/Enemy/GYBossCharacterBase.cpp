@@ -1,5 +1,6 @@
 #include "Enemy/GYBossCharacterBase.h"
 
+#include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "Enemy/GYBossAIController.h"
 #include "Enemy/EnemyAnimInstance.h"
 #include "Enemy/Component/BossPhaseComponent.h"
@@ -271,16 +272,11 @@ void AGYBossCharacterBase::OnSummonablesLoaded()
 		FBossCachedSummonable Cached;
 		Cached.DataAsset  = Entry.DataAsset.Get();
 		Cached.ActorClass = Entry.ActorClass.Get();
+		Cached.HealthBleedRatio = Entry.HealthBleedRatio;
 
 		if (Cached.DataAsset && Cached.ActorClass)
 		{
 			SummonCache.Add(Entry.EnemyType, Cached);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning,
-				TEXT("[Boss %s] Summonable entry incomplete for Type=%d"),
-				*GetName(), static_cast<int32>(Entry.EnemyType));
 		}
 	}
 }
@@ -293,4 +289,38 @@ bool AGYBossCharacterBase::GetSummonable(EEnemyType Type, FBossCachedSummonable&
 		return true;
 	}
 	return false;
+}
+
+void AGYBossCharacterBase::RegisterMinion(AGYEnemyCharacterBase* Minion, float HealthBleedRatio)
+{
+	if (!Minion || !HasAuthority()) return;
+	if (HealthBleedRatio <= 0.f) return;
+	if (ActiveMinionRatios.Contains(Minion)) return;
+
+	ActiveMinionRatios.Add(Minion, HealthBleedRatio);
+	Minion->OnEnemyHit.AddDynamic(this, &AGYBossCharacterBase::HandleMinionDamaged);
+	Minion->OnEnemyDead.AddDynamic(this, &AGYBossCharacterBase::HandleMinionDead);
+}
+
+void AGYBossCharacterBase::HandleMinionDamaged(AGYEnemyCharacterBase* Minion, float DamageAmount)
+{
+	if (!Minion || !HasAuthority() || !VitalAttribute) return;
+
+	const float* RatioPtr = ActiveMinionRatios.Find(Minion);
+	if (!RatioPtr) return;
+
+	const float Bleed = DamageAmount * (*RatioPtr);
+	if (Bleed <= 0.f) return;
+
+	const float NewHealth = FMath::Max(0.f, VitalAttribute->GetCurrentHealth() - Bleed);
+	VitalAttribute->SetCurrentHealth(NewHealth);
+}
+
+void AGYBossCharacterBase::HandleMinionDead(AGYEnemyCharacterBase* Minion)
+{
+	if (!Minion) return;
+
+	Minion->OnEnemyHit.RemoveDynamic(this, &AGYBossCharacterBase::HandleMinionDamaged);
+	Minion->OnEnemyDead.RemoveDynamic(this, &AGYBossCharacterBase::HandleMinionDead);
+	ActiveMinionRatios.Remove(Minion);
 }

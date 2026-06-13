@@ -46,6 +46,9 @@ struct FBossSummonEntry
 
 	UPROPERTY(EditDefaultsOnly, Category = "Summon")
 	TSoftClassPtr<AGYEnemyCharacterBase> ActorClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Summon", meta = (ClampMin = "0.0"))
+	float HealthBleedRatio = 1.f;
 };
 
 UCLASS()

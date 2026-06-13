@@ -119,5 +119,8 @@ AGYEnemyCharacterBase* USummonAddsAbility::SpawnAndInitMinion(const FSummonEntry
 
 	Minion->InitWithLoadedData(Entry.EnemyType, Cached.DataAsset);
 	Minion->Activate();
+
+	Boss->RegisterMinion(Minion, Cached.HealthBleedRatio);
+
 	return Minion;
 }
