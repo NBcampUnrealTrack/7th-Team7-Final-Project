@@ -71,6 +71,12 @@ void FGYEditorModule::SyncAbilityWeightRow(class UBlueprint* BP)
 		Cast<UGYEnemyAttackAbilityBase>(BP->GeneratedClass->GetDefaultObject());
 	if (!CDO) return;
 
+	if (CDO->AttackType != EGYEnemyAttackType::Melee &&
+		CDO->AttackType != EGYEnemyAttackType::Ranged)
+	{
+		return;
+	}
+
 	int32 TraceCount = 0;
 	if (CDO->AttackMontage)
 	{

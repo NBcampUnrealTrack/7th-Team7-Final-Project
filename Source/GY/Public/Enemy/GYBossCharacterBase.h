@@ -11,6 +11,7 @@ class UBossPhaseComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBossEncounterStarted, int32, ParticipantCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBossParticipantCountChanged, int32, NewCount);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBossMinionCountChanged, int32, NewCount);
 
 USTRUCT()
 struct FBossCachedSummonable
@@ -61,6 +62,12 @@ public:
 	bool GetSummonable(EEnemyType Type, FBossCachedSummonable& Out) const;
 
 	void RegisterMinion(AGYEnemyCharacterBase* Minion, float HealthBleedRatio);
+
+	UFUNCTION(BlueprintPure, Category = "Boss|Minion")
+	int32 GetActiveMinionCount() const { return ActiveMinionRatios.Num(); }
+
+	UPROPERTY(BlueprintAssignable, Category = "Boss|Minion")
+	FOnBossMinionCountChanged OnMinionCountChanged;
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual float GetStatScaleValue() const override;

@@ -300,6 +300,8 @@ void AGYBossCharacterBase::RegisterMinion(AGYEnemyCharacterBase* Minion, float H
 	ActiveMinionRatios.Add(Minion, HealthBleedRatio);
 	Minion->OnEnemyHit.AddDynamic(this, &AGYBossCharacterBase::HandleMinionDamaged);
 	Minion->OnEnemyDead.AddDynamic(this, &AGYBossCharacterBase::HandleMinionDead);
+
+	OnMinionCountChanged.Broadcast(ActiveMinionRatios.Num());
 }
 
 void AGYBossCharacterBase::HandleMinionDamaged(AGYEnemyCharacterBase* Minion, float DamageAmount)
@@ -323,4 +325,6 @@ void AGYBossCharacterBase::HandleMinionDead(AGYEnemyCharacterBase* Minion)
 	Minion->OnEnemyHit.RemoveDynamic(this, &AGYBossCharacterBase::HandleMinionDamaged);
 	Minion->OnEnemyDead.RemoveDynamic(this, &AGYBossCharacterBase::HandleMinionDead);
 	ActiveMinionRatios.Remove(Minion);
+
+	OnMinionCountChanged.Broadcast(ActiveMinionRatios.Num());
 }
