@@ -18,6 +18,7 @@ namespace GYStateTags
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Combat_InCombat)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Combat_SuperArmor)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Combat_Invulnerable)
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Regen_Delay_Stamina)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Regen_Delay_Stagger)
