@@ -103,6 +103,36 @@ TArray<APawn*> AGYBossCharacterBase::GetParticipantPawns() const
 	return Result;
 }
 
+void AGYBossCharacterBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!HasAuthority()) return;
+
+	// TODO: 인카운터 트리거 시스템 완성되면 제거
+	GetWorldTimerManager().SetTimer(TempEncounterTimer,
+		FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			TArray<APlayerState*> Players;
+			for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+			{
+				if (APlayerController* PC = It->Get())
+				{
+					if (APlayerState* PS = PC->PlayerState)
+					{
+						Players.Add(PS);
+					}
+				}
+			}
+			if (Players.Num() > 0)
+			{
+				SetParticipants(Players);
+				GetWorldTimerManager().ClearTimer(TempEncounterTimer);
+			}
+		}),
+		0.5f, /*bLoop=*/ true);
+}
+
 void AGYBossCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -202,8 +232,6 @@ void AGYBossCharacterBase::GrantDefaultAbilities()
 
 void AGYBossCharacterBase::OnDataAssetLoaded()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Boss] OnDataAssetLoaded fired, mesh=%s"),
-		LoadedDataAsset ? *LoadedDataAsset->VisualConfig.SkeletalMesh.ToString() : TEXT("null"));
 	Super::OnDataAssetLoaded();
 
 	if (PhaseComponent &&

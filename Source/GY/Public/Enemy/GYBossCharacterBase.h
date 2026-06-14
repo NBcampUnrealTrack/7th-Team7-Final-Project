@@ -69,6 +69,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Boss|Minion")
 	FOnBossMinionCountChanged OnMinionCountChanged;
 protected:
+	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual float GetStatScaleValue() const override;
 	virtual void OnDataAssetLoaded() override;
@@ -109,4 +110,6 @@ protected:
 
 	UPROPERTY(Transient)
 	TMap<TObjectPtr<AGYEnemyCharacterBase>, float> ActiveMinionRatios;
+
+	FTimerHandle TempEncounterTimer;
 };
