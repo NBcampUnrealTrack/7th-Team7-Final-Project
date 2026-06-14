@@ -6,6 +6,7 @@
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Components/StateTreeAIComponent.h"
+#include "Enemy/AI/GYBossStateTreeAIComponent.h"
 #include "Enemy/GYBossCharacterBase.h"
 #include "Enemy/Component/BossAggroComponent.h"
 
@@ -22,7 +23,7 @@ AGYBossAIController::AGYBossAIController()
 	SightConfig->AutoSuccessRangeFromLastSeenLocation = 500.f;
 	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 	SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
-	SightConfig->DetectionByAffiliation.bDetectNeutrals = false;
+	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	AIPerceptionComponent->ConfigureSense(*SightConfig);
 
 	DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
@@ -31,11 +32,12 @@ AGYBossAIController::AGYBossAIController()
 	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
 	HearingConfig->HearingRange = 2500.f;
 	HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
+	HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	AIPerceptionComponent->ConfigureSense(*HearingConfig);
 
 	AIPerceptionComponent->SetDominantSense(UAISenseConfig_Sight::StaticClass());
 
-	StateTreeComponent = CreateDefaultSubobject<UStateTreeAIComponent>(TEXT("StateTreeAI"));
+	StateTreeComponent = CreateDefaultSubobject<UGYBossStateTreeAIComponent>(TEXT("StateTreeAI"));
 	StateTreeComponent->SetStartLogicAutomatically(false);
 
 	AggroComponent = CreateDefaultSubobject<UBossAggroComponent>(TEXT("AggroComponent"));
