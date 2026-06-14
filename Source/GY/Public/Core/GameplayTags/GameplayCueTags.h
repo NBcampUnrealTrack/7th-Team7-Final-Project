@@ -19,10 +19,32 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Boss_Laser);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Boss_PhaseTransition);
 	/* 플레이어 액션 */
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Player_Dash);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Player_Parry);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Player_Ultimate);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Run);
+
+	// 약공격
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Attack_Light);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Attack_Stab);
+
+	// 강공격
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Attack_Heavy_Charge);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Attack_Heavy_Release);
+
+	// 패링
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Parry_Attempt);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Parry_Success);
+
+	// 방패 블로킹
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Block_Success);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Block_Break);
+
+	// 회피
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Dodge);
+
+	// 물약
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Potion);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Healing);
+
 	/* 상호 작용*/
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_LootBox);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_Door_Open);
