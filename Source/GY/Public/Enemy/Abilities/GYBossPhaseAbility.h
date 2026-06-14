@@ -5,6 +5,7 @@
 #include "GYBossPhaseAbility.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSubAbilityFinished, TSubclassOf<UGameplayAbility>, AbilityClass);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPhaseSequenceFinished);
 
 UCLASS()
 class GY_API UGYBossPhaseAbility : public UGYGameplayAbility
@@ -33,6 +34,13 @@ protected:
 
 	UPROPERTY(BlueprintAssignable, Category = "Boss|Phase|SubAbility")
 	FOnSubAbilityFinished OnSubAbilityFinished;
+
+	/** SubAbilities를 순서대로 활성화. 시퀀스 종료 시 OnSequenceFinished 발사 */
+	UFUNCTION(BlueprintCallable, Category = "Boss|Phase|Sequence")
+	void ExecuteSubAbilitySequence();
+
+	UPROPERTY(BlueprintAssignable, Category = "Boss|Phase|Sequence")
+	FOnPhaseSequenceFinished OnSequenceFinished;
 
 	void CachingParticipants();
 
@@ -74,6 +82,9 @@ protected:
 private:
 	UFUNCTION()
 	void HandleSubAbilityEnded(UGameplayAbility* Ability);
+
+	void AdvanceSequence();
+	void ActivateCurrentSequenceAbility();
 protected:
 	/** 진입 시 부여할 무적/슈퍼아머 태그 */
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Entry")
@@ -111,6 +122,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Exit")
 	FGameplayTag ExitCueTag;
 
+	/** 페이즈 진입 시 OnPhaseExecute 직후 순차 활성화할 SubAbility 리스트 */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Sequence")
+	TArray<TSubclassOf<UGameplayAbility>> SubAbilities;
+
+	/** SubAbility 간 딜레이(초). 한 GA가 끝나고 다음 GA 활성화까지 대기 시간 */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Sequence", meta = (ClampMin = "0"))
+	float DelayBetweenAbilities = 0.f;
+
+	/** true면 시퀀스가 끝나는 즉시 FinishPhase 호출 */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Sequence")
+	bool bAutoFinishAfterSequence = false;
+
 protected:
 	/** ActivateAbility 시점의 참가자 스냅샷 */
 	UPROPERTY(Transient)
@@ -129,6 +152,10 @@ protected:
 	TArray<FGameplayAbilitySpecHandle> TemporaryGrantedHandles;
 
 	bool bPhaseFinished = false;
+
+	bool bSequenceRunning = false;
+	int32 CurrentSubAbilityIndex = INDEX_NONE;
+	FTimerHandle SequenceDelayTimer;
 
 };
 
