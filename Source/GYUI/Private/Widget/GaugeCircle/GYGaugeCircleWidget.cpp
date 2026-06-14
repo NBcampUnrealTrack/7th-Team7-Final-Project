@@ -152,20 +152,17 @@ AActor* UGYGaugeCircleWidget::GetOwningActor() const
 
 void UGYGaugeCircleWidget::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
-	bool bIsGameplay = (Data.NewValue < Data.OldValue);
-	RefreshHP(bIsGameplay);
+	RefreshHP(!FMath::IsNearlyEqual(Data.NewValue, Data.OldValue));
 }
 
 void UGYGaugeCircleWidget::OnPoiseChanged(const FOnAttributeChangeData& Data)
 {
-	bool bIsGameplay = (Data.NewValue < Data.OldValue);
-	RefreshPoise(bIsGameplay);
+	RefreshPoise(!FMath::IsNearlyEqual(Data.NewValue, Data.OldValue));
 }
 
 void UGYGaugeCircleWidget::OnStaminaChanged(const FOnAttributeChangeData& Data)
 {
-	bool bIsGameplay = (Data.NewValue < Data.OldValue);
-	RefreshStamina(bIsGameplay);
+	RefreshStamina(!FMath::IsNearlyEqual(Data.NewValue, Data.OldValue));
 }
 
 void UGYGaugeCircleWidget::RefreshHP(bool bFromGameplay)
@@ -180,7 +177,7 @@ void UGYGaugeCircleWidget::RefreshHP(bool bFromGameplay)
 	const float Cur = ASC->GetNumericAttribute(CurAttr);
 	const float Max = ASC->GetNumericAttribute(MaxAttr);
 
-	SetPercent(Image_HP, FMath::Clamp(Cur / FMath::Max(Max, KINDA_SMALL_NUMBER), -1.f, 1.f), bFromGameplay);
+	SetPercent(Image_HP, FMath::Clamp(Cur / FMath::Max(Max, KINDA_SMALL_NUMBER), 0.f, 1.f), bFromGameplay);
 }
 
 void UGYGaugeCircleWidget::RefreshPoise(bool bFromGameplay)
@@ -195,7 +192,7 @@ void UGYGaugeCircleWidget::RefreshPoise(bool bFromGameplay)
 	const float Cur = ASC->GetNumericAttribute(CurAttr);
 	const float Max = ASC->GetNumericAttribute(MaxAttr);
 
-	SetPercent(Image_Poise, FMath::Clamp(Cur / FMath::Max(Max, KINDA_SMALL_NUMBER), -1.f, 1.f), bFromGameplay);
+	SetPercent(Image_Poise, FMath::Clamp(Cur / FMath::Max(Max, KINDA_SMALL_NUMBER), 0.f, 1.f), bFromGameplay);
 }
 
 void UGYGaugeCircleWidget::RefreshStamina(bool bFromGameplay)
@@ -240,14 +237,8 @@ void UGYGaugeCircleWidget::SetPercent(UImage* Image, float Percent, bool bFromGa
 	}
 
 	// 값 변동 시 보간 타이머 가동
-	UWorld* World = GetWorld();
-	if (World && !World->GetTimerManager().IsTimerActive(InterpolationTimerHandle))
-	{
-		World->GetTimerManager().SetTimer(
-			InterpolationTimerHandle, this, &UGYGaugeCircleWidget::ProcessVisualInterpolation, 0.016f, true);
-	}
-
-	const bool bWithinGrace = World && (World->TimeSince(BindTime) < BindGracePeriod);
+	EnsureInterpolationRunning();
+	const bool bWithinGrace = GetWorld() && (GetWorld()->TimeSince(BindTime) < BindGracePeriod);
 	if (bFromGameplay && !bWithinGrace)
 	{
 		NotifyActivity();
@@ -260,16 +251,8 @@ void UGYGaugeCircleWidget::NotifyActivity()
 	if (!World) return;
 
 	TargetAlpha = 1.f;
-
-	if (!World->GetTimerManager().IsTimerActive(InterpolationTimerHandle))
-	{
-		World->GetTimerManager().SetTimer(
-			InterpolationTimerHandle, this, &UGYGaugeCircleWidget::ProcessVisualInterpolation, 0.016f, true);
-	}
-
-	// duration 끝나면 사라지게
-	World->GetTimerManager().SetTimer(
-		HoldDelayTimerHandle, this, &UGYGaugeCircleWidget::StartFadeOutTimer, HoldDuration, false);
+	World->GetTimerManager().ClearTimer(HoldDelayTimerHandle); // 수치 변화 시 페이드아웃 무효
+	EnsureInterpolationRunning();
 }
 
 void UGYGaugeCircleWidget::SetWidgetOwnerActor(AActor* InOwner)
@@ -322,15 +305,16 @@ void UGYGaugeCircleWidget::ProcessVisualInterpolation()
 	UWorld* World = GetWorld();
 	if (!World) return;
 
-	float DeltaTime = World->GetDeltaSeconds();
-	bool bIsWorkRemaining = false;
+	const float DeltaTime = World->GetDeltaSeconds();
+	bool bAlphaAnimating = false;
+    bool bValueAnimating = false;
 
 	// 투명도 보간 처리
 	if (!FMath::IsNearlyEqual(CurrentAlpha, TargetAlpha, 0.001f))
 	{
 		CurrentAlpha = FMath::FInterpTo(CurrentAlpha, TargetAlpha, DeltaTime, FadeSpeed);
 		SetRenderOpacity(CurrentAlpha);
-		bIsWorkRemaining = true;
+		bAlphaAnimating = true;
 	}
 	else if (CurrentAlpha != TargetAlpha)
 	{
@@ -345,29 +329,40 @@ void UGYGaugeCircleWidget::ProcessVisualInterpolation()
 		const float TargetPct = Pair.Value;
 		float CurrentPct = CurrentPercents.Contains(CurrentImage) ? CurrentPercents[CurrentImage] : TargetPct;
 
+		UMaterialInstanceDynamic* MID = MIDCache.FindRef(CurrentImage);
+
 		if (!FMath::IsNearlyEqual(CurrentPct, TargetPct, 0.001f))
 		{
 			CurrentPct = FMath::FInterpTo(CurrentPct, TargetPct, DeltaTime, InterpSpeed);
 			CurrentPercents.Add(CurrentImage, CurrentPct);
-
-			if (UMaterialInstanceDynamic* MID = MIDCache.Contains(CurrentImage) ? MIDCache[CurrentImage] : nullptr)
-			{
-				MID->SetScalarParameterValue(PercentParamName, CurrentPct);
-			}
-			bIsWorkRemaining = true;
+			if (MID) MID->SetScalarParameterValue(PercentParamName, CurrentPct);
+			bValueAnimating = true;
 		}
 		else if (CurrentPct != TargetPct)
 		{
 			CurrentPercents.Add(CurrentImage, TargetPct);
-			if (UMaterialInstanceDynamic* MID = MIDCache.Contains(CurrentImage) ? MIDCache[CurrentImage] : nullptr)
-			{
-				MID->SetScalarParameterValue(PercentParamName, TargetPct);
-			}
+			if (MID) MID->SetScalarParameterValue(PercentParamName, TargetPct);
+		}
+	}
+
+	if (bValueAnimating)
+	{
+		// 값 변경 중엔 페이드아웃 예약만 취소
+		World->GetTimerManager().ClearTimer(HoldDelayTimerHandle);
+	}
+	else
+	{
+		// 값 일정 유지, 아직 보이는 상태면 페이드 예약
+		if (TargetAlpha > 0.f && !World->GetTimerManager().IsTimerActive(HoldDelayTimerHandle))
+		{
+			World->GetTimerManager().SetTimer(
+				HoldDelayTimerHandle, this,
+				&UGYGaugeCircleWidget::StartFadeOutTimer, HoldDuration, false);
 		}
 	}
 
 	// 목표 달성 시 타이머 종료
-	if (!bIsWorkRemaining)
+	if (!bAlphaAnimating && !bValueAnimating)
 	{
 		World->GetTimerManager().ClearTimer(InterpolationTimerHandle);
 	}
@@ -376,7 +371,11 @@ void UGYGaugeCircleWidget::ProcessVisualInterpolation()
 void UGYGaugeCircleWidget::StartFadeOutTimer()
 {
 	TargetAlpha = 0.f; // 목표 투명도 0
+	EnsureInterpolationRunning();
+}
 
+void UGYGaugeCircleWidget::EnsureInterpolationRunning()
+{
 	UWorld* World = GetWorld();
 	if (World && !World->GetTimerManager().IsTimerActive(InterpolationTimerHandle))
 	{
