@@ -16,6 +16,9 @@ struct FPatternEvaluatorInstanceData
 
 	UPROPERTY(EditAnywhere, Category = "Output")
 	bool bHasReadyPattern = false;
+
+	UPROPERTY(EditAnywhere, Category = "Output")
+	bool bHasPendingAbility = false;
 };
 
 USTRUCT(meta = (DisplayName = "Boss Pattern Evaluator"))
@@ -35,6 +38,8 @@ struct GY_API FPatternEvaluator : public FStateTreeEvaluatorCommonBase
 	virtual  void TreeStart(FStateTreeExecutionContext& Context) const override;
 	virtual void Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
 
-	TStateTreeExternalDataHandle<UBossPatternSelectorComponent> SelectorHandle;
-	TStateTreeExternalDataHandle<UBossAggroComponent> AggroHandle;
+	TStateTreeExternalDataHandle<UBossPatternSelectorComponent,
+		EStateTreeExternalDataRequirement::Optional> SelectorHandle;
+	TStateTreeExternalDataHandle<UBossAggroComponent,
+		EStateTreeExternalDataRequirement::Optional> AggroHandle;
 };

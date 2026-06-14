@@ -15,6 +15,7 @@ void FPatternEvaluator::TreeStart(FStateTreeExecutionContext& Context) const
 {
 	FInstanceDataType& Data = Context.GetInstanceData(*this);
 	Data.bHasReadyPattern = false;
+	Data.bHasPendingAbility = false;
 }
 
 void FPatternEvaluator::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
@@ -27,10 +28,19 @@ void FPatternEvaluator::Tick(FStateTreeExecutionContext& Context, const float De
 	if (!Selector || !Aggro)
 	{
 		Data.bHasReadyPattern = false;
+		Data.bHasPendingAbility = false;
 		return;
 	}
 
 	AActor* Target = Aggro->GetCurrentTarget();
+
+	if (Target && Selector->GetPendingAbility() == nullptr)
+	{
+		Selector->SelectNextPattern(Target);
+	}
+
+	Data.bHasPendingAbility = (Selector->GetPendingAbility() != nullptr);
+
 	if (!Target)
 	{
 		Data.bHasReadyPattern = false;

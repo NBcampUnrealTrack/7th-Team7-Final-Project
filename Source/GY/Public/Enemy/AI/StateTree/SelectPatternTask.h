@@ -14,8 +14,8 @@ struct FSelectPatternInstanceData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category = "nullptr")
-	TObjectPtr<AActor> Taget = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<AActor> Target = nullptr;
 };
 
 USTRUCT(meta = (DisplayName = "Select Pattern"))
@@ -36,6 +36,7 @@ struct GY_API FSelectPattern : public FStateTreeTaskCommonBase
 		FStateTreeExecutionContext& Context,
 		const FStateTreeTransitionResult& Transition) const override;
 
-	TStateTreeExternalDataHandle<UBossPatternSelectorComponent> SelectorHandle;
+	TStateTreeExternalDataHandle<UBossPatternSelectorComponent,
+		EStateTreeExternalDataRequirement::Optional> SelectorHandle;
 };
 
