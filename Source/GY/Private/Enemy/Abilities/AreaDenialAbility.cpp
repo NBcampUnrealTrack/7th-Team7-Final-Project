@@ -22,13 +22,17 @@ void UAreaDenialAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (!ProjectileClass) return;
+	if (ProjectileClass)
+	{
+		UAbilityTask_WaitGameplayEvent* HitTask =
+			UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+				this, GYGameplayTags::Event_Enemy_WeaponTrace_Hit, nullptr, false);
+		HitTask->EventReceived.AddDynamic(this, &UAreaDenialAbility::OnProjectileHit);
+		HitTask->ReadyForActivation();
+	}
 
-	UAbilityTask_WaitGameplayEvent* HitTask =
-		UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-			this, GYGameplayTags::Event_Enemy_WeaponTrace_Hit, nullptr, false);
-	HitTask->EventReceived.AddDynamic(this, &UAreaDenialAbility::OnProjectileHit);
-	HitTask->ReadyForActivation();
+	PlayAttackMontage();
+	ExecuteAreaDenail();
 }
 
 bool UAreaDenialAbility::IsSpacingOK(const FVector& Candidate, const TArray<FVector>& Placed) const

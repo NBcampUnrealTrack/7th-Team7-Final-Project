@@ -9,6 +9,16 @@ USummonAddsAbility::USummonAddsAbility()
 {
 }
 
+void USummonAddsAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData* TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	PlayAttackMontage();
+	ExecuteSummon();
+}
+
 void USummonAddsAbility::ExecuteSummon()
 {
 	AActor* BossActor = GetAvatarActorFromActorInfo();
