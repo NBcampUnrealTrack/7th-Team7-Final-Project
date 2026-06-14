@@ -72,6 +72,7 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual float GetStatScaleValue() const override;
 	virtual void OnDataAssetLoaded() override;
+	virtual void GrantDefaultAbilities() override;
 
 	UFUNCTION()
 	void OnRep_Participants();

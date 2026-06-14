@@ -1,5 +1,6 @@
 #include "Enemy/GYBossCharacterBase.h"
 
+#include "AbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "Enemy/GYBossAIController.h"
 #include "Enemy/EnemyAnimInstance.h"
@@ -167,8 +168,42 @@ void AGYBossCharacterBase::Die()
 	Super::Die();
 }
 
+void AGYBossCharacterBase::GrantDefaultAbilities()
+{
+	Super::GrantDefaultAbilities();
+
+	if (!AbilitySystemComponent) return;
+	UBossDataAsset* BossData = GetBossData();
+	if (!BossData) return;
+
+	TSet<TSubclassOf<UGameplayAbility>> UniqueClasses;
+
+	for (const FBossPatternEntry& Entry : BossData->NormalPatterns)
+	{
+		if (Entry.AbilityClass) UniqueClasses.Add(Entry.AbilityClass);
+	}
+	for (const FBossPhaseSetup& Setup : BossData->PhaseSetups)
+	{
+		for (const FBossPatternEntry& Entry : Setup.PhasePatterns)
+		{
+			if (Entry.AbilityClass) UniqueClasses.Add(Entry.AbilityClass);
+		}
+	}
+
+	for (const TSubclassOf<UGameplayAbility>& AbilityClass : UniqueClasses)
+	{
+		if (!AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass))
+		{
+			AbilitySystemComponent->GiveAbility(
+				FGameplayAbilitySpec(AbilityClass, 1, INDEX_NONE, this));
+		}
+	}
+}
+
 void AGYBossCharacterBase::OnDataAssetLoaded()
 {
+	UE_LOG(LogTemp, Warning, TEXT("[Boss] OnDataAssetLoaded fired, mesh=%s"),
+		LoadedDataAsset ? *LoadedDataAsset->VisualConfig.SkeletalMesh.ToString() : TEXT("null"));
 	Super::OnDataAssetLoaded();
 
 	if (PhaseComponent &&

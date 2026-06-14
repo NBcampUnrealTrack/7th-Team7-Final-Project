@@ -111,7 +111,7 @@ protected:
 	void ApplyAnimConfig(const FEnemyAnimationConfig& Config);
 
 	void InitGAS();
-	void GrantDefaultAbilities();
+	virtual void GrantDefaultAbilities();
 	//TODO 은서 : 코드에서 Effect 생성해주므로 사실상 필요없을수도있음
 	void ApplyPassiveEffects();
 
