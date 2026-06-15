@@ -28,6 +28,7 @@
 #include "Character/GYCharacter.h"
 #include "Character/HitReactionComponent.h"
 #include "Character/LockOn/LockOnComponent.h"
+#include "Core/GameplayTeams/GYTeams.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
@@ -57,6 +58,8 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	bNetLoadOnClient = false;
+
+	TeamId = FGenericTeamId(GYTeams::Enemy);
 }
 
 UAbilitySystemComponent* AGYEnemyCharacterBase::GetAbilitySystemComponent() const
