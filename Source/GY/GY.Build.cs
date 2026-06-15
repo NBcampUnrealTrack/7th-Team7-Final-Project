@@ -28,6 +28,8 @@ public class GY : ModuleRules
 			"MotionWarping",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
+			"LevelSequence",
+			"MovieScene",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "Niagara" });
