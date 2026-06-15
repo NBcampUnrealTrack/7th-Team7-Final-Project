@@ -20,6 +20,8 @@
 #include "GameFramework/GameStateBase.h"
 #include "Character/GYPawnData.h"
 #include "Character/GYPlayerActionConfig.h"
+#include "Widget/EndingCredits/GYEndingCreditsWidget.h"
+#include "Widget/Interaction/GYInteractionWaitingWidget.h"
 
 void UGYUIManagerSubsystem::Deinitialize()
 {
@@ -32,6 +34,10 @@ void UGYUIManagerSubsystem::Deinitialize()
 			{
 				MSG->UnregisterListener(RegionEnterListenerHandle);
 				MSG->UnregisterListener(RegionExitListenerHandle);
+				MSG->UnregisterListener(EndingStartedHandle);
+				MSG->UnregisterListener(EndingWaitingHandle);
+				MSG->UnregisterListener(EndingCinematicFinishedHandle);
+				MSG->UnregisterListener(EndingCreditsFinishedHandle);
 			}
 		}
 		UnbindASC();
@@ -107,10 +113,36 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		{
 			MSG.UnregisterListener(RegionExitListenerHandle);
 		}
+		if (EndingStartedHandle.IsValid())
+		{
+			MSG.UnregisterListener(EndingStartedHandle);
+		}
+		if (EndingWaitingHandle.IsValid())
+		{
+			MSG.UnregisterListener(EndingWaitingHandle);
+		}
+		if (EndingCinematicFinishedHandle.IsValid())
+		{
+			MSG.UnregisterListener(EndingCinematicFinishedHandle);
+		}
+		if (EndingCreditsFinishedHandle.IsValid())
+		{
+			MSG.UnregisterListener(EndingCreditsFinishedHandle);
+		}
+
+
 		RegionEnterListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Region_Entered, this, &UGYUIManagerSubsystem::HandleRegionEntered);
 		RegionExitListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Region_Exited, this, &UGYUIManagerSubsystem::HandleRegionExited);
+		EndingStartedHandle = MSG.RegisterListener(
+	GYGameplayTags::Message_Ending_Started, this, &UGYUIManagerSubsystem::HandleEndingStarted);
+		EndingWaitingHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_Ending_WaitingForPlayers, this, &UGYUIManagerSubsystem::HandleEndingWaiting);
+		EndingCinematicFinishedHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_Ending_CinematicFinished, this, &UGYUIManagerSubsystem::HandleEndingCinematicFinished);
+		EndingCreditsFinishedHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_Ending_CreditsFinished, this, &UGYUIManagerSubsystem::HandleEndingCreditsFinished);
 	}
 }
 
@@ -628,4 +660,104 @@ void UGYUIManagerSubsystem::BroadcastRevivalProgress(float Current, float Max) c
 	Msg.MaxValue = Max;
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(
 		GYGameplayTags::Message_Player_RevivalProgress, Msg);
+}
+
+void UGYUIManagerSubsystem::HandleEndingWaiting(FGameplayTag, const FGYInteractionWaitingMessage& Msg)
+{
+	APlayerController* LocalPC = GetLocalPlayer() ? GetLocalPlayer()->GetPlayerController(GetWorld()) : nullptr;
+	if (!LocalPC) return;
+
+	APlayerState* LocalPS = LocalPC->PlayerState;
+	const bool bIsMe = (LocalPS && LocalPS == Msg.ChangedPlayer.Get());
+
+	if (bIsMe)
+	{
+		if (Msg.bAdded)
+		{
+			if (!ActiveWaitingWidget.IsValid()) // 상호작용 시 Waiting 위젯 처리
+			{
+				const UGYUISettings* Settings = GetDefault<UGYUISettings>();
+				UClass* WidgetClass = Settings ? Settings->InteractionWaitingWidgetClass.LoadSynchronous() : nullptr;
+				if (WidgetClass)
+				{
+					UCommonActivatableWidget* W = PushWidgetToLayer(GYUILayerTags::UI_Layer_Menu, WidgetClass);
+					ActiveWaitingWidget = Cast<UGYInteractionWaitingWidget>(W);
+				}
+			}
+			if (ActiveWaitingWidget.IsValid())
+			{
+				ActiveWaitingWidget->SetCount(Msg.CurrentCount, Msg.RequiredCount);
+			}
+		}
+		else
+		{
+			if (ActiveWaitingWidget.IsValid()) // 상호작용 취소 처리
+			{
+				PopWidget(ActiveWaitingWidget.Get());
+				ActiveWaitingWidget = nullptr;
+			}
+		}
+	}
+	else if (ActiveWaitingWidget.IsValid())
+	{
+		ActiveWaitingWidget->SetCount(Msg.CurrentCount, Msg.RequiredCount); // 다른 사람 상호작용 - 카운트 변경
+	}
+}
+
+void UGYUIManagerSubsystem::HandleEndingStarted(FGameplayTag, const FGYEndingStartedMessage&)
+{
+	if (ActiveWaitingWidget.IsValid())
+	{
+		PopWidget(ActiveWaitingWidget.Get());
+		ActiveWaitingWidget = nullptr;
+	}
+}
+
+void UGYUIManagerSubsystem::HandleEndingCinematicFinished(FGameplayTag, const FGYEndingCinematicFinishedMessage& Msg)
+{
+	if (Msg.bShowCredits)
+	{
+		StartEndingCredits();
+	}
+}
+
+void UGYUIManagerSubsystem::StartEndingCredits()
+{
+	const UGYUISettings* Settings = GetDefault<UGYUISettings>();
+	if (!Settings) return;
+
+	UClass* WidgetClass = Settings->EndingCreditsWidgetClass.LoadSynchronous();
+	if (!WidgetClass) return;
+
+	if (PrimaryGameLayout) // 다른 위젯 다 삭제
+	{
+		PrimaryGameLayout->ClearAllLayers();
+	}
+
+	UCommonActivatableWidget* Widget = PushWidgetToLayer(GYUILayerTags::UI_Layer_Menu, WidgetClass);
+	ActiveCreditsWidget = Widget;
+}
+
+void UGYUIManagerSubsystem::HandleEndingCreditsFinished(FGameplayTag, const FGYEndingCreditsFinishedMessage& /*Msg*/)
+{
+	if (ActiveCreditsWidget.IsValid()) // 크레딧 위젯 제커
+	{
+		PopWidget(ActiveCreditsWidget.Get());
+		ActiveCreditsWidget = nullptr;
+	}
+	TravelToMainMenu();
+}
+
+void UGYUIManagerSubsystem::TravelToMainMenu() const
+{
+	const UGYUISettings* Settings = GetDefault<UGYUISettings>();
+	if (!Settings) return;
+
+	const FSoftObjectPath& MenuMap = Settings->MainMenuMap;
+	if (!MenuMap.IsValid()) return;
+
+	APlayerController* PC = GetLocalPlayer() ? GetLocalPlayer()->GetPlayerController(GetWorld()) : nullptr;
+	if (!PC) return;
+
+	PC->ClientTravel(MenuMap.GetLongPackageName(), ETravelType::TRAVEL_Absolute); // 클라 이동 - 추후 메인화면으로 설정
 }

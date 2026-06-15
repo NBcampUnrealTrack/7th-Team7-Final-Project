@@ -10,8 +10,14 @@
 class AGYPlayerController;
 class UCommonActivatableWidget;
 class UGYPrimaryGameLayout;
+class UGYEndingCreditsWidget;
+class UGYInteractionWaitingWidget;
 struct FGYRegionEnteredMessage;
 struct FGYRegionExitedMessage;
+struct FGYEndingCinematicFinishedMessage;
+struct FGYEndingCreditsFinishedMessage;
+struct FGYInteractionWaitingMessage;
+struct FGYEndingStartedMessage;
 /**
  * 로컬마다 생성, 관리되는 UI 총괄 매니저
  */
@@ -69,6 +75,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "GY|UI")
 	TArray<APlayerState*> GetKnownPlayerStates() const;
+
+	UFUNCTION(BlueprintCallable, Category = "GY|UI|Ending")
+	void StartEndingCredits();
 
 protected:
 	void UnbindASC();
@@ -152,4 +161,19 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "GY|UI")
 	float RevivalBroadcastInterval = 0.05f;
+
+	/** 엔딩 흐름 */
+	void HandleEndingStarted(FGameplayTag, const FGYEndingStartedMessage& Msg);
+	void HandleEndingWaiting(FGameplayTag, const FGYInteractionWaitingMessage& Msg);
+	void HandleEndingCinematicFinished(FGameplayTag, const FGYEndingCinematicFinishedMessage& Msg);
+	void HandleEndingCreditsFinished(FGameplayTag, const FGYEndingCreditsFinishedMessage& Msg);
+	void TravelToMainMenu() const;
+
+	FGameplayMessageListenerHandle EndingStartedHandle;
+	FGameplayMessageListenerHandle EndingWaitingHandle;
+	FGameplayMessageListenerHandle EndingCinematicFinishedHandle;
+	FGameplayMessageListenerHandle EndingCreditsFinishedHandle;
+
+	TWeakObjectPtr<UCommonActivatableWidget> ActiveCreditsWidget;
+	TWeakObjectPtr<UGYInteractionWaitingWidget> ActiveWaitingWidget;
 };
