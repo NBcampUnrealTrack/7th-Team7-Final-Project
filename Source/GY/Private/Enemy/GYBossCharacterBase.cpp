@@ -109,18 +109,6 @@ void AGYBossCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (bIsStationary)
-	{
-		if (UCharacterMovementComponent* Movement = GetCharacterMovement())
-		{
-			Movement->DisableMovement();
-			Movement->StopMovementImmediately();
-
-			Movement->MaxWalkSpeed = 0.f;
-			Movement->MaxAcceleration = 0.f;
-		}
-	}
-
 	if (!HasAuthority()) return;
 
 	// TODO: 인카운터 트리거 시스템 완성되면 제거
@@ -248,6 +236,22 @@ void AGYBossCharacterBase::GrantDefaultAbilities()
 void AGYBossCharacterBase::OnDataAssetLoaded()
 {
 	Super::OnDataAssetLoaded();
+
+	if (UBossDataAsset* BossDataAsset = GetBossData())
+	{
+		bIsStationary = BossDataAsset->bIsStationary;
+
+		if (bIsStationary)
+		{
+			if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+			{
+				Movement->DisableMovement();
+				Movement->StopMovementImmediately();
+				Movement->MaxWalkSpeed = 0.f;
+				Movement->MaxAcceleration = 0.f;
+			}
+		}
+	}
 
 	if (HasAuthority())
 	{
