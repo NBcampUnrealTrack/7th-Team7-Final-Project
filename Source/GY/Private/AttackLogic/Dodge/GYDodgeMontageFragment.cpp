@@ -14,13 +14,13 @@ const FGYDodgeMontageSet* UGYDodgeMontageFragment::GetBestMatchingSet(const FGam
 	{
 		if (!Pair.Key.IsValid())
 		{
-			if (Pair.Value.DodgeMontage)
+			if (Pair.Value.DirectionalMontages.IsEmpty())
 				DefaultResult = &Pair.Value;
 			continue;
 		}
 		if (OwnedTags.HasTag(Pair.Key))
 		{
-			return Pair.Value.DodgeMontage ? &Pair.Value : nullptr;
+			return Pair.Value.DirectionalMontages.IsEmpty() ? &Pair.Value : nullptr;
 		}
 	}
 
