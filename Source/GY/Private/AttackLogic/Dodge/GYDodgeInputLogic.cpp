@@ -73,7 +73,19 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	UAnimMontage* SelectedMontage = MontageSet->GetMontageByAngle(DodgeAngle);
 	if (!SelectedMontage) { return; }
 
+
+	// 기존 몽타주 전부 중단
+	if (USkeletalMeshComponent* Mesh = Character->GetMesh())
+	{
+		if (UAnimInstance* AnimInst = Mesh->GetAnimInstance())
+		{
+			AnimInst->StopAllMontages(0.1f);  // 0.1f = 블렌드아웃 시간
+		}
+	}
+
+
 	const float Duration = Ability->PlayMontageForLogic(SelectedMontage, 1.f);
+
 
 	//직접 날려보내기
 	Character->LaunchCharacter(CachedDodgeDirection * DodgeData->DodgeImpulse, true, true);
