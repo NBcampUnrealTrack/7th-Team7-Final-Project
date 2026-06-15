@@ -40,6 +40,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Enchant")
 	float ValueScale = 1.f;
 
+	// 발동 확률 매그니튜드 태그(OnHitModifier에서 퍼센트로 읽음, 예: 7 = 7%). 미설정이면 항상 발동.
+	UPROPERTY(EditAnywhere, Category = "Enchant", meta = (Categories = "Enchant.Magnitude"))
+	FGameplayTag ChanceTag;
+
 	// 효과가 끝난 뒤 추가 대기시간(초, 공격자 단위). 총 쿨 = 효과 지속 + Cooldown.
 	// 0이면 쿨타임 없음(매 타격 발동). 효과마다 CooldownTag가 달라야 서로 독립.
 	UPROPERTY(EditAnywhere, Category = "Enchant|Cooldown")

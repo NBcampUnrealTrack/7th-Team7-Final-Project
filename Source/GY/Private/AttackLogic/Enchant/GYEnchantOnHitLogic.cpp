@@ -43,6 +43,13 @@ void UGYEnchantOnHitLogic::OnGameplayEvent(FGameplayTag EventTag, const FGamepla
 	const float Value = Modifiers->GetModifierSumValue(MagnitudeTag);
 	if (FMath::IsNearlyZero(Value)) return;
 
+	// 발동 확률: ChanceTag 설정 시 그 퍼센트로 롤. 미설정이면 항상 발동.
+	if (ChanceTag.IsValid())
+	{
+		const float ChancePercent = Modifiers->GetModifierSumValue(ChanceTag);
+		if (FMath::FRand() * 100.f >= ChancePercent) return;
+	}
+
 	// 적용 대상: 출혈·방깎=피격 대상, 흡혈=공격자 자신.
 	UAbilitySystemComponent* ApplyToASC = SourceASC;
 	if (bApplyToTarget)
