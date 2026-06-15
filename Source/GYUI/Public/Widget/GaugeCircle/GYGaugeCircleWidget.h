@@ -41,7 +41,6 @@ protected:
 	float FadeSpeed = 6.f;
 	UPROPERTY(EditDefaultsOnly, Category="GY|Radial")
 	float BindGracePeriod = 0.5f;
-
 	UPROPERTY(EditDefaultsOnly, Category="GY|Radial")
 	float InterpSpeed = 5.f;
 
@@ -68,6 +67,7 @@ private:
 	void ProcessBindRetry();
 	void ProcessVisualInterpolation();
 	void StartFadeOutTimer();
+	void EnsureInterpolationRunning();
 
 	FTimerHandle BindRetryTimerHandle;
 	FTimerHandle InterpolationTimerHandle;
