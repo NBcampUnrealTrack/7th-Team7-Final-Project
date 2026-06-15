@@ -6903,6 +6903,24 @@
                                                                                                       }
                                                                                                   ]
                                                                                   },
+                   "CarnivorousPlant/Animatios/MainPlant/AM_GY_BossFlower_Eat.uasset":  {
+                                                                                            "history":  [
+                                                                                                            {
+                                                                                                                "by":  "rhkrd",
+                                                                                                                "at":  "2026-06-15 10:26:29",
+                                                                                                                "note":  ""
+                                                                                                            }
+                                                                                                        ]
+                                                                                        },
+                   "CarnivorousPlant/Animatios/PlantRoot/AM_GY_Plant_Stagger.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-06-15 10:26:29",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
                    "CarnivorousPlant/Mesh/EnemyPlant/SKEL_EnemyPlant_Skeleton.uasset":  {
                                                                                             "history":  [
                                                                                                             {
@@ -6930,6 +6948,24 @@
                                                                                                             }
                                                                                                         ]
                                                                                         },
+                   "CarnivorousPlant/Mesh/MainPlant/SKEL_MainPlant_Full_Skeleton.uasset":  {
+                                                                                               "history":  [
+                                                                                                               {
+                                                                                                                   "by":  "rhkrd",
+                                                                                                                   "at":  "2026-06-15 10:26:29",
+                                                                                                                   "note":  ""
+                                                                                                               }
+                                                                                                           ]
+                                                                                           },
+                   "CarnivorousPlant/Mesh/PlantRoot/SKEL_PlantRoot_Skeleton.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-06-15 10:26:29",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
                    "CarnivorousPlant/Mesh/PlantRoot/SKM_PlantRoot.uasset":  {
                                                                                 "history":  [
                                                                                                 {
