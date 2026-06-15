@@ -9,6 +9,7 @@
 #include "Character/GYPlayerActionConfig.h"
 #include "Character/LockOn/LockOnComponent.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
+#include "Character/GYCharacterMovementComponent.h"
 #include "Character/HitReactionComponent.h"
 #include "Character/Climbing/ClimbingComponent.h"
 #include "GameModes/GYGameMode.h"
@@ -27,7 +28,9 @@
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "UI/GYUIMessages.h"
 
-AGYCharacter::AGYCharacter()
+AGYCharacter::AGYCharacter(const FObjectInitializer& ObjectInitializer)
+: Super(ObjectInitializer.SetDefaultSubobjectClass<UGYCharacterMovementComponent>(
+	ACharacter::CharacterMovementComponentName))
 {
 	ActiveEquipmentComponent = CreateDefaultSubobject<UActiveEquipmentComponent>(TEXT("ActiveEquipmentComponent"));
 	PawnExtComponent = CreateDefaultSubobject<UGYPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
@@ -43,6 +46,7 @@ AGYCharacter::AGYCharacter()
 	StimuliSource->RegisterForSense(UAISense_Hearing::StaticClass());
 	StimuliSource->bAutoRegister = true;
 }
+
 
 void AGYCharacter::PossessedBy(AController* NewController)
 {

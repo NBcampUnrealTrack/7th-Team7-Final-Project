@@ -15,7 +15,7 @@ UClimbingComponent::UClimbingComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
-	SetIsReplicatedByDefault(false);
+	SetIsReplicatedByDefault(true);
 }
 
 void UClimbingComponent::BeginPlay()

@@ -22,7 +22,7 @@ class GY_API AGYCharacter : public ACharacter, public IAbilitySystemInterface
 	GENERATED_BODY()
 
 public:
-	AGYCharacter();
+	AGYCharacter(const FObjectInitializer& ObjectInitializer);
 
 	virtual void PossessedBy(AController* NewController) override;
 

@@ -1,9 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Character/Climbing/GA_Climb.h"
 
-#include "Character/Climbing/AbilityTask_LadderClimb.h"
+#include "Character/GYCharacterMovementComponent.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "GameFramework/Character.h"
@@ -40,6 +37,7 @@ void UGA_Climb::ActivateAbility(
 	const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
+
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	if (!TriggerEventData)
@@ -56,7 +54,8 @@ void UGA_Climb::ActivateAbility(
 	}
 
 	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
-	UCharacterMovementComponent* Movement = Character ? Character->GetCharacterMovement() : nullptr;
+	UGYCharacterMovementComponent* Movement =
+		Character ? Cast<UGYCharacterMovementComponent>(Character->GetCharacterMovement()) : nullptr;
 	if (!Character || !Movement)
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -64,30 +63,28 @@ void UGA_Climb::ActivateAbility(
 	}
 
 	CurrentLadder = Ladder;
-
+	CachedMovement = Movement;
 	const bool bFromTop = ShouldEnterFromTop(Character, Ladder);
+
 	const FTransform EntryT = Ladder->GetClimbStartTransform(bFromTop);
 
-	UE::Math::TVector<double> CharacterExtent = Character->GetComponentsBoundingBox().GetExtent();
-	Character->SetActorLocationAndRotation(
-		EntryT.GetLocation() + FVector(0,0,CharacterExtent.Z) + Ladder->GetActorForwardVector()*CharacterExtent.X,
-		EntryT.GetRotation(),
-		false,
-		nullptr,
-		ETeleportType::TeleportPhysics);
+	if (ActorInfo->IsNetAuthority())
+	{
+		const FVector CharacterExtent = Character->GetComponentsBoundingBox().GetExtent();
+		Character->SetActorLocationAndRotation(
+			EntryT.GetLocation() + FVector(0,0,CharacterExtent.Z) + Ladder->GetActorForwardVector()*CharacterExtent.X,
+			EntryT.GetRotation(),
+			false, nullptr,
+			ETeleportType::TeleportPhysics);
+	}
+
 
 	SavedMovementMode = Movement->MovementMode;
-
-	Movement->StopMovementImmediately();
-	Movement->DisableMovement();
-
 	Movement->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = false;
-	Character->MoveIgnoreActorAdd(Ladder);
 
-	ClimbTask = UAbilityTask_LadderClimb::CreateLadderClimbTask(this, Ladder, ClimbSpeed);
-	ClimbTask->OnExit.AddDynamic(this, &UGA_Climb::OnClimbExit);
-	ClimbTask->ReadyForActivation();
+	Movement->OnClimbingEnded.AddDynamic(this, &UGA_Climb::OnClimbExit);
+	Movement->StartClimbing(Ladder);
 }
 
 void UGA_Climb::EndAbility(
@@ -97,28 +94,21 @@ void UGA_Climb::EndAbility(
 	bool bReplicateEndAbility,
 	bool bWasCancelled)
 {
-	if (ClimbTask)
-	{
-		ClimbTask->EndTask();
-		ClimbTask = nullptr;
-	}
 
-	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+	if (CachedMovement.IsValid())
 	{
-		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+		CachedMovement->OnClimbingEnded.RemoveDynamic(this, &UGA_Climb::OnClimbExit);
+		CachedMovement->StopClimbing();
+		CachedMovement->bOrientRotationToMovement = bSavedOrientToMovement;
+
+		if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 		{
-			Movement->SetMovementMode(SavedMovementMode);
-			Movement->bOrientRotationToMovement = bSavedOrientToMovement;
 			Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
 		}
-		if (CurrentLadder.IsValid())
-		{
-			Character->MoveIgnoreActorRemove(CurrentLadder.Get());
-		}
 	}
 
-
 	CurrentLadder.Reset();
+	CachedMovement.Reset();
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
@@ -127,11 +117,11 @@ void UGA_Climb::OnClimbExit(ELadderExitReason Reason)
 {
 	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
 
-	if (Reason == ELadderExitReason::Top && Character && CurrentLadder.IsValid())
+	if (Reason == ELadderExitReason::Top && Character && CurrentLadder.IsValid()&& CurrentActorInfo->IsNetAuthority())
 	{
 		const FVector ExitLoc = CurrentLadder->GetActorLocation()
 			+ CurrentLadder->GetClimbAxis() * CurrentLadder->GetClimbDistance()
-			- CurrentLadder->GetActorForwardVector() * TopExitForwardOffset + FVector(0,0,Character->GetComponentsBoundingBox().GetExtent().Z);
+			- CurrentLadder->GetActorForwardVector() * 50.0f + FVector(0,0,Character->GetComponentsBoundingBox().GetExtent().Z);
 		Character->SetActorLocation(ExitLoc, false, nullptr, ETeleportType::TeleportPhysics);
 	}
 
