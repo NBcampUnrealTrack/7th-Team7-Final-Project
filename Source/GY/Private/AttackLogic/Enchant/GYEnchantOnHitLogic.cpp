@@ -63,15 +63,26 @@ void UGYEnchantOnHitLogic::OnGameplayEvent(FGameplayTag EventTag, const FGamepla
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude1, Value * ValueScale);
 	SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), ApplyToASC);
 
-	// 쿨타임 부여: CooldownTag를 Cooldown초 동안 공격자에게(효과별 독립). RefreshRegenDelay와 동일 패턴.
+	// 쿨타임 부여: CooldownTag를 공격자에게(효과별 독립). RefreshRegenDelay와 동일 패턴.
+	// 재발동 = "효과가 끝난 뒤 Cooldown초 더" 구조 → 총 쿨 = 효과 지속 + Cooldown.
 	if (Cooldown > 0.f && CooldownTag.IsValid())
 	{
 		if (TSubclassOf<UGameplayEffect> CooldownGE = CooldownEffect.LoadSynchronous())
 		{
+			float EffectDuration = 0.f;
+			if (const UGameplayEffect* EffectCDO = Effect->GetDefaultObject<UGameplayEffect>())
+			{
+				if (EffectCDO->DurationPolicy == EGameplayEffectDurationType::HasDuration)
+				{
+					// 고정 지속(ScalableFloat)만 읽힘. SetByCaller 등 동적 지속이면 0(=Cooldown만).
+					EffectCDO->DurationMagnitude.GetStaticMagnitudeIfPossible(1.f, EffectDuration);
+				}
+			}
+
 			FGameplayEffectSpecHandle CooldownSpec = SourceASC->MakeOutgoingSpec(CooldownGE, 1.f, SourceASC->MakeEffectContext());
 			if (CooldownSpec.IsValid())
 			{
-				CooldownSpec.Data->SetDuration(Cooldown, true);
+				CooldownSpec.Data->SetDuration(EffectDuration + Cooldown, true);
 				CooldownSpec.Data->DynamicGrantedTags.AddTag(CooldownTag);
 				SourceASC->ApplyGameplayEffectSpecToSelf(*CooldownSpec.Data.Get());
 			}

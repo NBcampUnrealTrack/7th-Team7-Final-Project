@@ -40,7 +40,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Enchant")
 	float ValueScale = 1.f;
 
-	// 발동 쿨타임(초, 공격자 단위). 0이면 매 타격 발동. 효과마다 CooldownTag가 달라야 서로 독립.
+	// 효과가 끝난 뒤 추가 대기시간(초, 공격자 단위). 총 쿨 = 효과 지속 + Cooldown.
+	// 0이면 쿨타임 없음(매 타격 발동). 효과마다 CooldownTag가 달라야 서로 독립.
 	UPROPERTY(EditAnywhere, Category = "Enchant|Cooldown")
 	float Cooldown = 0.f;
 
