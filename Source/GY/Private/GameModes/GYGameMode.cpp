@@ -7,6 +7,7 @@
 #include "Character/GYPawnExtensionComponent.h"
 #include "Character/GYPlayerActionConfig.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
+#include "Equipment/ActiveEquipmentComponent.h"
 #include "GameStates/GYGameState.h"
 #include "Misc/TrackedActivity.h"
 #include "Player/GYPlayerController.h"
@@ -125,6 +126,11 @@ void AGYGameMode::PerformRespawn(APlayerController* PC)
 
 	if (APawn* OldPawn = PC->GetPawn())
 	{
+		if (UActiveEquipmentComponent* Equip = OldPawn->FindComponentByClass<UActiveEquipmentComponent>())
+		{
+			Equip->MulticastRemoveAllVisuals();
+		}
+
 		PC->UnPossess();
 		OldPawn->Destroy();
 	}
