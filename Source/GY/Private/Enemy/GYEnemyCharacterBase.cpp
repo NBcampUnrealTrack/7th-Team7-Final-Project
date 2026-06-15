@@ -170,6 +170,11 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 
+	if (HitReactionComponent)
+	{
+		HitReactionComponent->SetHitReactStartBone(LoadedDataAsset->HitReactStartBone);
+	}
+
 	// 브로드캐스트
 	bIsInitialized = true;
 	OnEnemyReady.Broadcast(this);
@@ -687,6 +692,10 @@ void AGYEnemyCharacterBase::Activate()
 				BB->SetValueAsBool(EnemyBBKeys::IsDead, false);
 			}
 			AIC->StartPerception();
+		}
+		if (HitReactionComponent)
+		{
+			HitReactionComponent->SetHitReactStartBone(LoadedDataAsset->HitReactStartBone);
 		}
 	}
 }
