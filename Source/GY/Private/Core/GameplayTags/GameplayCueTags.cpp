@@ -42,7 +42,8 @@ namespace GYGameplayTags
 
 	// 물약
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Potion, "GameplayCue.Player.Potion");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Healing, "GameplayCue.Player.Healing");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Healing_HP, "GameplayCue.Player.Healing.HP");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Healing_SP, "GameplayCue.Player.Healing.SP");
 
 	// 상호 작용
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_LootBox, "GameplayCue.Interaction.LootBox");

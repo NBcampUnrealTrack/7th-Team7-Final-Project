@@ -43,7 +43,8 @@ namespace GYGameplayTags
 
 	// 물약
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Potion);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Healing);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Healing_HP);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Healing_SP);
 
 	/* 상호 작용*/
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_LootBox);
