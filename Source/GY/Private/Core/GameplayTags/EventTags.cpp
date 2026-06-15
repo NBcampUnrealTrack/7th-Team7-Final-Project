@@ -40,6 +40,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_SkillTree, "Event.TimeRift.SkillTree");
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_SkillTree_Exit, "Event.TimeRift.SkillTree.Exit");
 
+	UE_DEFINE_GAMEPLAY_TAG(Event_Ladder_ClimbRequest, "Event.Ladder.ClimbRequest");
+
 	UE_DEFINE_GAMEPLAY_TAG(Event_SkillTree_Unlock, "Event.SkillTree.Unlock");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Hit_Stagger, "Event.Hit.Stagger");

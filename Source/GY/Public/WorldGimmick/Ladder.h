@@ -1,121 +1,99 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Engine/DataTable.h"
-#include "LadderTypeDataTableRow.h"
-#include "Components/BoxComponent.h"
-#include "Components/TextRenderComponent.h"
+#include "Interaction/Interactable.h"
 #include "Ladder.generated.h"
 
+class UBoxComponent;
+
 UCLASS()
-class GY_API ALadder : public AActor
+class GY_API ALadder : public AActor, public IInteractable
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	ALadder();
 
 	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void Tick(float DeltaSeconds) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	// 콜리전 세팅
-public:
-	void CreateCollision();
+	virtual void GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const override;
+	virtual void OnInteract(FGameplayTag OptionTag, APawn* Interactor) override;
 
-	// 사다리 간격 세팅
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder", meta = (RowType = "LadderTypeDataTableRow"))
-	FDataTableRowHandle LadderDataHandle;
+	FORCEINLINE bool IsActivated() const { return bActivated; }
+	FORCEINLINE bool CanClimb() const { return bCanClimb; }
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder")
-	int32 LadderHeight = 250;
+	void Activate();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder")
-	int32 RungsOffset = 50;
+	FTransform GetClimbStartTransform(bool bFromTop) const;
+	FVector GetClimbAxis() const;
+	FRotator GetClimbFacing() const;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder")
-	int32 PoleOverStep = 2;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder")
-	int32 WallConnectionStep = 3;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder")
-	bool bNeedTopLadder = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder|Check")
-	TObjectPtr<UTextRenderComponent> TextRender;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder|Check")
-	FText CheckMessageText = FText::FromString(TEXT("Wrong Place"));
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder|Check")
-	FName MaterialParameterName = FName(TEXT("Color"));
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder|Check")
-	FVector MaterialParameterColor = FVector(1,1,1);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder|Check")
-	FVector MaterialParameterErrorColor = FVector(1,0,0);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ladder|Collision")
-	int32 TopBoxCollisionOffset = 32;
-
-
-	// 데이터 테이블 메시 세팅
-public:
-	const FLadderTypeDataTableRow* LadderMesh = nullptr;
-
-	UPROPERTY()
-	TObjectPtr<UStaticMesh> RungsMesh;
-
-	UPROPERTY()
-	TObjectPtr<UStaticMesh> PoleMesh;
-
-	UPROPERTY()
-	TObjectPtr<UStaticMesh> TopLadderMesh;
-
-	UPROPERTY()
-	TObjectPtr<UStaticMesh> WallConnectionMesh;
-
-	// 콜리전
-public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ladder|Collision")
-	TObjectPtr<UBoxComponent> TopBoxCollision;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ladder|Collision")
-	TObjectPtr<UBoxComponent> PlayerClimbCheckCollision;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ladder|Collision")
-	TObjectPtr<UBoxComponent> BottomBoxCollision;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ladder|Collision")
-	TObjectPtr<UBoxComponent> ClimbIntoFromTopBoxCollision;
-
-
-
-
-	// 사다리생성함수
-public:
-	void CreateLadder();
-	void CreateCheckText();
-	void WallCheck();
-
-	void DatatableSetup();
-	void AddStaticMesh(UStaticMesh* Mesh, const int32 IndexNumber = 0, int32 MeshOffset = 1);
-	void CalculatePole();
-	void CreateRungs();
-	void CreatePole();
-	void CreateWallConnection();
-	void CreateTopLadder();
-	void UpdateCollision();
+	float GetClimbDistance() const { return LadderHeight; }
+	float GetRungSpacing() const;
+	UBoxComponent* GetClimbCheckBox() const { return ClimbCheckBox; }
 
 protected:
-	int32 PoleMeshHeight;
-	int32 LastRungsIndex;
-	int32 LastPoleLocation;
-	bool bWrongPlace = false;
-};
+	UFUNCTION()
+	void OnRep_Activated();
 
+	void BuildLadder();
+	void UpdateColliders();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ladder")
+	FDataTableRowHandle LadderDataHandle;
+
+	//활성화 전 높이
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ladder")
+	float ActivateHeight = 200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ladder")
+	float LadderHeight = 1000.f;
+
+	UPROPERTY(EditAnywhere, Category="Ladder|Activation")
+	float UnfoldDuration = 1.0f;
+
+	//TODO 저장해야함 Save
+	UPROPERTY(EditDefaultsOnly, ReplicatedUsing=OnRep_Activated)
+	bool bActivated = false;
+
+	bool bCanClimb = false;
+
+	UPROPERTY(EditDefaultsOnly, Category="Ladder|Interaction")
+	TSubclassOf<UGameplayAbility> ActivateAbilityClass;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USceneComponent> SceneRoot;
+
+	UPROPERTY(VisibleAnywhere, Category="Ladder|Visual")
+	TObjectPtr<USceneComponent> LadderRoot;
+
+	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
+	TObjectPtr<UBoxComponent> TopActivationBox;
+
+	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
+	TObjectPtr<UBoxComponent> ClimbCheckBox;
+
+	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
+	TObjectPtr<UBoxComponent> BottomBox;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UStaticMeshComponent>> RungMeshes;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UStaticMeshComponent>> PoleMeshes;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UStaticMeshComponent>> WallBracketMeshes;
+
+	UPROPERTY()
+	TObjectPtr<UStaticMeshComponent> TopGrabBarMesh;
+
+private:
+	//내리는거 관리
+	float UnfoldAlpha = 0.f;
+	bool  bUnfolding  = false;
+
+};

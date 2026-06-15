@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "GYCharacter.generated.h"
 
+class UClimbingComponent;
 class UHitReactionComponent;
 class UPhysicalAnimationComponent;
 class UMotionWarpingComponent;
@@ -22,7 +23,7 @@ class GY_API AGYCharacter : public ACharacter, public IAbilitySystemInterface, p
 	GENERATED_BODY()
 
 public:
-	AGYCharacter();
+	AGYCharacter(const FObjectInitializer& ObjectInitializer);
 
 	virtual void PossessedBy(AController* NewController) override;
 
@@ -39,6 +40,7 @@ public:
 	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
 
 	ULockOnComponent* GetLockOnComponent() const { return LockOnComponent; }
+	UClimbingComponent* GetClimbingComponent() const { return ClimbingComponent; }
 
 
 
@@ -80,6 +82,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<ULockOnComponent> LockOnComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UClimbingComponent> ClimbingComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;

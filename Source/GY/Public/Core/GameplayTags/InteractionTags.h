@@ -7,4 +7,5 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interaction_Open_LootBox)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interaction_Open_Door)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interaction_TimeRift_Sit)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interaction_Ladder_Activate)
 }

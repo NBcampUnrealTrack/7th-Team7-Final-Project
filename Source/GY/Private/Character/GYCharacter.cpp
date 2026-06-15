@@ -9,7 +9,9 @@
 #include "Character/GYPlayerActionConfig.h"
 #include "Character/LockOn/LockOnComponent.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
+#include "Character/GYCharacterMovementComponent.h"
 #include "Character/HitReactionComponent.h"
+#include "Character/Climbing/ClimbingComponent.h"
 #include "GameModes/GYGameMode.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
@@ -27,12 +29,15 @@
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "UI/GYUIMessages.h"
 
-AGYCharacter::AGYCharacter()
+AGYCharacter::AGYCharacter(const FObjectInitializer& ObjectInitializer)
+: Super(ObjectInitializer.SetDefaultSubobjectClass<UGYCharacterMovementComponent>(
+	ACharacter::CharacterMovementComponentName))
 {
 	ActiveEquipmentComponent = CreateDefaultSubobject<UActiveEquipmentComponent>(TEXT("ActiveEquipmentComponent"));
 	PawnExtComponent = CreateDefaultSubobject<UGYPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 	LockOnComponent = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));
+	ClimbingComponent = CreateDefaultSubobject<UClimbingComponent>(TEXT("ClimbingComponent"));
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 	PhysicalAnimationComponent = CreateDefaultSubobject<UPhysicalAnimationComponent>(TEXT("PhysicalAnimation"));
 	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReaction"));
@@ -44,6 +49,7 @@ AGYCharacter::AGYCharacter()
 
 	TeamId = FGenericTeamId(GYTeams::Player);
 }
+
 
 void AGYCharacter::PossessedBy(AController* NewController)
 {
@@ -71,7 +77,10 @@ void AGYCharacter::PossessedBy(AController* NewController)
 
 	ensureMsgf(LockOnComponent, TEXT("LockOnComponent Is Null"));
 	LockOnComponent->BindToASC(PS);
-	
+	ensureMsgf(ClimbingComponent, TEXT("ClimbingComponent Is Null"));
+	ClimbingComponent->BindToASC(PS);
+
+
 	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
 	if (!IsValid(Loadout)) return;
 
@@ -100,7 +109,11 @@ void AGYCharacter::OnRep_Controller()
 	}
 
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
+
+	ensureMsgf(LockOnComponent, TEXT("LockOnComponent Is Null"));
 	LockOnComponent->BindToASC(PS);
+	ensureMsgf(ClimbingComponent, TEXT("ClimbingComponent Is Null"));
+	ClimbingComponent->BindToASC(PS);
 
 	BroadcastCharacterReady(); // 컨트롤러가 늦게 복제될 때도 알림
 }
@@ -118,7 +131,11 @@ void AGYCharacter::OnRep_PlayerState()
 	if (!IsValid(PS)) return;
 
 	PS->InitGAS(this);
+
+	ensureMsgf(LockOnComponent, TEXT("LockOnComponent Is Null"));
 	LockOnComponent->BindToASC(PS);
+	ensureMsgf(ClimbingComponent, TEXT("ClimbingComponent Is Null"));
+	ClimbingComponent->BindToASC(PS);
 
 	BroadcastCharacterReady();
 }

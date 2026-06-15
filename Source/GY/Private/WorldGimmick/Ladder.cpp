@@ -1,243 +1,253 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "WorldGimmick/Ladder.h"
+
+#include "Abilities/GameplayAbility.h"
+#include "Components/BoxComponent.h"
+#include "Core/GameplayTags/InteractionTags.h"
+#include "Net/UnrealNetwork.h"
+#include "WorldGimmick/LadderTypeDataTableRow.h"
+
 
 ALadder::ALadder()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
+	bReplicates = true;
 
-	USceneComponent* RootScene = CreateDefaultSubobject<USceneComponent>("Scene");
-	RootComponent = RootScene;
+	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
+	SetRootComponent(SceneRoot);
 
-	CreateCollision();
+	LadderRoot = CreateDefaultSubobject<USceneComponent>(TEXT("LadderRoot"));
+	LadderRoot->SetupAttachment(SceneRoot);
+
+	TopActivationBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TopActivationBox"));
+	TopActivationBox->SetupAttachment(SceneRoot);
+	TopActivationBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+
+	ClimbCheckBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ClimbCheckBox"));
+	ClimbCheckBox->SetupAttachment(SceneRoot);
+	ClimbCheckBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+
+	BottomBox = CreateDefaultSubobject<UBoxComponent>(TEXT("BottomBox"));
+	BottomBox->SetupAttachment(SceneRoot);
+	BottomBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 }
 
-void ALadder::CreateCollision()
-{
-	TopBoxCollision = CreateDefaultSubobject<UBoxComponent>("TopBox");
-	TopBoxCollision->SetupAttachment(RootComponent);
-
-	PlayerClimbCheckCollision = CreateDefaultSubobject<UBoxComponent>("ClimbCheck");
-	PlayerClimbCheckCollision->SetupAttachment(RootComponent);
-
-	BottomBoxCollision = CreateDefaultSubobject<UBoxComponent>("BottomBox");
-	BottomBoxCollision->SetupAttachment(RootComponent);
-
-	ClimbIntoFromTopBoxCollision = CreateDefaultSubobject<UBoxComponent>("ClimbTopBox");
-	ClimbIntoFromTopBoxCollision->SetupAttachment(RootComponent);
-}
-
-// 에디터에서 액터의 transform이 변할때마다 호출됨. 액터 변경시마다 생성자의 초기화처럼 작동함.
-// 게임 실행중 런타임중에는 작동하지 않음
 void ALadder::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 
-	CreateLadder();
+	BuildLadder();
+	UpdateColliders();
+
+	if (LadderRoot)
+	{
+		LadderRoot->SetRelativeLocation(FVector(0, 0, bActivated ? 0.f : ActivateHeight));
+	}
+	bCanClimb = bActivated;
 }
 
-void ALadder::CreateLadder()
+//펼칠때만 켜짐
+void ALadder::Tick(float DeltaSeconds)
 {
-	CreateCheckText();
-	WallCheck();
+	Super::Tick(DeltaSeconds);
+	if (!bUnfolding) return;
 
-	DatatableSetup();
-	if (LadderMesh == nullptr)
+	UnfoldAlpha = FMath::Min(1.f, UnfoldAlpha + DeltaSeconds / UnfoldDuration);
+	const float Z = FMath::Lerp(ActivateHeight, 0.f, UnfoldAlpha);
+	if (LadderRoot)
 	{
-		return;
+		LadderRoot->SetRelativeLocation(FVector(0, 0, Z));
 	}
 
-	CalculatePole();
-	CreateRungs();
-	CreatePole();
-	CreateWallConnection();
-	CreateTopLadder();
-	UpdateCollision();
-}
-
-void ALadder::CreateCheckText()
-{
-	TextRender = NewObject<UTextRenderComponent>(this);
-	if (TextRender == nullptr)
+	if (UnfoldAlpha >= 1.f)
 	{
-		return;
-	}
-
-	TextRender->CreationMethod = EComponentCreationMethod::UserConstructionScript;
-	TextRender->SetText(CheckMessageText);
-
-	TextRender->SetRelativeLocation(FVector(0, 0, LadderHeight / 2));
-	TextRender->SetupAttachment(RootComponent);
-	TextRender->RegisterComponent();
-}
-
-void ALadder::WallCheck()
-{
-	if (TextRender == nullptr)
-	{
-		return;
-	}
-
-	FHitResult HitResult;
-	const FVector StartLocation = GetActorLocation() + FVector(0, 0, 50);
-	const FVector Backward = GetRootComponent()->GetForwardVector() * -1;
-	const FVector EndLocation = StartLocation + (Backward * 30);
-
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActor(this);
-
-	bool bOnHit = GetWorld()->LineTraceSingleByChannel(
-		HitResult, StartLocation, EndLocation,
-		ECC_Visibility, CollisionParams);
-
-	bWrongPlace = !bOnHit;
-
-	TextRender->SetVisibility(bWrongPlace);
-}
-
-
-void ALadder::DatatableSetup()
-{
-	const FLadderTypeDataTableRow* LadderData = LadderDataHandle.GetRow<FLadderTypeDataTableRow>(TEXT("Rung Setup"));
-
-	if (LadderData == nullptr)
-	{
-		return;
-	}
-
-	LadderMesh = LadderData;
-	RungsMesh = LadderMesh->Rungs;
-	PoleMesh = LadderMesh->SideRungs;
-	TopLadderMesh = LadderMesh->TopLadder;
-	WallConnectionMesh = LadderMesh->WallConnection;
-}
-
-void ALadder::AddStaticMesh(UStaticMesh* Mesh, const int32 IndexNumber, int32 MeshOffset)
-{
-	//NewObject는 GC에 들어가서 따로 해제 안해줘도 됨.
-	UStaticMeshComponent* MeshPart = NewObject<UStaticMeshComponent>(this);
-	if (MeshPart == nullptr)
-	{
-		return;
-	}
-
-	// 메시에 construction script 태그 추가. OnConstruction으로 셍성시 (에디터에서 움직일때마다 동적생성) 기존 메시를 자동으로 지워주는 태그부착.
-	// 이 태그가 없으면 움직일때마다 메시가 계속 추가됨.
-	MeshPart->CreationMethod = EComponentCreationMethod::UserConstructionScript;
-
-	// 1. 메시 세팅
-	MeshPart->SetRelativeLocation(FVector(0, 0, IndexNumber * MeshOffset));
-	MeshPart->SetStaticMesh(Mesh);
-
-	// 2. 부착부모 예약
-	// SetupAttachment는 초기화시 / AttachTo는 이미 등록후 런타임중 사용.
-	// OnConstruction에서 NewObject로 동적생성시 초기화로 취급함.
-	MeshPart->SetupAttachment(RootComponent);
-	//RungMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-
-	// 3. 세팅 완료후 월드 등록 -> 2,3,1 순서로 하면 레지스터 파괴후 재계산, 231->3 다시 실행함.
-	MeshPart->RegisterComponent();
-
-	FVector MaterialColor;
-	if (bWrongPlace == false)
-	{
-		MaterialColor = MaterialParameterColor;
-	}
-	else
-	{
-		MaterialColor = MaterialParameterErrorColor;
-	}
-	MeshPart->SetVectorParameterValueOnMaterials(MaterialParameterName, MaterialColor);
-}
-
-void ALadder::CalculatePole()
-{
-	// 봉 메시 높이 가져오기
-	if (LadderMesh->SideRungs == nullptr)
-	{
-		return;
-	}
-	const FBoxSphereBounds Bounds = LadderMesh->SideRungs->GetBounds();
-	const double BoundsZSize = Bounds.BoxExtent.Z * 2.0;
-
-	PoleMeshHeight = FMath::TruncToInt(BoundsZSize);
-}
-
-void ALadder::CreateRungs()
-{
-	if (RungsMesh == nullptr || RungsOffset == 0)
-	{
-		return;
-	}
-
-	LastRungsIndex = (LadderHeight / RungsOffset) + 1;
-
-	for (int32 i = 1; i <= LastRungsIndex; i++)
-	{
-		AddStaticMesh(RungsMesh, i, RungsOffset);
+		bUnfolding = false;
+		bCanClimb = true;
+		SetActorTickEnabled(false);
 	}
 }
 
-void ALadder::CreatePole()
+void ALadder::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	if (PoleMesh == nullptr || PoleMeshHeight == 0)
-	{
-		return;
-	}
-
-	const int32 LastPoleIndex = (LastRungsIndex * RungsOffset / PoleMeshHeight) + PoleOverStep;
-
-	for (int32 i = 0; i <= LastPoleIndex; i++)
-	{
-		AddStaticMesh(PoleMesh, i, PoleMeshHeight);
-	}
-
-	LastPoleLocation = LastPoleIndex * PoleMeshHeight;
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ALadder, bActivated);
 }
 
-void ALadder::CreateWallConnection()
+void ALadder::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const
 {
-	if (WallConnectionMesh == nullptr || WallConnectionStep == 0)
+	if (bActivated) return;
+	if (!Interactor) return;
+	if (!ActivateAbilityClass) return;
+
+	if (TopActivationBox)
 	{
-		return;
+		TArray<AActor*> Overlapping;
+		TopActivationBox->GetOverlappingActors(Overlapping);
+		if (!Overlapping.Contains(Interactor)) return;
 	}
 
-	const int32 WallOffset = LadderHeight / WallConnectionStep;
+	FInteractionOption Option;
+	Option.InteractionAbilityToGrant = ActivateAbilityClass;
+	Option.SourceObject = const_cast<ALadder*>(this);
+	Option.Text = NSLOCTEXT("Ladder", "Activate", "사다리 활성화");
+	Option.OptionTag = GYGameplayTags::Interaction_Ladder_Activate;
+	OutOptions.Add(Option);
+}
 
-	for (int32 i = 1; i <= WallConnectionStep; i++)
+void ALadder::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
+{
+}
+
+void ALadder::Activate()
+{
+	if (!HasAuthority()) return;
+	if (bActivated) return;
+
+	bActivated = true;
+	OnRep_Activated();
+	ForceNetUpdate();
+}
+
+FTransform ALadder::GetClimbStartTransform(bool bFromTop) const
+{
+	const FVector Origin = GetActorLocation();
+	const FRotator Facing = GetClimbFacing();
+	const FVector Loc = bFromTop ? Origin + FVector(0, 0, LadderHeight) : Origin;
+	return FTransform(Facing, Loc);
+}
+
+FVector ALadder::GetClimbAxis() const
+{
+	return GetActorUpVector();
+}
+
+FRotator ALadder::GetClimbFacing() const
+{
+	return (-GetActorForwardVector()).Rotation();
+}
+
+float ALadder::GetRungSpacing() const
+{
+	if (const FLadderTypeDataTableRow* Row = LadderDataHandle.GetRow<FLadderTypeDataTableRow>(TEXT("GetRungSpacing")))
 	{
-		AddStaticMesh(WallConnectionMesh, i, WallOffset);
+		return Row->RungSpacing;
+	}
+	return 30.f;
+}
+
+void ALadder::OnRep_Activated()
+{
+	if (bActivated)
+	{
+		UnfoldAlpha = 0.f;
+		bUnfolding = true;
+		bCanClimb = false;
+		SetActorTickEnabled(true);
 	}
 }
 
-void ALadder::CreateTopLadder()
+void ALadder::BuildLadder()
 {
-	if (TopLadderMesh == nullptr || bNeedTopLadder == false)
+	//Clear
+	for (UStaticMeshComponent* RungMesh : RungMeshes)
 	{
-		return;
+		if (RungMesh) RungMesh->DestroyComponent();
+	}
+	RungMeshes.Empty();
+
+	for (UStaticMeshComponent* PoleMesh : PoleMeshes)
+	{
+		if (PoleMesh) PoleMesh->DestroyComponent();
+	}
+	PoleMeshes.Empty();
+
+	for (UStaticMeshComponent* WallBracketMesh : WallBracketMeshes)
+	{
+		if (WallBracketMesh) WallBracketMesh->DestroyComponent();
+	}
+	WallBracketMeshes.Empty();
+
+	if (TopGrabBarMesh)
+	{
+		TopGrabBarMesh->DestroyComponent();
+		TopGrabBarMesh = nullptr;
 	}
 
-	AddStaticMesh(TopLadderMesh, 1, LastPoleLocation);
+	const FLadderTypeDataTableRow* Row = LadderDataHandle.GetRow<FLadderTypeDataTableRow>(TEXT("ALadder::BuildLadder"));
+	if (!Row) return;
+
+	const float Spacing = Row->RungSpacing;
+	const float HalfWidth = Row->LadderWidth * 0.5f;
+	const int32 NumRungs = FMath::FloorToInt(LadderHeight / Spacing);
+
+	if (Row->RungMesh)
+	{
+		for (int32 i = 0; i < NumRungs; i++)
+		{
+			UStaticMeshComponent* Rung = NewObject<UStaticMeshComponent>(this);
+			Rung->SetStaticMesh(Row->RungMesh);
+			Rung->SetupAttachment(LadderRoot);
+			Rung->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Rung->SetRelativeLocation(FVector(0, 0, i * Spacing));
+			Rung->RegisterComponent();
+			RungMeshes.Add(Rung);
+		}
+	}
+
+	if (Row->PoleMesh)
+	{
+		const float ScaleZ = (Row->PoleSegmentLength > 0.f) ? (LadderHeight / Row->PoleSegmentLength) : 1.f;
+
+		UStaticMeshComponent* Pole = NewObject<UStaticMeshComponent>(this);
+		Pole->SetStaticMesh(Row->PoleMesh);
+		Pole->SetupAttachment(LadderRoot);
+		Pole->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Pole->SetRelativeLocation(FVector(0, 0, 0));
+		Pole->SetRelativeScale3D(FVector(1.f, 1.f, ScaleZ));
+		Pole->RegisterComponent();
+		PoleMeshes.Add(Pole);
+	}
+
+	if (Row->WallBracketMesh && Row->WallBracketStep > 0)
+	{
+		for (int32 i = 0; i < NumRungs; i += Row->WallBracketStep)
+		{
+			UStaticMeshComponent* Bracket = NewObject<UStaticMeshComponent>(this);
+			Bracket->SetStaticMesh(Row->WallBracketMesh);
+			Bracket->SetupAttachment(LadderRoot);
+			Bracket->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Bracket->SetRelativeLocation(FVector(0, 0, i * Spacing));
+			Bracket->RegisterComponent();
+			WallBracketMeshes.Add(Bracket);
+		}
+	}
+
+	if (Row->TopGrabBarMesh)
+	{
+		TopGrabBarMesh = NewObject<UStaticMeshComponent>(this);
+		TopGrabBarMesh->SetStaticMesh(Row->TopGrabBarMesh);
+		TopGrabBarMesh->SetupAttachment(LadderRoot);
+		TopGrabBarMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		TopGrabBarMesh->SetRelativeLocation(FVector(0, 0, LadderHeight));
+		TopGrabBarMesh->RegisterComponent();
+	}
 }
 
-
-void ALadder::UpdateCollision()
+void ALadder::UpdateColliders()
 {
-	if (PlayerClimbCheckCollision == nullptr)
+	if (TopActivationBox)
 	{
-		return;
+		TopActivationBox->SetRelativeLocation(FVector(0, 0, LadderHeight + 30.f));
+		TopActivationBox->SetBoxExtent(FVector(80, 80, 50));
 	}
-
-	const double HalfHeight = LadderHeight / 2.0;
-
-	PlayerClimbCheckCollision->SetBoxExtent(FVector(25.f, 25.f, HalfHeight), true);
-	PlayerClimbCheckCollision->SetRelativeLocation(FVector(32.f, 0.f, HalfHeight));
-
-
-	float TopBoxLocation = LadderHeight + TopBoxCollisionOffset;
-	TopBoxCollision->SetRelativeLocation(FVector(0, 0, TopBoxLocation));
-
-	ClimbIntoFromTopBoxCollision->SetRelativeLocation(FVector(-75, 0, TopBoxLocation));
-	
-
+	if (ClimbCheckBox)
+	{
+		ClimbCheckBox->SetRelativeLocation(FVector(0, 0, LadderHeight * 0.5f));
+		ClimbCheckBox->SetBoxExtent(FVector(60, 60, LadderHeight * 0.5f));
+	}
+	if (BottomBox)
+	{
+		BottomBox->SetRelativeLocation(FVector(0, 0, 0));
+		BottomBox->SetBoxExtent(FVector(50, 50, 30));
+	}
 }
