@@ -10,7 +10,6 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_BleedChancePct)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_BleedPerSec)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_LifestealPct)
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_LifestealCap)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_DefBreak)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_CritDmgPct)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_ParryStaggerPct)
