@@ -107,4 +107,7 @@ protected:
 	TMap<TObjectPtr<AGYEnemyCharacterBase>, float> ActiveMinionRatios;
 
 	FTimerHandle TempEncounterTimer;
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Movement")
+	bool bIsStationary = false;
 };

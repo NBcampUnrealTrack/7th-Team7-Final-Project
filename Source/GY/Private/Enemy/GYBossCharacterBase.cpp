@@ -10,6 +10,7 @@
 #include "Components/StateTreeAIComponent.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Engine/AssetManager.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerState.h"
 
 #include "Net/UnrealNetwork.h"
@@ -107,6 +108,18 @@ TArray<APawn*> AGYBossCharacterBase::GetParticipantPawns() const
 void AGYBossCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (bIsStationary)
+	{
+		if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+		{
+			Movement->DisableMovement();
+			Movement->StopMovementImmediately();
+
+			Movement->MaxWalkSpeed = 0.f;
+			Movement->MaxAcceleration = 0.f;
+		}
+	}
 
 	if (!HasAuthority()) return;
 
