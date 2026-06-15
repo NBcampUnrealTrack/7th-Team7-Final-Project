@@ -127,7 +127,7 @@ void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 
 void UGYVitalAttributeSet::HandleHitReaction(const FGameplayEffectModCallbackData& Data, float DamageDone)
 {
-	AActor* SourceActor = Data.EffectSpec.GetContext().GetInstigator();
+	AActor* SourceActor = Data.EffectSpec.GetContext().GetEffectCauser();
 	AActor* TargetActor = GetOwningActor();
 	if (!SourceActor || !TargetActor || SourceActor == TargetActor) return;
 
