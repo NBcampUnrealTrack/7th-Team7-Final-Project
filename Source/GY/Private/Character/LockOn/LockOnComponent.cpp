@@ -21,7 +21,23 @@ ULockOnComponent::ULockOnComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
+
+
+
 	SetIsReplicatedByDefault(true);
+}
+
+void ULockOnComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
+	{
+		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+		{
+			bSavedOrientToMovement = Movement->bOrientRotationToMovement;
+			bSavedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
+		}
+	}
 }
 
 void ULockOnComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -33,11 +49,16 @@ void ULockOnComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void ULockOnComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		StopLockOn();
+	}
+
 	if (CurrentTarget.IsValid())
 	{
-		AActor* PrevTarget = CurrentTarget.Get();
 		CurrentTarget = nullptr;
-		OnRep_CurrentTarget(PrevTarget);
+		OnRep_CurrentTarget();
 	}
 
 	if (BoundASC.IsValid())
@@ -116,7 +137,7 @@ void ULockOnComponent::OnInCombatTagChanged(const FGameplayTag Tag, int32 NewCou
 void ULockOnComponent::StartLockOn()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-
+	if (CurrentTarget.IsValid()) return;
 
 	AActor* Target = FindBestTarget();
 	if (!Target) return;
@@ -129,9 +150,8 @@ void ULockOnComponent::StartLockOn()
 
 	BindTargetDeathListener(Target);
 
-	AActor* PrevTarget = CurrentTarget.Get();
 	CurrentTarget = Target;
-	OnRep_CurrentTarget(PrevTarget);
+	OnRep_CurrentTarget();
 }
 
 void ULockOnComponent::StopLockOn()
@@ -150,15 +170,13 @@ void ULockOnComponent::StopLockOn()
 	}
 
 	UnbindTargetDeathListener(CurrentTarget.Get());
-	AActor* PrevTarget = CurrentTarget.Get();
 	CurrentTarget = nullptr;
 
-	OnRep_CurrentTarget(PrevTarget);
+	OnRep_CurrentTarget();
 }
 
-void ULockOnComponent::OnRep_CurrentTarget(TWeakObjectPtr<AActor> PrevTarget)
+void ULockOnComponent::OnRep_CurrentTarget()
 {
-	const bool bWasActive = PrevTarget.IsValid();
 	const bool bCurrentActive = CurrentTarget.IsValid();
 
 	SetComponentTickEnabled(bCurrentActive);
@@ -167,14 +185,13 @@ void ULockOnComponent::OnRep_CurrentTarget(TWeakObjectPtr<AActor> PrevTarget)
 	{
 		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
 		{
-			if (!bWasActive && bCurrentActive)
+			if (bCurrentActive)
 			{
-				bSavedOrientToMovement = Movement->bOrientRotationToMovement;
-				bSavedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
+
 				Movement->bOrientRotationToMovement = false;
 				Character->bUseControllerRotationYaw = true;
 			}
-			else if (bWasActive && !bCurrentActive)
+			else
 			{
 				Movement->bOrientRotationToMovement = bSavedOrientToMovement;
 				Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
@@ -316,21 +333,15 @@ void ULockOnComponent::RetryFindTarget()
 		GetWorld()->GetTimerManager().ClearTimer(RetryTargetHandle);
 		return;
 	}
+	if (CurrentTarget.IsValid()) return;
 
-	AActor* Target = FindBestTarget();
-	if (!Target) return;
+	StartLockOn();
 
-	GetWorld()->GetTimerManager().ClearTimer(RetryTargetHandle);
-
-	if (BoundASC.IsValid())
+	if (CurrentTarget.IsValid())
 	{
-		BoundASC->AddLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
-		                              EGameplayTagReplicationState::CountToOwner);
+		GetWorld()->GetTimerManager().ClearTimer(RetryTargetHandle);
 	}
 
-	AActor* PrevTarget = CurrentTarget.Get();
-	CurrentTarget = Target;
-	OnRep_CurrentTarget(PrevTarget);
 }
 
 void ULockOnComponent::HandleTargetDied(AGYEnemyCharacterBase* DeadEnemy)
@@ -358,7 +369,7 @@ void ULockOnComponent::SwitchToBestTarget()
 	BindTargetDeathListener(NewTarget);
 
 	CurrentTarget = NewTarget;
-	OnRep_CurrentTarget(PrevTarget);
+	OnRep_CurrentTarget();
 }
 
 void ULockOnComponent::BindTargetDeathListener(AActor* Target)
