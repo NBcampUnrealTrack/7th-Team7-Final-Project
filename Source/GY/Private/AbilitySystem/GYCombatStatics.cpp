@@ -112,34 +112,15 @@ static void ResolveDamageMultipliers(const FGYHitContext& HitContext, float& Out
 	const AActor* SourceAvatar = HitContext.SourceASC ? HitContext.SourceASC->GetAvatarActor() : nullptr;
 	if (const UGYOnHitModifierComponent* SourceMods = SourceAvatar ? SourceAvatar->FindComponentByClass<UGYOnHitModifierComponent>() : nullptr)
 	{
-		TArray<FRolledMagnitude> Modifiers;
-		SourceMods->CollectModifiers(Modifiers);
-		for (const FRolledMagnitude& Modifier : Modifiers)
-		{
-			if (Modifier.MagnitudeTag == GYGameplayTags::Enchant_Magnitude_DamageDealtPct)
-			{
-				OutDealtMultiplier += Modifier.Value * PercentToFraction;
-			}
-		}
+		OutDealtMultiplier += SourceMods->GetModifierSumValue(GYGameplayTags::Enchant_Magnitude_DamageDealtPct) * PercentToFraction;
 	}
 
 	const AActor* TargetAvatar = HitContext.TargetASC ? HitContext.TargetASC->GetAvatarActor() : nullptr;
 	if (const UGYOnHitModifierComponent* TargetMods = TargetAvatar ? TargetAvatar->FindComponentByClass<UGYOnHitModifierComponent>() : nullptr)
 	{
-		TArray<FRolledMagnitude> Modifiers;
-		TargetMods->CollectModifiers(Modifiers);
-		for (const FRolledMagnitude& Modifier : Modifiers)
-		{
-			// 받는 피해는 증가(DamageTakenPct)·감소(DamageTakenReductionPct) 태그가 분리. 둘 다 양수 저장이라 부호를 직접 적용.
-			if (Modifier.MagnitudeTag == GYGameplayTags::Enchant_Magnitude_DamageTakenPct)
-			{
-				OutTakenMultiplier += Modifier.Value * PercentToFraction;
-			}
-			else if (Modifier.MagnitudeTag == GYGameplayTags::Enchant_Magnitude_DamageTakenReductionPct)
-			{
-				OutTakenMultiplier -= Modifier.Value * PercentToFraction;
-			}
-		}
+		// 받는 피해는 증가(DamageTakenPct)·감소(DamageTakenReductionPct) 태그가 분리. 둘 다 양수 저장이라 차감으로 합산.
+		OutTakenMultiplier += (TargetMods->GetModifierSumValue(GYGameplayTags::Enchant_Magnitude_DamageTakenPct)
+			- TargetMods->GetModifierSumValue(GYGameplayTags::Enchant_Magnitude_DamageTakenReductionPct)) * PercentToFraction;
 	}
 }
 

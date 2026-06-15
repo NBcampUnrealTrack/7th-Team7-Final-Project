@@ -19,8 +19,8 @@ public:
 	// 출처가 사라질 때(장비 해제 등) 그 출처의 수정자 전부 제거.
 	void UnregisterModifiers(const UObject* Source);
 
-	// 현재 활성 수정자 전부(출처 무관 평탄화). resolver가 조건 매칭에 사용.
-	void CollectModifiers(TArray<FRolledMagnitude>& OutModifiers) const;
+	// 특정 매그니튜드 태그의 활성 값을 출처 무관 합산해 반환. resolver·온히트 로직이 사용.
+	float GetModifierSumValue(FGameplayTag MagnitudeTag) const;
 
 private:
 	// FRolledMagnitude는 UObject 참조가 없어 GC 루팅 불필요 → plain 멤버. 키는 안정적인 FObjectKey.

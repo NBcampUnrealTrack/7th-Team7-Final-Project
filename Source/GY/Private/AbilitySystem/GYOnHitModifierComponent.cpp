@@ -12,10 +12,18 @@ void UGYOnHitModifierComponent::UnregisterModifiers(const UObject* Source)
 	ModifiersBySource.Remove(FObjectKey(Source));
 }
 
-void UGYOnHitModifierComponent::CollectModifiers(TArray<FRolledMagnitude>& OutModifiers) const
+float UGYOnHitModifierComponent::GetModifierSumValue(FGameplayTag MagnitudeTag) const
 {
+	float Sum = 0.f;
 	for (const TPair<FObjectKey, TArray<FRolledMagnitude>>& Pair : ModifiersBySource)
 	{
-		OutModifiers.Append(Pair.Value);
+		for (const FRolledMagnitude& Modifier : Pair.Value)
+		{
+			if (Modifier.MagnitudeTag == MagnitudeTag)
+			{
+				Sum += Modifier.Value;
+			}
+		}
 	}
+	return Sum;
 }
