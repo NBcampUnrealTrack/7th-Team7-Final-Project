@@ -82,11 +82,6 @@ protected:
 	void HandleStunBegin() override;
 	void Die() override;
 
-	UFUNCTION()
-	void OnPhaseQueued(const FBossPhaseTrigger& Trigger);
-
-	void ApplyPhaseSetup(const FBossPhaseSetup& Setup);
-
 	void RequestSummonablePreload();
 	void OnSummonablesLoaded();
 

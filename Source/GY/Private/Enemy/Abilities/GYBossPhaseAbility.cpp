@@ -13,6 +13,27 @@ UGYBossPhaseAbility::UGYBossPhaseAbility()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
+void UGYBossPhaseAbility::CollectAbilities(
+	TSubclassOf<UGYBossPhaseAbility> PhaseClass,
+	TSet<TSubclassOf<UGameplayAbility>>& OutSet)
+{
+	if (!PhaseClass) return;
+
+	OutSet.Add(PhaseClass);
+
+	const UGYBossPhaseAbility* CDO = PhaseClass.GetDefaultObject();
+	if (!CDO) return;
+
+	for (const TSubclassOf<UGameplayAbility>& Sub : CDO->SubAbilities)
+	{
+		if (Sub) OutSet.Add(Sub);
+	}
+	for (const TSubclassOf<UGameplayAbility>& Sub : CDO->AbilitiesToGrantOnExit)
+	{
+		if (Sub) OutSet.Add(Sub);
+	}
+}
+
 void UGYBossPhaseAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)

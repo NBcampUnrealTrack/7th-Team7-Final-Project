@@ -3,7 +3,6 @@
 #include "AIController.h"
 #include "GameFramework/Pawn.h"
 #include "StateTreeExecutionContext.h"
-#include "Logging/GYLogManager.h"
 #include "Subsystems/WorldSubsystem.h"
 
 bool UGYBossStateTreeAIComponent::CollectExternalData(
@@ -15,18 +14,10 @@ bool UGYBossStateTreeAIComponent::CollectExternalData(
 	checkf(Descs.Num() == OutDataViews.Num(), TEXT("Desc/View count mismatch."));
 
 	const UWorld* World = Context.GetWorld();
-	if (!World)
-	{
-		GY_WARN(AI,  ESK, "World null while collecting external data");
-		return false;
-	}
+	if (!World) return false;
 
 	AAIController* AIController = Cast<AAIController>(Context.GetOwner());
-	if (!AIController)
-	{
-		GY_WARN(AI,  ESK, "Context owner is not an AIController");
-		return false;
-	}
+	if (!AIController) return false;
 
 	APawn* ControlledPawn = AIController->GetPawn();
 
@@ -77,8 +68,6 @@ bool UGYBossStateTreeAIComponent::CollectExternalData(
 
 		if (!bFound && Desc.Requirement == EStateTreeExternalDataRequirement::Required)
 		{
-			GY_WARN(AI,  ESK, "Required external data '%s' not found (AIController=%s, Pawn=%s)",
-				*GetNameSafe(Desc.Struct), *GetNameSafe(AIController), *GetNameSafe(ControlledPawn));
 			return false;
 		}
 	}

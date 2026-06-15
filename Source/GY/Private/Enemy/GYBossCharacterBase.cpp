@@ -4,6 +4,7 @@
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "Enemy/GYBossAIController.h"
 #include "Enemy/EnemyAnimInstance.h"
+#include "Enemy/Abilities/GYBossPhaseAbility.h"
 #include "Enemy/Component/BossPhaseComponent.h"
 #include "Enemy/Component/BossPatternSelectorComponent.h"
 #include "Components/StateTreeAIComponent.h"
@@ -156,6 +157,8 @@ void AGYBossCharacterBase::OnRep_Participants()
 
 void AGYBossCharacterBase::HandleStaggerBegin()
 {
+	if (bIsDead) return;
+
 	Super::HandleStaggerBegin();
 
 	if (AAIController* AI = Cast<AAIController>(GetController()))
@@ -171,6 +174,8 @@ void AGYBossCharacterBase::HandleStaggerBegin()
 
 void AGYBossCharacterBase::HandleStunBegin()
 {
+	if (bIsDead) return;
+
 	Super::HandleStunBegin();
 	if (AAIController* AI = Cast<AAIController>(GetController()))
 	{
@@ -212,12 +217,9 @@ void AGYBossCharacterBase::GrantDefaultAbilities()
 	{
 		if (Entry.AbilityClass) UniqueClasses.Add(Entry.AbilityClass);
 	}
-	for (const FBossPhaseSetup& Setup : BossData->PhaseSetups)
+	for (const FBossPhaseTrigger& Trigger : BossData->PhaseTriggers)
 	{
-		for (const FBossPatternEntry& Entry : Setup.PhasePatterns)
-		{
-			if (Entry.AbilityClass) UniqueClasses.Add(Entry.AbilityClass);
-		}
+		UGYBossPhaseAbility::CollectAbilities(Trigger.PhaseAbilityClass, UniqueClasses);
 	}
 
 	for (const TSubclassOf<UGameplayAbility>& AbilityClass : UniqueClasses)
@@ -234,69 +236,21 @@ void AGYBossCharacterBase::OnDataAssetLoaded()
 {
 	Super::OnDataAssetLoaded();
 
-	if (PhaseComponent &&
-		!PhaseComponent->OnPhaseQueued.IsAlreadyBound(this, &AGYBossCharacterBase::OnPhaseQueued))
-	{
-		PhaseComponent->OnPhaseQueued.AddDynamic(this, &AGYBossCharacterBase::OnPhaseQueued);
-	}
-
-	if (UBossDataAsset* BossData = GetBossData())
-	{
-		if (const FBossPhaseSetup* Initial = BossData->GetInitialPhaseSetup())
-		{
-			ApplyPhaseSetup(*Initial);
-		}
-	}
-
-	RequestSummonablePreload();
-}
-
-void AGYBossCharacterBase::OnPhaseQueued(const FBossPhaseTrigger& Trigger)
-{
-	UBossDataAsset* BossData = GetBossData();
-	if (!BossData) return;
-
-	if (const FBossPhaseSetup* Setup = BossData->FindPhaseSetup(Trigger.DebugName))
-	{
-		ApplyPhaseSetup(*Setup);
-	}
-}
-
-void AGYBossCharacterBase::ApplyPhaseSetup(const FBossPhaseSetup& Setup)
-{
-	UBossDataAsset* BossData = GetBossData();
-	if (!BossData) return;
-
-	if (Setup.bOverrideVisual)
-	{
-		ApplyVisualConfig(Setup.VisualOverride);
-		CachedWeaponTraceSockets();
-	}
-
-	if (Setup.bOverrideAnimation)
-	{
-		ApplyAnimConfig(Setup.AnimationOverride);
-		BuildMontageMap(Setup.AnimationOverride);
-
-		if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance()))
-		{
-			InitAnimInstanceAssets(AnimInst, Setup.AnimationOverride);
-		}
-	}
-
 	if (HasAuthority())
 	{
 		if (AGYBossAIController* AIC = Cast<AGYBossAIController>(GetController()))
 		{
 			if (UBossPatternSelectorComponent* Selector = AIC->GetPatternSelector())
 			{
-				TArray<FBossPatternEntry> Pool;
-				Pool.Append(BossData->NormalPatterns);
-				Pool.Append(Setup.PhasePatterns);
-				Selector->InitializePatterns(Pool);
+				if (UBossDataAsset* BossData = GetBossData())
+				{
+					Selector->InitializePatterns(BossData->NormalPatterns);
+				}
 			}
 		}
 	}
+
+	RequestSummonablePreload();
 }
 
 void AGYBossCharacterBase::RequestSummonablePreload()
@@ -369,7 +323,7 @@ void AGYBossCharacterBase::RegisterMinion(AGYEnemyCharacterBase* Minion, float H
 
 void AGYBossCharacterBase::HandleMinionDamaged(AGYEnemyCharacterBase* Minion, float DamageAmount)
 {
-	if (!Minion || !HasAuthority() || !VitalAttribute) return;
+	if (!Minion || !HasAuthority() || !VitalAttribute || !AbilitySystemComponent) return;
 
 	const float* RatioPtr = ActiveMinionRatios.Find(Minion);
 	if (!RatioPtr) return;
@@ -377,8 +331,10 @@ void AGYBossCharacterBase::HandleMinionDamaged(AGYEnemyCharacterBase* Minion, fl
 	const float Bleed = DamageAmount * (*RatioPtr);
 	if (Bleed <= 0.f) return;
 
-	const float NewHealth = FMath::Max(0.f, VitalAttribute->GetCurrentHealth() - Bleed);
-	VitalAttribute->SetCurrentHealth(NewHealth);
+	AbilitySystemComponent->ApplyModToAttribute(
+		UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute(),
+		EGameplayModOp::Additive,
+		-Bleed);
 }
 
 void AGYBossCharacterBase::HandleMinionDead(AGYEnemyCharacterBase* Minion)
