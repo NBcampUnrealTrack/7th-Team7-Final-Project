@@ -4,12 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
+#include "GameplayEffectTypes.h"
 #include "GA_UseConsumable.generated.h"
 
+class UAnimMontage;
 
-/**
- *
- */
 UCLASS()
 class GY_API UGA_UseConsumable : public UGYGameplayAbility
 {
@@ -22,4 +21,19 @@ public:
 		const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> HPConsumableMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SPConsumableMontage;
+
+private:
+	FGameplayEffectSpecHandle CachedEffectSpec;
+
+	UFUNCTION()
+	void OnMontageCompleted();
+
+	UFUNCTION()
+	void OnMontageCancelled();
 };
