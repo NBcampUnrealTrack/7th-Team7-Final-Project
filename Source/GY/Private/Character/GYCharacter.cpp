@@ -65,7 +65,10 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!IsValid(PS)) return;
 	if (!IsValid(ActiveEquipmentComponent)) return;
+
+	ensureMsgf(LockOnComponent, TEXT("LockOnComponent Is Null"));
 	LockOnComponent->BindToASC(PS);
+	
 	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
 	if (!IsValid(Loadout)) return;
 
