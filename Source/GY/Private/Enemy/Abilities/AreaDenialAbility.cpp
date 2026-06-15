@@ -111,8 +111,10 @@ void UAreaDenialAbility::ExecuteAreaDenail()
 			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		Params.Owner = BossActor;
 
-		if (World->SpawnActor<AActor>(HazardActorClass, Candidate, FRotator::ZeroRotator, Params))
+		const FVector SpawnLoc = Candidate + FVector(0.f, 0.f, HazardZOffset);
+		if (AActor* HazardActor = World->SpawnActor<AActor>(HazardActorClass, SpawnLoc, FRotator::ZeroRotator, Params))
 		{
+			HazardActor->SetLifeSpan(WarningDuration);
 			Placed.Add(Candidate);
 			++Spawned;
 		}

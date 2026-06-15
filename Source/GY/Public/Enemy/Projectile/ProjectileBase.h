@@ -30,6 +30,10 @@ protected:
 
 	virtual void OnHitTarget(AActor* HitActor, const FHitResult& HitResult);
 
+	UFUNCTION()
+	virtual void OnProjectileMovementStop(const FHitResult& ImpactResult);
+
+protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USphereComponent> CollisionComponent;
 

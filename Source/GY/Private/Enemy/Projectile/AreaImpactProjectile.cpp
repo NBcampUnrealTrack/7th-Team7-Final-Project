@@ -6,14 +6,24 @@
 #include "Core/GameplayTags/EventTags.h"
 #include "Engine/OverlapResult.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Logging/GYLogManager.h"
 
 void AAreaImpactProjectile::OnProjectileOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                                UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	GY_LOG(AI, ESK, "AreaImpactProjectile::Overlap - Other=%s, Instigator=%s, bImpacted=%d",
+		*GetNameSafe(OtherActor),
+		*GetNameSafe(InstigatorActor.Get()),
+		bImpacted ? 1 : 0);
+
 	if (!HasAuthority()) return;
 	if (bImpacted) return;
+	if (!InstigatorActor.IsValid()) return;
 	if (!OtherActor || OtherActor == this) return;
 	if (OtherActor == InstigatorActor.Get()) return;
+
+	APawn* Pawn = Cast<APawn>(OtherActor);
+	if (!Pawn || !Pawn->IsPlayerControlled()) return;
 
 	bImpacted = true;
 	if (ProjectileMovement)
@@ -22,6 +32,20 @@ void AAreaImpactProjectile::OnProjectileOverlap(UPrimitiveComponent* OverlappedC
 	}
 
 	TriggerImpact(GetActorLocation());
+	Destroy();
+}
+
+void AAreaImpactProjectile::OnProjectileMovementStop(const FHitResult& ImpactResult)
+{
+	GY_LOG(AI, ESK, "AreaImpact::Stop - Hit=%s, Point=%s",
+		*GetNameSafe(ImpactResult.GetActor()),
+		*ImpactResult.ImpactPoint.ToString());
+
+	if (!HasAuthority()) return;
+	if (bImpacted) return;
+
+	bImpacted = true;
+	TriggerImpact(ImpactResult.ImpactPoint);
 	Destroy();
 }
 

@@ -28,6 +28,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Boss|Attack|AreaDenial")
 	void ExecuteAreaDenail();
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Attack|AreaDenial")
 	TSubclassOf<AActor> HazardActorClass;
@@ -59,6 +60,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Attack|AreaDenial|Projectile")
 	float DropSpeed = 3000.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Attack|AreaDenial")
+	float HazardZOffset = -90.f;
 private:
 	bool IsSpacingOK(const FVector& Candidate, const TArray<FVector>& Placed) const;
 
