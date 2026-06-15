@@ -68,6 +68,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Boss|Minion")
 	FOnBossMinionCountChanged OnMinionCountChanged;
+
+	UFUNCTION(BlueprintPure, Category = "Boss|Movement")
+	bool IsStationary() const { return bIsStationary; }
 protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
@@ -107,4 +110,7 @@ protected:
 	TMap<TObjectPtr<AGYEnemyCharacterBase>, float> ActiveMinionRatios;
 
 	FTimerHandle TempEncounterTimer;
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Movement")
+	bool bIsStationary = false;
 };

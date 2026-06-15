@@ -69,5 +69,6 @@ public:
 
 private:
 	FVector TargetLocation = FVector::ZeroVector;
-
+	bool bJumpFinished = false;
+	bool bLanded = false;
 };

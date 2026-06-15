@@ -4,12 +4,14 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_ApplyRootMotionJumpForce.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/OverlapResult.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 void UEnemySlamAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                        const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
@@ -39,7 +41,15 @@ void UEnemySlamAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const FRotator JumpRot = Flat.Rotation();
 	const float Duration = Distance / HorizontalSpeed;
 
-	PlayAttackMontage();
+	UAbilityTask_PlayMontageAndWait* MontageTask =
+		UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+			this, NAME_None, AttackMontage, PlayRate, NAME_None, true);
+	MontageTask->ReadyForActivation();
+
+	if (UCharacterMovementComponent* MovementComponent = Avatar->GetCharacterMovement())
+	{
+		MovementComponent->SetMovementMode(MOVE_Falling);
+	}
 
 	UAbilityTask_ApplyRootMotionJumpForce* Jump =
 		UAbilityTask_ApplyRootMotionJumpForce::ApplyRootMotionJumpForce(
@@ -49,7 +59,7 @@ void UEnemySlamAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			Distance,
 			JumpHeight,
 			Duration,
-			0.f,
+			0.1f,
 			true,
 			ERootMotionFinishVelocityMode::ClampVelocity,
 			FVector::ZeroVector,
@@ -78,6 +88,8 @@ void UEnemySlamAttack::OnJumpFinished()
 	{
 		Anim->Montage_JumpToSection(TEXT("Land"), AttackMontage);
 	}
+	ExecuteImpact();
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void UEnemySlamAttack::OnLandImpact(FGameplayEventData Payload)
@@ -164,6 +176,7 @@ void UEnemySlamAttack::ExecuteImpact()
 
 	const FRichCurve* Curve = DamageFalloffCurve.GetRichCurveConst();
 
+	TSet<UAbilitySystemComponent*> ProcessedASCs;
 	for (const FOverlapResult& Result : Overlaps)
 	{
 		AActor* HitActor = Result.GetActor();
@@ -172,6 +185,10 @@ void UEnemySlamAttack::ExecuteImpact()
 		UAbilitySystemComponent* TargetASC =
 			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
 		if (!TargetASC) continue;
+
+		bool bAlreadyProcessed = false;
+		ProcessedASCs.Add(TargetASC, &bAlreadyProcessed);
+		if (bAlreadyProcessed) continue;
 
 		const float Dist = FVector::Dist(Origin, HitActor->GetActorLocation());
 		const float NormalizeDist = FMath::Clamp(Dist / FMath::Max(1.f, ImpactRadius), 0.f, 1.f);

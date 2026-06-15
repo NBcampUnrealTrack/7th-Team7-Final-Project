@@ -17,6 +17,7 @@
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Core/GameplayTeams/GYTeams.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interaction/InteractionComponent.h"
 #include "Player/GYPlayerState.h"
@@ -40,6 +41,8 @@ AGYCharacter::AGYCharacter()
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
 	StimuliSource->RegisterForSense(UAISense_Hearing::StaticClass());
 	StimuliSource->bAutoRegister = true;
+
+	TeamId = FGenericTeamId(GYTeams::Player);
 }
 
 void AGYCharacter::PossessedBy(AController* NewController)

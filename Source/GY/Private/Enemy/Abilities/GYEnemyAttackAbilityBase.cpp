@@ -28,6 +28,8 @@ UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 
 bool UGYEnemyAttackAbilityBase::CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const
 {
+	if (DistToTarget < MinDistance) return false;
+
 	if (AttackType == EGYEnemyAttackType::Ranged)
 	{
 		if (DistToTarget < 100.f) return false;
@@ -72,6 +74,8 @@ float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Abi
 	const UAbilitySystemComponent* ASC, float DistToTarget, float AngleDeg, const UObject* LastUsed)
 {
 	if (!Ability || !ASC) return -1.f;
+
+	if (DistToTarget < Ability->MinDistance) return -1.f;
 
 	if (Ability->bHasCooldown && Ability->GetRemainingCooldown(ASC) > 0.f) return -1.f;
 

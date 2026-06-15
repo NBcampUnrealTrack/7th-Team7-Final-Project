@@ -10,6 +10,7 @@
 #include "Components/StateTreeAIComponent.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Engine/AssetManager.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerState.h"
 
 #include "Net/UnrealNetwork.h"
@@ -235,6 +236,22 @@ void AGYBossCharacterBase::GrantDefaultAbilities()
 void AGYBossCharacterBase::OnDataAssetLoaded()
 {
 	Super::OnDataAssetLoaded();
+
+	if (UBossDataAsset* BossDataAsset = GetBossData())
+	{
+		bIsStationary = BossDataAsset->bIsStationary;
+
+		if (bIsStationary)
+		{
+			if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+			{
+				Movement->DisableMovement();
+				Movement->StopMovementImmediately();
+				Movement->MaxWalkSpeed = 0.f;
+				Movement->MaxAcceleration = 0.f;
+			}
+		}
+	}
 
 	if (HasAuthority())
 	{

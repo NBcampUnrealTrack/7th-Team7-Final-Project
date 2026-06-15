@@ -49,6 +49,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
 	float AttackRange = 200.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection",
+		meta = (ClampMin = "0", ToolTip = "이 거리보다 가까우면 어빌리티 후보에서 제외. 0이면 비활성화"))
+	float MinDistance = 0.f;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
 	float AttackAngle = 360.f;
 

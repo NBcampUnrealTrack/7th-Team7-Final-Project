@@ -2,6 +2,7 @@
 
 #include "AbilitySystemInterface.h"
 #include "CoreMinimal.h"
+#include "GenericTeamAgentInterface.h"
 #include "GameFramework/Character.h"
 #include "GYCharacter.generated.h"
 
@@ -16,7 +17,7 @@ class UInteractionComponent;
 class UAIPerceptionStimuliSourceComponent;
 
 UCLASS()
-class GY_API AGYCharacter : public ACharacter, public IAbilitySystemInterface
+class GY_API AGYCharacter : public ACharacter, public IAbilitySystemInterface, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -55,6 +56,7 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool IsDead() const { return bIsDead; }
 
+	virtual FGenericTeamId GetGenericTeamId() const override { return TeamId; }
 protected:
 	void HandleDeath();
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
@@ -98,5 +100,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HB|Character", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UGYPawnExtensionComponent> PawnExtComponent;
 
+	FGenericTeamId TeamId;
 	//TODO::타겟을 정해주는 로직 필요
 };

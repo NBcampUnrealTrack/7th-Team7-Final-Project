@@ -74,4 +74,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Summon",
 		meta = (ToolTip = "보스가 SummonAdds 같은 어빌리티로 소환할 수 있는 잡몹 종류. 보스 로드 시점에 모두 비동기 프리로드된다."))
 	TArray<FBossSummonEntry> SummonableEnemies;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Boss|Movement",
+	meta = (ToolTip = "true면 보스가 위치 이동 불가. ChaseTargetTask 즉시 통과, CharacterMovement 비활성화. 회전은 그대로."))
+	bool bIsStationary = false;
 };

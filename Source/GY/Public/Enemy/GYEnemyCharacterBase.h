@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
+#include "GenericTeamAgentInterface.h"
 #include "Config/EnemyDataAsset.h"
 #include "World/ActorManagement/WorldPartitionLevelPlacedActor.h"
 #include "GYEnemyCharacterBase.generated.h"
@@ -37,7 +38,7 @@ struct FEnemyComputedStats
 };
 
 UCLASS(Abstract, BlueprintType, Blueprintable)
-class GY_API AGYEnemyCharacterBase : public ACharacter, public IAbilitySystemInterface, public IWorldPartitionLevelPlacedActor
+class GY_API AGYEnemyCharacterBase : public ACharacter, public IAbilitySystemInterface, public IWorldPartitionLevelPlacedActor, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -95,6 +96,8 @@ public:
 	void SetOrientToMovement(bool bEnable);
 
 	void OnDeathAnimFinished();
+
+	virtual FGenericTeamId GetGenericTeamId() const override { return TeamId; }
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -233,5 +236,6 @@ private:
 	UPROPERTY()
 	FRotator EnemySpawnRotation;
 
+	FGenericTeamId TeamId;
 };
 

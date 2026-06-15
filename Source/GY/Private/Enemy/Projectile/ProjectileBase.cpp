@@ -16,7 +16,13 @@ AProjectileBase::AProjectileBase()
 
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
 	CollisionComponent->InitSphereRadius(SweepRadius);
-	CollisionComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+
+	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CollisionComponent->SetCollisionObjectType(ECC_WorldDynamic);
+	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+
 	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectileBase::OnProjectileOverlap);
 	SetRootComponent(CollisionComponent);
 
@@ -26,6 +32,8 @@ AProjectileBase::AProjectileBase()
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f;
 
+	ProjectileMovement->OnProjectileStop.AddDynamic(this, &AProjectileBase::OnProjectileMovementStop);
+
 	InitialLifeSpan = MaxLifeTime;
 }
 
@@ -33,6 +41,11 @@ void AProjectileBase::Launch(AActor* InInstigator, const FVector& InDirection, f
 {
 	InstigatorActor = InInstigator;
 	ProjectileMovement->Velocity = InDirection.GetSafeNormal() * InSpeed;
+
+	if (CollisionComponent)
+	{
+		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
 }
 
 void AProjectileBase::OnProjectileOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -81,6 +94,12 @@ void AProjectileBase::OnHitTarget(AActor* HitActor, const FHitResult& HitResult)
 			ASC->ExecuteGameplayCue(HitCueTag, CueParams);
 		}
 	}
+}
+
+void AProjectileBase::OnProjectileMovementStop(const FHitResult& ImpactResult)
+{
+	if (!HasAuthority()) return;
+	Destroy();
 }
 
 void AProjectileBase::BeginPlay()

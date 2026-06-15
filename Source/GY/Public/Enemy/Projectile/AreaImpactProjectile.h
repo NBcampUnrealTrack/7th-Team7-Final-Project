@@ -17,6 +17,7 @@ protected:
 		bool bFromSweep,
 		const FHitResult& SweepResult) override;
 
+	virtual void OnProjectileMovementStop(const FHitResult& ImpactResult) override;
 private:
 	void TriggerImpact(const FVector& ImpactLocation);
 
