@@ -8,6 +8,7 @@
 #include "Core/GameplayTags/EventTags.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/OverlapResult.h"
+#include "Enemy/GYEnemyAIController.h"
 #include "GameFramework/Character.h"
 
 void UEnemySlamAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -86,6 +87,51 @@ void UEnemySlamAttack::OnLandImpact(FGameplayEventData Payload)
 
 void UEnemySlamAttack::ResolveTargetLocation(const FGameplayEventData* TriggerEventData)
 {
+	ACharacter* Avatar = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+	if (!Avatar)
+	{
+		TargetLocation = FVector::ZeroVector;
+		return;
+	}
+
+	const FVector Self = Avatar->GetActorLocation();
+
+	if (TargetMode == ESlamTargetMode::FixedDistance)
+	{
+		FVector Forward = Avatar->GetActorForwardVector();
+		Forward.Z = 0.f;
+		Forward.Normalize();
+		TargetLocation = Self + Forward * FixedDistance;
+		return;
+	}
+
+	AActor* Target = nullptr;
+	if (AGYEnemyAIController* AI = Cast<AGYEnemyAIController>(Avatar->GetController()))
+	{
+		Target = AI->GetTargetActor();
+	}
+
+	if (!Target)
+	{
+		FVector Forward = Avatar->GetActorForwardVector();
+		Forward.Z = 0.f;
+		Forward.Normalize();
+		TargetLocation = Self + Forward * FixedDistance;
+		return;
+	}
+
+	const FVector TargetPos = Target->GetActorLocation();
+	FVector Dir = TargetPos - Self;
+	Dir.Z = 0.f;
+	const float Dist = Dir.Size();
+	if (Dist < KINDA_SMALL_NUMBER)
+	{
+		TargetLocation = TargetPos;
+		return;
+	}
+	Dir /= Dist;
+
+	TargetLocation = TargetPos - Dir * TargetOffset;
 }
 
 void UEnemySlamAttack::ExecuteImpact()
