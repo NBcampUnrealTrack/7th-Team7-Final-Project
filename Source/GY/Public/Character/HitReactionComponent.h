@@ -19,6 +19,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ApplyHitReaction(const FVector& HitDirection, float Strength = -1.f, FName HitBone = NAME_None);
+	void SetHitReactStartBone(FName BoneName);
 
 protected:
 	TWeakObjectPtr<UPhysicalAnimationComponent> PhysicalAnimation;
