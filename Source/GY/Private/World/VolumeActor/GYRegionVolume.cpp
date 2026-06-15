@@ -8,6 +8,7 @@
 #include "Loot/RegionLootData.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/PlayerController.h"
 
 AGYRegionVolume::AGYRegionVolume()
 {
@@ -25,6 +26,12 @@ void AGYRegionVolume::BeginPlay()
 	Super::BeginPlay();
 	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AGYRegionVolume::OnOverlapBegin);
 	TriggerBox->OnComponentEndOverlap.AddDynamic(this, &AGYRegionVolume::OnOverlapEnd);
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimerForNextTick(
+			FTimerDelegate::CreateUObject(this, &AGYRegionVolume::ProcessInitialOverlappingPawns));
+	}
 }
 
 bool AGYRegionVolume::IsLocationInside(const FVector& WorldLocation) const
@@ -39,42 +46,9 @@ bool AGYRegionVolume::IsLocationInside(const FVector& WorldLocation) const
 }
 
 void AGYRegionVolume::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-	bool bFromSweep, const FHitResult& SweepResult)
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	APawn* Pawn = Cast<APawn>(OtherActor);
-	if (!Pawn) return;
-
-	if (!IsValid(TargetBossActor)) return; // Actor 유효성 체크
-
-	URegionLootData* Region = RegionData.LoadSynchronous();
-	if (!Region) return;
-
-	if (Region->RegionId.IsValid()) // 지역 태그 갱신
-	{
-		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
-		{
-			FGameplayTag RegionParentTag = FGameplayTag::RequestGameplayTag(TEXT("Region"));
-			FGameplayTagContainer OwnedTags;
-
-			ASC->GetOwnedGameplayTags(OwnedTags);
-			FGameplayTagContainer TagsToRemove = OwnedTags.Filter(FGameplayTagContainer(RegionParentTag));
-
-			ASC->RemoveLooseGameplayTags(TagsToRemove);
-			ASC->AddLooseGameplayTag(Region->RegionId);
-		}
-	}
-
-	// UI 배너용 메시지
-	FGYRegionEnteredMessage Msg;
-	Msg.RegionId = Region->RegionId;
-	Msg.RegionDisplayName = Region->RegionDisplayName;
-	Msg.RegionLevel = GetDefault<UGYWorldDataSettings>()->DefaultRegionLevel;
-	Msg.RegionIcon = Region->RegionIcon;
-	Msg.BossActor = TargetBossActor;
-	Msg.Pawn = Pawn;
-
-	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Region_Entered, Msg);
+	HandlePawnEntered(Cast<APawn>(OtherActor));
 }
 
 void AGYRegionVolume::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -86,16 +60,65 @@ void AGYRegionVolume::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* 
 	{
 		return;
 	}
+	HandlePawnExited(Pawn);
+}
+
+void AGYRegionVolume::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGYRegionVolume, TargetBossActor); // 서버에서 복제한 액터 클라이언트로 동기화
+}
+
+void AGYRegionVolume::HandlePawnEntered(APawn* Pawn)
+{
+	if (!Pawn) return;
 
 	URegionLootData* Region = RegionData.LoadSynchronous();
 	if (!Region) return;
 
-	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
-	if (ASC)
+	if (Region->RegionId.IsValid()) // 지역 태그 갱신
+	{
+		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
+		{
+			FGameplayTag RegionParentTag = FGameplayTag::RequestGameplayTag(TEXT("Region"));
+			FGameplayTagContainer OwnedTags;
+
+			ASC->GetOwnedGameplayTags(OwnedTags);
+			FGameplayTagContainer TagsToRemove = OwnedTags.Filter(FGameplayTagContainer(RegionParentTag));
+
+			ASC->RemoveLooseGameplayTags(TagsToRemove);
+			ASC->AddLooseGameplayTag(Region->RegionId);
+		}
+	}
+	if (GetNetMode() == NM_DedicatedServer) return;
+
+	FGYRegionEnteredMessage Msg;
+	Msg.RegionId = Region->RegionId;
+	Msg.RegionDisplayName = Region->RegionDisplayName;
+	Msg.RegionLevel = GetDefault<UGYWorldDataSettings>()->DefaultRegionLevel;
+	Msg.RegionIcon = Region->RegionIcon;
+	Msg.BossActor = TargetBossActor;
+	Msg.Pawn = Pawn;
+
+	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Region_Entered, Msg);
+}
+
+void AGYRegionVolume::HandlePawnExited(APawn* Pawn)
+{
+	if (!Pawn) return;
+
+	URegionLootData* Region = RegionData.LoadSynchronous();
+	if (!Region) return;
+
+	// 태그 제거
+	if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
 	{
 		if (!ASC->HasMatchingGameplayTag(Region->RegionId)) return;
-		ASC->RemoveLooseGameplayTag(Region->RegionId); // 태그 회수
+		ASC->RemoveLooseGameplayTag(Region->RegionId);
 	}
+
+	if (GetNetMode() == NM_DedicatedServer) return;
+
 	FGYRegionExitedMessage ExitMsg;
 	ExitMsg.RegionId = Region->RegionId;
 	ExitMsg.Pawn = Pawn;
@@ -103,8 +126,44 @@ void AGYRegionVolume::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Region_Exited, ExitMsg);
 }
 
-void AGYRegionVolume::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void AGYRegionVolume::ProcessInitialOverlappingPawns()
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AGYRegionVolume, TargetBossActor); // 서버에서 복제한 액터 클라이언트로 동기화
+	if (!IsValid(TriggerBox)) return;
+
+	TArray<AActor*> Overlapping;
+	TriggerBox->GetOverlappingActors(Overlapping, APawn::StaticClass());
+	for (AActor* Actor : Overlapping) // 오버랩된 폰 - 지역 진입 처리
+	{
+		HandlePawnEntered(Cast<APawn>(Actor));
+	}
+
+	if (GetNetMode() == NM_Client)
+	{
+		TryNotifyLocalPawn();
+	}
+}
+
+void AGYRegionVolume::TryNotifyLocalPawn()
+{
+	if (!IsValid(TriggerBox)) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	APlayerController* PC = World->GetFirstPlayerController();
+	APawn* LocalPawn = PC ? PC->GetPawn() : nullptr;
+
+	if (LocalPawn && TriggerBox->IsOverlappingActor(LocalPawn))
+	{
+		HandlePawnEntered(LocalPawn);
+		return;
+	}
+
+	// 폰이 아직 없거나 영역 밖이면 잠시 후 재시도
+	if (LocalPawnRetryCount < 10)
+	{
+		++LocalPawnRetryCount;
+		World->GetTimerManager().SetTimer(LocalPawnRetryTimer, FTimerDelegate::CreateUObject(
+			this, &AGYRegionVolume::TryNotifyLocalPawn), 0.5f, false);
+	}
 }
