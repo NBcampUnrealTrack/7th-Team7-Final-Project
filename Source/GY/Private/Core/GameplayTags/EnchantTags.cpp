@@ -9,7 +9,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_LifestealPct, "Enchant.Magnitude.LifestealPct")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_DefBreak, "Enchant.Magnitude.DefBreak")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_CritDmgPct, "Enchant.Magnitude.CritDmgPct")
-	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_ParryStaggerPct, "Enchant.Magnitude.ParryStaggerPct")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_MoveSpeedPct, "Enchant.Magnitude.MoveSpeedPct")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_DamageTakenPct, "Enchant.Magnitude.DamageTakenPct")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_MaxSP, "Enchant.Magnitude.MaxSP")
