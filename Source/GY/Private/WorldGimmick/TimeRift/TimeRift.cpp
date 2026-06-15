@@ -1,4 +1,6 @@
 #include "WorldGimmick/TimeRift/TimeRift.h"
+
+#include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Player/GYPlayerState.h"

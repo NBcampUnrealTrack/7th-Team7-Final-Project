@@ -14,9 +14,6 @@ struct FSummonEntry
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AGYEnemyCharacterBase> EnemyClass;
-
-	UPROPERTY(EditDefaultsOnly)
 	EEnemyType EnemyType = EEnemyType::None;
 
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = "0"))
@@ -31,6 +28,11 @@ class GY_API USummonAddsAbility : public UGYEnemyAttackAbilityBase
 public:
 	USummonAddsAbility();
 protected:
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData* TriggerEventData) override;
+
 	UFUNCTION(BlueprintCallable, Category = "Boss|Attack|Summon")
 	void ExecuteSummon();
 

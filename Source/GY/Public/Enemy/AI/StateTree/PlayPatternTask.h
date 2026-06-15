@@ -50,5 +50,6 @@ struct GY_API FPlayPattern : public FStateTreeTaskCommonBase
 		FStateTreeExecutionContext& Context,
 		const FStateTreeTransitionResult& Transition) const override;
 
-	TStateTreeExternalDataHandle<UBossPatternSelectorComponent> SelectorHandle;
+	TStateTreeExternalDataHandle<UBossPatternSelectorComponent,
+		EStateTreeExternalDataRequirement::Optional> SelectorHandle;
 };

@@ -36,5 +36,6 @@ struct GY_API FPhaseEvaluator : public FStateTreeEvaluatorCommonBase
 	virtual void TreeStart(FStateTreeExecutionContext& Context) const override;
 	virtual void Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
 
-	TStateTreeExternalDataHandle<UBossPhaseComponent> PhaseHandle;
+	TStateTreeExternalDataHandle<UBossPhaseComponent,
+		EStateTreeExternalDataRequirement::Optional> PhaseHandle;
 };

@@ -71,10 +71,7 @@ EStateTreeRunStatus FExecutePhaseAbilityTask::Tick(FStateTreeExecutionContext& C
 		Spec = ASC->FindAbilitySpecFromClass(Data.PlayingAbility);
 	}
 
-	if (!Spec || !Spec->IsActive())
-	{
-		return EStateTreeRunStatus::Succeeded;
-	}
+	if (!Spec || !Spec->IsActive()) return EStateTreeRunStatus::Succeeded;
 
 	return EStateTreeRunStatus::Running;
 }

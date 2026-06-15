@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
+#include "Enemy/Abilities/GYBossPhaseAbility.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -51,6 +52,19 @@ TSubclassOf<UGameplayAbility> UBossPhaseComponent::PopNextPhaseAbility()
 	TSubclassOf<UGameplayAbility> Next = PendingQueue[0];
 	PendingQueue.RemoveAt(0);
 	return Next;
+}
+
+void UBossPhaseComponent::EnqueuePhaseAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	for (const TSubclassOf<UGameplayAbility>& Ability : Abilities)
+	{
+		if (Ability)
+		{
+			PendingQueue.Add(Ability);
+		}
+	}
 }
 
 void UBossPhaseComponent::NotifyPhaseStarted(TSubclassOf<UGameplayAbility> AbilityClass)
@@ -133,9 +147,9 @@ void UBossPhaseComponent::OnHealthChanged(const FOnAttributeChangeData& Data)
 		const bool bCrossed = (OldRatio > T.HealthRatio) && (NewRatio <= T.HealthRatio);
 		if (!bCrossed) continue;
 
-		if (T.AbilityClass)
+		if (T.PhaseAbilityClass)
 		{
-			PendingQueue.Add(T.AbilityClass);
+			PendingQueue.Add(T.PhaseAbilityClass.Get());
 		}
 		TriggeredFlags[i] = true;
 		bAnyQueued = true;

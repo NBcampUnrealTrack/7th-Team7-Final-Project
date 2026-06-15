@@ -49,7 +49,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	void InitWithType(const EEnemyType& InEnemyType);
 
+	void InitWithLoadedData(EEnemyType InEnemyType, UEnemyDataAsset* InDataAsset);
+
 	void InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance);
+	void InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance, const FEnemyAnimationConfig& Config);
 
 	UFUNCTION(BlueprintPure, Category = "Enemy")
 	UEnemyDataAsset* GetEnemyData() const { return LoadedDataAsset; }
@@ -101,14 +104,14 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void LoadDataAssetAndApply();
-	void OnDataAssetLoaded();
+	virtual void OnDataAssetLoaded();
 
 	void ApplyVisualConfig(const FEnemyVisualConfig& Config);
 	void ApplyAIConfig(const FEnemyAIConfig& Config);
 	void ApplyAnimConfig(const FEnemyAnimationConfig& Config);
 
 	void InitGAS();
-	void GrantDefaultAbilities();
+	virtual void GrantDefaultAbilities();
 	//TODO 은서 : 코드에서 Effect 생성해주므로 사실상 필요없을수도있음
 	void ApplyPassiveEffects();
 
@@ -142,7 +145,7 @@ protected:
 
 	UFUNCTION()
 	void OnRep_IsActivate();
-private:
+
 	void CachedWeaponTraceSockets();
 public:
 	/** UI, 퀘스트 쪽에 쓸 수도있어서 남겨두는 용 */

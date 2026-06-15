@@ -37,6 +37,7 @@ namespace GYGameplayTags
 	// Enemy Attack events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_WeaponTrace_Hit)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_LaunchProjectile)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Slam_Land)
 
 	//TimeRift
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_TimeRift_Rest)

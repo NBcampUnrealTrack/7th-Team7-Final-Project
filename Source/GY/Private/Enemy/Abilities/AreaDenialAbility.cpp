@@ -1,11 +1,38 @@
 #include "Enemy/Abilities/AreaDenialAbility.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "GameFramework/Pawn.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "AbilitySystem/GYCombatStatics.h"
+#include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
+#include "Core/GameplayTags/EventTags.h"
+#include "Enemy/Projectile/AreaImpactProjectile.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "GameFramework/Pawn.h"
+#include "TimerManager.h"
 
 UAreaDenialAbility::UAreaDenialAbility()
 {
+}
+
+void UAreaDenialAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData* TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (ProjectileClass)
+	{
+		UAbilityTask_WaitGameplayEvent* HitTask =
+			UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+				this, GYGameplayTags::Event_Enemy_WeaponTrace_Hit, nullptr, false);
+		HitTask->EventReceived.AddDynamic(this, &UAreaDenialAbility::OnProjectileHit);
+		HitTask->ReadyForActivation();
+	}
+
+	PlayAttackMontage();
+	ExecuteAreaDenail();
 }
 
 bool UAreaDenialAbility::IsSpacingOK(const FVector& Candidate, const TArray<FVector>& Placed) const
@@ -90,6 +117,74 @@ void UAreaDenialAbility::ExecuteAreaDenail()
 			++Spawned;
 		}
 	}
+
+	if (ProjectileClass && Placed.Num() > 0)
+	{
+		CachedImpactLocations = Placed;
+		FTimerHandle TimerHandle;
+		World->GetTimerManager().SetTimer(TimerHandle, this,
+			&UAreaDenialAbility::SpawnImpactProjectiles, WarningDuration, false);
+	}
 }
 
+void UAreaDenialAbility::SpawnImpactProjectiles()
+{
+	UWorld* World = GetWorld();
+	if (!World || !ProjectileClass) return;
+
+	APawn* Boss = Cast<APawn>(GetAvatarActorFromActorInfo());
+	if (!Boss) return;
+
+	for (const FVector& Loc : CachedImpactLocations)
+	{
+		const FVector SpawnLoc = Loc + FVector(0.f, 0.f, SpawnHeight);
+
+		FActorSpawnParameters Params;
+		Params.Owner = Boss;
+		Params.Instigator = Boss;
+		Params.SpawnCollisionHandlingOverride =
+			ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		AAreaImpactProjectile* P = World->SpawnActor<AAreaImpactProjectile>(
+			ProjectileClass, SpawnLoc, FRotator(-90.f, 0.f, 0.f), Params);
+
+		if (P) P->Launch(Boss, FVector(0.f, 0.f, -1.f), DropSpeed);
+	}
+	CachedImpactLocations.Reset();
+}
+
+void UAreaDenialAbility::OnProjectileHit(FGameplayEventData Payload)
+{
+	AActor* HitActor   = const_cast<AActor*>(Payload.Target.Get());
+	AActor* Instigator = const_cast<AActor*>(Payload.Instigator.Get());
+	if (!HitActor || !Instigator) return;
+
+	UAbilitySystemComponent* TargetASC =
+		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
+	UAbilitySystemComponent* OwnerASC = GetAbilitySystemComponentFromActorInfo();
+	if (!TargetASC || !OwnerASC) return;
+
+	float MotionMultiplier = 1.f;
+	float Additive         = 0.f;
+	float Stagger          = 0.f;
+	float Stun             = 0.f;
+	if (HitDamageWeights.IsValidIndex(0))
+	{
+		const FHitDamageWeight& W = HitDamageWeights[0];
+		MotionMultiplier = W.Multiplicative;
+		Additive         = W.Additive;
+		Stagger          = W.Stagger;
+		Stun             = W.Stun;
+	}
+
+	FGYHitContext HitContext;
+	HitContext.SourceASC        = OwnerASC;
+	HitContext.TargetASC        = TargetASC;
+	HitContext.MotionMultiplier = MotionMultiplier;
+	HitContext.Additive         = Additive;
+	HitContext.StaggerAmount    = Stagger;
+	HitContext.StunAmount       = Stun;
+
+	UGYCombatStatics::ApplyHitImpact(HitContext);
+}
 

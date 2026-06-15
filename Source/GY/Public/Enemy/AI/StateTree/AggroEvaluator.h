@@ -17,6 +17,10 @@ struct FAggroEvaluatorInstanceData
 
 	UPROPERTY(EditAnywhere, Category = "Output")
 	bool bHasTarget = false;
+
+	/** 보스(Owner Pawn) 가 죽었는지 여부. StateTree 조건에서 죽음 상태 분기에 사용. */
+	UPROPERTY(EditAnywhere, Category = "Output")
+	bool bOwnerDead = false;
 };
 
 USTRUCT(meta = (DisplayName = "Aggro Evaluator"))
@@ -36,5 +40,6 @@ struct GY_API FAggroEvaluator : public FStateTreeEvaluatorCommonBase
 	virtual void TreeStart(FStateTreeExecutionContext& Context) const override;
 	virtual void Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
 
-	TStateTreeExternalDataHandle<UBossAggroComponent> AggroComponentHandle;
+	TStateTreeExternalDataHandle<UBossAggroComponent,
+		EStateTreeExternalDataRequirement::Optional> AggroComponentHandle;
 };

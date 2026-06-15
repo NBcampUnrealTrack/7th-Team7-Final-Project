@@ -13,12 +13,14 @@ class UBlackboardData;
 UENUM(BlueprintType)
 enum class EEnemyType : uint8
 {
-	None		UMETA(DisplayName = "None"),
-	FengMao		UMETA(DisplayName = "FengMao"),
-	Sparrow		UMETA(DisplayName = "Sparrow"),
-	Melee		UMETA(DisplayName = "Melee"),
-	Ranged		UMETA(DisplayName = "Ranged"),
-	Flower		UMETA(DisplayName = "Flower"),
+	None			UMETA(DisplayName = "None"),
+	FengMao			UMETA(DisplayName = "FengMao"),
+	Sparrow			UMETA(DisplayName = "Sparrow"),
+	Melee			UMETA(DisplayName = "Melee"),
+	Ranged			UMETA(DisplayName = "Ranged"),
+	BossFlower		UMETA(DisplayName = "BossFlower"),
+	NormalFlower	UMETA(DisplayName = "NormalFlower"),
+	PlantRoot		UMETA(DisplayName = "PlantRoot"),
 };
 
 USTRUCT(BlueprintType)
@@ -119,6 +121,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Info")
 	FText EnemyName;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
+	FName HitReactStartBone = TEXT("spine_01");
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Visual")
 	FEnemyVisualConfig VisualConfig;

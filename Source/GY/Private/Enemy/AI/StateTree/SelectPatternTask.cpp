@@ -16,9 +16,9 @@ EStateTreeRunStatus FSelectPattern::EnterState(FStateTreeExecutionContext& Conte
 
 	UBossPatternSelectorComponent* Selector = Context.GetExternalDataPtr(SelectorHandle);
 	if (!Selector) { return EStateTreeRunStatus::Failed; }
-	if (!Data.Taget){ return EStateTreeRunStatus::Failed; }
+	if (!Data.Target){ return EStateTreeRunStatus::Failed; }
 
-	TSubclassOf<UGameplayAbility> Selected = Selector->SelectNextPattern(Data.Taget);
+	TSubclassOf<UGameplayAbility> Selected = Selector->SelectNextPattern(Data.Target);
 	if (!Selected) { return EStateTreeRunStatus::Failed; }
 
 	return EStateTreeRunStatus::Succeeded;

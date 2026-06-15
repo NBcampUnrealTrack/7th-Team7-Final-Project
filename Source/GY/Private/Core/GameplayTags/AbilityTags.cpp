@@ -36,5 +36,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Sprint, "Ability.State.Sprint");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Blocking, "Ability.State.Blocking");
 
+	// Enemy
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Attack_Enemy, "Ability.Attack.Enemy");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Boss_Phase, "Ability.Boss.Phase");
 }

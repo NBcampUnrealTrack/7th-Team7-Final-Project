@@ -11,6 +11,7 @@ class UAISenseConfig_Sight;
 class UAISenseConfig_Damage;
 class UAISenseConfig_Hearing;
 class UStateTreeAIComponent;
+class UGYBossStateTreeAIComponent;
 class AGYBossCharacterBase;
 class UBossPatternSelectorComponent;
 
@@ -29,7 +30,7 @@ public:
 	UAIPerceptionComponent* GetPerceptionComp() const { return AIPerceptionComponent; }
 
 	UFUNCTION(BlueprintPure, Category = "Boss|AI")
-	UStateTreeAIComponent* GetStateTreeComp() const { return StateTreeComponent; }
+	UGYBossStateTreeAIComponent* GetStateTreeComp() const { return StateTreeComponent; }
 
 	UFUNCTION(BlueprintPure, Category = "Boss|AI")
 	UBossAggroComponent* GetAggroComponent() const { return AggroComponent; }
@@ -67,7 +68,7 @@ protected:
 	TObjectPtr<UAISenseConfig_Hearing> HearingConfig;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boss|StateTree")
-	TObjectPtr<UStateTreeAIComponent> StateTreeComponent;
+	TObjectPtr<UGYBossStateTreeAIComponent> StateTreeComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Components")
 	TObjectPtr<UBossAggroComponent> AggroComponent;

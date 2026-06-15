@@ -129,6 +129,7 @@ TSubclassOf<UGameplayAbility> UBossPatternSelectorComponent::SelectedByWeightedR
 		if (Weight <= 0.f) continue;
 
 		Candidates.Add({&Pattern, Weight});
+		TotalWeight += Weight;
 	}
 
 	if (Candidates.Num() == 0 || TotalWeight <= 0.f)
@@ -149,6 +150,8 @@ TSubclassOf<UGameplayAbility> UBossPatternSelectorComponent::SelectedByWeightedR
 			break;
 		}
 	}
+
+	RegisterSelected(*Selected);
 	return Selected->AbilityClass;
 }
 

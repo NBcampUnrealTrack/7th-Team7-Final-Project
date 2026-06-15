@@ -3,12 +3,35 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Enemy/GYBossCharacterBase.h"
+#include "Engine/World.h"
 #include "GameFramework/PlayerState.h"
+#include "TimerManager.h"
 
 UGYBossPhaseAbility::UGYBossPhaseAbility()
 {
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+}
+
+void UGYBossPhaseAbility::CollectAbilities(
+	TSubclassOf<UGYBossPhaseAbility> PhaseClass,
+	TSet<TSubclassOf<UGameplayAbility>>& OutSet)
+{
+	if (!PhaseClass) return;
+
+	OutSet.Add(PhaseClass);
+
+	const UGYBossPhaseAbility* CDO = PhaseClass.GetDefaultObject();
+	if (!CDO) return;
+
+	for (const TSubclassOf<UGameplayAbility>& Sub : CDO->SubAbilities)
+	{
+		if (Sub) OutSet.Add(Sub);
+	}
+	for (const TSubclassOf<UGameplayAbility>& Sub : CDO->AbilitiesToGrantOnExit)
+	{
+		if (Sub) OutSet.Add(Sub);
+	}
 }
 
 void UGYBossPhaseAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -20,16 +43,29 @@ void UGYBossPhaseAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	bPhaseFinished = false;
 	ActiveEntryEffectHandles.Reset();
 	GrantedAbilitySpecHandles.Reset();
+	bSequenceRunning = false;
+	CurrentSubAbilityIndex = INDEX_NONE;
 
 	CachingParticipants();
 	ApplyPhaseEntry();
 	OnPhaseExecute();
+
+	if (SubAbilities.Num() > 0)
+	{
+		ExecuteSubAbilitySequence();
+	}
 }
 
 void UGYBossPhaseAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool bReplicateEndAbility, bool bWasCancelled)
 {
+	bSequenceRunning = false;
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(SequenceDelayTimer);
+	}
+
 	if (bWasCancelled && !bPhaseFinished)
 	{
 		if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
@@ -337,4 +373,69 @@ void UGYBossPhaseAbility::HandleSubAbilityEnded(UGameplayAbility* Ability)
 	if (!Ability) return;
 
 	OnSubAbilityFinished.Broadcast(Ability->GetClass());
+
+	if (!bSequenceRunning) return;
+	if (!SubAbilities.IsValidIndex(CurrentSubAbilityIndex)) return;
+	if (Ability->GetClass() != SubAbilities[CurrentSubAbilityIndex]) return;
+
+	UWorld* World = GetWorld();
+	if (DelayBetweenAbilities > 0.f && World)
+	{
+		World->GetTimerManager().SetTimer(
+			SequenceDelayTimer, this, &UGYBossPhaseAbility::AdvanceSequence,
+			DelayBetweenAbilities, false);
+	}
+	else
+	{
+		AdvanceSequence();
+	}
+}
+
+void UGYBossPhaseAbility::ExecuteSubAbilitySequence()
+{
+	if (SubAbilities.Num() == 0) return;
+	if (bSequenceRunning) return;
+
+	bSequenceRunning = true;
+	CurrentSubAbilityIndex = 0;
+	ActivateCurrentSequenceAbility();
+}
+
+void UGYBossPhaseAbility::AdvanceSequence()
+{
+	if (!bSequenceRunning) return;
+
+	++CurrentSubAbilityIndex;
+
+	if (!SubAbilities.IsValidIndex(CurrentSubAbilityIndex))
+	{
+		bSequenceRunning = false;
+		CurrentSubAbilityIndex = INDEX_NONE;
+		OnSequenceFinished.Broadcast();
+
+		if (bAutoFinishAfterSequence && !bPhaseFinished)
+		{
+			FinishPhase();
+		}
+		return;
+	}
+
+	ActivateCurrentSequenceAbility();
+}
+
+void UGYBossPhaseAbility::ActivateCurrentSequenceAbility()
+{
+	if (!SubAbilities.IsValidIndex(CurrentSubAbilityIndex)) return;
+
+	TSubclassOf<UGameplayAbility> AbilityClass = SubAbilities[CurrentSubAbilityIndex];
+	if (!AbilityClass)
+	{
+		AdvanceSequence();
+		return;
+	}
+
+	if (!ActivateSubAbility(AbilityClass))
+	{
+		AdvanceSequence();
+	}
 }

@@ -49,5 +49,6 @@ struct GY_API FExecutePhaseAbilityTask : public FStateTreeTaskCommonBase
 		FStateTreeExecutionContext& Context,
 		const FStateTreeTransitionResult& Transition) const override;
 
-	TStateTreeExternalDataHandle<UBossPhaseComponent> PhaseHandle;
+	TStateTreeExternalDataHandle<UBossPhaseComponent,
+		EStateTreeExternalDataRequirement::Optional> PhaseHandle;
 };

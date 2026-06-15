@@ -1,6 +1,9 @@
 #include "Enemy/Component/BossAggroComponent.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "AIController.h"
+#include "Core/GameplayTags/FactionTags.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
 #include "Perception/AISense_Hearing.h"
@@ -122,6 +125,14 @@ void UBossAggroComponent::UnbindFromPerception()
 void UBossAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 	if (!Actor || !GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor))
+	{
+		if (TargetASC->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy))
+		{
+			return;
+		}
+	}
 
 	const FAISenseID SightId = UAISense::GetSenseID<UAISense_Sight>();
 	const FAISenseID DamageId = UAISense::GetSenseID<UAISense_Damage>();
