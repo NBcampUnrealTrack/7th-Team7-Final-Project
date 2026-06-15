@@ -155,16 +155,29 @@ void ALadder::BuildLadder()
 	}
 	RungMeshes.Empty();
 
-	if (TopCapMesh)
+	for (UStaticMeshComponent* PoleMesh : PoleMeshes)
 	{
-		TopCapMesh->DestroyComponent();
-		TopCapMesh = nullptr;
+		if (PoleMesh) PoleMesh->DestroyComponent();
+	}
+	PoleMeshes.Empty();
+
+	for (UStaticMeshComponent* WallBracketMesh : WallBracketMeshes)
+	{
+		if (WallBracketMesh) WallBracketMesh->DestroyComponent();
+	}
+	WallBracketMeshes.Empty();
+
+	if (TopGrabBarMesh)
+	{
+		TopGrabBarMesh->DestroyComponent();
+		TopGrabBarMesh = nullptr;
 	}
 
 	const FLadderTypeDataTableRow* Row = LadderDataHandle.GetRow<FLadderTypeDataTableRow>(TEXT("ALadder::BuildLadder"));
 	if (!Row) return;
 
 	const float Spacing = Row->RungSpacing;
+	const float HalfWidth = Row->LadderWidth * 0.5f;
 	const int32 NumRungs = FMath::FloorToInt(LadderHeight / Spacing);
 
 	if (Row->RungMesh)
@@ -180,13 +193,39 @@ void ALadder::BuildLadder()
 		}
 	}
 
-	if (Row->TopCapMesh)
+	if (Row->PoleMesh)
 	{
-		TopCapMesh = NewObject<UStaticMeshComponent>(this);
-		TopCapMesh->SetStaticMesh(Row->TopCapMesh);
-		TopCapMesh->SetupAttachment(LadderRoot);
-		TopCapMesh->SetRelativeLocation(FVector(0, 0, LadderHeight));
-		TopCapMesh->RegisterComponent();
+		const float ScaleZ = (Row->PoleSegmentLength > 0.f) ? (LadderHeight / Row->PoleSegmentLength) : 1.f;
+
+		UStaticMeshComponent* Pole = NewObject<UStaticMeshComponent>(this);
+		Pole->SetStaticMesh(Row->PoleMesh);
+		Pole->SetupAttachment(LadderRoot);
+		Pole->SetRelativeLocation(FVector(0, 0, 0));
+		Pole->SetRelativeScale3D(FVector(1.f, 1.f, ScaleZ));
+		Pole->RegisterComponent();
+		PoleMeshes.Add(Pole);
+	}
+
+	if (Row->WallBracketMesh && Row->WallBracketStep > 0)
+	{
+		for (int32 i = 0; i < NumRungs; i += Row->WallBracketStep)
+		{
+			UStaticMeshComponent* Bracket = NewObject<UStaticMeshComponent>(this);
+			Bracket->SetStaticMesh(Row->WallBracketMesh);
+			Bracket->SetupAttachment(LadderRoot);
+			Bracket->SetRelativeLocation(FVector(0, 0, i * Spacing));
+			Bracket->RegisterComponent();
+			WallBracketMeshes.Add(Bracket);
+		}
+	}
+
+	if (Row->TopGrabBarMesh)
+	{
+		TopGrabBarMesh = NewObject<UStaticMeshComponent>(this);
+		TopGrabBarMesh->SetStaticMesh(Row->TopGrabBarMesh);
+		TopGrabBarMesh->SetupAttachment(LadderRoot);
+		TopGrabBarMesh->SetRelativeLocation(FVector(0, 0, LadderHeight));
+		TopGrabBarMesh->RegisterComponent();
 	}
 }
 

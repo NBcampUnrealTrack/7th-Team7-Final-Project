@@ -83,7 +83,13 @@ protected:
 	TArray<TObjectPtr<UStaticMeshComponent>> RungMeshes;
 
 	UPROPERTY()
-	TObjectPtr<UStaticMeshComponent> TopCapMesh;
+	TArray<TObjectPtr<UStaticMeshComponent>> PoleMeshes;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UStaticMeshComponent>> WallBracketMeshes;
+
+	UPROPERTY()
+	TObjectPtr<UStaticMeshComponent> TopGrabBarMesh;
 
 private:
 	//내리는거 관리
