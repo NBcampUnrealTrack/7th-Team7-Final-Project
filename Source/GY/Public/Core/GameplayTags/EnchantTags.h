@@ -6,7 +6,7 @@ namespace GYGameplayTags
 {
 	// 인챈트 옵션 효과 수치 (SetByCaller 키). 스탯/프록 구분 없이 "인챈트가 쓰는 magnitude".
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_DamageDealtPct)
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_StaggerReduction)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_StunDealtPct)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_BleedChancePct)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_BleedPerSec)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_LifestealPct)

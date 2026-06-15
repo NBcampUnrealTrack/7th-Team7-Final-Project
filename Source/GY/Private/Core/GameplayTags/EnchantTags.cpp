@@ -3,7 +3,7 @@
 namespace GYGameplayTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_DamageDealtPct, "Enchant.Magnitude.DamageDealtPct")
-	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_StaggerReduction, "Enchant.Magnitude.StaggerReduction")
+	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_StunDealtPct, "Enchant.Magnitude.StunDealtPct")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_BleedChancePct, "Enchant.Magnitude.BleedChancePct")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_BleedPerSec, "Enchant.Magnitude.BleedPerSec")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_LifestealPct, "Enchant.Magnitude.LifestealPct")

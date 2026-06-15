@@ -102,17 +102,19 @@ static const FGYBlockData* GetActiveBlock(UAbilitySystemComponent* TargetASC, UA
 // 인첸트 매그니튜드 값은 퍼센트(예: 10 = +10%)로 저장 → 배율 기여분으로 환산
 static constexpr float PercentToFraction = 0.01f;
 
-// OnHitModifier에서 값형 수정자를 수집해 데미지 배율로 환산.
-// 공격자측: 가하는 데미지 증감(DamageDealtPct). 피격자측: 받는 피해 증감.
-static void ResolveDamageMultipliers(const FGYHitContext& HitContext, float& OutDealtMultiplier, float& OutTakenMultiplier)
+// OnHitModifier에서 값형 수정자를 수집해 타격 배율로 환산.
+// 공격자측: 가하는 데미지(DamageDealtPct)·무력화(StunDealtPct) 증가. 피격자측: 받는 피해 증감.
+static void ResolveHitMultipliers(const FGYHitContext& HitContext, float& OutDealtMultiplier, float& OutTakenMultiplier, float& OutStunMultiplier)
 {
 	OutDealtMultiplier = 1.f;
 	OutTakenMultiplier = 1.f;
+	OutStunMultiplier = 1.f;
 
 	const AActor* SourceAvatar = HitContext.SourceASC ? HitContext.SourceASC->GetAvatarActor() : nullptr;
 	if (const UGYOnHitModifierComponent* SourceMods = SourceAvatar ? SourceAvatar->FindComponentByClass<UGYOnHitModifierComponent>() : nullptr)
 	{
 		OutDealtMultiplier += SourceMods->GetModifierSumValue(GYGameplayTags::Enchant_Magnitude_DamageDealtPct) * PercentToFraction;
+		OutStunMultiplier += SourceMods->GetModifierSumValue(GYGameplayTags::Enchant_Magnitude_StunDealtPct) * PercentToFraction;
 	}
 
 	const AActor* TargetAvatar = HitContext.TargetASC ? HitContext.TargetASC->GetAvatarActor() : nullptr;
@@ -152,13 +154,15 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	const float BlockReduction = ActiveBlock ? ActiveBlock->DamageReductionMultiplier : 0.f;
 	const float BlockHitCostMultiplier = ActiveBlock ? ActiveBlock->BlockHitCostMultiplier : 0.f;
 
-	const float StaggerAmount = ActiveBlock ? HitContext.StaggerAmount * (1.f - BlockReduction) : HitContext.StaggerAmount;
-	const float StunAmount = ActiveBlock ? HitContext.StunAmount * (1.f - BlockReduction) : HitContext.StunAmount;
-
-	// 인첸트 값형(가하는 데미지%, 받는 피해%)을 수집해 데미지 배율로 환산
+	// 인첸트 값형(가하는 데미지%·무력화%, 받는 피해%)을 수집해 배율로 환산
 	float DealtMultiplier = 1.f;
 	float TakenMultiplier = 1.f;
-	ResolveDamageMultipliers(HitContext, DealtMultiplier, TakenMultiplier);
+	float StunMultiplier = 1.f;
+	ResolveHitMultipliers(HitContext, DealtMultiplier, TakenMultiplier, StunMultiplier);
+
+	const float StaggerAmount = ActiveBlock ? HitContext.StaggerAmount * (1.f - BlockReduction) : HitContext.StaggerAmount;
+	// 무력화 증가(StunDealtPct)는 공격별 Stun에 곱 (예: +10% = ×1.1). 경직(Stagger)은 미적용.
+	const float StunAmount = (ActiveBlock ? HitContext.StunAmount * (1.f - BlockReduction) : HitContext.StunAmount) * StunMultiplier;
 
 	// HP + 경직/무력을 GE_HitImpact로 적용. HP는 execution(공격자 ATK/Crit/STR/DEX + 대상 DEF, 블록 시 ×(1-BlockReduction)),
 	// 경직/무력은 SetByCaller 모디파이어. 닷지(Ability.State.Dodging)는 GE의 ApplicationRequirement로 차단.
