@@ -30,7 +30,7 @@ public:
 
 protected:
 	UFUNCTION()
-	void OnRep_CurrentTarget();
+	void OnRep_CurrentTarget(TWeakObjectPtr<AActor> PrevTarget);
 
 	void OnInCombatTagChanged(const FGameplayTag Tag, int32 NewCount);
 

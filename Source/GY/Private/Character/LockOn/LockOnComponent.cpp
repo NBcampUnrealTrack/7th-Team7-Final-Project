@@ -35,8 +35,9 @@ void ULockOnComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (CurrentTarget.IsValid())
 	{
+		AActor* PrevTarget = CurrentTarget.Get();
 		CurrentTarget = nullptr;
-		OnRep_CurrentTarget();
+		OnRep_CurrentTarget(PrevTarget);
 	}
 
 	if (BoundASC.IsValid())
@@ -128,8 +129,9 @@ void ULockOnComponent::StartLockOn()
 
 	BindTargetDeathListener(Target);
 
+	AActor* PrevTarget = CurrentTarget.Get();
 	CurrentTarget = Target;
-	OnRep_CurrentTarget();
+	OnRep_CurrentTarget(PrevTarget);
 }
 
 void ULockOnComponent::StopLockOn()
@@ -148,33 +150,38 @@ void ULockOnComponent::StopLockOn()
 	}
 
 	UnbindTargetDeathListener(CurrentTarget.Get());
-
+	AActor* PrevTarget = CurrentTarget.Get();
 	CurrentTarget = nullptr;
-	OnRep_CurrentTarget();
+
+	OnRep_CurrentTarget(PrevTarget);
 }
 
-void ULockOnComponent::OnRep_CurrentTarget()
+void ULockOnComponent::OnRep_CurrentTarget(TWeakObjectPtr<AActor> PrevTarget)
 {
-	SetComponentTickEnabled(CurrentTarget.IsValid());
+	const bool bWasActive = PrevTarget.IsValid();
+	const bool bCurrentActive = CurrentTarget.IsValid();
+
+	SetComponentTickEnabled(bCurrentActive);
 
 	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
 	{
 		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
 		{
-			if (CurrentTarget.IsValid())
+			if (!bWasActive && bCurrentActive)
 			{
 				bSavedOrientToMovement = Movement->bOrientRotationToMovement;
 				bSavedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
 				Movement->bOrientRotationToMovement = false;
 				Character->bUseControllerRotationYaw = true;
 			}
-			else
+			else if (bWasActive && !bCurrentActive)
 			{
 				Movement->bOrientRotationToMovement = bSavedOrientToMovement;
 				Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
 			}
 		}
 	}
+
 	BroadcastLockOnMessage();
 }
 
@@ -320,8 +327,10 @@ void ULockOnComponent::RetryFindTarget()
 		BoundASC->AddLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
 		                              EGameplayTagReplicationState::CountToOwner);
 	}
+
+	AActor* PrevTarget = CurrentTarget.Get();
 	CurrentTarget = Target;
-	OnRep_CurrentTarget();
+	OnRep_CurrentTarget(PrevTarget);
 }
 
 void ULockOnComponent::HandleTargetDied(AGYEnemyCharacterBase* DeadEnemy)
@@ -349,7 +358,7 @@ void ULockOnComponent::SwitchToBestTarget()
 	BindTargetDeathListener(NewTarget);
 
 	CurrentTarget = NewTarget;
-	OnRep_CurrentTarget();
+	OnRep_CurrentTarget(PrevTarget);
 }
 
 void ULockOnComponent::BindTargetDeathListener(AActor* Target)
