@@ -29,6 +29,10 @@ public:
 	UFUNCTION(BlueprintPure)
 	UEquipmentInstance* GetEquippedInstance(FGameplayTag SlotTag) const;
 
+	void RemoveAllVisuals();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRemoveAllVisuals();
+
 	void RefreshEquipment(const struct FInventoryEntry& Entry);
 
 	void OnLoadoutSlotChanged(FGameplayTag SlotTag, FGuid NewInstanceId);

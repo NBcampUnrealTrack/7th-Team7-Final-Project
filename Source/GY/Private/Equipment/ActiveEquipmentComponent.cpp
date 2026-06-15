@@ -64,6 +64,8 @@ void UActiveEquipmentComponent::BeginPlay()
 
 void UActiveEquipmentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	RemoveAllVisuals();
+
 	if (EnchantedHandle.IsValid())
 	{
 		if (UGameInstance* GI = GetWorld() != nullptr ? GetWorld()->GetGameInstance() : nullptr)
@@ -179,6 +181,23 @@ UEquipmentInstance* UActiveEquipmentComponent::GetEquippedInstance(FGameplayTag 
 	});
 
 	return Found != nullptr ? Found->Instance : nullptr;
+}
+
+void UActiveEquipmentComponent::RemoveAllVisuals()
+{
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	for (const FEquipmentEntry& Entry : EquippedItems.Entries)
+	{
+		if (IsValid(Entry.Instance))
+		{
+			Entry.Instance->OnUnequipped(Pawn);
+		}
+	}
+}
+
+void UActiveEquipmentComponent::MulticastRemoveAllVisuals_Implementation()
+{
+	RemoveAllVisuals();
 }
 
 void UActiveEquipmentComponent::RefreshEquipment(const FInventoryEntry& Entry)
