@@ -24,6 +24,8 @@ private:
 
 	void RemoveDodgeTag();
 
+	FVector CachedDodgeDirection;
+
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
 	FGameplayTag CachedDodgeAppliedTag;
 
