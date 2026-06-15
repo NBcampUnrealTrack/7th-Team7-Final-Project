@@ -8,6 +8,8 @@
 #include "Perception/AISense_Damage.h"
 #include "Perception/AISense_Hearing.h"
 #include "Perception/AISense_Sight.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "Logging/GYLogManager.h"
 
 
 UBossAggroComponent::UBossAggroComponent()
@@ -126,11 +128,18 @@ void UBossAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulu
 {
 	if (!Actor || !GetOwner() || !GetOwner()->HasAuthority()) return;
 
-	if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor))
+	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
+	if (TargetASC && TargetASC->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy))
 	{
-		if (TargetASC->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy))
+		return;
+	}
+
+	if (Stimulus.WasSuccessfullySensed())
+	{
+		UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC);
+		if (GYASC)
 		{
-			return;
+			GYASC->ApplyCombatTag();
 		}
 	}
 
