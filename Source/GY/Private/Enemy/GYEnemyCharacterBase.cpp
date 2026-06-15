@@ -564,6 +564,11 @@ void AGYEnemyCharacterBase::Die()
 	if (bIsDead) return;
 	bIsDead = true;
 
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->AddLooseGameplayTag(GYStateTags::State_Life_Dead);
+	}
+
 	DisableGameplay();
 
 	if (HasAuthority())

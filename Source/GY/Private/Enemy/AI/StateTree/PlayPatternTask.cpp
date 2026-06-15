@@ -34,8 +34,7 @@ EStateTreeRunStatus FPlayPattern::EnterState(FStateTreeExecutionContext& Context
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(AI->GetPawn());
 	if (!ASC) return EStateTreeRunStatus::Failed;
 
-	const bool bActivated = ASC->TryActivateAbilityByClass(Ability);
-	if (!bActivated) return EStateTreeRunStatus::Failed;
+	if (!ASC->TryActivateAbilityByClass(Ability)) return EStateTreeRunStatus::Failed;
 
 	Data.PlayingAbility = Ability;
 	Data.bActivated = true;

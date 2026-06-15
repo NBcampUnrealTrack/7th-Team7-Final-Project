@@ -17,6 +17,10 @@ struct FAggroEvaluatorInstanceData
 
 	UPROPERTY(EditAnywhere, Category = "Output")
 	bool bHasTarget = false;
+
+	/** 보스(Owner Pawn) 가 죽었는지 여부. StateTree 조건에서 죽음 상태 분기에 사용. */
+	UPROPERTY(EditAnywhere, Category = "Output")
+	bool bOwnerDead = false;
 };
 
 USTRUCT(meta = (DisplayName = "Aggro Evaluator"))
