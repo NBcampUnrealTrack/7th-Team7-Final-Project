@@ -15,7 +15,8 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_MoveSpeedPct)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_DamageTakenPct)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_MaxSP)
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_StaggerResist)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_MaxHP)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_MaxStagger)
 
 	// 방어구
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_NonCombatHPRegen)

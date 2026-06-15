@@ -12,7 +12,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_MoveSpeedPct, "Enchant.Magnitude.MoveSpeedPct")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_DamageTakenPct, "Enchant.Magnitude.DamageTakenPct")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_MaxSP, "Enchant.Magnitude.MaxSP")
-	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_StaggerResist, "Enchant.Magnitude.StaggerResist")
+	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_MaxHP, "Enchant.Magnitude.MaxHP")
+	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_MaxStagger, "Enchant.Magnitude.MaxStagger")
 
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_NonCombatHPRegen, "Enchant.Magnitude.NonCombatHPRegen")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_DamageTakenReductionPct, "Enchant.Magnitude.DamageTakenReductionPct")
