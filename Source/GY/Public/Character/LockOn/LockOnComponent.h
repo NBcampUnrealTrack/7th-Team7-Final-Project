@@ -17,6 +17,7 @@ class GY_API ULockOnComponent : public UActorComponent
 public:
 	ULockOnComponent();
 
+	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -30,7 +31,7 @@ public:
 
 protected:
 	UFUNCTION()
-	void OnRep_CurrentTarget(TWeakObjectPtr<AActor> PrevTarget);
+	void OnRep_CurrentTarget();
 
 	void OnInCombatTagChanged(const FGameplayTag Tag, int32 NewCount);
 
