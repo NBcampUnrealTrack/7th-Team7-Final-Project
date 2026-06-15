@@ -18,11 +18,32 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Boss_PhaseTransition, "GameplayCue.Combat.Boss.PhaseTransition");
 
 	// 플레이어 액션
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Player_Dash, "GameplayCue.Combat.Player.Dash");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Player_Parry, "GameplayCue.Combat.Player.Parry");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Player_Ultimate, "GameplayCue.Combat.Player.Ultimate");
-
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Run, "GameplayCue.Player.Run");
+
+	// 약공격
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Attack_Light, "GameplayCue.Player.Attack.Light");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Attack_Stab, "GameplayCue.Player.Attack.Stab");
+
+	// 강공격
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Attack_Heavy_Charge, "GameplayCue.Player.Attack.Heavy.Charge");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Attack_Heavy_Release, "GameplayCue.Player.Attack.Heavy.Release");
+
+	// 패링
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Parry_Attempt, "GameplayCue.Player.Parry.Attempt");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Parry_Success, "GameplayCue.Player.Parry.Success");
+
+	// 방패 블로킹
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Block_Success, "GameplayCue.Player.Block.Success");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Block_Break, "GameplayCue.Player.Block.Break");
+
+	// 회피
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Dodge, "GameplayCue.Player.Dodge");
+
+	// 물약
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Potion, "GameplayCue.Player.Potion");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Healing_HP, "GameplayCue.Player.Healing.HP");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Healing_SP, "GameplayCue.Player.Healing.SP");
 
 	// 상호 작용
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_LootBox, "GameplayCue.Interaction.LootBox");

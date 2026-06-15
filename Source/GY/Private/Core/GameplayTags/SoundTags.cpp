@@ -6,6 +6,30 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Walk, "Sound.Player.Walk")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Run, "Sound.Player.Run")
 
+	// 약공격
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Light, "Sound.Player.Attack.Light")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Stab, "Sound.Player.Attack.Stab")
+
+	// 강공격
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Heavy_Charge, "Sound.Player.Attack.Heavy.Charge")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Heavy_Release, "Sound.Player.Attack.Heavy.Release")
+
+	// 패링
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Parry_Attempt, "Sound.Player.Parry.Attempt")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Parry_Success, "Sound.Player.Parry.Success")
+
+	// 방패 블로킹
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Block_Success, "Sound.Player.Block.Success")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Block_Break, "Sound.Player.Block.Break")
+
+	// 회피
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Dodge, "Sound.Player.Dodge")
+
+	// 물약
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Potion, "Sound.Player.Potion")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Healing, "Sound.Player.Healing")
+
+
 	/* 적 사운드 */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Goblin_Roar, "Sound.Goblin.Roar")
 

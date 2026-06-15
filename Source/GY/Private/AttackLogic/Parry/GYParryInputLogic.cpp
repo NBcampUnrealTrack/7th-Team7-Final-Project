@@ -8,6 +8,7 @@
 #include "AbilitySystemGlobals.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 
 using GYAttributeCostHelpers::ApplyCost;
 using GYAttributeCostHelpers::ApplyReward;
@@ -93,6 +94,7 @@ TArray<FGameplayTag> UGYParryInputLogic::GetSubscribedEventTags() const
 
 void UGYParryInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
 {
+	// 패리 성공
 	if (EventTag != GYGameplayTags::Event_Parry_Hit || !CachedAbility.IsValid()) return;
 
 	CachedAbility->GetWorld()->GetTimerManager().ClearTimer(ParryWindowTimer);
@@ -115,6 +117,10 @@ void UGYParryInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 			}
 		}
 	}
+	// 카메라 쉐이크
+	FGameplayCueParameters Parameters;
+	Parameters.Normal = FVector(1.f, 0.f, 0.f);
+	ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Camera_Shake, Parameters);
 
 	if (CachedMontageSet && CachedMontageSet->CounterMontage)
 	{
