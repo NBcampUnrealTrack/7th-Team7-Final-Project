@@ -187,6 +187,7 @@ void ALadder::BuildLadder()
 			UStaticMeshComponent* Rung = NewObject<UStaticMeshComponent>(this);
 			Rung->SetStaticMesh(Row->RungMesh);
 			Rung->SetupAttachment(LadderRoot);
+			Rung->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			Rung->SetRelativeLocation(FVector(0, 0, i * Spacing));
 			Rung->RegisterComponent();
 			RungMeshes.Add(Rung);
@@ -200,6 +201,7 @@ void ALadder::BuildLadder()
 		UStaticMeshComponent* Pole = NewObject<UStaticMeshComponent>(this);
 		Pole->SetStaticMesh(Row->PoleMesh);
 		Pole->SetupAttachment(LadderRoot);
+		Pole->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		Pole->SetRelativeLocation(FVector(0, 0, 0));
 		Pole->SetRelativeScale3D(FVector(1.f, 1.f, ScaleZ));
 		Pole->RegisterComponent();
@@ -213,6 +215,7 @@ void ALadder::BuildLadder()
 			UStaticMeshComponent* Bracket = NewObject<UStaticMeshComponent>(this);
 			Bracket->SetStaticMesh(Row->WallBracketMesh);
 			Bracket->SetupAttachment(LadderRoot);
+			Bracket->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			Bracket->SetRelativeLocation(FVector(0, 0, i * Spacing));
 			Bracket->RegisterComponent();
 			WallBracketMeshes.Add(Bracket);
@@ -224,6 +227,7 @@ void ALadder::BuildLadder()
 		TopGrabBarMesh = NewObject<UStaticMeshComponent>(this);
 		TopGrabBarMesh->SetStaticMesh(Row->TopGrabBarMesh);
 		TopGrabBarMesh->SetupAttachment(LadderRoot);
+		TopGrabBarMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		TopGrabBarMesh->SetRelativeLocation(FVector(0, 0, LadderHeight));
 		TopGrabBarMesh->RegisterComponent();
 	}
