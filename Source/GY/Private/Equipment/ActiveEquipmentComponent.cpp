@@ -266,6 +266,12 @@ void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance
 
 			const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
 			Instance->GetMutableGrantedHandles().GameplayEffectHandles.Add(Handle);
+
+			// 타격 시점에 값이 필요한 매그니튜드(온히트 효과 등)는 GE 적용과 별개로 OnHitModifier에도 등록
+			if (EffectRow->bHitTimeValue)
+			{
+				OnHitModifiers.Add(Magnitude);
+			}
 		}
 	}
 
