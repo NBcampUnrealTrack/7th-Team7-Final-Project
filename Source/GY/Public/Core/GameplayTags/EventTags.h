@@ -49,7 +49,8 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_TimeRift_SkillTree)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_TimeRift_SkillTree_Exit)
 
-
+	//Ladder
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Ladder_ClimbRequest)
 
 	//SkillTree
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_SkillTree_Unlock)

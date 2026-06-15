@@ -25,7 +25,7 @@ public:
 	FORCEINLINE bool IsActivated() const { return bActivated; }
 	FORCEINLINE bool CanClimb() const { return bCanClimb; }
 
-	void Activatte();
+	void Activate();
 
 	FTransform GetClimbStartTransform(bool bFromTop) const;
 	FVector GetClimbAxis() const;

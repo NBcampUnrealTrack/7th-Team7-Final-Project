@@ -53,7 +53,7 @@ void ALadder::Tick(float DeltaSeconds)
 	if (!bUnfolding) return;
 
 	UnfoldAlpha = FMath::Min(1.f, UnfoldAlpha + DeltaSeconds / UnfoldDuration);
-	const float Z = FMath::Lerp(LadderHeight, 0.f, UnfoldAlpha);
+	const float Z = FMath::Lerp(ActivateHeight, 0.f, UnfoldAlpha);
 	if (LadderRoot)
 	{
 		LadderRoot->SetRelativeLocation(FVector(0, 0, Z));
@@ -98,7 +98,7 @@ void ALadder::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 {
 }
 
-void ALadder::Activatte()
+void ALadder::Activate()
 {
 	if (!HasAuthority()) return;
 	if (bActivated) return;
@@ -199,8 +199,8 @@ void ALadder::UpdateColliders()
 	}
 	if (ClimbCheckBox)
 	{
-		ClimbCheckBox->SetRelativeLocation(FVector(40, 0, LadderHeight * 0.5f));
-		ClimbCheckBox->SetBoxExtent(FVector(40, 60, LadderHeight * 0.5f));
+		ClimbCheckBox->SetRelativeLocation(FVector(0, 0, LadderHeight * 0.5f));
+		ClimbCheckBox->SetBoxExtent(FVector(60, 60, LadderHeight * 0.5f));
 	}
 	if (BottomBox)
 	{

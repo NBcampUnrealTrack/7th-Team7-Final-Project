@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "GYCharacter.generated.h"
 
+class UClimbingComponent;
 class UHitReactionComponent;
 class UPhysicalAnimationComponent;
 class UMotionWarpingComponent;
@@ -38,6 +39,7 @@ public:
 	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
 
 	ULockOnComponent* GetLockOnComponent() const { return LockOnComponent; }
+	UClimbingComponent* GetClimbingComponent() const { return ClimbingComponent; }
 
 
 
@@ -78,6 +80,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<ULockOnComponent> LockOnComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UClimbingComponent> ClimbingComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
