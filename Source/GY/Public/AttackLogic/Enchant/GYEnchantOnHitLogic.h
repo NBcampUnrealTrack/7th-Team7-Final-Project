@@ -40,6 +40,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Enchant")
 	float ValueScale = 1.f;
 
+	// 발동 쿨타임(초, 공격자 단위). 0이면 매 타격 발동. 효과마다 CooldownTag가 달라야 서로 독립.
+	UPROPERTY(EditAnywhere, Category = "Enchant|Cooldown")
+	float Cooldown = 0.f;
+
+	// 쿨타임 동안 공격자에게 부여·체크하는 태그. 효과별로 다르게 지정.
+	UPROPERTY(EditAnywhere, Category = "Enchant|Cooldown", meta = (Categories = "Cooldown"))
+	FGameplayTag CooldownTag;
+
+	// 쿨타임용 Duration GE(공용). 적용 시 CooldownTag를 Cooldown초 동안 부여. 모디파이어 없는 빈 Duration GE면 됨.
+	UPROPERTY(EditAnywhere, Category = "Enchant|Cooldown")
+	TSoftClassPtr<UGameplayEffect> CooldownEffect;
+
 private:
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
 };

@@ -32,6 +32,9 @@ void UGYEnchantOnHitLogic::OnGameplayEvent(FGameplayTag EventTag, const FGamepla
 	UAbilitySystemComponent* SourceASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
 	if (!SourceASC) return;
 
+	// 쿨타임 중이면 스킵 (효과별 독립 태그)
+	if (Cooldown > 0.f && CooldownTag.IsValid() && SourceASC->HasMatchingGameplayTag(CooldownTag)) return;
+
 	// 값: 공격자 OnHitModifier에서 이 효과의 매그니튜드 합산. 0이면(=해당 인첸트 미장착) 무시.
 	const AGYCharacter* Character = CachedAbility->GetGYCharacter();
 	const UGYOnHitModifierComponent* Modifiers = IsValid(Character) ? Character->GetOnHitModifierComponent() : nullptr;
@@ -59,4 +62,19 @@ void UGYEnchantOnHitLogic::OnGameplayEvent(FGameplayTag EventTag, const FGamepla
 
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude1, Value * ValueScale);
 	SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), ApplyToASC);
+
+	// 쿨타임 부여: CooldownTag를 Cooldown초 동안 공격자에게(효과별 독립). RefreshRegenDelay와 동일 패턴.
+	if (Cooldown > 0.f && CooldownTag.IsValid())
+	{
+		if (TSubclassOf<UGameplayEffect> CooldownGE = CooldownEffect.LoadSynchronous())
+		{
+			FGameplayEffectSpecHandle CooldownSpec = SourceASC->MakeOutgoingSpec(CooldownGE, 1.f, SourceASC->MakeEffectContext());
+			if (CooldownSpec.IsValid())
+			{
+				CooldownSpec.Data->SetDuration(Cooldown, true);
+				CooldownSpec.Data->DynamicGrantedTags.AddTag(CooldownTag);
+				SourceASC->ApplyGameplayEffectSpecToSelf(*CooldownSpec.Data.Get());
+			}
+		}
+	}
 }
