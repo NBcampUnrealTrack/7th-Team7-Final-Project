@@ -8,6 +8,7 @@ namespace GYGameplayTags
 
 	// 약공격
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Light, "Sound.Player.Attack.Light")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Stab, "Sound.Player.Attack.Stab")
 
 	// 강공격
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Heavy_Charge, "Sound.Player.Attack.Heavy.Charge")
