@@ -13,7 +13,9 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/GYAdditionalResourceStatics.h"
 #include "AbilitySystem/GYCombatSettings.h"
+#include "AbilitySystem/GYOnHitModifierComponent.h"
 #include "Core/GameplayTags/OptionTags.h"
+#include "Core/GameplayTags/EnchantTags.h"
 #include "Character/HitReactionComponent.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Logging/GYLogManager.h"
@@ -97,6 +99,50 @@ static const FGYBlockData* GetActiveBlock(UAbilitySystemComponent* TargetASC, UA
 	return Data;
 }
 
+// 인첸트 매그니튜드 값은 퍼센트(예: 10 = +10%)로 저장 → 배율 기여분으로 환산
+static constexpr float PercentToFraction = 0.01f;
+
+// OnHitModifier에서 값형 수정자를 수집해 데미지 배율로 환산.
+// 공격자측: 가하는 데미지 증감(DamageDealtPct). 피격자측: 받는 피해 증감.
+static void ResolveDamageMultipliers(const FGYHitContext& HitContext, float& OutDealtMultiplier, float& OutTakenMultiplier)
+{
+	OutDealtMultiplier = 1.f;
+	OutTakenMultiplier = 1.f;
+
+	const AActor* SourceAvatar = HitContext.SourceASC ? HitContext.SourceASC->GetAvatarActor() : nullptr;
+	if (const UGYOnHitModifierComponent* SourceMods = SourceAvatar ? SourceAvatar->FindComponentByClass<UGYOnHitModifierComponent>() : nullptr)
+	{
+		TArray<FRolledMagnitude> Modifiers;
+		SourceMods->CollectModifiers(Modifiers);
+		for (const FRolledMagnitude& Modifier : Modifiers)
+		{
+			if (Modifier.MagnitudeTag == GYGameplayTags::Enchant_Magnitude_DamageDealtPct)
+			{
+				OutDealtMultiplier += Modifier.Value * PercentToFraction;
+			}
+		}
+	}
+
+	const AActor* TargetAvatar = HitContext.TargetASC ? HitContext.TargetASC->GetAvatarActor() : nullptr;
+	if (const UGYOnHitModifierComponent* TargetMods = TargetAvatar ? TargetAvatar->FindComponentByClass<UGYOnHitModifierComponent>() : nullptr)
+	{
+		TArray<FRolledMagnitude> Modifiers;
+		TargetMods->CollectModifiers(Modifiers);
+		for (const FRolledMagnitude& Modifier : Modifiers)
+		{
+			// 받는 피해는 증가(DamageTakenPct)·감소(DamageTakenReductionPct) 태그가 분리. 둘 다 양수 저장이라 부호를 직접 적용.
+			if (Modifier.MagnitudeTag == GYGameplayTags::Enchant_Magnitude_DamageTakenPct)
+			{
+				OutTakenMultiplier += Modifier.Value * PercentToFraction;
+			}
+			else if (Modifier.MagnitudeTag == GYGameplayTags::Enchant_Magnitude_DamageTakenReductionPct)
+			{
+				OutTakenMultiplier -= Modifier.Value * PercentToFraction;
+			}
+		}
+	}
+}
+
 void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 {
 	UAbilitySystemComponent* TargetASC = HitContext.TargetASC;
@@ -128,6 +174,11 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	const float StaggerAmount = ActiveBlock ? HitContext.StaggerAmount * (1.f - BlockReduction) : HitContext.StaggerAmount;
 	const float StunAmount = ActiveBlock ? HitContext.StunAmount * (1.f - BlockReduction) : HitContext.StunAmount;
 
+	// 인첸트 값형(가하는 데미지%, 받는 피해%)을 수집해 데미지 배율로 환산
+	float DealtMultiplier = 1.f;
+	float TakenMultiplier = 1.f;
+	ResolveDamageMultipliers(HitContext, DealtMultiplier, TakenMultiplier);
+
 	// HP + 경직/무력을 GE_HitImpact로 적용. HP는 execution(공격자 ATK/Crit/STR/DEX + 대상 DEF, 블록 시 ×(1-BlockReduction)),
 	// 경직/무력은 SetByCaller 모디파이어. 닷지(Ability.State.Dodging)는 GE의 ApplicationRequirement로 차단.
 	const UGYCombatSettings* Settings = GetDefault<UGYCombatSettings>();
@@ -144,6 +195,8 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_StunAmount, StunAmount);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockReduction, BlockReduction);
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockHitCostMultiplier, BlockHitCostMultiplier);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_DealtMultiplier, DealtMultiplier);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_TakenMultiplier, TakenMultiplier);
 	SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), TargetASC);
 
 	if (ActiveBlock)

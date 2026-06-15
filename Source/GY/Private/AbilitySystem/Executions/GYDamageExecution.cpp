@@ -75,15 +75,19 @@ void UGYDamageExecution::Execute_Implementation(
 	const float Additive = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_Additive, false, 0.f);
 	const float BlockReduction = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockReduction, false, 0.f);
 	const float BlockHitCostMultiplier = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_BlockHitCostMultiplier, false, 0.f);
+	const float DealtMultiplier = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_DealtMultiplier, false, 1.f);
+	const float TakenMultiplier = Spec.GetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_TakenMultiplier, false, 1.f);
 
-	float Damage = (Attack + Additive) * Motion * (1.f + (Strength + Dexterity) * StatToWeaponDamage);
+	// 공격측 증감(약/강공%)은 공격력에 곱해 DEF가 막는 구조
+	float Damage = (Attack + Additive) * Motion * (1.f + (Strength + Dexterity) * StatToWeaponDamage) * DealtMultiplier;
 	if (FMath::FRand() < CriticalRate)
 	{
 		Damage *= CriticalMultiplier;
 	}
 
+	// 받는 피해 증감(TakenMultiplier)은 DEF·블록까지 거친 최종 피해에 곱 (예: -25% = 0.75)
 	const float DamageAfterDefense = FMath::Max(0.f, Damage - Defense);
-	const float FinalDamage = DamageAfterDefense * (1.f - BlockReduction);
+	const float FinalDamage = DamageAfterDefense * (1.f - BlockReduction) * TakenMultiplier;
 	if (FinalDamage > 0.f)
 	{
 		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(

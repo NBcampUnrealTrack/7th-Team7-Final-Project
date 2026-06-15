@@ -17,4 +17,6 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact_SetByCaller_StunAmount)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact_SetByCaller_BlockReduction)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact_SetByCaller_BlockHitCostMultiplier)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact_SetByCaller_DealtMultiplier)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact_SetByCaller_TakenMultiplier)
 }
