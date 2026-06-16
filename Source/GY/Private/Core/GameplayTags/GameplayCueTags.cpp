@@ -62,4 +62,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_Zoom, "GameplayCue.Camera.Zoom");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_Shake, "GameplayCue.Camera.Shake");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_Push, "GameplayCue.Camera.Push");
+
+	// 텔포
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Teleport_Disappear, "GameplayCue.Enemy.Teleport.Disappear");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Teleport_Appear, "GameplayCue.Enemy.Teleport.Appear");
 }
