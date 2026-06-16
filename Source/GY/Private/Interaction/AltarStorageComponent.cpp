@@ -11,6 +11,16 @@
 #include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
 
+namespace
+{
+	// 제단은 분해 제물 전용 — 장비 카테고리만 받는다 (포션 등 비장비 차단).
+	bool IsAltarEligible(const TSoftObjectPtr<UItemDefinition>& Def)
+	{
+		const UItemDefinition* DefPtr = Def.LoadSynchronous();
+		return IsValid(DefPtr) && DefPtr->CategoryTags.HasTag(GYGameplayTags::Item_Category_Equipment);
+	}
+}
+
 
 UAltarStorageComponent::UAltarStorageComponent()
 {
@@ -41,6 +51,7 @@ int32 UAltarStorageComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, in
 	if (!GetOwner()->HasAuthority()) return 0;
 	if (Count <= 0) return 0;
 	if (Def.IsNull()) return 0;
+	if (!IsAltarEligible(Def)) return 0;
 
 	UItemDefinition* DefPtr = Def.LoadSynchronous();
 	if (!IsValid(DefPtr)) return 0;
@@ -184,6 +195,7 @@ void UAltarStorageComponent::NotifyContainerChanged(const FGuid& InstanceId, EIn
 bool UAltarStorageComponent::InsertEntry(const FInventoryEntry& Entry)
 {
 	if (!GetOwner()->HasAuthority()) return false;
+	if (!IsAltarEligible(Entry.Definition)) return false;
 
 	FInventoryEntry& Added = Storage.Entries.Add_GetRef(Entry);
 	Storage.MarkItemDirty(Added);
