@@ -6921,6 +6921,15 @@
                                                                                                            }
                                                                                                        ]
                                                                                        },
+                   "CarnivorousPlant/Animatios/PlantRoot/AM_GY_PlantRoot_Exit.uasset":  {
+                                                                                            "history":  [
+                                                                                                            {
+                                                                                                                "by":  "rhkrd",
+                                                                                                                "at":  "2026-06-16 16:07:38",
+                                                                                                                "note":  null
+                                                                                                            }
+                                                                                                        ]
+                                                                                        },
                    "CarnivorousPlant/Mesh/EnemyPlant/SKEL_EnemyPlant_Skeleton.uasset":  {
                                                                                             "history":  [
                                                                                                             {
