@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Character/GYCharacterMovementComponent.h"
 #include "Core/GameplayTags/StateTags.h"
 
 
@@ -65,6 +66,27 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsStunned = AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Hit_Stun);
 		bIsStaggered = AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Hit_Stagger);
 	}
+
+	if (IsValid(AbilitySystemComponent) && IsValid(OwnerCharacter) && AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Climbing))
+	{
+		bIsClimbing = true;
+		const FVector CurrentVelocity = OwnerCharacter->GetVelocity();
+		const FVector ClimbAxis = OwnerCharacter->GetActorUpVector();
+		const float VertSpeed = FVector::DotProduct(CurrentVelocity, ClimbAxis);
+		float MaxSpeed = 150.f;
+		UGYCharacterMovementComponent* GyCharacterMovementComponent = Cast<UGYCharacterMovementComponent> (OwnerCharacter->GetMovementComponent());
+		if (GyCharacterMovementComponent != nullptr)
+		{
+			MaxSpeed = GyCharacterMovementComponent->GetMaxClimbSpeed();
+		}
+		ClimbPlayRate = FMath::Clamp(VertSpeed / MaxSpeed, -1.f, 1.f);
+	}
+	else
+	{
+		bIsClimbing = false;
+		ClimbPlayRate = 0.f;
+	}
+
 }
 
 void UGYCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)

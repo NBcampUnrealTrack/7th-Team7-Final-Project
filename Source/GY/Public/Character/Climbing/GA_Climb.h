@@ -4,6 +4,7 @@
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "GA_Climb.generated.h"
 
+class UAbilityTask_PlayMontageAndWait;
 class UGYCharacterMovementComponent;
 class ALadder;
 /**
@@ -51,4 +52,19 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Climb")
 	float TopEntryThreshold = 50.f;
+
+
+	UPROPERTY(EditDefaultsOnly, Category="Climb|Anim")
+	TObjectPtr<UAnimMontage> EntryFromTopMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category="Climb|Anim")
+	TObjectPtr<UAnimMontage> ExitToTopMontage;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_PlayMontageAndWait> CurrentMontageTask;
+
+	UFUNCTION() void OnEntryMontageCompleted();
+	UFUNCTION() void OnEntryMontageInterrupted();
+	UFUNCTION() void OnExitMontageCompleted();
+	UFUNCTION() void OnExitMontageInterrupted();
 };
