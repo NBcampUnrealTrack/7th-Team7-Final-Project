@@ -30,6 +30,10 @@ ALadder::ALadder()
 	BottomBox = CreateDefaultSubobject<UBoxComponent>(TEXT("BottomBox"));
 	BottomBox->SetupAttachment(SceneRoot);
 	BottomBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+
+	TopBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TopBox"));
+	TopBox->SetupAttachment(SceneRoot);
+	TopBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 }
 
 void ALadder::OnConstruction(const FTransform& Transform)
@@ -243,11 +247,16 @@ void ALadder::UpdateColliders()
 	if (ClimbCheckBox)
 	{
 		ClimbCheckBox->SetRelativeLocation(FVector(0, 0, LadderHeight * 0.5f));
-		ClimbCheckBox->SetBoxExtent(FVector(60, 60, LadderHeight * 0.5f));
+		ClimbCheckBox->SetBoxExtent(FVector(40, 40, LadderHeight * 0.5f));
 	}
 	if (BottomBox)
 	{
 		BottomBox->SetRelativeLocation(FVector(0, 0, 0));
 		BottomBox->SetBoxExtent(FVector(50, 50, 30));
+	}
+	if (TopBox)
+	{
+		TopBox->SetRelativeLocation(FVector(-50, 0, LadderHeight));
+		TopBox->SetBoxExtent(FVector(50, 50, 30));
 	}
 }

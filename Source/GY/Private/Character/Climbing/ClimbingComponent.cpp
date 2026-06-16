@@ -57,10 +57,13 @@ void UClimbingComponent::OnCapsuleOverlapBegin(UPrimitiveComponent* OverlappedCo
                                                bool bFromSweep, const FHitResult& SweepResult)
 {
 	ALadder* Ladder = Cast<ALadder>(OtherActor);
-
 	if (!Ladder) return;
-	if (OtherComp != Ladder->GetClimbCheckBox()) return;
 
+	const bool bIsEntryBox = (OtherComp == Ladder->GetBottomEntryBox())
+		|| (OtherComp == Ladder->GetTopEntryBox());
+	if (!bIsEntryBox) return;
+
+	LastEnteredBox = OtherComp;
 	CandidateLadders.AddUnique(Ladder);
 	SetComponentTickEnabled(true);
 }
@@ -70,7 +73,8 @@ void UClimbingComponent::OnCapsuleOverlapEnd(UPrimitiveComponent* OverlappedComp
 {
 	if (ALadder* Ladder = Cast<ALadder>(OtherActor))
 	{
-		if (OtherComp == Ladder->GetClimbCheckBox())
+		const bool bIsEntryBox = (OtherComp == Ladder->GetBottomEntryBox())	|| (OtherComp == Ladder->GetTopEntryBox());
+		if (bIsEntryBox)
 		{
 			CandidateLadders.Remove(Ladder);
 		}
@@ -141,6 +145,10 @@ void UClimbingComponent::TriggerClimbAbility(ALadder* Ladder)
 	Payload.EventTag = GYGameplayTags::Event_Ladder_ClimbRequest;
 	Payload.Instigator = GetOwner();
 	Payload.OptionalObject = Cast<UObject>(Ladder);
-
+	if (LastEnteredBox.IsValid())
+	{
+		const bool bFromTopBox = (LastEnteredBox.Get() == Ladder->GetTopEntryBox());
+		Payload.EventMagnitude = bFromTopBox ? 1.f : 0.f;
+	}
 	BoundASC->HandleGameplayEvent(GYGameplayTags::Event_Ladder_ClimbRequest, &Payload);
 }

@@ -41,6 +41,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "CC", meta = (BlueprintThreadSafe))
 	bool bIsStaggered;
 
+	UPROPERTY(BlueprintReadOnly, Category="Climb", meta=(BlueprintThreadSafe))
+	bool bIsClimbing = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Climb", meta=(BlueprintThreadSafe))
+	float ClimbPlayRate = 0.f;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Locomotion", meta = (BlueprintThreadSafe))
 	FVector Velocity;
 
@@ -71,4 +77,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Thresholds")
 	float RunningSpeed = 600.f;
+
+
 };

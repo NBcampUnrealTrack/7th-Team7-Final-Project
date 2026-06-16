@@ -53,7 +53,7 @@ void UGYCharacterMovementComponent::PhysClimbing(float DeltaTime, int32 Iteratio
 	const FVector Diff = UpdatedComponent->GetComponentLocation() - LadderOrigin;
 	const float HeightAlong = FVector::DotProduct(Diff, ClimbAxis);
 
-	if (HeightAlong >= ClimbingLadder->GetClimbDistance() && ForwardInput > 0.f)
+	if (HeightAlong >= ClimbingLadder->GetClimbDistance() - 100.f && ForwardInput > 0.f)
 	{
 		EndClimbingWith(ELadderExitReason::Top);
 		return;
