@@ -2,6 +2,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
+#include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/CameraTags.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
@@ -308,6 +309,12 @@ void ULockOnComponent::UpdateRotationToTarget(float DeltaTime)
 	const FRotator TargetRot = Direction.Rotation();
 	const FRotator CurrentRot = Controller->GetControlRotation();
 	const FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, RotationInterpSpeed);
+
+	UAbilitySystemComponent* ASC = OwnerPawn->GetPlayerState<AGYPlayerState>()->GetAbilitySystemComponent();
+	if (!ASC) return;
+	if (ASC->HasMatchingGameplayTag(GYGameplayTags::Ability_State_Dodging)) return;
+
+
 	Controller->SetControlRotation(NewRot);
 }
 
