@@ -306,7 +306,6 @@ void AGYBossCharacterBase::OnSummonablesLoaded()
 		FBossCachedSummonable Cached;
 		Cached.DataAsset  = Entry.DataAsset.Get();
 		Cached.ActorClass = Entry.ActorClass.Get();
-		Cached.HealthBleedRatio = Entry.HealthBleedRatio;
 
 		if (Cached.DataAsset && Cached.ActorClass)
 		{
@@ -325,42 +324,22 @@ bool AGYBossCharacterBase::GetSummonable(EEnemyType Type, FBossCachedSummonable&
 	return false;
 }
 
-void AGYBossCharacterBase::RegisterMinion(AGYEnemyCharacterBase* Minion, float HealthBleedRatio)
+void AGYBossCharacterBase::RegisterMinion(AGYEnemyCharacterBase* Minion)
 {
 	if (!Minion || !HasAuthority()) return;
-	if (HealthBleedRatio <= 0.f) return;
-	if (ActiveMinionRatios.Contains(Minion)) return;
+	if (ActiveMinions.Contains(Minion)) return;
 
-	ActiveMinionRatios.Add(Minion, HealthBleedRatio);
-	Minion->OnEnemyHit.AddDynamic(this, &AGYBossCharacterBase::HandleMinionDamaged);
 	Minion->OnEnemyDead.AddDynamic(this, &AGYBossCharacterBase::HandleMinionDead);
 
-	OnMinionCountChanged.Broadcast(ActiveMinionRatios.Num());
-}
-
-void AGYBossCharacterBase::HandleMinionDamaged(AGYEnemyCharacterBase* Minion, float DamageAmount)
-{
-	if (!Minion || !HasAuthority() || !VitalAttribute || !AbilitySystemComponent) return;
-
-	const float* RatioPtr = ActiveMinionRatios.Find(Minion);
-	if (!RatioPtr) return;
-
-	const float Bleed = DamageAmount * (*RatioPtr);
-	if (Bleed <= 0.f) return;
-
-	AbilitySystemComponent->ApplyModToAttribute(
-		UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute(),
-		EGameplayModOp::Additive,
-		-Bleed);
+	OnMinionCountChanged.Broadcast(ActiveMinions.Num());
 }
 
 void AGYBossCharacterBase::HandleMinionDead(AGYEnemyCharacterBase* Minion)
 {
 	if (!Minion) return;
 
-	Minion->OnEnemyHit.RemoveDynamic(this, &AGYBossCharacterBase::HandleMinionDamaged);
 	Minion->OnEnemyDead.RemoveDynamic(this, &AGYBossCharacterBase::HandleMinionDead);
-	ActiveMinionRatios.Remove(Minion);
+	ActiveMinions.Remove(Minion);
 
-	OnMinionCountChanged.Broadcast(ActiveMinionRatios.Num());
+	OnMinionCountChanged.Broadcast(ActiveMinions.Num());
 }
