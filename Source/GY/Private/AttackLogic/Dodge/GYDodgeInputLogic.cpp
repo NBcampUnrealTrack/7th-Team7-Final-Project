@@ -87,10 +87,8 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	const float Duration = Ability->PlayMontageForLogic(SelectedMontage, 1.f);
 
 
-	//직접 날려보내기
-	Character->LaunchCharacter(CachedDodgeDirection * DodgeData->DodgeImpulse, true, true);
 
-	//const float Duration = Ability->PlayMontageForLogic(MontageSet->DodgeMontage, 1.f);
+
 
 
 
