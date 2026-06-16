@@ -6,6 +6,8 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerState.h"
 #include "TimerManager.h"
+#include "GameplayEffect.h"
+#include "Core/GameplayTags/StateTags.h"
 
 UGYBossPhaseAbility::UGYBossPhaseAbility()
 {
@@ -54,6 +56,26 @@ void UGYBossPhaseAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	{
 		ExecuteSubAbilitySequence();
 	}
+
+	bMinionGateTriggered = false;
+
+	if (bUseMinionGate)
+	{
+		if (AGYBossCharacterBase* Boss = Cast<AGYBossCharacterBase>(GetAvatarActorFromActorInfo()))
+		{
+			Boss->OnMinionCountChanged.AddDynamic(this, &UGYBossPhaseAbility::OnBossMinionCountChanged);
+		}
+
+		if (bUseMinionTimeoutPunish && MinionGateTimeoutDuration > 0.f)
+		{
+			if (UWorld* World = GetWorld())
+			{
+				World->GetTimerManager().SetTimer(
+					MinionGateTimeoutTimer, this, &UGYBossPhaseAbility::OnMinionGateTimeout,
+					MinionGateTimeoutDuration, false);
+			}
+		}
+	}
 }
 
 void UGYBossPhaseAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
@@ -64,6 +86,23 @@ void UGYBossPhaseAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(SequenceDelayTimer);
+		World->GetTimerManager().ClearTimer(MinionGateTimeoutTimer);
+	}
+
+	if (AGYBossCharacterBase* Boss = Cast<AGYBossCharacterBase>(GetAvatarActorFromActorInfo()))
+	{
+		Boss->OnMinionCountChanged.RemoveDynamic(this, &UGYBossPhaseAbility::OnBossMinionCountChanged);
+	}
+
+	UnbindStunTagObserver();
+
+	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
+	{
+		if (StunEffectHandle.IsValid())
+		{
+			ASC->RemoveActiveGameplayEffect(StunEffectHandle);
+			StunEffectHandle.Invalidate();
+		}
 	}
 
 	if (bWasCancelled && !bPhaseFinished)
@@ -438,4 +477,99 @@ void UGYBossPhaseAbility::ActivateCurrentSequenceAbility()
 	{
 		AdvanceSequence();
 	}
+}
+
+void UGYBossPhaseAbility::OnBossMinionCountChanged(int32 NewCount)
+{
+	if (bMinionGateTriggered) return;
+	if (NewCount > 0) return;
+
+	bMinionGateTriggered = true;
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(MinionGateTimeoutTimer);
+	}
+
+	EnterMinionGateStun();
+}
+
+void UGYBossPhaseAbility::EnterMinionGateStun()
+{
+	UAbilitySystemComponent* BossASC = GetAbilitySystemComponentFromActorInfo();
+	if (!BossASC) return;
+
+	RemoveInvulnerabilityTagsNow();
+
+	if (!MinionGateStunEffect)
+	{
+		FinishPhase();
+		return;
+	}
+
+	FGameplayEffectContextHandle Ctx = BossASC->MakeEffectContext();
+	Ctx.AddSourceObject(this);
+	FGameplayEffectSpecHandle SpecHandle = BossASC->MakeOutgoingSpec(MinionGateStunEffect, GetAbilityLevel(), Ctx);
+	if (SpecHandle.IsValid())
+	{
+		StunEffectHandle = BossASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+	}
+
+	if (!StunEffectHandle.IsValid())
+	{
+		FinishPhase();
+		return;
+	}
+
+	StunTagDelegateHandle = BossASC->RegisterGameplayTagEvent(
+		GYStateTags::State_Hit_Stun,
+		EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &UGYBossPhaseAbility::OnStunTagChanged);
+}
+
+void UGYBossPhaseAbility::OnStunTagChanged(FGameplayTag CallbackTag, int32 NewCount)
+{
+	if (NewCount > 0) return;
+
+	UnbindStunTagObserver();
+	StunEffectHandle.Invalidate();
+	FinishPhase();
+}
+
+void UGYBossPhaseAbility::OnMinionGateTimeout()
+{
+	if (bMinionGateTriggered) return;
+	bMinionGateTriggered = true;
+
+	if (MinionTimeoutPunishAbility)
+	{
+		ActivateSubAbility(MinionTimeoutPunishAbility);
+	}
+
+	RemoveInvulnerabilityTagsNow();
+	FinishPhase();
+}
+
+void UGYBossPhaseAbility::RemoveInvulnerabilityTagsNow()
+{
+	UAbilitySystemComponent* BossASC = GetAbilitySystemComponentFromActorInfo();
+	if (!BossASC) return;
+
+	for (const FGameplayTag& Tag : InvulnerabilityTags)
+	{
+		BossASC->RemoveLooseGameplayTag(Tag);
+	}
+}
+
+void UGYBossPhaseAbility::UnbindStunTagObserver()
+{
+	UAbilitySystemComponent* BossASC = GetAbilitySystemComponentFromActorInfo();
+	if (!BossASC || !StunTagDelegateHandle.IsValid()) return;
+
+	BossASC->RegisterGameplayTagEvent(
+		GYStateTags::State_Hit_Stun,
+		EGameplayTagEventType::NewOrRemoved)
+		.Remove(StunTagDelegateHandle);
+
+	StunTagDelegateHandle.Reset();
 }

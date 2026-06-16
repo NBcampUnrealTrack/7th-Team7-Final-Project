@@ -107,6 +107,22 @@ private:
 
 	void AdvanceSequence();
 	void ActivateCurrentSequenceAbility();
+
+	UFUNCTION()
+	void OnBossMinionCountChanged(int32 NewCount);
+
+	void EnterMinionGateStun();
+	void OnMinionGateTimeout();
+
+	void OnStunTagChanged(FGameplayTag CallbackTag, int32 NewCount);
+
+	void RemoveInvulnerabilityTagsNow();
+	void UnbindStunTagObserver();
+
+	FTimerHandle MinionGateTimeoutTimer;
+	FActiveGameplayEffectHandle StunEffectHandle;
+	FDelegateHandle StunTagDelegateHandle;
+	bool bMinionGateTriggered = false;
 protected:
 	/** 진입 시 부여할 무적/슈퍼아머 태그 */
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Entry",
@@ -168,6 +184,34 @@ protected:
 		meta = (ToolTip = "true 이면 SubAbilities 시퀀스가 모두 끝난 직후 FinishPhase 를 자동 호출하여 페이즈 어빌리티 자체를 종료한다."))
 	bool bAutoFinishAfterSequence = false;
 
+	/** true면 SubAbility로 소환한 잡몹이 모두 죽을 때까지 무적 유지 */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
+		meta = (ToolTip = "true면 SubAbility로 소환한 잡몹이 모두 죽을 때까지 무적 유지"))
+	bool bUseMinionGate = false;
+
+	/** 잡몹 전멸 시 보스에 적용할 Stun GE. Duration은 GE 자체에 설정. State.Hit.Stun 태그 부여 권장. */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
+	meta = (EditCondition = "bUseMinionGate",
+		ToolTip = "잡몹 전멸 시 보스에 적용할 Stun GE. Duration은 GE 자체에 설정. State.Hit.Stun 태그를 부여하는 Duration GE 권장 (예: GE_Stun)."))
+	TSubclassOf<UGameplayEffect> MinionGateStunEffect;
+
+	/** 켜면 MinionGateTimeoutDuration 안에 잡몹 못 잡을 때 PunishAbility 발동 후 무적 해제 */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
+	meta = (EditCondition = "bUseMinionGate",
+		ToolTip = "켜면 MinionGateTimeoutDuration 안에 잡몹 못 잡을 때 PunishAbility 발동 후 무적 해제"))
+	bool bUseMinionTimeoutPunish = false;
+
+	/** 잡몹 처치 제한 시간(초). 만료 시 PunishAbility 발동 + 무적 해제 + Phase 종료 */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
+		meta = (EditCondition = "bUseMinionTimeoutPunish", ClampMin = "0.0",
+			ToolTip = "잡몹 처치 제한 시간(초). 만료 시 PunishAbility 발동 + 무적 해제 + Phase 종료"))
+	float MinionGateTimeoutDuration = 30.f;
+
+	/** 타임아웃 시 발동할 페널티 어빌리티 (광역 데미지 등) */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
+		meta = (EditCondition = "bUseMinionTimeoutPunish",
+			ToolTip = "타임아웃 시 발동할 페널티 어빌리티 (광역 데미지 등)"))
+	TSubclassOf<UGameplayAbility> MinionTimeoutPunishAbility;
 protected:
 	/** ActivateAbility 시점의 참가자 스냅샷 */
 	UPROPERTY(Transient)

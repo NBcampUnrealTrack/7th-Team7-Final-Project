@@ -329,6 +329,7 @@ void AGYBossCharacterBase::RegisterMinion(AGYEnemyCharacterBase* Minion)
 	if (!Minion || !HasAuthority()) return;
 	if (ActiveMinions.Contains(Minion)) return;
 
+	ActiveMinions.Add(Minion);
 	Minion->OnEnemyDead.AddDynamic(this, &AGYBossCharacterBase::HandleMinionDead);
 
 	OnMinionCountChanged.Broadcast(ActiveMinions.Num());
