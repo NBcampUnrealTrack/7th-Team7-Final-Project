@@ -19,6 +19,7 @@
 #include "Character/HitReactionComponent.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Logging/GYLogManager.h"
+#include "Perception/AISense_Damage.h"
 
 static bool IsSameFaction(UAbilitySystemComponent* A, UAbilitySystemComponent* B)
 {
@@ -213,4 +214,22 @@ float UGYCombatStatics::GetMaxHealth(const UAbilitySystemComponent* ASC)
 bool UGYCombatStatics::IsAlive(const UAbilitySystemComponent* ASC)
 {
 	return GetCurrentHealth(ASC) > 0.f;
+}
+
+void UGYCombatStatics::ReportDamageToPerception(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC,
+	float Effective)
+{
+	if (Effective <= 0.f || !TargetASC || !SourceASC) return;
+
+	AActor* TargetActor = TargetASC->GetAvatarActor();
+	AActor* SourceActor = SourceASC->GetAvatarActor();
+	if (!TargetActor || !SourceActor) return;
+
+	UAISense_Damage::ReportDamageEvent(
+		TargetActor->GetWorld(),
+		TargetActor,
+		SourceActor,
+		Effective,
+		SourceActor->GetActorLocation(),
+		TargetActor->GetActorLocation());
 }

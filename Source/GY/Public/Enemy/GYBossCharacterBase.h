@@ -23,8 +23,6 @@ struct FBossCachedSummonable
 
 	UPROPERTY()
 	TSubclassOf<AGYEnemyCharacterBase> ActorClass;
-
-	float HealthBleedRatio  = 1.f;
 };
 
 UCLASS()
@@ -61,10 +59,10 @@ public:
 
 	bool GetSummonable(EEnemyType Type, FBossCachedSummonable& Out) const;
 
-	void RegisterMinion(AGYEnemyCharacterBase* Minion, float HealthBleedRatio);
+	void RegisterMinion(AGYEnemyCharacterBase* Minion);
 
 	UFUNCTION(BlueprintPure, Category = "Boss|Minion")
-	int32 GetActiveMinionCount() const { return ActiveMinionRatios.Num(); }
+	int32 GetActiveMinionCount() const { return ActiveMinions.Num(); }
 
 	UPROPERTY(BlueprintAssignable, Category = "Boss|Minion")
 	FOnBossMinionCountChanged OnMinionCountChanged;
@@ -89,9 +87,6 @@ protected:
 	void OnSummonablesLoaded();
 
 	UFUNCTION()
-	void HandleMinionDamaged(AGYEnemyCharacterBase* Minion, float DamageAmount);
-
-	UFUNCTION()
 	void HandleMinionDead(AGYEnemyCharacterBase* Minion);
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Participants, VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Encounter")
@@ -107,7 +102,7 @@ protected:
 	TMap<EEnemyType, FBossCachedSummonable> SummonCache;
 
 	UPROPERTY(Transient)
-	TMap<TObjectPtr<AGYEnemyCharacterBase>, float> ActiveMinionRatios;
+	TSet<TObjectPtr<AGYEnemyCharacterBase>> ActiveMinions;
 
 	FTimerHandle TempEncounterTimer;
 public:

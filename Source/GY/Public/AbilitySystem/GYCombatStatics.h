@@ -42,4 +42,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="GY|Combat")
 	static bool IsAlive(const UAbilitySystemComponent* ASC);
+
+	static void ReportDamageToPerception(
+		UAbilitySystemComponent* TargetASC,
+	UAbilitySystemComponent* SourceASC,
+	float Effective);
 };

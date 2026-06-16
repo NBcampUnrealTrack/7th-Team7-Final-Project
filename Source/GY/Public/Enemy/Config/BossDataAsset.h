@@ -32,15 +32,6 @@ struct FBossSummonEntry
 		meta = (ToolTip = "스폰될 잡몹 액터 클래스. DataAsset 과 함께 비동기 프리로드된다."))
 	TSoftClassPtr<AGYEnemyCharacterBase> ActorClass;
 
-	/**
-	 * 잡몹이 받은 데미지를 보스에게 transfer 하는 비율.
-	 *
-	 * 예: 1.0 = 잡몹에게 들어온 데미지 100% 가 보스에게도 동일 적용 (체력 출혈).
-	 * 0.0 이면 transfer 비활성. RegisterMinion 시점에 보스가 이 값을 캐싱한다.
-	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Summon", meta = (ClampMin = "0.0",
-		ToolTip = "잡몹이 받는 데미지를 보스 체력에 옮기는 비율. 1.0 이면 동일 데미지가 보스에게도 적용된다."))
-	float HealthBleedRatio = 1.f;
 };
 
 /**

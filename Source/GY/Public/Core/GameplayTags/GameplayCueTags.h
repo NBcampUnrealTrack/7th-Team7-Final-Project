@@ -60,4 +60,8 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_Zoom);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_Shake);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_Push);
+
+	/* 텔포 */
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Enemy_Teleport_Disappear);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Enemy_Teleport_Appear);
 }

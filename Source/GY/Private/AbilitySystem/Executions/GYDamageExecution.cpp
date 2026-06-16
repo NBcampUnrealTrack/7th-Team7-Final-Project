@@ -5,6 +5,7 @@
 #include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "Core/GameplayTags/OptionTags.h"
+#include "Core/GameplayTags/StateTags.h"
 
 namespace
 {
@@ -57,6 +58,13 @@ void UGYDamageExecution::Execute_Implementation(
 	FAggregatorEvaluateParameters EvalParams;
 	EvalParams.SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
 	EvalParams.TargetTags = Spec.CapturedTargetTags.GetAggregatedTags();
+
+	// 무적 가드 — Target이 State.Combat.Invulnerable 가지면 데미지 계산 자체를 스킵
+	if (EvalParams.TargetTags &&
+		EvalParams.TargetTags->HasTag(GYStateTags::State_Combat_Invulnerable))
+	{
+		return;
+	}
 
 	float Attack = 0.f;
 	float Defense = 0.f;

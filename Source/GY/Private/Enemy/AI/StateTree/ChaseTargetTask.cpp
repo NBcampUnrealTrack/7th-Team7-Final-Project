@@ -1,5 +1,4 @@
 #include "Enemy/AI/StateTree/ChaseTargetTask.h"
-#include "Enemy/GYBossCharacterBase.h"
 #include "AIController.h"
 #include "GameFramework/Pawn.h"
 #include "Navigation/PathFollowingComponent.h"
@@ -15,14 +14,6 @@ EStateTreeRunStatus FChaseTargetTask::EnterState(FStateTreeExecutionContext& Con
 
 	AAIController* AI = Cast<AAIController>(Context.GetOwner());
 	if (!AI || !AI->GetPawn()) return EStateTreeRunStatus::Failed;
-
-	if (AGYBossCharacterBase* Boss = Cast<AGYBossCharacterBase>(AI->GetPawn()))
-	{
-		if (Boss->bIsStationary)
-		{
-			return EStateTreeRunStatus::Succeeded;
-		}
-	}
 
 	const float Dist = FVector::Dist(
 		AI->GetPawn()->GetActorLocation(),
