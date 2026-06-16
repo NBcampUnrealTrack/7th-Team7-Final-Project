@@ -6,8 +6,10 @@
 #include "Core/GYItemDragDropOperation.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/ItemTags.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Interaction/AltarStorageComponent.h"
+#include "Inventory/InventoryEntry.h"
 #include "Inventory/ItemTransactionComponent.h"
 #include "Items/ItemContainer.h"
 #include "Items/ItemDefinition.h"
@@ -75,6 +77,15 @@ bool UGYAltarWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 	if (DragOperation->OriginSlotWidget.IsValid())
 	{
 		DragOperation->OriginSlotWidget->SetRenderOpacity(1.0f);
+	}
+
+	// 제단은 분해 제물 전용 — 장비만 올릴 수 있음. 비장비 드롭은 서버 전송 전에 거부.
+	const FInventoryEntry* DraggedEntry = DragOperation->FromContainer->FindEntry(DragOperation->FromInstanceId);
+	if (DraggedEntry == nullptr) return false;
+	const UItemDefinition* DraggedDef = DraggedEntry->Definition.LoadSynchronous();
+	if (!IsValid(DraggedDef) || !DraggedDef->CategoryTags.HasTag(GYGameplayTags::Item_Category_Equipment))
+	{
+		return false;
 	}
 
 	if (AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState()))
