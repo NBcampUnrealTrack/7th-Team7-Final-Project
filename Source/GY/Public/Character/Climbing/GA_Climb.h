@@ -4,6 +4,7 @@
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "GA_Climb.generated.h"
 
+class UAbilityTask_ApplyRootMotionMoveToForce;
 class UAbilityTask_PlayMontageAndWait;
 class UGYCharacterMovementComponent;
 class ALadder;
@@ -49,6 +50,7 @@ protected:
 	TEnumAsByte<EMovementMode> SavedMovementMode = MOVE_Walking;
 	bool bSavedOrientToMovement = true;
 	bool bSavedUseControllerRotationYaw = false;
+	bool bSavedUseControllerDesiredRotation = true;
 
 	UPROPERTY(EditDefaultsOnly, Category="Climb")
 	float TopEntryThreshold = 50.f;
@@ -62,6 +64,16 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UAbilityTask_PlayMontageAndWait> CurrentMontageTask;
+	UPROPERTY(EditDefaultsOnly, Category="Climb|Entry")
+	float EntryInterpDuration = 0.3f;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_ApplyRootMotionMoveToForce> EntryMoveTask;
+
+	FTransform PendingEntryTransform;
+
+	UFUNCTION()
+	void OnEntryMoveFinished();
 
 	UFUNCTION() void OnEntryMontageCompleted();
 	UFUNCTION() void OnEntryMontageInterrupted();

@@ -39,7 +39,7 @@ public:
 	UBoxComponent* GetBottomEntryBox() const { return BottomBox; }
 
 	UFUNCTION(BlueprintPure, Category="Ladder")
-	UBoxComponent* GetTopEntryBox() const { return TopBox; }
+	UBoxComponent* GetTopEntryBox() const { return ClimbIntoFromTopBox; }
 
 protected:
 	UFUNCTION()
@@ -83,7 +83,10 @@ protected:
 	TObjectPtr<UBoxComponent> ClimbCheckBox;
 
 	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
-	TObjectPtr<UBoxComponent> TopBox;
+	TObjectPtr<UBoxComponent> ClimbIntoFromTopBox;
+
+	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
+	TObjectPtr<UBoxComponent> ClimbOutBox;
 
 	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
 	TObjectPtr<UBoxComponent> BottomBox;

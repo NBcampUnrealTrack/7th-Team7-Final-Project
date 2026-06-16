@@ -30,14 +30,12 @@ void UGYCharacterAnimInstance::NativeInitializeAnimation()
 void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
+
 	if (OwnerCharacter && MovementComponent)
 	{
 
 		Velocity = MovementComponent->Velocity;
 		GroundSpeed = Velocity.Size2D();
-
-
-
 
 		bHasAcceleration = !MovementComponent->GetCurrentAcceleration().IsNearlyZero();
 
@@ -67,23 +65,25 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsStaggered = AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Hit_Stagger);
 	}
 
-	if (IsValid(AbilitySystemComponent) && IsValid(OwnerCharacter) && AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Climbing))
+	UGYCharacterMovementComponent* GyMovement = Cast<UGYCharacterMovementComponent>(MovementComponent);
+	const bool bIsClimbingMode = GyMovement && GyMovement->IsClimbing();
+
+	bIsClimbing = bIsClimbingMode;
+
+	if (bIsClimbingMode  && IsValid(OwnerCharacter))
 	{
-		bIsClimbing = true;
 		const FVector CurrentVelocity = OwnerCharacter->GetVelocity();
 		const FVector ClimbAxis = OwnerCharacter->GetActorUpVector();
 		const float VertSpeed = FVector::DotProduct(CurrentVelocity, ClimbAxis);
 		float MaxSpeed = 150.f;
-		UGYCharacterMovementComponent* GyCharacterMovementComponent = Cast<UGYCharacterMovementComponent> (OwnerCharacter->GetMovementComponent());
-		if (GyCharacterMovementComponent != nullptr)
+		if (GyMovement != nullptr)
 		{
-			MaxSpeed = GyCharacterMovementComponent->GetMaxClimbSpeed();
+			MaxSpeed = GyMovement->GetMaxClimbSpeed();
 		}
 		ClimbPlayRate = FMath::Clamp(VertSpeed / MaxSpeed, -1.f, 1.f);
 	}
 	else
 	{
-		bIsClimbing = false;
 		ClimbPlayRate = 0.f;
 	}
 
