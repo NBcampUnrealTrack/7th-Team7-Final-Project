@@ -5,9 +5,14 @@
 #include "GameplayTagContainer.h"
 #include "Interaction/InteractionOption.h"
 #include "Enchant/RolledEnchantOption.h"
+#include "LevelSequence.h"
 #include "GYUIMessages.generated.h"
 
 class UItemDefinition;
+class APlayerState;
+class APawn;
+class AActor;
+class UTexture2D;
 
 /** 아이템 정보 패널 표시용 스냅샷. 우클릭 시 슬롯이 발행 (Message.UI.ShowItemInfo). 인벤/루트/장비/인첸트 공용 */
 USTRUCT(BlueprintType)
@@ -273,4 +278,42 @@ struct GY_API FGYRevivalProgressMessage
 	UPROPERTY(BlueprintReadWrite) float CurrentValue = 0.f;
 	UPROPERTY(BlueprintReadWrite) float MaxValue = 1.f;
 	UPROPERTY(BlueprintReadWrite) FGameplayTag InputActionTag;
+};
+
+/** 엔딩 시작 */
+USTRUCT(BlueprintType)
+struct GY_API FGYEndingStartedMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) TSoftObjectPtr<ULevelSequence> Cinematic;
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<APawn> Pawn;
+};
+
+/** 상호작용 카운트 */
+USTRUCT(BlueprintType)
+struct GY_API FGYInteractionWaitingMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) int32 CurrentCount = 0;
+	UPROPERTY(BlueprintReadWrite) int32 RequiredCount = 0;
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<APlayerState> ChangedPlayer;
+	UPROPERTY(BlueprintReadWrite) bool bAdded = true;
+};
+
+/** 시네마틱 종료 알림 */
+USTRUCT(BlueprintType)
+struct GY_API FGYEndingCinematicFinishedMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) bool bShowCredits = false;
+};
+
+/** 크레딧 종료 알림 */
+USTRUCT(BlueprintType)
+struct GY_API FGYEndingCreditsFinishedMessage
+{
+	GENERATED_BODY()
 };

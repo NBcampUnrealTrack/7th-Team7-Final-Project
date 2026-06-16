@@ -6,6 +6,8 @@
 class UCommonActivatableWidget;
 class UGYPrimaryGameLayout;
 class UGYLootBoxScreenWidget;
+class UGYEndingCreditsWidget;
+class UGYInteractionWaitingWidget;
 
 UCLASS(Config=Game, DefaultConfig, meta=(DisplayName="GY UI"))
 class GYUI_API UGYUISettings : public UDeveloperSettings
@@ -24,4 +26,13 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI")
 	TSoftClassPtr<UCommonActivatableWidget> RevivalWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Config, Category="UI|Ending")
+	TSoftClassPtr<UGYEndingCreditsWidget> EndingCreditsWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Config, Category="UI|Ending")
+	TSoftClassPtr<UGYInteractionWaitingWidget> InteractionWaitingWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Config, Category="UI|Ending", meta = (AllowedClasses = "/Script/Engine.World"))
+	FSoftObjectPath MainMenuMap;
 };
