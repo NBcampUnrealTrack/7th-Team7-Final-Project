@@ -75,4 +75,5 @@ private:
 	FTimerHandle ChargeThresholdTimer;
 	bool bAttackHeld = false;
 	bool bParryHeld = false;
+	bool bChargePossible = false;
 };

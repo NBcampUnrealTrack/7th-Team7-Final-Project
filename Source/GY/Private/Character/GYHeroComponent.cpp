@@ -364,14 +364,15 @@ void UGYHeroComponent::OnAttackPressed()
 	if (!ASC) return;
 
 	// 차지 이미 활성 중이면 새 입력 무시
+	bool bComboActive = false;
 	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
 	{
-		if (Spec.IsActive() && Spec.Ability &&
-			Spec.Ability->GetAssetTags().HasTag(GYGameplayTags::Ability_Attack_Charge))
-		{
-			return;
-		}
+		if (!Spec.IsActive() || !Spec.Ability) continue;
+		if (Spec.Ability->GetAssetTags().HasTag(GYGameplayTags::Ability_Attack_Charge)) return;
+		if (Spec.Ability->GetAssetTags().HasTag(GYGameplayTags::Ability_Attack_Combo)) bComboActive = true;
 	}
+
+	bChargePossible = !bComboActive;
 
 	// 첫 press면 콤보 활성화 시도. 이미 active면 다음 줄의 이벤트로 콤보 체이닝.
 	ASC->TryActivateAbilitiesByTag(FGameplayTagContainer(GYGameplayTags::Ability_Attack_Combo));
@@ -388,6 +389,7 @@ void UGYHeroComponent::OnAttackPressed()
 void UGYHeroComponent::OnAttackReleased()
 {
 	bAttackHeld = false;
+	bChargePossible = false;
 
 	GetWorld()->GetTimerManager().ClearTimer(ChargeThresholdTimer);
 
@@ -426,7 +428,7 @@ bool UGYHeroComponent::HasChargeDataForCurrentWeapon() const
 
 void UGYHeroComponent::OnChargeThreshold()
 {
-	if (!HasChargeDataForCurrentWeapon()) return;
+	if (!bChargePossible || !HasChargeDataForCurrentWeapon()) return;
 
 	GY_LOG(Player, KHB, "OnChargeThreshold fired. ChargeThresholdEventTags: %s", *ChargeThresholdEventTags.ToString());
 
