@@ -2,7 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Logic/AbilityLogicBase.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
+#include "GameplayEffectTypes.h"
 #include "GYBlockInputLogic.generated.h"
+
+struct FOnAttributeChangeData;
 
 UCLASS()
 class GY_API UGYBlockInputLogic : public UAbilityLogicBase
@@ -18,10 +22,19 @@ public:
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 
 private:
-	void DrainTick();
+	void ApplyDrainEffect();
+	void RemoveDrainEffect();
 	void PlayBlockEnd();
 	void PlayBlockBreak();
 	void RemoveBlockTag();
+
+	void OnStaminaChanged(const FOnAttributeChangeData& Data);
+
+	UFUNCTION()
+	void OnBlockEndMontageFinished();
+
+	UFUNCTION()
+	void OnBlockBreakMontageFinished();
 
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
 	const struct FGYBlockMontageSet* CachedMontageSet = nullptr;
@@ -31,9 +44,13 @@ private:
 	FGameplayAttribute CachedHitCostAttribute;
 	float CachedHitCostMultiplier = 1.f;
 	bool bEnding = false;
-	FTimerHandle DrainTimer;
-	FTimerHandle EndMontageTimer;
-	FTimerHandle BlockBreakTimer;
 
-	static constexpr float DrainInterval = 0.1f;
+	FActiveGameplayEffectHandle DrainEffectHandle;
+	FDelegateHandle StaminaDelegateHandle;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> EndMontageTask;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> BlockBreakTask;
 };

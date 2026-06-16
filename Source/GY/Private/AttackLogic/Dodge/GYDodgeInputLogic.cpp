@@ -35,14 +35,7 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 
 	if (!DodgeData || !MontageSet)
 	{
-		TWeakObjectPtr<UGYPlayerGameplayAbility> WeakAbility(Ability);
-		Ability->GetWorld()->GetTimerManager().SetTimerForNextTick([WeakAbility]()
-		{
-			if (UGYPlayerGameplayAbility* A = WeakAbility.Get())
-			{
-				A->RequestEnd(true);
-			}
-		});
+		Ability->RequestEnd(true);
 		return;
 	}
 
@@ -63,45 +56,35 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	{
 		ASC->AddLooseGameplayTag(CachedDodgeAppliedTag);
 
-		TWeakObjectPtr<UGYDodgeInputLogic> WeakThis(this);
-		Ability->GetWorld()->GetTimerManager().SetTimer(
-			IFrameTimer,
-			[WeakThis]()
-			{
-				if (UGYDodgeInputLogic* Self = WeakThis.Get())
-				{
-					Self->RemoveDodgeTag();
-				}
-			},
-			FMath::Max(InvincibilityDuration, KINDA_SMALL_NUMBER),
-			false
-		);
+		IFrameTask = UAbilityTask_WaitDelay::WaitDelay(Ability, FMath::Max(DodgeData->InvincibilityDuration, KINDA_SMALL_NUMBER));
+		IFrameTask->OnFinish.AddDynamic(this, &UGYDodgeInputLogic::OnIFrameFinished);
+		IFrameTask->ReadyForActivation();
 	}
 
-	TWeakObjectPtr<UGYDodgeInputLogic> WeakThis(this);
-	Ability->GetWorld()->GetTimerManager().SetTimer(
-		EndTimer,
-		[WeakThis]()
-		{
-			if (UGYDodgeInputLogic* Self = WeakThis.Get())
-			{
-				if (Self->CachedAbility.IsValid())
-				{
-					Self->CachedAbility->RequestEnd(false);
-				}
-			}
-		},
-		FMath::Max(Duration, 0.1f),
-		false
-	);
+	DodgeEndTask = UAbilityTask_WaitDelay::WaitDelay(Ability, FMath::Max(Duration, 0.1f));
+	DodgeEndTask->OnFinish.AddDynamic(this, &UGYDodgeInputLogic::OnDodgeEndFinished);
+	DodgeEndTask->ReadyForActivation();
+}
+
+void UGYDodgeInputLogic::OnIFrameFinished()
+{
+	IFrameTask = nullptr;
+	RemoveDodgeTag();
+}
+
+void UGYDodgeInputLogic::OnDodgeEndFinished()
+{
+	DodgeEndTask = nullptr;
+	if (CachedAbility.IsValid())
+	{
+		CachedAbility->RequestEnd(false);
+	}
 }
 
 void UGYDodgeInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
 {
-	if (CachedAbility.IsValid())
-	{
-		CachedAbility->GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
-	}
+	if (IFrameTask) { IFrameTask->EndTask(); IFrameTask = nullptr; }
+	if (DodgeEndTask) { DodgeEndTask->EndTask(); DodgeEndTask = nullptr; }
 	RemoveDodgeTag();
 	CachedAbility.Reset();
 }

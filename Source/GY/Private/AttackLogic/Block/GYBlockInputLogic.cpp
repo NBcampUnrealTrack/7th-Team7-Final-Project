@@ -4,8 +4,12 @@
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystemComponent.h"
+#include "GameplayEffect.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/EventTags.h"
+
+static constexpr float BlockDrainInterval = 0.1f;
+
 void UGYBlockInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
 	CachedAbility = Ability;
@@ -21,11 +25,7 @@ void UGYBlockInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 
 	if (!Fragment)
 	{
-		TWeakObjectPtr<UGYPlayerGameplayAbility> WeakAbility(Ability);
-		Ability->GetWorld()->GetTimerManager().SetTimerForNextTick([WeakAbility]()
-		{
-			if (UGYPlayerGameplayAbility* A = WeakAbility.Get()) A->RequestEnd(true);
-		});
+		Ability->RequestEnd(true);
 		return;
 	}
 
@@ -33,11 +33,7 @@ void UGYBlockInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 
 	if (!BlockData)
 	{
-		TWeakObjectPtr<UGYPlayerGameplayAbility> WeakAbility(Ability);
-		Ability->GetWorld()->GetTimerManager().SetTimerForNextTick([WeakAbility]()
-		{
-			if (UGYPlayerGameplayAbility* A = WeakAbility.Get()) A->RequestEnd(true);
-		});
+		Ability->RequestEnd(true);
 		return;
 	}
 
@@ -62,24 +58,63 @@ void UGYBlockInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 
 	if (CachedDrainPerSecond > 0.f && CachedDrainAttribute.IsValid())
 	{
-		TWeakObjectPtr<UGYBlockInputLogic> WeakThis(this);
-		Ability->GetWorld()->GetTimerManager().SetTimer(
-			DrainTimer,
-			[WeakThis]() { if (UGYBlockInputLogic* Self = WeakThis.Get()) Self->DrainTick(); },
-			DrainInterval,
-			true
-		);
+		ApplyDrainEffect();
 	}
+}
+
+void UGYBlockInputLogic::ApplyDrainEffect()
+{
+	if (!CachedAbility.IsValid()) return;
+	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return;
+
+	StaminaDelegateHandle = ASC->GetGameplayAttributeValueChangeDelegate(CachedDrainAttribute)
+		.AddUObject(this, &UGYBlockInputLogic::OnStaminaChanged);
+
+	if (!CachedAbility->GetAvatarActorFromActorInfo()->HasAuthority()) return;
+
+	const float DrainPerTick = CachedDrainPerSecond * BlockDrainInterval;
+
+	UGameplayEffect* DrainGE = NewObject<UGameplayEffect>(GetTransientPackage(), TEXT("GE_BlockStaminaDrain"));
+	DrainGE->DurationPolicy = EGameplayEffectDurationType::Infinite;
+	DrainGE->Period.Value = BlockDrainInterval;
+	DrainGE->bExecutePeriodicEffectOnApplication = false;
+	DrainGE->Modifiers.SetNum(1);
+	DrainGE->Modifiers[0].ModifierMagnitude = FScalableFloat(-DrainPerTick);
+	DrainGE->Modifiers[0].ModifierOp = EGameplayModOp::Additive;
+	DrainGE->Modifiers[0].Attribute = CachedDrainAttribute;
+
+	FGameplayEffectSpec Spec(DrainGE, ASC->MakeEffectContext(), 1.f);
+	DrainEffectHandle = ASC->ApplyGameplayEffectSpecToSelf(Spec);
+}
+
+void UGYBlockInputLogic::RemoveDrainEffect()
+{
+	if (!CachedAbility.IsValid()) return;
+	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return;
+
+	if (DrainEffectHandle.IsValid())
+		ASC->RemoveActiveGameplayEffect(DrainEffectHandle);
+	if (StaminaDelegateHandle.IsValid() && CachedDrainAttribute.IsValid())
+		ASC->GetGameplayAttributeValueChangeDelegate(CachedDrainAttribute).Remove(StaminaDelegateHandle);
+
+	DrainEffectHandle = FActiveGameplayEffectHandle();
+	StaminaDelegateHandle.Reset();
+}
+
+void UGYBlockInputLogic::OnStaminaChanged(const FOnAttributeChangeData& Data)
+{
+	if (bEnding) return;
+	if (Data.NewValue <= 0.f)
+		PlayBlockEnd();
 }
 
 void UGYBlockInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
 {
-	if (CachedAbility.IsValid())
-	{
-		CachedAbility->GetWorld()->GetTimerManager().ClearTimer(DrainTimer);
-		CachedAbility->GetWorld()->GetTimerManager().ClearTimer(EndMontageTimer);
-		CachedAbility->GetWorld()->GetTimerManager().ClearTimer(BlockBreakTimer);
-	}
+	RemoveDrainEffect();
+	if (EndMontageTask) { EndMontageTask->EndTask(); EndMontageTask = nullptr; }
+	if (BlockBreakTask) { BlockBreakTask->EndTask(); BlockBreakTask = nullptr; }
 	RemoveBlockTag();
 	CachedAbility.Reset();
 	CachedMontageSet = nullptr;
@@ -87,11 +122,17 @@ void UGYBlockInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bW
 
 TArray<FGameplayTag> UGYBlockInputLogic::GetSubscribedEventTags() const
 {
-	return { GYGameplayTags::Event_Block_Hit };
+	return { GYGameplayTags::Event_Block_Hit, GYGameplayTags::Event_Block_LoopEnd };
 }
 
 void UGYBlockInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
 {
+	if (EventTag == GYGameplayTags::Event_Block_LoopEnd)
+	{
+		PlayBlockEnd();
+		return;
+	}
+
 	if (EventTag != GYGameplayTags::Event_Block_Hit || bEnding || !CachedAbility.IsValid()) return;
 	if (!CachedHitCostAttribute.IsValid() || CachedHitCostMultiplier <= 0.f) return;
 
@@ -113,6 +154,16 @@ void UGYBlockInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 void UGYBlockInputLogic::OnInputReleased()
 {
 	PlayBlockEnd();
+
+	if (!CachedAbility.IsValid()) return;
+	if (CachedAbility->IsLocallyControlled() && !CachedAbility->GetAvatarActorFromActorInfo()->HasAuthority())
+	{
+		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(
+			CachedAbility->GetAbilitySystemComponentFromActorInfo()))
+		{
+			GYASC->Server_SendGameplayEvent(GYGameplayTags::Event_Block_LoopEnd, FGameplayEventData());
+		}
+	}
 }
 
 TArray<FGameplayTag> UGYBlockInputLogic::GetRequiredFragmentTags() const
@@ -120,54 +171,20 @@ TArray<FGameplayTag> UGYBlockInputLogic::GetRequiredFragmentTags() const
 	return { GYGameplayTags::Ability_Fragment_Block };
 }
 
-void UGYBlockInputLogic::DrainTick()
-{
-	UGYPlayerGameplayAbility* Ability = CachedAbility.Get();
-	if (!Ability) return;
-
-	UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo();
-	if (!ASC) return;
-
-	const float Current = ASC->GetNumericAttributeBase(CachedDrainAttribute);
-	if (Current <= 0.f)
-	{
-		PlayBlockEnd();
-		return;
-	}
-
-	const float Drain = CachedDrainPerSecond * DrainInterval;
-	ASC->SetNumericAttributeBase(CachedDrainAttribute, FMath::Max(0.f, Current - Drain));
-
-	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
-		GYASC->NotifyAttributeChanged(CachedDrainAttribute);
-
-	if (Current - Drain <= 0.f)
-		PlayBlockEnd();
-}
-
 void UGYBlockInputLogic::PlayBlockEnd()
 {
 	if (bEnding || !CachedAbility.IsValid()) return;
 	bEnding = true;
 
-	CachedAbility->GetWorld()->GetTimerManager().ClearTimer(DrainTimer);
+	RemoveDrainEffect();
 	RemoveBlockTag();
 
 	if (CachedMontageSet && CachedMontageSet->EndMontage)
 	{
 		const float Duration = CachedAbility->PlayMontageForLogic(CachedMontageSet->EndMontage, 1.f);
-		TWeakObjectPtr<UGYBlockInputLogic> WeakThis(this);
-		CachedAbility->GetWorld()->GetTimerManager().SetTimer(
-			EndMontageTimer,
-			[WeakThis]()
-			{
-				if (UGYBlockInputLogic* Self = WeakThis.Get())
-					if (Self->CachedAbility.IsValid())
-						Self->CachedAbility->RequestEnd(false);
-			},
-			FMath::Max(Duration, 0.1f),
-			false
-		);
+		EndMontageTask = UAbilityTask_WaitDelay::WaitDelay(CachedAbility.Get(), FMath::Max(Duration, 0.1f));
+		EndMontageTask->OnFinish.AddDynamic(this, &UGYBlockInputLogic::OnBlockEndMontageFinished);
+		EndMontageTask->ReadyForActivation();
 	}
 	else
 	{
@@ -180,24 +197,15 @@ void UGYBlockInputLogic::PlayBlockBreak()
 	if (bEnding || !CachedAbility.IsValid()) return;
 	bEnding = true;
 
-	CachedAbility->GetWorld()->GetTimerManager().ClearTimer(DrainTimer);
+	RemoveDrainEffect();
 	RemoveBlockTag();
 
 	if (CachedMontageSet && CachedMontageSet->BlockBreakMontage)
 	{
 		const float Duration = CachedAbility->PlayMontageForLogic(CachedMontageSet->BlockBreakMontage, 1.f);
-		TWeakObjectPtr<UGYBlockInputLogic> WeakThis(this);
-		CachedAbility->GetWorld()->GetTimerManager().SetTimer(
-			BlockBreakTimer,
-			[WeakThis]()
-			{
-				if (UGYBlockInputLogic* Self = WeakThis.Get())
-					if (Self->CachedAbility.IsValid())
-						Self->CachedAbility->RequestEnd(false);
-			},
-			FMath::Max(Duration, 0.1f),
-			false
-		);
+		BlockBreakTask = UAbilityTask_WaitDelay::WaitDelay(CachedAbility.Get(), FMath::Max(Duration, 0.1f));
+		BlockBreakTask->OnFinish.AddDynamic(this, &UGYBlockInputLogic::OnBlockBreakMontageFinished);
+		BlockBreakTask->ReadyForActivation();
 	}
 	else
 	{
@@ -205,10 +213,26 @@ void UGYBlockInputLogic::PlayBlockBreak()
 	}
 }
 
+void UGYBlockInputLogic::OnBlockEndMontageFinished()
+{
+	EndMontageTask = nullptr;
+	if (CachedAbility.IsValid())
+		CachedAbility->RequestEnd(false);
+}
+
+void UGYBlockInputLogic::OnBlockBreakMontageFinished()
+{
+	BlockBreakTask = nullptr;
+	if (CachedAbility.IsValid())
+		CachedAbility->RequestEnd(false);
+}
+
 void UGYBlockInputLogic::RemoveBlockTag()
 {
 	if (!CachedAbility.IsValid() || !CachedBlockAppliedTag.IsValid()) return;
 	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
-	if (ASC && ASC->HasMatchingGameplayTag(CachedBlockAppliedTag))
+	if (!ASC) return;
+
+	if (ASC->HasMatchingGameplayTag(CachedBlockAppliedTag))
 		ASC->RemoveLooseGameplayTag(CachedBlockAppliedTag);
 }

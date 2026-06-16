@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Logic/AbilityLogicBase.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "GYParryInputLogic.generated.h"
 
 struct FGYParryMontageSet;
@@ -20,16 +21,35 @@ public:
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 
 private:
+	UFUNCTION()
 	void OnParryWindowExpired();
+
+	UFUNCTION()
 	void OnParryAnimExpired();
+
+	UFUNCTION()
+	void OnCounterMontageFinished();
+
+	UFUNCTION()
+	void OnEndMontageFinished();
+
 	void PlayEndMontage();
 	void RemoveParryTag();
+	void CancelPendingTasks();
 
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
 	const FGYParryMontageSet* CachedMontageSet = nullptr;
 	const FGYParryData* CachedParryData = nullptr;
-	FTimerHandle ParryWindowTimer;
-	FTimerHandle ParryAnimTimer;
-	FTimerHandle CounterMontageTimer;
-	FTimerHandle EndMontageTimer;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> ParryWindowTask;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> ParryAnimTask;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> CounterMontageTask;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> EndMontageTask;
 };

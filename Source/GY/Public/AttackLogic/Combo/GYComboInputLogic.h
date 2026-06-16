@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Logic/AbilityLogicBase.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "GameplayTagContainer.h"
 #include "GYComboInputLogic.generated.h"
 
@@ -26,12 +27,19 @@ private:
 	void PlayCurrentMontage();
 	void AdvanceCombo();
 
+	UFUNCTION()
+	void OnReadyTaskFinished();
+
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
 	int32 ComboIndex = 0;
 	int32 MaxComboCount = 0;
 	int32 ComboIndexAtWindowOpen = 0;
 	bool bWindowOpen = false;
 	bool bReady = false;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> ReadyTask;
+
 	const TArray<TObjectPtr<UAnimMontage>>* CachedMontages = nullptr;
 	const TArray<FGYCollisionShapeData>* CachedCollisions = nullptr;
 };
