@@ -42,36 +42,27 @@ void UGYComboInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 
 	if (!CachedMontages)
 	{
-		TWeakObjectPtr<UGYPlayerGameplayAbility> WeakAbility(Ability);
-		Ability->GetWorld()->GetTimerManager().SetTimerForNextTick([WeakAbility]()
-		{
-			if (UGYPlayerGameplayAbility* A = WeakAbility.Get())
-			{
-				A->RequestEnd(true);
-			}
-		});
+		Ability->RequestEnd(true);
 		return;
 	}
 
 	bReady = false;
-	TWeakObjectPtr<UGYComboInputLogic> WeakThis(this);
-	Ability->GetWorld()->GetTimerManager().SetTimerForNextTick([WeakThis]()
-	{
-		if (UGYComboInputLogic* Self = WeakThis.Get())
-		{
-			Self->bReady = true;
-		}
-	});
+	ReadyTask = UAbilityTask_WaitDelay::WaitDelay(Ability, KINDA_SMALL_NUMBER);
+	ReadyTask->OnFinish.AddDynamic(this, &UGYComboInputLogic::OnReadyTaskFinished);
+	ReadyTask->ReadyForActivation();
 
 	PlayCurrentMontage();
 }
 
+void UGYComboInputLogic::OnReadyTaskFinished()
+{
+	ReadyTask = nullptr;
+	bReady = true;
+}
+
 void UGYComboInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
 {
-	if (CachedAbility.IsValid())
-	{
-		CachedAbility->GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
-	}
+	if (ReadyTask) { ReadyTask->EndTask(); ReadyTask = nullptr; }
 	CachedAbility.Reset();
 	CachedMontages = nullptr;
 	CachedCollisions = nullptr;

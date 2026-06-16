@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Logic/AbilityLogicBase.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "GYChargeInputLogic.generated.h"
 
 struct FGYChargeMontageSet;
@@ -25,11 +26,22 @@ public:
 private:
 	void ExecuteAttack();
 
+	UFUNCTION()
+	void OnMaxChargeFinished();
+
+	UFUNCTION()
+	void OnAttackMontageFinished();
+
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
 	float ChargeStartTime = 0.f;
 	bool bCharging = false;
-	FTimerHandle MaxChargeTimer;
-	FTimerHandle MontageEndTimer;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> MaxChargeTask;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> MontageEndTask;
+
 	const FGYChargeMontageSet* CachedMontageSet = nullptr;
 	const TArray<FGYCollisionShapeData>* CachedCollisions = nullptr;
 };

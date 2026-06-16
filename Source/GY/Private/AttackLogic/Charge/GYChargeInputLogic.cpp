@@ -58,28 +58,31 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 
 	if (ChargeData && ChargeData->MaxChargeTime > 0.f)
 	{
-		TWeakObjectPtr<UGYChargeInputLogic> WeakThis(this);
-		Ability->GetWorld()->GetTimerManager().SetTimer(
-			MaxChargeTimer,
-			[WeakThis]()
-			{
-				if (UGYChargeInputLogic* Self = WeakThis.Get())
-				{
-					Self->ExecuteAttack();
-				}
-			},
-			ChargeData->MaxChargeTime,
-			false
-		);
+		MaxChargeTask = UAbilityTask_WaitDelay::WaitDelay(Ability, FMath::Max(ChargeData->MaxChargeTime, KINDA_SMALL_NUMBER));
+		MaxChargeTask->OnFinish.AddDynamic(this, &UGYChargeInputLogic::OnMaxChargeFinished);
+		MaxChargeTask->ReadyForActivation();
+	}
+}
+
+void UGYChargeInputLogic::OnMaxChargeFinished()
+{
+	MaxChargeTask = nullptr;
+	ExecuteAttack();
+}
+
+void UGYChargeInputLogic::OnAttackMontageFinished()
+{
+	MontageEndTask = nullptr;
+	if (CachedAbility.IsValid())
+	{
+		CachedAbility->RequestEnd(false);
 	}
 }
 
 void UGYChargeInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
 {
-	if (CachedAbility.IsValid())
-	{
-		CachedAbility->GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
-	}
+	if (MaxChargeTask) { MaxChargeTask->EndTask(); MaxChargeTask = nullptr; }
+	if (MontageEndTask) { MontageEndTask->EndTask(); MontageEndTask = nullptr; }
 	bCharging = false;
 	CachedAbility.Reset();
 	CachedMontageSet = nullptr;
@@ -119,7 +122,7 @@ void UGYChargeInputLogic::ExecuteAttack()
 	if (!CachedAbility.IsValid() || !bCharging) return;
 
 	bCharging = false;
-	CachedAbility->GetWorld()->GetTimerManager().ClearTimer(MaxChargeTimer);
+	if (MaxChargeTask) { MaxChargeTask->EndTask(); MaxChargeTask = nullptr; }
 
 	const float ElapsedTime = CachedAbility->GetWorld()->GetTimeSeconds() - ChargeStartTime;
 
@@ -189,22 +192,9 @@ void UGYChargeInputLogic::ExecuteAttack()
 	{
 		const float MontageDuration = CachedAbility->PlayMontageForLogic(CachedMontageSet->AttackMontage, 1.f);
 
-		TWeakObjectPtr<UGYChargeInputLogic> WeakThis(this);
-		CachedAbility->GetWorld()->GetTimerManager().SetTimer(
-			MontageEndTimer,
-			[WeakThis]()
-			{
-				if (UGYChargeInputLogic* Self = WeakThis.Get())
-				{
-					if (Self->CachedAbility.IsValid())
-					{
-						Self->CachedAbility->RequestEnd(false);
-					}
-				}
-			},
-			FMath::Max(MontageDuration, 0.1f),
-			false
-		);
+		MontageEndTask = UAbilityTask_WaitDelay::WaitDelay(CachedAbility.Get(), FMath::Max(MontageDuration, 0.1f));
+		MontageEndTask->OnFinish.AddDynamic(this, &UGYChargeInputLogic::OnAttackMontageFinished);
+		MontageEndTask->ReadyForActivation();
 	}
 	else
 	{

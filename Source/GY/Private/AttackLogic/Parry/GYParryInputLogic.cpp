@@ -38,14 +38,7 @@ void UGYParryInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 
 	if (!CachedMontageSet || !CachedParryData)
 	{
-		TWeakObjectPtr<UGYPlayerGameplayAbility> WeakAbility(Ability);
-		Ability->GetWorld()->GetTimerManager().SetTimerForNextTick([WeakAbility]()
-		{
-			if (UGYPlayerGameplayAbility* A = WeakAbility.Get())
-			{
-				A->RequestEnd(true);
-			}
-		});
+		Ability->RequestEnd(true);
 		return;
 	}
 
@@ -62,29 +55,26 @@ void UGYParryInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 			ASC->AddLooseGameplayTag(Tag);
 	}
 
-	TWeakObjectPtr<UGYParryInputLogic> WeakThis(this);
-	Ability->GetWorld()->GetTimerManager().SetTimer(
-		ParryWindowTimer,
-		[WeakThis]()
-		{
-			if (UGYParryInputLogic* Self = WeakThis.Get())
-			{
-				Self->OnParryWindowExpired();
-			}
-		},
-		FMath::Max(CachedParryData->ParryTime, KINDA_SMALL_NUMBER),
-		false
-	);
+	ParryWindowTask = UAbilityTask_WaitDelay::WaitDelay(Ability, FMath::Max(CachedParryData->ParryTime, KINDA_SMALL_NUMBER));
+	ParryWindowTask->OnFinish.AddDynamic(this, &UGYParryInputLogic::OnParryWindowExpired);
+	ParryWindowTask->ReadyForActivation();
 }
 
 void UGYParryInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
 {
-	if (CachedAbility.IsValid())
-		CachedAbility->GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+	CancelPendingTasks();
 	RemoveParryTag();
 	CachedAbility.Reset();
 	CachedMontageSet = nullptr;
 	CachedParryData = nullptr;
+}
+
+void UGYParryInputLogic::CancelPendingTasks()
+{
+	if (ParryWindowTask) { ParryWindowTask->EndTask(); ParryWindowTask = nullptr; }
+	if (ParryAnimTask) { ParryAnimTask->EndTask(); ParryAnimTask = nullptr; }
+	if (CounterMontageTask) { CounterMontageTask->EndTask(); CounterMontageTask = nullptr; }
+	if (EndMontageTask) { EndMontageTask->EndTask(); EndMontageTask = nullptr; }
 }
 
 TArray<FGameplayTag> UGYParryInputLogic::GetSubscribedEventTags() const
@@ -97,8 +87,8 @@ void UGYParryInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 	// 패리 성공
 	if (EventTag != GYGameplayTags::Event_Parry_Hit || !CachedAbility.IsValid()) return;
 
-	CachedAbility->GetWorld()->GetTimerManager().ClearTimer(ParryWindowTimer);
-	CachedAbility->GetWorld()->GetTimerManager().ClearTimer(ParryAnimTimer);
+	if (ParryWindowTask) { ParryWindowTask->EndTask(); ParryWindowTask = nullptr; }
+	if (ParryAnimTask) { ParryAnimTask->EndTask(); ParryAnimTask = nullptr; }
 
 	RemoveParryTag();
 
@@ -125,18 +115,9 @@ void UGYParryInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 	if (CachedMontageSet && CachedMontageSet->CounterMontage)
 	{
 		const float Duration = CachedAbility->PlayMontageForLogic(CachedMontageSet->CounterMontage, 1.f);
-		TWeakObjectPtr<UGYParryInputLogic> WeakThis(this);
-		CachedAbility->GetWorld()->GetTimerManager().SetTimer(
-			CounterMontageTimer,
-			[WeakThis]()
-			{
-				if (UGYParryInputLogic* Self = WeakThis.Get())
-					if (Self->CachedAbility.IsValid())
-						Self->CachedAbility->RequestEnd(false);
-			},
-			FMath::Max(Duration, 0.1f),
-			false
-		);
+		CounterMontageTask = UAbilityTask_WaitDelay::WaitDelay(CachedAbility.Get(), FMath::Max(Duration, 0.1f));
+		CounterMontageTask->OnFinish.AddDynamic(this, &UGYParryInputLogic::OnCounterMontageFinished);
+		CounterMontageTask->ReadyForActivation();
 	}
 	else
 	{
@@ -155,26 +136,34 @@ TArray<FGameplayTag> UGYParryInputLogic::GetRequiredFragmentTags() const
 
 void UGYParryInputLogic::OnParryWindowExpired()
 {
+	ParryWindowTask = nullptr;
 	RemoveParryTag();
 
 	if (!CachedAbility.IsValid() || !CachedParryData) return;
 
-	TWeakObjectPtr<UGYParryInputLogic> WeakThis(this);
-	CachedAbility->GetWorld()->GetTimerManager().SetTimer(
-		ParryAnimTimer,
-		[WeakThis]()
-		{
-			if (UGYParryInputLogic* Self = WeakThis.Get())
-				Self->OnParryAnimExpired();
-		},
-		FMath::Max(CachedParryData->ParryAnimTime, KINDA_SMALL_NUMBER),
-		false
-	);
+	ParryAnimTask = UAbilityTask_WaitDelay::WaitDelay(CachedAbility.Get(), FMath::Max(CachedParryData->ParryAnimTime, KINDA_SMALL_NUMBER));
+	ParryAnimTask->OnFinish.AddDynamic(this, &UGYParryInputLogic::OnParryAnimExpired);
+	ParryAnimTask->ReadyForActivation();
 }
 
 void UGYParryInputLogic::OnParryAnimExpired()
 {
+	ParryAnimTask = nullptr;
 	PlayEndMontage();
+}
+
+void UGYParryInputLogic::OnCounterMontageFinished()
+{
+	CounterMontageTask = nullptr;
+	if (CachedAbility.IsValid())
+		CachedAbility->RequestEnd(false);
+}
+
+void UGYParryInputLogic::OnEndMontageFinished()
+{
+	EndMontageTask = nullptr;
+	if (CachedAbility.IsValid())
+		CachedAbility->RequestEnd(false);
 }
 
 void UGYParryInputLogic::PlayEndMontage()
@@ -184,22 +173,9 @@ void UGYParryInputLogic::PlayEndMontage()
 	if (CachedMontageSet && CachedMontageSet->EndMontage)
 	{
 		const float Duration = CachedAbility->PlayMontageForLogic(CachedMontageSet->EndMontage, 1.f);
-		TWeakObjectPtr<UGYParryInputLogic> WeakThis(this);
-		CachedAbility->GetWorld()->GetTimerManager().SetTimer(
-			EndMontageTimer,
-			[WeakThis]()
-			{
-				if (UGYParryInputLogic* Self = WeakThis.Get())
-				{
-					if (Self->CachedAbility.IsValid())
-					{
-						Self->CachedAbility->RequestEnd(false);
-					}
-				}
-			},
-			FMath::Max(Duration, 0.1f),
-			false
-		);
+		EndMontageTask = UAbilityTask_WaitDelay::WaitDelay(CachedAbility.Get(), FMath::Max(Duration, 0.1f));
+		EndMontageTask->OnFinish.AddDynamic(this, &UGYParryInputLogic::OnEndMontageFinished);
+		EndMontageTask->ReadyForActivation();
 	}
 	else
 	{

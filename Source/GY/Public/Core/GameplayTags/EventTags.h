@@ -33,6 +33,7 @@ namespace GYGameplayTags
 
 	// Block events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Block_Hit)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Block_LoopEnd)
 
 	// Enemy Attack events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_WeaponTrace_Hit)
