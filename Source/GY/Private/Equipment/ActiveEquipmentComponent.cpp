@@ -1,6 +1,7 @@
 #include "Equipment/ActiveEquipmentComponent.h"
 
 #include "AbilitySystem/AbilitySet.h"
+#include "AbilitySystem/GYOnHitModifierComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/OptionTags.h"
@@ -258,16 +259,20 @@ void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance
 	UDataTable* EffectTable = IsValid(Settings) ? Settings->MagnitudeEffectTable.LoadSynchronous() : nullptr;
 	if (!IsValid(EffectTable)) return;
 
-	// 매그니튜드 단위로 적용. 매핑(DT_EnchantMagnitudeEffect)에 있는 단순 어트리뷰트 가산만 GE로 처리.
-	// 매핑 없는 매그니튜드(조건부 타격·프록·이동속도 등)는 각 도메인(전투/어빌리티)에서 별도 처리.
+	// 매그니튜드 단위로 분기. 매핑(DT_EnchantMagnitudeEffect) 있는 단순 어트리뷰트 가산은 GE로 즉시 적용,
+	// 매핑 없는 매그니튜드(조건부 등)는 히트 시점에 평가되도록 OnHitModifier에 모아 등록.
+	TArray<FRolledMagnitude> OnHitModifiers;
 	for (const FRolledEnchantOption& Option : Entry.RolledOptions)
 	{
 		for (const FRolledMagnitude& Magnitude : Option.Magnitudes)
 		{
 			const FEnchantMagnitudeEffectRow* EffectRow = EffectTable->FindRow<FEnchantMagnitudeEffectRow>(
 				Magnitude.MagnitudeTag.GetTagName(), TEXT("ApplyEnchantOptions"), false);
-			if (EffectRow == nullptr) continue;
-			if (!IsValid(EffectRow->Effect)) continue;
+			if (EffectRow == nullptr || !IsValid(EffectRow->Effect))
+			{
+				OnHitModifiers.Add(Magnitude);
+				continue;
+			}
 
 			FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
 			Context.AddSourceObject(Instance);
@@ -280,6 +285,20 @@ void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance
 
 			const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
 			Instance->GetMutableGrantedHandles().GameplayEffectHandles.Add(Handle);
+
+			// 타격 시점에 값이 필요한 매그니튜드(온히트 효과 등)는 GE 적용과 별개로 OnHitModifier에도 등록
+			if (EffectRow->bHitTimeValue)
+			{
+				OnHitModifiers.Add(Magnitude);
+			}
+		}
+	}
+
+	if (!OnHitModifiers.IsEmpty())
+	{
+		if (UGYOnHitModifierComponent* OnHitComp = GetOwner()->FindComponentByClass<UGYOnHitModifierComponent>())
+		{
+			OnHitComp->RegisterModifiers(Instance, OnHitModifiers);
 		}
 	}
 }
@@ -312,6 +331,11 @@ void UActiveEquipmentComponent::ApplyWeaponBaseStats(UEquipmentInstance* Instanc
 void UActiveEquipmentComponent::RevokeAbilitySets(UEquipmentInstance* Instance)
 {
 	if (!IsValid(Instance)) return;
+
+	if (UGYOnHitModifierComponent* OnHitComp = GetOwner()->FindComponentByClass<UGYOnHitModifierComponent>())
+	{
+		OnHitComp->UnregisterModifiers(Instance);
+	}
 
 	APawn* Pawn = Cast<APawn>(GetOwner());
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);

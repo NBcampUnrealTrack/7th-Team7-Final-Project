@@ -16,6 +16,7 @@ class UAbilitySystemComponent;
 class UActiveEquipmentComponent;
 class UInteractionComponent;
 class UAIPerceptionStimuliSourceComponent;
+class UGYOnHitModifierComponent;
 
 UCLASS()
 class GY_API AGYCharacter : public ACharacter, public IAbilitySystemInterface, public IGenericTeamAgentInterface
@@ -36,6 +37,8 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	UActiveEquipmentComponent* GetActiveEquipmentComponent() const { return ActiveEquipmentComponent; }
+
+	UGYOnHitModifierComponent* GetOnHitModifierComponent() const { return OnHitModifierComponent; }
 
 	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
 
@@ -76,6 +79,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UActiveEquipmentComponent> ActiveEquipmentComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UGYOnHitModifierComponent> OnHitModifierComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UInteractionComponent> InteractionComponent;

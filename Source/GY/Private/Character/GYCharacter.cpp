@@ -16,6 +16,7 @@
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "AbilitySystem/GYOnHitModifierComponent.h"
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -34,6 +35,7 @@ AGYCharacter::AGYCharacter(const FObjectInitializer& ObjectInitializer)
 	ACharacter::CharacterMovementComponentName))
 {
 	ActiveEquipmentComponent = CreateDefaultSubobject<UActiveEquipmentComponent>(TEXT("ActiveEquipmentComponent"));
+	OnHitModifierComponent = CreateDefaultSubobject<UGYOnHitModifierComponent>(TEXT("OnHitModifierComponent"));
 	PawnExtComponent = CreateDefaultSubobject<UGYPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 	LockOnComponent = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));

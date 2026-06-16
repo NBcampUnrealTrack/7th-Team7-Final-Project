@@ -58,6 +58,11 @@ public:
 	UFUNCTION()
 	virtual void OnRep_MaxStun(const FGameplayAttributeData& OldMaxStun);
 
+	// 메타어트리뷰트 — Execution이 여기에 데미지를 출력하면 PostGameplayEffectExecute가 CurrentHealth로 변환한다. 복제하지 않는다.
+	UPROPERTY(BlueprintReadOnly, Category="Attributes")
+	FGameplayAttributeData Damage;
+	GY_ATTRIBUTE_ACCESSORS(UGYVitalAttributeSet, Damage)
+
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 

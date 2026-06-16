@@ -13,4 +13,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(HitImpact_SetByCaller_StunAmount, "HitImpact.SetByCaller.StunAmount");
 	UE_DEFINE_GAMEPLAY_TAG(HitImpact_SetByCaller_BlockReduction, "HitImpact.SetByCaller.BlockReduction");
 	UE_DEFINE_GAMEPLAY_TAG(HitImpact_SetByCaller_BlockHitCostMultiplier, "HitImpact.SetByCaller.BlockHitCostMultiplier");
+	UE_DEFINE_GAMEPLAY_TAG(HitImpact_SetByCaller_DealtMultiplier, "HitImpact.SetByCaller.DealtMultiplier");
+	UE_DEFINE_GAMEPLAY_TAG(HitImpact_SetByCaller_TakenMultiplier, "HitImpact.SetByCaller.TakenMultiplier");
 }
