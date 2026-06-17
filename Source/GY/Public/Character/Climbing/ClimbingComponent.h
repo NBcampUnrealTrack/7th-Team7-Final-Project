@@ -44,6 +44,8 @@ protected:
 	UPROPERTY()
 	TArray<TWeakObjectPtr<ALadder>> CandidateLadders;
 
+	TWeakObjectPtr<UPrimitiveComponent> LastEnteredBox;
+
 	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
 	TWeakObjectPtr<UCapsuleComponent> BoundCapsule;
 };

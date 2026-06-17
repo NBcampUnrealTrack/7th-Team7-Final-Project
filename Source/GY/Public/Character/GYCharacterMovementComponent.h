@@ -9,8 +9,8 @@ class ALadder;
 UENUM(BlueprintType)
 enum ECustomMovementMode
 {
-	CMOVE_None     = 0 UMETA(Hidden),
-	CMOVE_Climbing      UMETA(DisplayName="Climbing"),
+	CMOVE_None = 0 UMETA(Hidden),
+	CMOVE_Climbing UMETA(DisplayName="Climbing"),
 };
 
 UENUM(BlueprintType)
@@ -28,6 +28,7 @@ UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class GY_API UGYCharacterMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
+
 public:
 	UGYCharacterMovementComponent(const FObjectInitializer& OI);
 
@@ -43,6 +44,7 @@ public:
 	virtual void PhysCustom(float DeltaTime, int32 Iterations) override;
 	virtual float GetMaxSpeed() const override;
 	virtual bool CanAttemptJump() const override;
+	float GetMaxClimbSpeed() const { return MaxClimbSpeed; };
 
 protected:
 	void PhysClimbing(float DeltaTime, int32 Iterations);
@@ -53,5 +55,4 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Climb")
 	float MaxClimbSpeed = 150.f;
-
 };

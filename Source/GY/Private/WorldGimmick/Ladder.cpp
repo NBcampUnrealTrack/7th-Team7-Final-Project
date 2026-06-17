@@ -30,6 +30,16 @@ ALadder::ALadder()
 	BottomBox = CreateDefaultSubobject<UBoxComponent>(TEXT("BottomBox"));
 	BottomBox->SetupAttachment(SceneRoot);
 	BottomBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+
+	ClimbIntoFromTopBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ClimbIntoFromTopBox"));
+	ClimbIntoFromTopBox->SetupAttachment(SceneRoot);
+	ClimbIntoFromTopBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+
+	ClimbOutBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ClimbOutBox"));
+	ClimbOutBox->SetupAttachment(SceneRoot);
+	ClimbOutBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+
+
 }
 
 void ALadder::OnConstruction(const FTransform& Transform)
@@ -242,12 +252,23 @@ void ALadder::UpdateColliders()
 	}
 	if (ClimbCheckBox)
 	{
-		ClimbCheckBox->SetRelativeLocation(FVector(0, 0, LadderHeight * 0.5f));
-		ClimbCheckBox->SetBoxExtent(FVector(60, 60, LadderHeight * 0.5f));
+		ClimbCheckBox->SetRelativeLocation(FVector(32, 0, LadderHeight * 0.5f));
+		ClimbCheckBox->SetBoxExtent(FVector(25, 25, LadderHeight * 0.5f));
 	}
 	if (BottomBox)
 	{
 		BottomBox->SetRelativeLocation(FVector(0, 0, 0));
 		BottomBox->SetBoxExtent(FVector(50, 50, 30));
+	}
+	if (ClimbIntoFromTopBox)
+	{
+		ClimbIntoFromTopBox->SetRelativeLocation(FVector(-50, 0, LadderHeight));
+		ClimbIntoFromTopBox->SetBoxExtent(FVector(50, 50, 30));
+	}
+
+	if (ClimbOutBox)
+	{
+		ClimbOutBox->SetRelativeLocation(FVector(50, 0, LadderHeight));
+		ClimbOutBox->SetBoxExtent(FVector(50, 50, 30));
 	}
 }

@@ -30,21 +30,16 @@ void UGYCharacterMovementComponent::PhysClimbing(float DeltaTime, int32 Iteratio
 
 	const float ForwardInput = -LocalInput.X;
 
-
-	UE_LOG(LogTemp, Warning, TEXT("[Climb] %s Accel=%s LastInput=%s ForwardInput=%.2f"),
-		CharacterOwner->HasAuthority() ? TEXT("Server") : TEXT("Client"),
-		*Acceleration.ToString(),
-		*GetLastInputVector().ToString(),
-		ForwardInput);
-
 	// 위/아래 이동
 	const FVector ClimbAxis = ClimbingLadder->GetClimbAxis();
 	Velocity = ClimbAxis * ForwardInput * MaxClimbSpeed;
 
+	const FQuat TargetQuat = ClimbingLadder->GetClimbFacing().Quaternion();
+
 	FHitResult Hit;
 	SafeMoveUpdatedComponent(
 		Velocity * DeltaTime,
-		UpdatedComponent->GetComponentQuat(),
+		TargetQuat,
 		true,
 		Hit);
 
@@ -52,8 +47,7 @@ void UGYCharacterMovementComponent::PhysClimbing(float DeltaTime, int32 Iteratio
 	const FVector LadderOrigin = ClimbingLadder->GetActorLocation();
 	const FVector Diff = UpdatedComponent->GetComponentLocation() - LadderOrigin;
 	const float HeightAlong = FVector::DotProduct(Diff, ClimbAxis);
-
-	if (HeightAlong >= ClimbingLadder->GetClimbDistance() && ForwardInput > 0.f)
+	if (HeightAlong >= ClimbingLadder->GetClimbDistance() - 100.f && ForwardInput > 0.f)
 	{
 		EndClimbingWith(ELadderExitReason::Top);
 		return;
@@ -71,7 +65,7 @@ void UGYCharacterMovementComponent::StartClimbing(ALadder* Ladder)
 {
     if (!Ladder) return;
     ClimbingLadder = Ladder;
-    StopMovementImmediately();
+    // StopMovementImmediately();
     SetMovementMode(MOVE_Custom, CMOVE_Climbing);
 }
 

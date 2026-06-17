@@ -31,7 +31,8 @@ protected:
 	UBlendSpace* MoveBlendSpace;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
 	UAnimSequence* IdleSequence;
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Climb", meta=(BlueprintThreadSafe))
+	UAnimSequence* ClimbCycleSequence;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
 	UBlendSpace* WalkStartBlendSpace;

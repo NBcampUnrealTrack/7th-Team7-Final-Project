@@ -35,6 +35,12 @@ public:
 	float GetRungSpacing() const;
 	UBoxComponent* GetClimbCheckBox() const { return ClimbCheckBox; }
 
+	UFUNCTION(BlueprintPure, Category="Ladder")
+	UBoxComponent* GetBottomEntryBox() const { return BottomBox; }
+
+	UFUNCTION(BlueprintPure, Category="Ladder")
+	UBoxComponent* GetTopEntryBox() const { return ClimbIntoFromTopBox; }
+
 protected:
 	UFUNCTION()
 	void OnRep_Activated();
@@ -75,6 +81,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
 	TObjectPtr<UBoxComponent> ClimbCheckBox;
+
+	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
+	TObjectPtr<UBoxComponent> ClimbIntoFromTopBox;
+
+	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
+	TObjectPtr<UBoxComponent> ClimbOutBox;
 
 	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
 	TObjectPtr<UBoxComponent> BottomBox;
