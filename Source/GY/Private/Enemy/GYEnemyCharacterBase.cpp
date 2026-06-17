@@ -29,6 +29,7 @@
 #include "Character/HitReactionComponent.h"
 #include "Character/LockOn/LockOnComponent.h"
 #include "Core/GameplayTeams/GYTeams.h"
+#include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
@@ -38,7 +39,7 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 	bReplicates = true;
 	SetReplicateMovement(true);
 
-	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent = CreateDefaultSubobject<UGYEnemyAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
@@ -231,6 +232,15 @@ void AGYEnemyCharacterBase::InitGAS()
 
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 
+	if (VitalAttribute)
+	{
+		AbilitySystemComponent->AddSpawnedAttribute(VitalAttribute);
+	}
+	if (DamageAttribute)
+	{
+		AbilitySystemComponent->AddSpawnedAttribute(DamageAttribute);
+	}
+
 	if (!bAttributeDelegatesBound)
 	{
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
@@ -364,6 +374,11 @@ void AGYEnemyCharacterBase::ApplyInitialStats(const FEnemyComputedStats& Stats)
 	if (UCharacterMovementComponent* Move = GetCharacterMovement())
 	{
 		Move->MaxWalkSpeed = Stats.MoveSpeed;
+	}
+
+	if (UGYEnemyAbilitySystemComponent* EnemyASC = Cast<UGYEnemyAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		EnemyASC->ApplyRegenEffects();
 	}
 }
 
@@ -921,7 +936,7 @@ void AGYEnemyCharacterBase::SetOrientToMovement(bool bEnable)
 void AGYEnemyCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-
+	UE_LOG(LogTemp, Warning, TEXT("[EnemyAI] BeginPlay 진입"));
 	if (EnemySpawnLocation.IsNearlyZero())
 	{
 		EnemySpawnLocation = GetActorLocation();

@@ -2,6 +2,7 @@
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
 #include "AbilitySystem/GYCombatStatics.h"
+#include "Enemy/GYEnemyAbilitySystemComponent.h"
 
 void UGYEnemyVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
@@ -17,6 +18,8 @@ void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 {
 	Super::PostGameplayEffectExecute(Data);
 
+
+
 	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
 	{
 		const float Delta = Data.EvaluatedData.Magnitude;
@@ -28,5 +31,24 @@ void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 			UGYCombatStatics::ReportDamageToPerception(&Data.Target, SourceASC, -Delta);
 		}
 		SetCurrentHealth(FMath::Clamp(GetCurrentHealth(), 0.f, GetMaxHealth()));
+		return;
+	}
+
+	float CurrentValue = 0.f;
+	if (Data.EvaluatedData.Attribute == GetCurrentStaggerAttribute())
+		CurrentValue = GetCurrentStagger();
+	else if (Data.EvaluatedData.Attribute == GetCurrentStunAttribute())
+		CurrentValue = GetCurrentStun();
+	else
+		return;
+
+	if (UGYEnemyAbilitySystemComponent* EnemyASC =
+		Cast<UGYEnemyAbilitySystemComponent>(GetOwningAbilitySystemComponent()))
+	{
+		EnemyASC->HandleVitalAccumulation(Data.EvaluatedData.Attribute, CurrentValue);
+		if (Data.EvaluatedData.Magnitude > 0.f)
+		{
+			EnemyASC->NotifyAttributeChanged(Data.EvaluatedData.Attribute);
+		}
 	}
 }
