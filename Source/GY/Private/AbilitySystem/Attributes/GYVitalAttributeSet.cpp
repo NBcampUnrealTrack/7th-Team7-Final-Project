@@ -5,7 +5,14 @@
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Logging/GYLogManager.h"
+
+namespace
+{
+	// 이 비율 이하에서 State.Life.LowHP 부여 (저체력 조건부 효과 기준선)
+	constexpr float LowHPThreshold = 0.25f;
+}
 
 UGYVitalAttributeSet::UGYVitalAttributeSet()
 {
@@ -95,6 +102,7 @@ void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 		{
 			SetCurrentHealth(FMath::Clamp(GetCurrentHealth() - LocalDamage, 0.f, GetMaxHealth()));
 		}
+		UpdateLowHPState();
 		return;
 	}
 
@@ -103,6 +111,13 @@ void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 		GY_WARN(Combat, ESK, "HP 변경 (서버) %.1f / %.1f - Owner: %s",
 			GetCurrentHealth(), GetMaxHealth(),
 			GetOwningActor() ? *GetOwningActor()->GetName() : TEXT("Unknown"));
+		UpdateLowHPState();
+		return;
+	}
+
+	if (Data.EvaluatedData.Attribute == GetMaxHealthAttribute())
+	{
+		UpdateLowHPState();
 		return;
 	}
 
@@ -155,4 +170,23 @@ void UGYVitalAttributeSet::HandleHitReaction(const FGameplayEffectModCallbackDat
 	Params.Location = TargetActor->GetActorLocation();
 
 	TargetASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Combat_HitReaction, Params);
+}
+
+void UGYVitalAttributeSet::UpdateLowHPState()
+{
+	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+	if (!ASC) return;
+
+	const float Max = GetMaxHealth();
+	const bool bLow = Max > 0.f && GetCurrentHealth() <= Max * LowHPThreshold;
+	const bool bHasTag = ASC->HasMatchingGameplayTag(GYStateTags::State_Life_LowHP);
+
+	if (bLow && !bHasTag)
+	{
+		ASC->AddLooseGameplayTag(GYStateTags::State_Life_LowHP);
+	}
+	else if (!bLow && bHasTag)
+	{
+		ASC->RemoveLooseGameplayTag(GYStateTags::State_Life_LowHP);
+	}
 }

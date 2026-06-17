@@ -3,6 +3,7 @@
 namespace GYStateTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(State_Life_Alive, "State.Life.Alive");
+	UE_DEFINE_GAMEPLAY_TAG(State_Life_LowHP, "State.Life.LowHP");
 	UE_DEFINE_GAMEPLAY_TAG(State_Life_Downed, "State.Life.Downed");
 	UE_DEFINE_GAMEPLAY_TAG(State_Life_BeingRevived, "State.Life.BeingRevived");
 	UE_DEFINE_GAMEPLAY_TAG(State_Life_Dead, "State.Life.Dead");
