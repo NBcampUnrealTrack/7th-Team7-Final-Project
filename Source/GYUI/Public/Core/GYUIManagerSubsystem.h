@@ -12,12 +12,14 @@ class UCommonActivatableWidget;
 class UGYPrimaryGameLayout;
 class UGYEndingCreditsWidget;
 class UGYInteractionWaitingWidget;
+class UGYWorldResetWidget;
 struct FGYRegionEnteredMessage;
 struct FGYRegionExitedMessage;
 struct FGYEndingCinematicFinishedMessage;
 struct FGYEndingCreditsFinishedMessage;
 struct FGYInteractionWaitingMessage;
 struct FGYEndingStartedMessage;
+struct FGYWorldResetMessage;
 /**
  * 로컬마다 생성, 관리되는 UI 총괄 매니저
  */
@@ -176,4 +178,10 @@ private:
 
 	TWeakObjectPtr<UCommonActivatableWidget> ActiveCreditsWidget;
 	TWeakObjectPtr<UGYInteractionWaitingWidget> ActiveWaitingWidget;
+
+	void HandleWorldReset(FGameplayTag Tag, const FGYWorldResetMessage& Msg);
+	void HandleWorldResetFinished();
+
+	FGameplayMessageListenerHandle WorldResetListenerHandle;
+	TWeakObjectPtr<UGYWorldResetWidget> ActiveWorldResetWidget;
 };
