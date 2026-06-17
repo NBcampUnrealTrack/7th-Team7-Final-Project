@@ -8,6 +8,7 @@ class UGYPrimaryGameLayout;
 class UGYLootBoxScreenWidget;
 class UGYEndingCreditsWidget;
 class UGYInteractionWaitingWidget;
+class UGYWorldResetWidget;
 
 UCLASS(Config=Game, DefaultConfig, meta=(DisplayName="GY UI"))
 class GYUI_API UGYUISettings : public UDeveloperSettings
@@ -26,6 +27,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI")
 	TSoftClassPtr<UCommonActivatableWidget> RevivalWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Config, Category="UI|WorldReset")
+	TSoftClassPtr<UGYWorldResetWidget> WorldResetWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI|Ending")
 	TSoftClassPtr<UGYEndingCreditsWidget> EndingCreditsWidgetClass;
