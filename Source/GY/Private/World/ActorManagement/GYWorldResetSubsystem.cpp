@@ -3,6 +3,7 @@
 #include "World/ActorManagement/LevelPlacedActorData.h"
 #include "World/ActorManagement/WorldPartitionLevelPlacedActor.h"
 #include "WorldPartition/DataLayer/DataLayerManager.h"
+#include "GameStates/GYGameState.h"
 
 void UGYWorldResetSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -55,7 +56,6 @@ bool UGYWorldResetSubsystem::OnActorBeginPlay(IWorldPartitionLevelPlacedActor* A
 
 void UGYWorldResetSubsystem::ResetWorld()
 {
-
 	if (!GetWorld() || !GetWorld()->GetAuthGameMode())
 	{
 		return;
@@ -85,5 +85,9 @@ void UGYWorldResetSubsystem::ResetWorld()
 		}
 	}, 0.5f, false);
 	//TODO 연출
+	if (AGYGameState* GS = GetWorld()->GetGameState<AGYGameState>())
+	{
+		GS->NotifyWorldResetAll(0.f);
+	}
 }
 
