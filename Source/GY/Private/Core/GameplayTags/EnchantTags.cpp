@@ -18,7 +18,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_NonCombatHPRegen, "Enchant.Magnitude.NonCombatHPRegen")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_DamageTakenReductionPct, "Enchant.Magnitude.DamageTakenReductionPct")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_DodgeInvulnTime, "Enchant.Magnitude.DodgeInvulnTime")
-	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_ParryWindow, "Enchant.Magnitude.ParryWindow")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_SPRegenRatePct, "Enchant.Magnitude.SPRegenRatePct")
 	UE_DEFINE_GAMEPLAY_TAG(Enchant_Magnitude_LowHPDamageReductionPct, "Enchant.Magnitude.LowHPDamageReductionPct")
 }
