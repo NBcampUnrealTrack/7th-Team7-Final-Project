@@ -5,6 +5,8 @@
 #include "GameplayTagContainer.h"
 #include "GYGameState.generated.h"
 
+struct FGYWorldResetMessage;
+
 UCLASS()
 class GY_API AGYGameState : public AGameState
 {
@@ -39,6 +41,12 @@ public:
 	// 퀘스트 클리어 추가
 	UFUNCTION(BlueprintCallable, Category="Quest")
 	void AddCompletedQuest(FGameplayTag QuestTag);
+
+	UFUNCTION()
+	void NotifyWorldResetAll(float DurationOverride);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayWorldResetSequence(float DurationOverride);
 
 	void AddActiveQuest(FGameplayTag QuestTag);
 	void RemoveActiveQuest(FGameplayTag QuestTag);
