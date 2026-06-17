@@ -14,8 +14,6 @@ void UGYEnemyAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, 
 void UGYEnemyAbilitySystemComponent::HandleVitalAccumulation(const FGameplayAttribute& ChangedAttribute,
 	float CurrentValue)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[EnemyASC] HandleVitalAccumulation Attr=%s Curr=%.2f"),
-		*ChangedAttribute.GetName(), CurrentValue);
 
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
@@ -70,8 +68,6 @@ void UGYEnemyAbilitySystemComponent::ApplyRegenEffects()
 
 void UGYEnemyAbilitySystemComponent::ApplyCombatTag()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[EnemyASC] ApplyCombatTag on %s"),
-		GetOwner() ? *GetOwner()->GetName() : TEXT("null"));
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	if (!CombatStateEffect) return;
 	if (CombatStateEffectHandle.IsValid()) return;
@@ -85,8 +81,6 @@ void UGYEnemyAbilitySystemComponent::ApplyCombatTag()
 
 void UGYEnemyAbilitySystemComponent::RemoveCombatTag()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[EnemyASC] RemoveCombatTag on %s"),
-		GetOwner() ? *GetOwner()->GetName() : TEXT("null"));
 	if (CombatStateEffectHandle.IsValid())
 	{
 		RemoveActiveGameplayEffect(CombatStateEffectHandle, 1);

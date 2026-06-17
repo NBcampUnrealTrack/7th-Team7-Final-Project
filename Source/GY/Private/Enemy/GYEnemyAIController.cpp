@@ -6,6 +6,7 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Core/GameplayTags/FactionTags.h"
+#include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Damage.h"
@@ -278,6 +279,8 @@ void AGYEnemyAIController::AddPerceivedActor(AActor* Actor, const FAIStimulus& S
 	NewInfo.Actor = Actor;
 	NewInfo.LastStimulus = Stimulus;
 	NewInfo.LastPerceivedTime = GetWorld()->GetTimeSeconds();
+
+	UpdateSelfCombatTagByPerception();
 }
 
 void AGYEnemyAIController::RemovePerceivedActor(AActor* Actor)
@@ -306,7 +309,21 @@ void AGYEnemyAIController::RemovePerceivedActor(AActor* Actor)
 
 			It.RemoveCurrent();
 		}
+		UpdateSelfCombatTagByPerception();
 	}
+}
+
+void AGYEnemyAIController::UpdateSelfCombatTagByPerception()
+{
+	if (!ControlledEnemy) return;
+	auto* SelfASC = Cast<UGYEnemyAbilitySystemComponent>(
+		ControlledEnemy->GetAbilitySystemComponent());
+	if (!SelfASC) return;
+
+	if (PerceivedActors.IsEmpty())
+		SelfASC->RemoveCombatTag();
+	else
+		SelfASC->ApplyCombatTag();
 }
 
 void AGYEnemyAIController::RemoveAllPerceivedActor()
@@ -409,7 +426,7 @@ void AGYEnemyAIController::RemoveOutOfRangeActors(const FVector& EnemyLocation, 
 			It.RemoveCurrent();
 		}
 	}
-
+	UpdateSelfCombatTagByPerception();
 }
 
 void AGYEnemyAIController::BeginPlay()

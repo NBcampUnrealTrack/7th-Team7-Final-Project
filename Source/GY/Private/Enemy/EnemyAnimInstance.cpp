@@ -1,5 +1,6 @@
 #include "Enemy/EnemyAnimInstance.h"
 
+#include "Core/GameplayTags/StateTags.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Runtime/AIModule/Classes/AIController.h"
@@ -26,6 +27,65 @@ void UEnemyAnimInstance::SetStunSequence(UAnimSequence* InSequence)
 void UEnemyAnimInstance::SetDeadSequence(UAnimSequence* InSequence)
 {
 	DeadSequence = InSequence;
+}
+
+void UEnemyAnimInstance::SetStaggerSequence(UAnimSequence* InSequence)
+{
+	StaggerSequence = InSequence;
+}
+
+void UEnemyAnimInstance::NativeBeginPlay()
+{
+	Super::NativeBeginPlay();
+	BindASCTagCallbacks();
+}
+
+void UEnemyAnimInstance::NativeUninitializeAnimation()
+{
+	UnbindASCTagCallbacks();
+	Super::NativeUninitializeAnimation();
+}
+
+void UEnemyAnimInstance::BindASCTagCallbacks()
+{
+	if (!OwnerEnemy) return;
+	UAbilitySystemComponent* ASC = OwnerEnemy->GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	CachedASC = ASC;
+
+	StaggerTagHandle = ASC->RegisterGameplayTagEvent(
+		GYStateTags::State_Hit_Stagger, EGameplayTagEventType::NewOrRemoved)
+	.AddUObject(this, &UEnemyAnimInstance::OnStaggerTagChanged);
+
+	StunTagHandle  = ASC->RegisterGameplayTagEvent(
+		GYStateTags::State_Hit_Stun, EGameplayTagEventType::NewOrRemoved)
+	.AddUObject(this, &UEnemyAnimInstance::OnStunTagChanged);
+
+	bIsStaggered = ASC->HasMatchingGameplayTag(GYStateTags::State_Hit_Stagger);
+	bIsStunned = ASC->HasMatchingGameplayTag(GYStateTags::State_Hit_Stun);
+}
+
+void UEnemyAnimInstance::UnbindASCTagCallbacks()
+{
+	if (UAbilitySystemComponent* ASC = CachedASC.Get())
+	{
+		ASC->UnregisterGameplayTagEvent(StaggerTagHandle,
+			GYStateTags::State_Hit_Stagger, EGameplayTagEventType::NewOrRemoved);
+		ASC->UnregisterGameplayTagEvent(StunTagHandle,
+			GYStateTags::State_Hit_Stun, EGameplayTagEventType::NewOrRemoved);
+	}
+	CachedASC.Reset();
+}
+
+void UEnemyAnimInstance::OnStaggerTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	bIsStaggered = (NewCount > 0);
+}
+
+void UEnemyAnimInstance::OnStunTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	bIsStunned = (NewCount > 0);
 }
 
 void UEnemyAnimInstance::NativeInitializeAnimation()
@@ -82,7 +142,6 @@ void UEnemyAnimInstance::UpdateStateFromBlackboard()
 	if (OwnerEnemy)
 	{
 		bIsDead = OwnerEnemy->IsDead();
-		bIsStunned = OwnerEnemy->IsStunned();
 	}
 	if (!BlackboardComponent) return;
 
@@ -124,11 +183,15 @@ void UEnemyAnimInstance::UpdateStateEnum()
 		CurrentState = EEnemyState::Stunned;
 		return;
 	}
+	if (bIsStaggered)
+	{
+		CurrentState = EEnemyState::Staggered;
+		return;
+	}
 	if (bIsMoving)
 	{
 		CurrentState = (Speed > WalkSpeedThreshold) ? EEnemyState::Run : EEnemyState::Walk;
 		return;
 	}
-
 	CurrentState = EEnemyState::Idle;
 }

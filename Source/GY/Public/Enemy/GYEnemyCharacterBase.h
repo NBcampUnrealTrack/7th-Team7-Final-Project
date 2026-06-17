@@ -221,15 +221,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Death")
 	float DeactivateDelay = 3.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Status")
-	float StunDuration = 2.f;
 private:
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	FString WeaponTraceBonePrefix = TEXT("WeaponTrace_");
 
 	FTimerHandle DeactivateTimerHandle;
-	FTimerHandle StunRecoveryTimerHandle;
-	FTimerHandle StaggerRecoveryTimerHandle;
 
 	UPROPERTY()
 	FVector EnemySpawnLocation;

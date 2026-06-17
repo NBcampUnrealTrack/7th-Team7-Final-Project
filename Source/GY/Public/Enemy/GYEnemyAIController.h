@@ -92,6 +92,7 @@ protected:
 private:
 	void AddPerceivedActor(AActor* Actor, const FAIStimulus& Stimulus);
 	void RemovePerceivedActor(AActor* Actor);
+	void UpdateSelfCombatTagByPerception();
 public:
 	UPROPERTY()
 	TArray<FVector> PatrolPoints;

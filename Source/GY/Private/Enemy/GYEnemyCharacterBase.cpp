@@ -97,6 +97,10 @@ void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInsta
 	{
 		AnimInstance->SetDeadSequence(DeadSeq);
 	}
+	if (UAnimSequence* StaggerSeq = Config.StaggerSequence.LoadSynchronous())
+	{
+		AnimInstance->SetDeadSequence(StaggerSeq);
+	}
 }
 
 void AGYEnemyCharacterBase::InitWithLoadedData(EEnemyType InEnemyType, UEnemyDataAsset* InDataAsset)
@@ -784,20 +788,6 @@ void AGYEnemyCharacterBase::HandleStunBegin()
 			AbilitySystemComponent->CancelAbilities(&CancelTags);
 		}
 
-		GetWorldTimerManager().SetTimer(
-		StunRecoveryTimerHandle,
-		FTimerDelegate::CreateWeakLambda(this, [this]()
-		{
-			if (AbilitySystemComponent)
-			{
-				AbilitySystemComponent->RemoveLooseGameplayTag(
-					GYStateTags::State_Hit_Stun,
-					1,
-					EGameplayTagReplicationState::TagOnly);
-			}
-		}),
-		StunDuration,
-		false);
 	}
 }
 
@@ -842,6 +832,15 @@ void AGYEnemyCharacterBase::HandleStaggerBegin()
 void AGYEnemyCharacterBase::HandleStaggerEnd()
 {
 	//TODO 은서 : VFX 종료 처리 등등 UI처리 종료 등등
+	if (!HasAuthority()) return;
+
+	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(EnemyBBKeys::IsStaggered, false);
+		}
+	}
 }
 
 UAnimMontage* AGYEnemyCharacterBase::GetMontageByTag(const FGameplayTag& Tag) const
@@ -936,7 +935,6 @@ void AGYEnemyCharacterBase::SetOrientToMovement(bool bEnable)
 void AGYEnemyCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("[EnemyAI] BeginPlay 진입"));
 	if (EnemySpawnLocation.IsNearlyZero())
 	{
 		EnemySpawnLocation = GetActorLocation();
@@ -963,10 +961,6 @@ void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (DeactivateTimerHandle.IsValid())
 		GetWorldTimerManager().ClearTimer(DeactivateTimerHandle);
-	if (StunRecoveryTimerHandle.IsValid())
-		GetWorldTimerManager().ClearTimer(StunRecoveryTimerHandle);
-	if (StaggerRecoveryTimerHandle.IsValid())
-		GetWorldTimerManager().ClearTimer(StaggerRecoveryTimerHandle);
 
 	Super::EndPlay(EndPlayReason);
 }
