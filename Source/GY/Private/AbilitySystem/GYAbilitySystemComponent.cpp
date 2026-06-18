@@ -292,12 +292,9 @@ void UGYAbilitySystemComponent::RemoveCombatTag()
 
 void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute& Attribute)
 {
+	// 경직/무력은 전투 중 회복 정지(regen GE의 InCombat 게이팅)로 처리하므로 delay는 스태미나 전용.
 	if (Attribute == UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute())
 		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stamina, StaminaRegenDelayDuration);
-	else if (Attribute == UGYVitalAttributeSet::GetCurrentStaggerAttribute())
-		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stagger, StaggerRegenDelayDuration);
-	else if (Attribute == UGYVitalAttributeSet::GetCurrentStunAttribute())
-		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stun, StunRegenDelayDuration);
 }
 
 UGameplayAbility* UGYAbilitySystemComponent::GetActiveAbilityByTag(const FGameplayTag& AbilityTag) const
