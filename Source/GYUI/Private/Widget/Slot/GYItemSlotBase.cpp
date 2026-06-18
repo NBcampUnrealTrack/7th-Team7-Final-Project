@@ -5,6 +5,12 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Items/ItemDefinition.h"
 
+void UGYItemSlotBase::NativeConstruct()
+{
+	Super::NativeConstruct();
+	SetVisibility(ESlateVisibility::Visible);
+}
+
 void UGYItemSlotBase::SetView(const FGYItemViewData& View)
 {
 	CurrentInfo = View;
@@ -41,21 +47,43 @@ void UGYItemSlotBase::ClearView()
 	OnViewChanged(true);
 }
 
-void UGYItemSlotBase::BroadcastItemInfo()
+void UGYItemSlotBase::BroadcastItemInfo(FGameplayTag Channel)
 {
 	if (CurrentInfo.Definition.IsNull()) return;
 
 	if (UWorld* World = GetWorld())
 	{
-		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_UI_ShowItemInfo, CurrentInfo);
+		UGameplayMessageSubsystem::Get(World).BroadcastMessage(Channel, CurrentInfo);
 	}
+}
+
+void UGYItemSlotBase::BroadcastHideItemInfo()
+{
+	if (UWorld* World = GetWorld())
+	{
+		FGYItemViewData Empty;
+		Empty.Source = this;
+		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_UI_ShowItemInfo, Empty);
+	}
+}
+
+void UGYItemSlotBase::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+	BroadcastItemInfo(GYGameplayTags::Message_UI_ShowItemInfo);
+}
+
+void UGYItemSlotBase::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
+{
+	Super::NativeOnMouseLeave(InMouseEvent);
+	BroadcastHideItemInfo();
 }
 
 FReply UGYItemSlotBase::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (InMouseEvent.IsMouseButtonDown(EKeys::RightMouseButton) && !CurrentInfo.Definition.IsNull())
+	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton && !CurrentInfo.Definition.IsNull())
 	{
-		BroadcastItemInfo();
+		BroadcastItemInfo(GYGameplayTags::Message_UI_PinItemInfo);
 		return FReply::Handled();
 	}
 

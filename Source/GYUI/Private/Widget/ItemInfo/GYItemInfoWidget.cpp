@@ -1,9 +1,13 @@
 #include "Widget/ItemInfo/GYItemInfoWidget.h"
 
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "CommonTextBlock.h"
+#include "Components/Border.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Enchant/EnchantOptionResolver.h"
+#include "Engine/DataTable.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
 #include "Items/EnchantOptionRow.h"
@@ -12,7 +16,11 @@
 #include "UI/GYUIMessages.h"
 #include "Widget/ItemInfo/EnchantMagnitudeDisplayRow.h"
 #include "Enchant/RolledEnchantOption.h"
-#include "Engine/DataTable.h"
+
+EGYItemInfoTrigger UGYItemInfoWidget::GetEffectiveTrigger() const
+{
+	return bPinned ? EGYItemInfoTrigger::Direct : Trigger;
+}
 
 void UGYItemInfoWidget::NativeConstruct()
 {
@@ -21,31 +29,27 @@ void UGYItemInfoWidget::NativeConstruct()
 	// 첫 우클릭 전엔 숨김
 	SetVisibility(ESlateVisibility::Collapsed);
 
-	if (UWorld* World = GetWorld())
-	{
-		UGameplayMessageSubsystem& Messaging = UGameplayMessageSubsystem::Get(World);
-		// pinned 패널은 우클릭 브라우징 메시지를 듣지 않음 (대상만 직접 표시)
-		if (!bPinned)
-		{
-			ListenerHandle = Messaging.RegisterListener(
-				GYGameplayTags::Message_UI_ShowItemInfo, this, &UGYItemInfoWidget::HandleShowItemInfo);
-		}
-		// 리롤 등 표시 중 아이템 변경 갱신은 공용
-		EntryListenerHandle = Messaging.RegisterListener(
-			GYGameplayTags::Message_Inventory_EntryChanged, this, &UGYItemInfoWidget::HandleEntryChanged);
-	}
-}
+	UWorld* World = GetWorld();
+	if (!World) return;
 
-void UGYItemInfoWidget::ShowItem(const FGYItemViewData& Item)
-{
-	if (Item.Definition.IsNull())
-	{
-		SetVisibility(ESlateVisibility::Collapsed);
-		CurrentSource = nullptr;
-		CurrentInstanceId = FGuid();
-		return;
+	UGameplayMessageSubsystem& Messaging = UGameplayMessageSubsystem::Get(World);
+
+	switch (GetEffectiveTrigger()) // 모드별 채널 구독
+ 	{
+	case EGYItemInfoTrigger::Hover:
+		TriggerListenerHandle = Messaging.RegisterListener(
+			GYGameplayTags::Message_UI_ShowItemInfo, this, &UGYItemInfoWidget::HandleHoverItemInfo);
+		break;
+	case EGYItemInfoTrigger::Pin:
+		TriggerListenerHandle = Messaging.RegisterListener(
+			GYGameplayTags::Message_UI_PinItemInfo, this, &UGYItemInfoWidget::HandlePinItemInfo);
+		break;
+	case EGYItemInfoTrigger::Direct:
+		break;
 	}
-	ApplyView(Item);
+	// 리롤 등 표시 중 아이템 변경 갱신은 공용
+	EntryListenerHandle = Messaging.RegisterListener(
+		GYGameplayTags::Message_Inventory_EntryChanged, this, &UGYItemInfoWidget::HandleEntryChanged);
 }
 
 void UGYItemInfoWidget::NativeDestruct()
@@ -53,33 +57,56 @@ void UGYItemInfoWidget::NativeDestruct()
 	if (UWorld* World = GetWorld())
 	{
 		UGameplayMessageSubsystem& Messaging = UGameplayMessageSubsystem::Get(World);
-		if (ListenerHandle.IsValid()) Messaging.UnregisterListener(ListenerHandle);
+		if (TriggerListenerHandle.IsValid()) Messaging.UnregisterListener(TriggerListenerHandle);
 		if (EntryListenerHandle.IsValid()) Messaging.UnregisterListener(EntryListenerHandle);
 	}
-	ListenerHandle = FGameplayMessageListenerHandle();
+	TriggerListenerHandle = FGameplayMessageListenerHandle();
 	EntryListenerHandle = FGameplayMessageListenerHandle();
 
 	Super::NativeDestruct();
 }
 
-void UGYItemInfoWidget::HandleShowItemInfo(FGameplayTag, const FGYItemViewData& Item)
+void UGYItemInfoWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	// 같은 슬롯 + 같은 아이템을 다시 우클릭 + 이미 표시 중이면 토글로 닫음
-	// (대상 교체처럼 Source는 같지만 아이템이 다른 경우는 토글 아님 → 갱신)
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	if (GetEffectiveTrigger() != EGYItemInfoTrigger::Hover) return;
+	if (!bFollowMouse) return;
+	if (GetVisibility() == ESlateVisibility::Collapsed) return;
+	UpdatePositionToMouse();
+}
+
+void UGYItemInfoWidget::ShowItem(const FGYItemViewData& Item)
+{
+	if (Item.Definition.IsNull())
+	{
+		Hide();
+		return;
+	}
+	ApplyView(Item);
+}
+
+void UGYItemInfoWidget::HandleHoverItemInfo(FGameplayTag, const FGYItemViewData& Item)
+{
+	if (Item.Definition.IsNull())
+	{
+		if (CurrentSource.Get() == Item.Source.Get() || !CurrentSource.IsValid())
+		{
+			Hide();
+		}
+		return;
+	}
+	ApplyView(Item);
+}
+
+void UGYItemInfoWidget::HandlePinItemInfo(FGameplayTag, const FGYItemViewData& Item)
+{
+	if (Item.Definition.IsNull()) return;
+
 	const bool bShown = GetVisibility() != ESlateVisibility::Collapsed;
 	if (bShown && CurrentSource.Get() == Item.Source.Get() && CurrentInstanceId == Item.InstanceId)
 	{
-		SetVisibility(ESlateVisibility::Collapsed);
-		CurrentSource = nullptr;
-		CurrentInstanceId = FGuid();
-		return;
-	}
-
-	if (Item.Definition.IsNull())
-	{
-		SetVisibility(ESlateVisibility::Collapsed);
-		CurrentSource = nullptr;
-		CurrentInstanceId = FGuid();
+		Hide();
 		return;
 	}
 
@@ -100,10 +127,7 @@ void UGYItemInfoWidget::HandleEntryChanged(FGameplayTag, const FGYInventoryEntry
 	// 아이템이 사라졌으면 패널 닫음
 	if (Entry == nullptr)
 	{
-		SetVisibility(ESlateVisibility::Collapsed);
-		CurrentSource = nullptr;
-		CurrentInstanceId = FGuid();
-		return;
+		Hide(); return;
 	}
 
 	FGYItemViewData View;
@@ -118,6 +142,13 @@ void UGYItemInfoWidget::HandleEntryChanged(FGameplayTag, const FGYInventoryEntry
 	ApplyView(View);
 }
 
+void UGYItemInfoWidget::Hide()
+{
+	SetVisibility(ESlateVisibility::Collapsed);
+	CurrentSource = nullptr;
+	CurrentInstanceId = FGuid();
+}
+
 void UGYItemInfoWidget::ApplyView(const FGYItemViewData& Item)
 {
 	UItemDefinition* Def = Item.Definition.LoadSynchronous();
@@ -125,7 +156,7 @@ void UGYItemInfoWidget::ApplyView(const FGYItemViewData& Item)
 
 	CurrentSource = Item.Source;
 	CurrentInstanceId = Item.InstanceId;
-	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	SetVisibility(ESlateVisibility::HitTestInvisible);
 
 	if (Image_Icon)
 	{
@@ -137,9 +168,16 @@ void UGYItemInfoWidget::ApplyView(const FGYItemViewData& Item)
 		Text_Name->SetText(Def->DisplayName);
 	}
 
+	if (Text_Name)
+	{
+		Text_Name->SetText(Def->DisplayName);
+	}
+
 	if (Text_Description)
 	{
 		Text_Description->SetText(Def->Description);
+		Text_Description->SetVisibility(Def->Description.IsEmpty() ? ESlateVisibility::Collapsed
+			: ESlateVisibility::HitTestInvisible);
 	}
 
 	if (Text_Level)
@@ -158,6 +196,8 @@ void UGYItemInfoWidget::ApplyView(const FGYItemViewData& Item)
 		}
 		Text_Grade->SetText(FText::FromString(GradeName));
 	}
+
+	ApplyGradeBorder(Item.GradeTag);
 
 	if (Text_EnchantOptions)
 	{
@@ -189,7 +229,43 @@ void UGYItemInfoWidget::ApplyView(const FGYItemViewData& Item)
 		Text_EnchantOptions->SetVisibility(Lines.Num() > 0 ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	}
 
+	// 호버, bFollowMouse일 때 즉시 마우스 위치로
+	if (GetEffectiveTrigger() == EGYItemInfoTrigger::Hover && bFollowMouse)
+	{
+		UpdatePositionToMouse();
+	}
 	OnItemInfoUpdated(Item.GradeTag);
+}
+
+void UGYItemInfoWidget::ApplyGradeBorder(FGameplayTag GradeTag)
+{
+	const FLinearColor Color = GetBorderColorForGrade(GradeTag);
+	if (Border_Grade) Border_Grade->SetBrushColor(Color);
+	if (Image_GradeBorder) Image_GradeBorder->SetColorAndOpacity(Color);
+}
+
+FLinearColor UGYItemInfoWidget::GetBorderColorForGrade(FGameplayTag GradeTag) const
+{
+	if (GradeTag.IsValid())
+	{
+		if (const FLinearColor* Exact = GradeBorderColors.Find(GradeTag)) return *Exact;
+		for (const TPair<FGameplayTag, FLinearColor>& Pair : GradeBorderColors)
+		{
+			if (GradeTag.MatchesTag(Pair.Key)) return Pair.Value;
+		}
+	}
+	return DefaultBorderColor;
+}
+
+void UGYItemInfoWidget::UpdatePositionToMouse()
+{
+	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Slot);
+	if (CanvasSlot == nullptr) return;
+	APlayerController* PC = GetOwningPlayer();
+
+	if (!IsValid(PC)) return;
+	const FVector2D MousePos = UWidgetLayoutLibrary::GetMousePositionOnViewport(PC);
+	CanvasSlot->SetPosition(MousePos + MouseOffset);
 }
 
 FText UGYItemInfoWidget::FormatMagnitude(const FRolledMagnitude& Magnitude, UDataTable* DisplayTable) const
