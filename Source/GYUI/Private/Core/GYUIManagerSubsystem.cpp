@@ -22,6 +22,7 @@
 #include "Character/GYPlayerActionConfig.h"
 #include "Widget/EndingCredits/GYEndingCreditsWidget.h"
 #include "Widget/Interaction/GYInteractionWaitingWidget.h"
+#include "Widget/WorldReset/GYWorldResetWidget.h"
 
 void UGYUIManagerSubsystem::Deinitialize()
 {
@@ -38,6 +39,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 				MSG->UnregisterListener(EndingWaitingHandle);
 				MSG->UnregisterListener(EndingCinematicFinishedHandle);
 				MSG->UnregisterListener(EndingCreditsFinishedHandle);
+				MSG->UnregisterListener(WorldResetListenerHandle);
 			}
 		}
 		UnbindASC();
@@ -129,7 +131,10 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		{
 			MSG.UnregisterListener(EndingCreditsFinishedHandle);
 		}
-
+		if (WorldResetListenerHandle.IsValid())
+		{
+			MSG.UnregisterListener(WorldResetListenerHandle);
+		}
 
 		RegionEnterListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Region_Entered, this, &UGYUIManagerSubsystem::HandleRegionEntered);
@@ -143,6 +148,8 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 			GYGameplayTags::Message_Ending_CinematicFinished, this, &UGYUIManagerSubsystem::HandleEndingCinematicFinished);
 		EndingCreditsFinishedHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Ending_CreditsFinished, this, &UGYUIManagerSubsystem::HandleEndingCreditsFinished);
+		WorldResetListenerHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_World_Reset, this, &UGYUIManagerSubsystem::HandleWorldReset);
 	}
 }
 
@@ -760,4 +767,36 @@ void UGYUIManagerSubsystem::TravelToMainMenu() const
 	if (!PC) return;
 
 	PC->ClientTravel(MenuMap.GetLongPackageName(), ETravelType::TRAVEL_Absolute); // 클라 이동 - 추후 메인화면으로 설정
+}
+
+void UGYUIManagerSubsystem::HandleWorldReset(FGameplayTag, const FGYWorldResetMessage& Msg)
+{
+	const UGYUISettings* Settings = GetDefault<UGYUISettings>();
+	UClass* WidgetClass = Settings ? Settings->WorldResetWidgetClass.LoadSynchronous() : nullptr;
+	if (!WidgetClass) return;
+
+	if (ActiveWorldResetWidget.IsValid())
+	{
+		ActiveWorldResetWidget->PlayResetSequence(Msg.DurationOverride);
+		return;
+	}
+
+	UCommonActivatableWidget* W = PushWidgetToLayer(GYUILayerTags::UI_Layer_Menu, WidgetClass);
+	UGYWorldResetWidget* Reset = Cast<UGYWorldResetWidget>(W);
+	if (!Reset) return;
+
+	ActiveWorldResetWidget = Reset;
+	Reset->OnSequenceFinished.AddUObject(this, &UGYUIManagerSubsystem::HandleWorldResetFinished);
+	Reset->PlayResetSequence(Msg.DurationOverride);
+}
+
+void UGYUIManagerSubsystem::HandleWorldResetFinished()
+{
+	if (ActiveWorldResetWidget.IsValid())
+	{
+		// 중복 바인딩 방지
+		ActiveWorldResetWidget->OnSequenceFinished.RemoveAll(this);
+		PopWidget(ActiveWorldResetWidget.Get());
+		ActiveWorldResetWidget = nullptr;
+	}
 }

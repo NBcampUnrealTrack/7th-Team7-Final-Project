@@ -237,6 +237,15 @@ struct GY_API FGYWorldTimeMessage
 	UPROPERTY(BlueprintReadWrite) int32 Minutes = 0;
 };
 
+/** 월드 리셋 알림 */
+USTRUCT(BlueprintType)
+struct GY_API FGYWorldResetMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) float DurationOverride = 0.f;
+};
+
 /** 인벤 엔트리 단건 변동 — 위젯이 InstanceId로 InventoryComponent.FindEntry 조회 */
 USTRUCT(BlueprintType)
 struct GY_API FGYInventoryEntryMessage

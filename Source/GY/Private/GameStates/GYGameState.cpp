@@ -3,7 +3,6 @@
 #include "GameplayTagContainer.h"
 #include "Net/UnrealNetwork.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
-#include "World/ActorManagement/GYWorldResetSubsystem.h"
 #include "UI/GYUIMessages.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
@@ -108,4 +107,23 @@ void AGYGameState::BroadcastTimeChanged()
 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(
 		GYGameplayTags::Message_World_TimeChanged, TimePayload);
+}
+
+void AGYGameState::NotifyWorldResetAll(float DurationOverride)
+{
+	if (!HasAuthority()) return;
+	Multicast_PlayWorldResetSequence(DurationOverride);
+}
+
+void AGYGameState::Multicast_PlayWorldResetSequence_Implementation(float DurationOverride)
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	if (IsRunningDedicatedServer()) return;
+
+	FGYWorldResetMessage Payload;
+	Payload.DurationOverride = DurationOverride;
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(
+		GYGameplayTags::Message_World_Reset, Payload);
 }
