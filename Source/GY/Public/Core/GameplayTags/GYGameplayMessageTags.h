@@ -63,6 +63,7 @@ namespace GYGameplayTags
 
 	// 아이템 정보 패널 (우클릭 → 표시). 인벤/루트/장비/인첸트 공용
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_ShowItemInfo);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_PinItemInfo);
 
 	// UI Attribute
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Stat_Health);

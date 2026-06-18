@@ -48,6 +48,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Message_UI_XPProgress, "Message.UI.XPProgress");
 	UE_DEFINE_GAMEPLAY_TAG(Message_UI_PlayerName, "Message.UI.PlayerName");
 	UE_DEFINE_GAMEPLAY_TAG(Message_UI_ShowItemInfo, "Message.UI.ShowItemInfo");
+	UE_DEFINE_GAMEPLAY_TAG(Message_UI_PinItemInfo, "Message.UI.PinItemInfo");
 
 	UE_DEFINE_GAMEPLAY_TAG(Message_Stat_Health, "Message.Stat.Health");
 	UE_DEFINE_GAMEPLAY_TAG(Message_Stat_Stamina, "Message.Stat.Stamina");

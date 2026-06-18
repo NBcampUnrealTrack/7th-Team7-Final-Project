@@ -13,6 +13,7 @@ class UInventoryComponent;
 class UPanelWidget;
 struct FGYInventoryEntryMessage;
 struct FGYEquipSlotMessage;
+class UGYPlayerStatsWidget;
 
 // 인벤 슬롯 좌클릭(드래그 아님) 시 발행. 호스트 화면(인첸트/루트/장착)이 바인딩해 동작 결정
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGYOnInventoryItemClicked, FGuid, InstanceId);
@@ -52,6 +53,10 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPanelWidget> SlotContainer;
+
+	// 인벤토리 우측에 표시하는 캐릭터 스탯 패널
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
+	TObjectPtr<UGYPlayerStatsWidget> StatsPanel;
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "GY|Inventory")
 	void OnCategoryChanged(FGameplayTag NewCategory);
