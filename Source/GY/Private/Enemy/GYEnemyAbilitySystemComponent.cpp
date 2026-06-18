@@ -44,26 +44,22 @@ void UGYEnemyAbilitySystemComponent::HandleVitalAccumulation(const FGameplayAttr
 			FGameplayEffectSpecHandle Spec = MakeOutgoingSpec(Threshold.DisableEffect, 1.f, Context);
 			if (Spec.IsValid())
 			{
+				if (Threshold.Duration > 0.f)
+				{
+					Spec.Data->SetDuration(Threshold.Duration, true);
+				}
 				ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
 			}
 		}
 	}
 }
 
-void UGYEnemyAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute& Attribute)
-{
-	if (Attribute == UGYEnemyVitalAttributeSet::GetCurrentStaggerAttribute())
-		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stagger, StaggerRegenDelayDuration);
-	else if (Attribute == UGYVitalAttributeSet::GetCurrentStunAttribute())
-		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stun, StunRegenDelayDuration);
-}
 
 void UGYEnemyAbilitySystemComponent::ApplyRegenEffects()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	ApplyEffect(StaggerRegenEffect, StaggerRegenGEHandle);
 	ApplyEffect(StunRegenEffect, StunRegenGEHandle);
-	ResetRegenDelays();
 }
 
 void UGYEnemyAbilitySystemComponent::ApplyCombatTag()
@@ -94,28 +90,4 @@ void UGYEnemyAbilitySystemComponent::ApplyEffect(TSubclassOf<UGYPeriodicAttribut
 	if (!EffectClass || Handle.IsValid()) return;
 	FGameplayEffectSpec Spec(EffectClass->GetDefaultObject<UGameplayEffect>(), MakeEffectContext(), 1.f);
 	Handle = ApplyGameplayEffectSpecToSelf(Spec);
-}
-
-void UGYEnemyAbilitySystemComponent::RefreshRegenDelay(const FGameplayTag& DelayTag, float Duration)
-{
-	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-	if (!HasMatchingGameplayTag(GYStateTags::State_Combat_InCombat)) return;
-	if (!RegenDelayEffect || Duration <= 0.f || !DelayTag.IsValid()) return;
-
-	FGameplayEffectContextHandle Context = MakeEffectContext();
-	FGameplayEffectSpecHandle Spec = MakeOutgoingSpec(RegenDelayEffect, 1.f, Context);
-	if (!Spec.IsValid()) return;
-
-	Spec.Data->SetDuration(Duration, true);
-	Spec.Data->DynamicGrantedTags.AddTag(DelayTag);
-
-	ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
-}
-
-void UGYEnemyAbilitySystemComponent::ResetRegenDelays()
-{
-	FGameplayTagContainer DelayTags;
-	DelayTags.AddTag(GYStateTags::State_Regen_Delay_Stagger);
-	DelayTags.AddTag(GYStateTags::State_Regen_Delay_Stun);
-	RemoveActiveEffectsWithGrantedTags(DelayTags);
 }
