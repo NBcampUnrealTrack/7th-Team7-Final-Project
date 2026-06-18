@@ -10,7 +10,7 @@ UGYPlayerVitalAttributeSet::UGYPlayerVitalAttributeSet()
 	InitMaxHealth(100.f);
 	InitCurrentStamina(100.f);
 	InitMaxStamina(100.f);
-	InitStaminaRegenRate(0.025f);
+	InitStaminaRegenPerTick(2.5f);
 }
 
 void UGYPlayerVitalAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -19,7 +19,7 @@ void UGYPlayerVitalAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 
 	DOREPLIFETIME(UGYPlayerVitalAttributeSet, CurrentStamina);
 	DOREPLIFETIME(UGYPlayerVitalAttributeSet, MaxStamina);
-	DOREPLIFETIME(UGYPlayerVitalAttributeSet, StaminaRegenRate);
+	DOREPLIFETIME(UGYPlayerVitalAttributeSet, StaminaRegenPerTick);
 }
 
 void UGYPlayerVitalAttributeSet::OnRep_CurrentStamina(const FGameplayAttributeData& OldCurrentStamina)
@@ -32,9 +32,9 @@ void UGYPlayerVitalAttributeSet::OnRep_MaxStamina(const FGameplayAttributeData& 
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerVitalAttributeSet, MaxStamina, OldMaxStamina);
 }
 
-void UGYPlayerVitalAttributeSet::OnRep_StaminaRegenRate(const FGameplayAttributeData& OldStaminaRegenRate)
+void UGYPlayerVitalAttributeSet::OnRep_StaminaRegenPerTick(const FGameplayAttributeData& OldStaminaRegenPerTick)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerVitalAttributeSet, StaminaRegenRate, OldStaminaRegenRate);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYPlayerVitalAttributeSet, StaminaRegenPerTick, OldStaminaRegenPerTick);
 }
 
 void UGYPlayerVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)

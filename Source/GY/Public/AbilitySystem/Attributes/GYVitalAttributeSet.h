@@ -58,21 +58,21 @@ public:
 	UFUNCTION()
 	virtual void OnRep_MaxStun(const FGameplayAttributeData& OldMaxStun);
 
-	// 초당 최대치의 N% 만큼 경직 게이지를 해소(음수=감소 방향). regen GE가 AttributeBased로 읽음.
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_StaggerRecoveryRate)
-	FGameplayAttributeData StaggerRecoveryRate;
-	GY_ATTRIBUTE_ACCESSORS(UGYVitalAttributeSet, StaggerRecoveryRate)
+	// 틱당 경직 게이지 해소량(음수=감소 방향). regen GE가 AttributeBased로 읽음.
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_StaggerRecoveryPerTick)
+	FGameplayAttributeData StaggerRecoveryPerTick;
+	GY_ATTRIBUTE_ACCESSORS(UGYVitalAttributeSet, StaggerRecoveryPerTick)
 
 	UFUNCTION()
-	virtual void OnRep_StaggerRecoveryRate(const FGameplayAttributeData& OldStaggerRecoveryRate);
+	virtual void OnRep_StaggerRecoveryPerTick(const FGameplayAttributeData& OldStaggerRecoveryPerTick);
 
-	// 초당 최대치의 N% 만큼 무력 게이지를 해소(음수=감소 방향).
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_StunRecoveryRate)
-	FGameplayAttributeData StunRecoveryRate;
-	GY_ATTRIBUTE_ACCESSORS(UGYVitalAttributeSet, StunRecoveryRate)
+	// 틱당 무력 게이지 해소량(음수=감소 방향).
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_StunRecoveryPerTick)
+	FGameplayAttributeData StunRecoveryPerTick;
+	GY_ATTRIBUTE_ACCESSORS(UGYVitalAttributeSet, StunRecoveryPerTick)
 
 	UFUNCTION()
-	virtual void OnRep_StunRecoveryRate(const FGameplayAttributeData& OldStunRecoveryRate);
+	virtual void OnRep_StunRecoveryPerTick(const FGameplayAttributeData& OldStunRecoveryPerTick);
 
 	// 메타어트리뷰트 — Execution이 여기에 데미지를 출력하면 PostGameplayEffectExecute가 CurrentHealth로 변환한다. 복제하지 않는다.
 	UPROPERTY(BlueprintReadOnly, Category="Attributes")
