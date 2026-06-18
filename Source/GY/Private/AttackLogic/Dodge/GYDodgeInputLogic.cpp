@@ -6,6 +6,8 @@
 #include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 using GYAttributeCostHelpers::ApplyCost;
 
@@ -44,7 +46,52 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 
 	ApplyCost(ASC, DodgeData->StaminaCost);
 
-	const float Duration = Ability->PlayMontageForLogic(MontageSet->DodgeMontage, 1.f);
+	// ----------입력에 따른 몽타주 재생 로직
+	ACharacter* Character = Cast<ACharacter>(Ability->GetAvatarActorFromActorInfo());
+	UCharacterMovementComponent* CMC = Character ? Character->GetCharacterMovement() : nullptr;
+
+	FVector InputDir = CMC ? CMC->GetLastInputVector() : FVector::ZeroVector;
+	InputDir.Z = 0.f;
+
+	if (InputDir.IsNearlyZero()) InputDir = Character->GetActorForwardVector();
+
+	InputDir.Normalize();
+	CachedDodgeDirection = InputDir;
+
+	FVector Forward = Character->GetActorForwardVector();
+	Forward.Z = 0.f;
+	Forward.Normalize();
+
+	//두 벡터 사이의 각도 구하기 Forward Dot InputDir = Cosθ, Forward X InputDir = Sinθ n (정규화됨)
+	// Sinθ/Cosθ = tanθ, arctan(Sinθ/cosθ) = θ
+
+	float cost = FVector::DotProduct(Forward, CachedDodgeDirection);
+	float sint = FVector::CrossProduct(Forward, CachedDodgeDirection).Z;
+	float DodgeAngle = FMath::RadiansToDegrees(FMath::Atan2(sint, cost));
+
+
+	UAnimMontage* SelectedMontage = MontageSet->GetMontageByAngle(DodgeAngle);
+	if (!SelectedMontage) { return; }
+
+
+	// 기존 몽타주 전부 중단
+	if (USkeletalMeshComponent* Mesh = Character->GetMesh())
+	{
+		if (UAnimInstance* AnimInst = Mesh->GetAnimInstance())
+		{
+			AnimInst->StopAllMontages(0.1f);  // 0.1f = 블렌드아웃 시간
+		}
+	}
+
+
+	const float Duration = Ability->PlayMontageForLogic(SelectedMontage, 1.f);
+
+
+
+
+
+
+
 
 	float InvincibilityDuration = DodgeData->InvincibilityDuration;
 	if (const UGYCoreStatAttributeSet* CoreStats = ASC ? ASC->GetSet<UGYCoreStatAttributeSet>() : nullptr)
