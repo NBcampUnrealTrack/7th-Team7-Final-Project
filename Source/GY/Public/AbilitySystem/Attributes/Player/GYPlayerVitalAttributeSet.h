@@ -29,6 +29,14 @@ public:
 	UFUNCTION()
 	virtual void OnRep_MaxStamina(const FGameplayAttributeData& OldMaxStamina);
 
+	// 초당 최대치의 N% 만큼 스태미나를 회복(양수=증가 방향). regen GE가 AttributeBased로 읽음.
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_StaminaRegenRate)
+	FGameplayAttributeData StaminaRegenRate;
+	GY_ATTRIBUTE_ACCESSORS(UGYPlayerVitalAttributeSet, StaminaRegenRate)
+
+	UFUNCTION()
+	virtual void OnRep_StaminaRegenRate(const FGameplayAttributeData& OldStaminaRegenRate);
+
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 };
