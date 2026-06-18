@@ -147,4 +147,10 @@ public:
 	{
 		return FPrimaryAssetId("EnemyConfig", EnemyID);
 	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Duration")
+	float StaggerDuration = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Duration")
+	float StunDuration = 4.f;
 };

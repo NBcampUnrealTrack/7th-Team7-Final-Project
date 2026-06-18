@@ -37,6 +37,10 @@ struct GY_API FGYDisableThreshold
 	// 발동 시 취소할 진행 중 어빌리티 태그 (예: Ability.Attack)
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer CancelAbilityTags;
+
+	// 0이면 GE 기본 Duration 사용
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float Duration = 0.f;
 };
 
 UCLASS()

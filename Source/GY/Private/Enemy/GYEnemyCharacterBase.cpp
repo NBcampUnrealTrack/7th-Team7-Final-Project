@@ -183,6 +183,21 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 		HitReactionComponent->SetHitReactStartBone(LoadedDataAsset->HitReactStartBone);
 	}
 
+	if (auto* EnemyASC = Cast<UGYEnemyAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		for (FGYDisableThreshold& Threshold : EnemyASC->DisableThresholds)
+		{
+			if (Threshold.StateTag == GYStateTags::State_Hit_Stagger)
+			{
+				Threshold.Duration = LoadedDataAsset->StaggerDuration;
+			}
+			else if (Threshold.StateTag == GYStateTags::State_Hit_Stun)
+			{
+				Threshold.Duration = LoadedDataAsset->StunDuration;
+			}
+		}
+	}
+
 	// 브로드캐스트
 	bIsInitialized = true;
 	OnEnemyReady.Broadcast(this);
