@@ -2,6 +2,7 @@
 
 #include "Abilities/GameplayAbility.h"
 #include "Components/BoxComponent.h"
+#include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Net/UnrealNetwork.h"
 #include "WorldGimmick/LadderTypeDataTableRow.h"
@@ -21,7 +22,7 @@ ALadder::ALadder()
 
 	TopActivationBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TopActivationBox"));
 	TopActivationBox->SetupAttachment(SceneRoot);
-	TopActivationBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	TopActivationBox->SetCollisionProfileName(GYCollisionProfile::Interactable);
 
 	ClimbCheckBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ClimbCheckBox"));
 	ClimbCheckBox->SetupAttachment(SceneRoot);

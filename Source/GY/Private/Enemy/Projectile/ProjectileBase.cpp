@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Components/SphereComponent.h"
+#include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -18,7 +19,7 @@ AProjectileBase::AProjectileBase()
 	CollisionComponent->InitSphereRadius(SweepRadius);
 
 	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	CollisionComponent->SetCollisionObjectType(ECC_WorldDynamic);
+	CollisionComponent->SetCollisionObjectType(ECC_EnemyProjectile);
 	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);

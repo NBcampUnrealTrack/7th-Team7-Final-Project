@@ -4,6 +4,7 @@
 #include "Interaction/GYInteractionStatics.h"
 #include "Interaction/Interactable.h"
 #include "TimerManager.h"
+#include "Core/GYCollisionChannels.h"
 
 
 UAbilityTask_WaitForInteractableTargets_SphereOverlap*
@@ -55,7 +56,7 @@ void UAbilityTask_WaitForInteractableTargets_SphereOverlap::PerformOverlap()
 		Overlaps,
 		Avatar->GetActorLocation(),
 		FQuat::Identity,
-		ECC_Visibility,
+		ECC_Interactable,
 		FCollisionShape::MakeSphere(InteractionScanRange),
 		Params);
 

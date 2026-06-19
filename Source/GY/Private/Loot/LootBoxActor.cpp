@@ -4,6 +4,7 @@
 #include "AbilitySystemComponent.h"
 #include "WorldGimmick/DoorMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTags/CameraTags.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
@@ -30,6 +31,8 @@ ALootBoxActor::ALootBoxActor()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
+
+	Mesh->SetCollisionProfileName(GYCollisionProfile::Interactable);
 }
 
 void ALootBoxActor::BeginPlay()

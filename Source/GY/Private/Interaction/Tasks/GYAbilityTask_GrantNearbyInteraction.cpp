@@ -5,6 +5,7 @@
 #include "Interaction/GYInteractionStatics.h"
 #include "Interaction/InteractionOption.h"
 #include "TimerManager.h"
+#include "Core/GYCollisionChannels.h"
 
 UGYAbilityTask_GrantNearbyInteraction* UGYAbilityTask_GrantNearbyInteraction::GrantAbilitiesForNearbyInteractors(
     UGameplayAbility* OwningAbility, float InScanRange, float InScanRate)
@@ -40,7 +41,7 @@ void UGYAbilityTask_GrantNearbyInteraction::QueryInteractables()
     TArray<FOverlapResult> Overlaps;
     GetWorld()->OverlapMultiByChannel(
         Overlaps, Avatar->GetActorLocation(), FQuat::Identity,
-        ECC_Visibility, FCollisionShape::MakeSphere(ScanRange), Params);
+        ECC_Interactable, FCollisionShape::MakeSphere(ScanRange), Params);
 
     TArray<TScriptInterface<IInteractable>> Interactables;
     UGYInteractionStatics::AppendInteractablesFromOverlapResults(Overlaps, Interactables);
