@@ -99,7 +99,7 @@ void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInsta
 	}
 	if (UAnimSequence* StaggerSeq = Config.StaggerSequence.LoadSynchronous())
 	{
-		AnimInstance->SetDeadSequence(StaggerSeq);
+		AnimInstance->SetStaggerSequence(StaggerSeq);
 	}
 }
 
