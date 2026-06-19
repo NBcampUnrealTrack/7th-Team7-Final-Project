@@ -16,6 +16,7 @@
 #include "AbilitySystem/GYOnHitModifierComponent.h"
 #include "Core/GameplayTags/OptionTags.h"
 #include "Core/GameplayTags/EnchantTags.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Character/HitReactionComponent.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Logging/GYLogManager.h"
@@ -124,6 +125,12 @@ static void ResolveHitMultipliers(const FGYHitContext& HitContext, float& OutDea
 		// 받는 피해는 증가(DamageTakenPct)·감소(DamageTakenReductionPct) 태그가 분리. 둘 다 양수 저장이라 차감으로 합산.
 		OutTakenMultiplier += (TargetMods->GetModifierSumValue(GYGameplayTags::Enchant_Magnitude_DamageTakenPct)
 			- TargetMods->GetModifierSumValue(GYGameplayTags::Enchant_Magnitude_DamageTakenReductionPct)) * PercentToFraction;
+
+		// A07 구원: 저체력(State.Life.LowHP)일 때만 받는 피해 추가 감소. HP 판정은 어트리뷰트셋이 태그로 관리.
+		if (HitContext.TargetASC->HasMatchingGameplayTag(GYStateTags::State_Life_LowHP))
+		{
+			OutTakenMultiplier -= TargetMods->GetModifierSumValue(GYGameplayTags::Enchant_Magnitude_LowHPDamageReductionPct) * PercentToFraction;
+		}
 	}
 }
 

@@ -68,4 +68,7 @@ public:
 
 protected:
 	virtual void HandleHitReaction(const FGameplayEffectModCallbackData& Data, float DamageDone);
+
+	// 현재 HP 비율에 따라 State.Life.LowHP 태그를 켜고/끈다 (저체력 조건부 효과의 단일 판정점).
+	void UpdateLowHPState();
 };

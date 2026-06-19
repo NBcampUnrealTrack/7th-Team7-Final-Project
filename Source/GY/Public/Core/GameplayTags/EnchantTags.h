@@ -22,7 +22,6 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_NonCombatHPRegen)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_DamageTakenReductionPct)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_DodgeInvulnTime)
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_ParryWindow)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_SPRegenRatePct)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Enchant_Magnitude_LowHPDamageReductionPct)
 }
