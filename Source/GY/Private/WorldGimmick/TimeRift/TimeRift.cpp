@@ -1,6 +1,7 @@
 #include "WorldGimmick/TimeRift/TimeRift.h"
 
 #include "AbilitySystemComponent.h"
+#include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Player/GYPlayerState.h"
@@ -13,6 +14,7 @@ ATimeRift::ATimeRift()
 
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	SetRootComponent(StaticMeshComponent);
+	StaticMeshComponent->SetCollisionProfileName(GYCollisionProfile::Interactable);
 
 	RespawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("RespawnPoint"));
 	RespawnPoint->SetupAttachment(StaticMeshComponent);

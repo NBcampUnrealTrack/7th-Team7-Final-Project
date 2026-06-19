@@ -11,6 +11,7 @@
 #include "DrawDebugHelpers.h"
 #include "MotionWarpingComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Core/GYCollisionChannels.h"
 
 void UGYParkourLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
@@ -142,7 +143,7 @@ bool UGYParkourLogic::DoForwardTrace(FHitResult& OutHit)
 
 		FHitResult Hit;
 
-		if (World->LineTraceSingleByChannel(Hit, Start, End, ECC_GameTraceChannel2, CollisionParams))
+		if (World->LineTraceSingleByChannel(Hit, Start, End, ECC_Traversable, CollisionParams))
 		{
 			OutHit = Hit;
 
@@ -181,7 +182,7 @@ bool UGYParkourLogic::DoTopTrace(FVector WallLoc, FHitResult& OutHit)
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Character);
-	bool bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_GameTraceChannel2, Params);
+	bool bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Traversable, Params);
 
 #if ENABLE_DRAW_DEBUG
 	DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 2.f, 0, 2.f);

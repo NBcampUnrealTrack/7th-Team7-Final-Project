@@ -1,10 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "WorldGimmick/DoorActor.h"
+﻿#include "WorldGimmick/DoorActor.h"
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
+#include "Components/BoxComponent.h"
+#include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Logging/GYLogManager.h"
@@ -20,6 +19,10 @@ ADoorActor::ADoorActor()
 
 	DoorFrameMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FrameMesh"));
 	DoorFrameMesh->SetupAttachment(Scene);
+
+	InteractionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionBox"));
+	InteractionBox->SetCollisionProfileName(GYCollisionProfile::Interactable);
+	InteractionBox->SetupAttachment(Scene);
 }
 
 void ADoorActor::BeginPlay()

@@ -11,6 +11,8 @@
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
 #include "MovieSceneSequencePlaybackSettings.h"
+#include "Components/BoxComponent.h"
+#include "Core/GYCollisionChannels.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/GYUIMessages.h"
 
@@ -23,6 +25,10 @@ AGYEndingInteractActor::AGYEndingInteractActor()
 	SetRootComponent(Root);
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(Root);
+
+	InteractionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractionBox"));
+	InteractionBox->SetCollisionProfileName(GYCollisionProfile::Interactable);
+	InteractionBox->SetupAttachment(Root);
 
 	InteractTag = GYGameplayTags::Interaction_Ending_Start;
 	InteractionText = NSLOCTEXT("CinematicGate", "Default", "상호작용");
