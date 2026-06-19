@@ -6,6 +6,7 @@
 #include "Interaction/Interactable.h"
 #include "GYEndingInteractActor.generated.h"
 
+class UBoxComponent;
 class ULevelSequence;
 class ULevelSequencePlayer;
 class ALevelSequenceActor;
@@ -38,8 +39,13 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> Root;
+
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticMeshComponent> Mesh;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UBoxComponent> InteractionBox;
+
 
 	UPROPERTY(EditAnywhere, Category = "Cinematic")
 	FText InteractionText;
@@ -66,12 +72,18 @@ private:
 
 	UPROPERTY()
 	TArray<TWeakObjectPtr<APlayerState>> InteractedPlayers;
+
 	UPROPERTY()
 	int32 RequiredCount = 0;
+
 	UPROPERTY(Replicated)
 	bool bConsumed = false;
+
 	UPROPERTY(Transient)
 	TObjectPtr<ULevelSequencePlayer> ActiveSequencePlayer;
+
 	UPROPERTY(Transient)
 	TObjectPtr<ALevelSequenceActor> ActiveSequenceActor;
+
+
 };

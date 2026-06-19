@@ -1,6 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -9,6 +7,8 @@
 
 #include "DoorActor.generated.h"
 
+
+class UBoxComponent;
 
 UCLASS()
 class GY_API ADoorActor : public AActor, public IInteractable
@@ -27,26 +27,29 @@ public:
 
 	bool GetDoorState() const;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
-	TObjectPtr<UStaticMeshComponent> DoorFrameMesh;
-
-
 protected:
 	void DoorMove();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Door")
-	TArray<TObjectPtr<UDoorMovementComponent>> DoorComponents;
-
 	//replicated
-protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION()
 	void OnRep_Open();
 
+	void PlayOpenEffect(APawn* Interactor);
+	void PlayCloseEffect(APawn* Interactor);
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Door")
+	TArray<TObjectPtr<UDoorMovementComponent>> DoorComponents;
+
 	UPROPERTY(ReplicatedUsing = OnRep_Open)
 	bool bIsOpen = false;
 
-	void PlayOpenEffect(APawn* Interactor);
-	void PlayCloseEffect(APawn* Interactor);
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
+	TObjectPtr<UStaticMeshComponent> DoorFrameMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
+	TObjectPtr<UBoxComponent> InteractionBox;
 };
