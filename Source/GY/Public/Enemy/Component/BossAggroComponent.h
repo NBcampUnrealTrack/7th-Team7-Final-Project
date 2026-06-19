@@ -103,6 +103,9 @@ protected:
 	UFUNCTION()
 	void OnPerceptionForgotten(AActor* Actor);
 
+	UFUNCTION()
+	void HandleTargetChanged(AActor* OldTarget, AActor* NewTarget);
+
 	void TickAggro();
 	void InternalAddThreat(AActor* Actor, float Amount);
 protected:

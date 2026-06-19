@@ -49,6 +49,9 @@ struct FEnemyAnimationConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|State")
 	TSoftObjectPtr<UAnimSequence> DeadSequence;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|State")
+	TSoftObjectPtr<UAnimSequence> StaggerSequence;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Montage",
 		meta = (Categories = "Anim"))
 	TMap<FGameplayTag, TSoftObjectPtr<UAnimMontage>> TaggedMontages;
@@ -144,4 +147,10 @@ public:
 	{
 		return FPrimaryAssetId("EnemyConfig", EnemyID);
 	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Duration")
+	float StaggerDuration = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Duration")
+	float StunDuration = 4.f;
 };

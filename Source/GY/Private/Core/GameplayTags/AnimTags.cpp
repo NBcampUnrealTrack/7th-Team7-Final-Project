@@ -2,6 +2,5 @@
 
 namespace GYAnimTags
 {
-	UE_DEFINE_GAMEPLAY_TAG(Anim_Stagger, "Anim.Stagger");
 	UE_DEFINE_GAMEPLAY_TAG(Anim_LookAround, "Anim.LookAround")
 }

@@ -9,6 +9,7 @@
 #include "Perception/AISense_Hearing.h"
 #include "Perception/AISense_Sight.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "Logging/GYLogManager.h"
 
 
@@ -29,13 +30,18 @@ void UBossAggroComponent::BeginPlay()
 
 	BindToPerception();
 
+	OnTargetChanged.AddDynamic(this, &UBossAggroComponent::HandleTargetChanged);
+
 	GetWorld()->GetTimerManager().SetTimer(
 		UpdateTimerHandle, this, &UBossAggroComponent::TickAggro, UpdateInterval, true);
 }
 
 void UBossAggroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	OnTargetChanged.RemoveDynamic(this, &UBossAggroComponent::HandleTargetChanged);
+
 	UnbindFromPerception();
+
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(UpdateTimerHandle);
@@ -170,6 +176,29 @@ void UBossAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulu
 
 void UBossAggroComponent::OnPerceptionForgotten(AActor* Actor)
 {
+}
+
+void UBossAggroComponent::HandleTargetChanged(AActor* OldTarget, AActor* NewTarget)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[BossAggro] HandleTargetChanged Old=%s New=%s"),
+		*GetNameSafe(OldTarget), *GetNameSafe(NewTarget));
+	if (!CachedAIController.IsValid()) return;
+
+	APawn* SelfPawn = CachedAIController->GetPawn();
+	if (!SelfPawn) return;
+
+	auto* SelfASC = Cast<UGYEnemyAbilitySystemComponent>(
+		SelfPawn->FindComponentByClass<UGYEnemyAbilitySystemComponent>());
+	if (!SelfASC) return;
+
+	if (NewTarget)
+	{
+		SelfASC->ApplyCombatTag();
+	}
+	else
+	{
+		SelfASC->RemoveCombatTag();
+	}
 }
 
 void UBossAggroComponent::TickAggro()

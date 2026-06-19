@@ -29,6 +29,7 @@
 #include "Character/HitReactionComponent.h"
 #include "Character/LockOn/LockOnComponent.h"
 #include "Core/GameplayTeams/GYTeams.h"
+#include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase()
@@ -38,7 +39,7 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 	bReplicates = true;
 	SetReplicateMovement(true);
 
-	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent = CreateDefaultSubobject<UGYEnemyAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
@@ -95,6 +96,10 @@ void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInsta
 	if (UAnimSequence* DeadSeq = Config.DeadSequence.LoadSynchronous())
 	{
 		AnimInstance->SetDeadSequence(DeadSeq);
+	}
+	if (UAnimSequence* StaggerSeq = Config.StaggerSequence.LoadSynchronous())
+	{
+		AnimInstance->SetDeadSequence(StaggerSeq);
 	}
 }
 
@@ -178,6 +183,21 @@ void AGYEnemyCharacterBase::OnDataAssetLoaded()
 		HitReactionComponent->SetHitReactStartBone(LoadedDataAsset->HitReactStartBone);
 	}
 
+	if (auto* EnemyASC = Cast<UGYEnemyAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		for (FGYDisableThreshold& Threshold : EnemyASC->DisableThresholds)
+		{
+			if (Threshold.StateTag == GYStateTags::State_Hit_Stagger)
+			{
+				Threshold.Duration = LoadedDataAsset->StaggerDuration;
+			}
+			else if (Threshold.StateTag == GYStateTags::State_Hit_Stun)
+			{
+				Threshold.Duration = LoadedDataAsset->StunDuration;
+			}
+		}
+	}
+
 	// 브로드캐스트
 	bIsInitialized = true;
 	OnEnemyReady.Broadcast(this);
@@ -230,6 +250,15 @@ void AGYEnemyCharacterBase::InitGAS()
 	if (!AbilitySystemComponent) return;
 
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+	if (VitalAttribute)
+	{
+		AbilitySystemComponent->AddSpawnedAttribute(VitalAttribute);
+	}
+	if (DamageAttribute)
+	{
+		AbilitySystemComponent->AddSpawnedAttribute(DamageAttribute);
+	}
 
 	if (!bAttributeDelegatesBound)
 	{
@@ -364,6 +393,11 @@ void AGYEnemyCharacterBase::ApplyInitialStats(const FEnemyComputedStats& Stats)
 	if (UCharacterMovementComponent* Move = GetCharacterMovement())
 	{
 		Move->MaxWalkSpeed = Stats.MoveSpeed;
+	}
+
+	if (UGYEnemyAbilitySystemComponent* EnemyASC = Cast<UGYEnemyAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		EnemyASC->ApplyRegenEffects();
 	}
 }
 
@@ -769,20 +803,6 @@ void AGYEnemyCharacterBase::HandleStunBegin()
 			AbilitySystemComponent->CancelAbilities(&CancelTags);
 		}
 
-		GetWorldTimerManager().SetTimer(
-		StunRecoveryTimerHandle,
-		FTimerDelegate::CreateWeakLambda(this, [this]()
-		{
-			if (AbilitySystemComponent)
-			{
-				AbilitySystemComponent->RemoveLooseGameplayTag(
-					GYStateTags::State_Hit_Stun,
-					1,
-					EGameplayTagReplicationState::TagOnly);
-			}
-		}),
-		StunDuration,
-		false);
 	}
 }
 
@@ -827,6 +847,15 @@ void AGYEnemyCharacterBase::HandleStaggerBegin()
 void AGYEnemyCharacterBase::HandleStaggerEnd()
 {
 	//TODO 은서 : VFX 종료 처리 등등 UI처리 종료 등등
+	if (!HasAuthority()) return;
+
+	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(EnemyBBKeys::IsStaggered, false);
+		}
+	}
 }
 
 UAnimMontage* AGYEnemyCharacterBase::GetMontageByTag(const FGameplayTag& Tag) const
@@ -921,7 +950,6 @@ void AGYEnemyCharacterBase::SetOrientToMovement(bool bEnable)
 void AGYEnemyCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-
 	if (EnemySpawnLocation.IsNearlyZero())
 	{
 		EnemySpawnLocation = GetActorLocation();
@@ -948,10 +976,6 @@ void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (DeactivateTimerHandle.IsValid())
 		GetWorldTimerManager().ClearTimer(DeactivateTimerHandle);
-	if (StunRecoveryTimerHandle.IsValid())
-		GetWorldTimerManager().ClearTimer(StunRecoveryTimerHandle);
-	if (StaggerRecoveryTimerHandle.IsValid())
-		GetWorldTimerManager().ClearTimer(StaggerRecoveryTimerHandle);
 
 	Super::EndPlay(EndPlayReason);
 }

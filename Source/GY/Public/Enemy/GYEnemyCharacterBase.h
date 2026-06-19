@@ -14,7 +14,7 @@ class UPhysicalAnimationComponent;
 class UGYEnemyVitalAttributeSet;
 class UGYEnemyDamageAttributeSet;
 class UEnemyAnimInstance;
-class UAbilitySystemComponent;
+class UGYEnemyAbilitySystemComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDead, AGYEnemyCharacterBase*, Enemy);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AGYEnemyCharacterBase*, Enemy, float, DamageAmount);
@@ -193,7 +193,7 @@ protected:
 	FName CachedStatRowName;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
-	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	TObjectPtr<UGYEnemyAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
 	TObjectPtr<UGYEnemyVitalAttributeSet> VitalAttribute;
@@ -221,15 +221,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Death")
 	float DeactivateDelay = 3.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Status")
-	float StunDuration = 2.f;
 private:
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	FString WeaponTraceBonePrefix = TEXT("WeaponTrace_");
 
 	FTimerHandle DeactivateTimerHandle;
-	FTimerHandle StunRecoveryTimerHandle;
-	FTimerHandle StaggerRecoveryTimerHandle;
 
 	UPROPERTY()
 	FVector EnemySpawnLocation;

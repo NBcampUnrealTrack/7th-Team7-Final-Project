@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemComponent.h"
 #include "Animation/AnimInstance.h"
 #include "EnemyAnimInstance.generated.h"
 
@@ -11,11 +12,12 @@ class UBlackboardComponent;
 UENUM(BlueprintType)
 enum class EEnemyState : uint8
 {
-	Idle	UMETA(DisplayName = "Idle"),
-	Walk	UMETA(DisplayName = "Walk"),
-	Run		UMETA(DisplayName = "Run"),
-	Stunned	UMETA(DisplayName = "Stunned"),
-	Dead	UMETA(DisplayName = "Dead"),
+	Idle		UMETA(DisplayName = "Idle"),
+	Walk		UMETA(DisplayName = "Walk"),
+	Run			UMETA(DisplayName = "Run"),
+	Stunned		UMETA(DisplayName = "Stunned"),
+	Staggered	UMETA(DisplayName = "Staggered"),
+	Dead		UMETA(DisplayName = "Dead"),
 };
 
 UCLASS(BlueprintType, Blueprintable)
@@ -33,6 +35,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "AnimInstance|Setup")
 	void SetDeadSequence(UAnimSequence* InSequence);
+
+	UFUNCTION(BlueprintCallable, Category = "AnimInstance|Setup")
+	void SetStaggerSequence(UAnimSequence* InSequence);
 
 	UFUNCTION(BlueprintPure, Category = "AnimInstance|Assets")
 	UAnimSequence* GetStunSequence() const { return StunSequence; }
@@ -58,7 +63,14 @@ protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
+	virtual void NativeBeginPlay() override;
+	virtual void NativeUninitializeAnimation() override;
 
+	void BindASCTagCallbacks();
+	void UnbindASCTagCallbacks();
+
+	void OnStaggerTagChanged(const FGameplayTag Tag, int32 NewCount);
+	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
 private:
 	void UpdateStateFromBlackboard();
 	void UpdateMovementData();
@@ -104,6 +116,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AnimInstance|State",
 		meta = (AllowPrivateAccess = "true"))
+	bool bIsStaggered = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AnimInstance|State",
+		meta = (AllowPrivateAccess = "true"))
 	bool bHasTarget = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AnimInstance|State", meta = (AllowPrivateAccess = "true"))
@@ -121,10 +137,15 @@ private:
 		meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimSequence> DeadSequence;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AnimInstance|Assets",
+		meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimSequence> StaggerSequence;
+
 	static const FName BB_Key_TargetActor;
 	static const FName BB_Key_IsStunned;
 	static const FName BB_Key_IsDead;
 
-public:
-
+	FDelegateHandle StaggerTagHandle;
+	FDelegateHandle StunTagHandle;
+	TWeakObjectPtr<UAbilitySystemComponent> CachedASC;
 };

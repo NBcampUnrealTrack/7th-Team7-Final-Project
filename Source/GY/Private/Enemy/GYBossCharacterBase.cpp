@@ -9,6 +9,7 @@
 #include "Enemy/Component/BossPatternSelectorComponent.h"
 #include "Components/StateTreeAIComponent.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "Engine/AssetManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerState.h"
