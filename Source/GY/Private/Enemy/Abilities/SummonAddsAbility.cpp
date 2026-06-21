@@ -1,6 +1,7 @@
 #include "Enemy/Abilities/SummonAddsAbility.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Enemy/GYBossCharacterBase.h"
+#include "Enemy/Component/BossBootstrapComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AIController.h"
 #include "Enemy/Component/BossAggroComponent.h"
