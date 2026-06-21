@@ -138,6 +138,7 @@ protected:
 
 	void TickAggro();
 	void InternalAddThreat(AActor* Actor, float Amount);
+	void RemoveTargetCombatTag(AActor* Actor);
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Aggro")
 	FEnemyAggroWeights Weights;

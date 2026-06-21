@@ -203,7 +203,7 @@ void AGYCharacter::MakeFootstepNoise()
 		GetActorLocation(),
 		0.5f,
 		this,
-		800.f,
+		1500.f,
 		FName("Footstep")
 	);
 }

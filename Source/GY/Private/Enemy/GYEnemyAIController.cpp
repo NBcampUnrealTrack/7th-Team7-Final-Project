@@ -3,18 +3,16 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "BrainComponent.h"
-#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Core/GameplayTags/FactionTags.h"
 #include "Enemy/Component/EnemyAggroComponent.h"
-#include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Damage.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Touch.h"
-#include "Player/GYPlayerState.h"
+#include "Perception/AISense_Hearing.h"
 
 AGYEnemyAIController::AGYEnemyAIController()
 {
@@ -140,13 +138,6 @@ void AGYEnemyAIController::AdvancePatrolIndex()
 	}
 }
 
-float AGYEnemyAIController::GetLoseSightRadius() const
-{
-	if (!SightConfig) return 0.f;
-	FAISenseAffiliationFilter Filter;
-	return SightConfig->LoseSightRadius;
-}
-
 void AGYEnemyAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -177,55 +168,18 @@ void AGYEnemyAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 	UBlackboardComponent* BB = GetBlackboardComponent();
 	if (!BB) return;
 
-	if (Stimulus.WasSuccessfullySensed())
+	if (Stimulus.WasSuccessfullySensed()
+		&& Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
 	{
-		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
+		if (BB->GetValueAsObject(EnemyBBKeys::TargetActor) == nullptr)
 		{
-			if (BB->GetValueAsObject(EnemyBBKeys::TargetActor) == nullptr)
-			{
-				BB->SetValueAsVector(EnemyBBKeys::InvestigateLocation, Stimulus.StimulusLocation);
-			}
-		}
-		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
-		{
-			AddPerceivedActor(Actor, Stimulus);
-		}
-
-	}
-	else
-	{
-		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
-		{
-			FVector LastVel = FVector::ZeroVector;
-			if (APawn* TargetPawn = Cast<APawn>(Actor))
-			{
-				LastVel = TargetPawn->GetVelocity();
-			}
-			const FVector Predicted = Stimulus.StimulusLocation + LastVel * 1.5f;
-			BB->SetValueAsVector(EnemyBBKeys::InvestigateLocation, Predicted);
-		}
-
-		for (FPerceivedActorInfo& Info : PerceivedActors)
-		{
-			if (Info.Actor == Actor)
-			{
-				Info.LastPerceivedTime = GetWorld()->GetTimeSeconds();
-				break;
-			}
+			BB->SetValueAsVector(EnemyBBKeys::InvestigateLocation, Stimulus.StimulusLocation);
 		}
 	}
 }
 
-void AGYEnemyAIController::OnTargetPerceptionForgotten(AActor* Actor)
+void AGYEnemyAIController::OnTargetPerceptionForgotten(AActor* /*Actor*/)
 {
-	for (FPerceivedActorInfo& Info : PerceivedActors)
-	{
-		if (Info.Actor == Actor)
-		{
-			Info.LastPerceivedTime = GetWorld()->GetTimeSeconds();
-			break;
-		}
-	}
 }
 
 void AGYEnemyAIController::SetupBlackboardDefaults()
@@ -248,118 +202,14 @@ void AGYEnemyAIController::SetupBlackboardDefaults()
 	}
 }
 
-void AGYEnemyAIController::AddPerceivedActor(AActor* Actor, const FAIStimulus& Stimulus)
-{
-	for (FPerceivedActorInfo& Info : PerceivedActors)
-	{
-		if (Info.Actor == Actor)
-		{
-			Info.LastStimulus = Stimulus;
-			Info.LastPerceivedTime = GetWorld()->GetTimeSeconds();
-			return;
-		}
-	}
-
-	UGYAbilitySystemComponent* ASC = nullptr;
-
-	if (APawn* TargetPawn = Cast<APawn>(Actor))
-	{
-		if (AGYPlayerState* GYPlayerState = Cast<AGYPlayerState>(TargetPawn->GetPlayerState()))
-		{
-			ASC = GYPlayerState->GetGYAbilitySystemComponent();
-		}
-	}
-	if (!ASC)
-	{
-		ASC = Actor->FindComponentByClass<UGYAbilitySystemComponent>();
-	}
-	if (ASC)
-	{
-		ASC->ApplyCombatTag();
-	}
-
-	FPerceivedActorInfo& NewInfo = PerceivedActors.AddDefaulted_GetRef();
-	NewInfo.Actor = Actor;
-	NewInfo.LastStimulus = Stimulus;
-	NewInfo.LastPerceivedTime = GetWorld()->GetTimeSeconds();
-
-	UpdateSelfCombatTagByPerception();
-}
-
-void AGYEnemyAIController::RemovePerceivedActor(AActor* Actor)
-{
-	for (auto It = PerceivedActors.CreateIterator(); It; ++It)
-	{
-		if (It->Actor == Actor)
-		{
-			UGYAbilitySystemComponent* ASC = nullptr;
-
-			if (APawn* TargetPawn = Cast<APawn>(Actor))
-			{
-				if (AGYPlayerState* GYPlayerState = Cast<AGYPlayerState>(TargetPawn->GetPlayerState()))
-				{
-					ASC = GYPlayerState->GetGYAbilitySystemComponent();
-				}
-			}
-			if (!ASC)
-			{
-				ASC = Actor->FindComponentByClass<UGYAbilitySystemComponent>();
-			}
-			if (ASC)
-			{
-				ASC->RemoveCombatTag();
-			}
-
-			It.RemoveCurrent();
-		}
-		UpdateSelfCombatTagByPerception();
-	}
-}
-
-void AGYEnemyAIController::UpdateSelfCombatTagByPerception()
-{
-	if (!ControlledEnemy) return;
-	auto* SelfASC = Cast<UGYEnemyAbilitySystemComponent>(
-		ControlledEnemy->GetAbilitySystemComponent());
-	if (!SelfASC) return;
-
-	if (PerceivedActors.IsEmpty())
-		SelfASC->RemoveCombatTag();
-	else
-		SelfASC->ApplyCombatTag();
-}
-
-void AGYEnemyAIController::RemoveAllPerceivedActor()
-{
-	for (auto It = PerceivedActors.CreateIterator(); It; ++It)
-	{
-		UGYAbilitySystemComponent* ASC = nullptr;
-		AActor* Actor = It->Actor.Get();
-
-		if (APawn* TargetPawn = Cast<APawn>(Actor))
-		{
-			if (AGYPlayerState* GYPlayerState = Cast<AGYPlayerState>(TargetPawn->GetPlayerState()))
-			{
-				ASC = GYPlayerState->GetGYAbilitySystemComponent();
-			}
-		}
-		if (!ASC && Actor)
-		{
-			ASC = Actor->FindComponentByClass<UGYAbilitySystemComponent>();
-		}
-		if (ASC)
-		{
-			ASC->RemoveCombatTag();
-		}
-		It.RemoveCurrent();
-	}
-}
-
 void AGYEnemyAIController::StopPerception()
 {
 	if (!AIPerceptionComponent) return;
 
-	RemoveAllPerceivedActor();
+	if (AggroComponent)
+	{
+		AggroComponent->ClearAllThreat();
+	}
 
 	AIPerceptionComponent->OnTargetPerceptionUpdated.RemoveDynamic(
 		this, &AGYEnemyAIController::OnTargetPerceptionUpdated);
@@ -386,50 +236,6 @@ void AGYEnemyAIController::StartPerception()
 		this, &AGYEnemyAIController::OnTargetPerceptionForgotten);
 
 	AIPerceptionComponent->RequestStimuliListenerUpdate();
-}
-
-void AGYEnemyAIController::RemoveOutOfRangeActors(const FVector& EnemyLocation, float LoseSightDist)
-{
-	const float CurrentTime = GetWorld()->GetTimeSeconds();
-	const float LoseSightDelay = 5.f;
-
-	for (auto It = PerceivedActors.CreateIterator(); It; ++It)
-	{
-		bool bShouldRemove = !It->Actor.IsValid();
-
-		if (!bShouldRemove)
-		{
-			bool bOutOfRange = FVector::Dist(EnemyLocation, It->Actor->GetActorLocation()) > LoseSightDist;
-			bool bExpired = (CurrentTime - It->LastPerceivedTime) > LoseSightDelay;
-			bShouldRemove = bOutOfRange && bExpired;
-		}
-
-		if (bShouldRemove)
-		{
-			if (It->Actor.IsValid())
-			{
-				UGYAbilitySystemComponent* ASC = nullptr;
-
-				if (APawn* TargetPawn = Cast<APawn>(It->Actor))
-				{
-					if (AGYPlayerState* GYPlayerState = Cast<AGYPlayerState>(TargetPawn->GetPlayerState()))
-					{
-						ASC = GYPlayerState->GetGYAbilitySystemComponent();
-					}
-				}
-				if (!ASC)
-				{
-					ASC = It->Actor->FindComponentByClass<UGYAbilitySystemComponent>();
-				}
-				if (ASC)
-				{
-					ASC->RemoveCombatTag();
-				}
-			}
-			It.RemoveCurrent();
-		}
-	}
-	UpdateSelfCombatTagByPerception();
 }
 
 void AGYEnemyAIController::BeginPlay()
@@ -466,4 +272,3 @@ void AGYEnemyAIController::OnAggroTargetChanged(AActor* OldTarget, AActor* NewTa
 		BB->SetValueAsObject(EnemyBBKeys::TargetActor, NewTarget);
 	}
 }
-

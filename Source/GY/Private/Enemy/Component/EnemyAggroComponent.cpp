@@ -82,6 +82,11 @@ void UEnemyAggroComponent::ClearAllThreat()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
+	for (const FAggroEntry& E : ThreatList)
+	{
+		RemoveTargetCombatTag(E.Actor.Get());
+	}
+
 	AActor* Old = CurrentTarget.Get();
 	ThreatList.Reset();
 	CurrentTarget.Reset();
@@ -89,6 +94,17 @@ void UEnemyAggroComponent::ClearAllThreat()
 	if (Old != nullptr)
 	{
 		OnTargetChanged.Broadcast(Old, nullptr);
+	}
+}
+
+void UEnemyAggroComponent::RemoveTargetCombatTag(AActor* Actor)
+{
+	if (!Actor) return;
+
+	if (auto* TargetASC = Cast<UGYAbilitySystemComponent>(
+		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor)))
+	{
+		TargetASC->RemoveCombatTag();
 	}
 }
 
@@ -132,6 +148,12 @@ void UEnemyAggroComponent::UnbindFromPerception()
 
 void UEnemyAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[EnemyAggro] PerceptionUpdated Actor=%s Type=%s Sensed=%d Strength=%.1f"),
+		*GetNameSafe(Actor),
+		*Stimulus.Type.Name.ToString(),
+		Stimulus.WasSuccessfullySensed() ? 1 : 0,
+		Stimulus.Strength);
 	if (!Actor || !GetOwner() || !GetOwner()->HasAuthority()) return;
 
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
@@ -247,6 +269,7 @@ void UEnemyAggroComponent::TickAggro()
 		const bool bExpired = (Now - E.LastUpdateTime) > Weights.ForgetTime;
 		if (bExpired || E.Threat <= KINDA_SMALL_NUMBER)
 		{
+			RemoveTargetCombatTag(E.Actor.Get());
 			ThreatList.RemoveAt(i);
 		}
 	}

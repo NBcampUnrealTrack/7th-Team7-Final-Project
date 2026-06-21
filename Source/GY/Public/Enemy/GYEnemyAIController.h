@@ -30,19 +30,6 @@ namespace  EnemyBBKeys
 	static const FName PatrolPosition		= TEXT("PatrolPosition");
 }
 
-USTRUCT()
-struct FPerceivedActorInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	TWeakObjectPtr<AActor> Actor = nullptr;
-
-	FAIStimulus LastStimulus;
-	float LastPerceivedTime = 0.f;
-
-};
-
 UCLASS(BlueprintType, Blueprintable)
 class GY_API AGYEnemyAIController : public AAIController
 {
@@ -68,16 +55,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "AI|Aggro")
 	UEnemyAggroComponent* GetAggroComponent() const { return AggroComponent; }
 
-	const TArray<FPerceivedActorInfo>& GetPerceivedActors() const { return PerceivedActors; }
-
 	void SetPatrolPoints(const TArray<FVector>& Offsets, const FVector& StartLocation);
 	FVector GetCurrentPatrolPoints() const;
 	void AdvancePatrolIndex();
-
-	float GetLoseSightRadius() const;
-	void RemoveOutOfRangeActors(const FVector& EnemyLocation, float LoseSightDist);
-
-	void RemoveAllPerceivedActor();
 
 	void StopPerception();
 	void StartPerception();
@@ -96,10 +76,6 @@ protected:
 	void OnAggroTargetChanged(AActor* OldTarget, AActor* NewTarget);
 
 	void SetupBlackboardDefaults();
-private:
-	void AddPerceivedActor(AActor* Actor, const FAIStimulus& Stimulus);
-	void RemovePerceivedActor(AActor* Actor);
-	void UpdateSelfCombatTagByPerception();
 public:
 	UPROPERTY()
 	TArray<FVector> PatrolPoints;
@@ -126,8 +102,4 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<AGYEnemyCharacterBase> ControlledEnemy;
-
-	UPROPERTY()
-	TArray<FPerceivedActorInfo> PerceivedActors;
-
 };
