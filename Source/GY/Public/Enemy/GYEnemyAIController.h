@@ -10,6 +10,7 @@ class UAISenseConfig_Sight;
 class UAISenseConfig_Damage;
 class UAISenseConfig_Hearing;
 class UAISenseConfig_Touch;
+class UEnemyAggroComponent;
 class AGYEnemyCharacterBase;
 
 namespace  EnemyBBKeys
@@ -64,6 +65,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "AI|Blackboard")
 	AActor* GetTargetActor() const;
 
+	UFUNCTION(BlueprintPure, Category = "AI|Aggro")
+	UEnemyAggroComponent* GetAggroComponent() const { return AggroComponent; }
+
 	const TArray<FPerceivedActorInfo>& GetPerceivedActors() const { return PerceivedActors; }
 
 	void SetPatrolPoints(const TArray<FVector>& Offsets, const FVector& StartLocation);
@@ -87,6 +91,9 @@ protected:
 
 	UFUNCTION()
 	void OnTargetPerceptionForgotten(AActor* Actor);
+
+	UFUNCTION()
+	void OnAggroTargetChanged(AActor* OldTarget, AActor* NewTarget);
 
 	void SetupBlackboardDefaults();
 private:
@@ -113,6 +120,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
 	TObjectPtr<UAISenseConfig_Touch> TouchConfig;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Aggro")
+	TObjectPtr<UEnemyAggroComponent> AggroComponent;
 
 	UPROPERTY()
 	TObjectPtr<AGYEnemyCharacterBase> ControlledEnemy;

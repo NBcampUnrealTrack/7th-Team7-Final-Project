@@ -6,6 +6,7 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Core/GameplayTags/FactionTags.h"
+#include "Enemy/Component/EnemyAggroComponent.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Perception/AIPerceptionComponent.h"
@@ -49,6 +50,8 @@ AGYEnemyAIController::AGYEnemyAIController()
 	AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
 
 	SetPerceptionComponent(*AIPerceptionComponent);
+
+	AggroComponent = CreateDefaultSubobject<UEnemyAggroComponent>(TEXT("AggroComponent"));
 }
 
 void AGYEnemyAIController::StartBehaviorTree(UBehaviorTree* BT)
@@ -448,5 +451,19 @@ void AGYEnemyAIController::BeginPlay()
 
 	AIPerceptionComponent->OnTargetPerceptionForgotten.AddDynamic(
 		this, &AGYEnemyAIController::OnTargetPerceptionForgotten);
+
+	if (AggroComponent)
+	{
+		AggroComponent->OnTargetChanged.AddDynamic(
+			this, &AGYEnemyAIController::OnAggroTargetChanged);
+	}
+}
+
+void AGYEnemyAIController::OnAggroTargetChanged(AActor* OldTarget, AActor* NewTarget)
+{
+	if (UBlackboardComponent* BB = GetBlackboardComponent())
+	{
+		BB->SetValueAsObject(EnemyBBKeys::TargetActor, NewTarget);
+	}
 }
 

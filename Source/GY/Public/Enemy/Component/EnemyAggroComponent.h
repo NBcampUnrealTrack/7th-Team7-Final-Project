@@ -10,7 +10,7 @@ class UAIPerceptionComponent;
 class AAIController;
 
 /**
- * BossAggroComponent — AIController에 부착해서 위협도(threat) 기반으로 CurrentTarget을 선정/유지.
+ * EnemyAggroComponent — AIController에 부착해서 위협도(threat) 기반으로 CurrentTarget을 선정/유지.
  *
  * 입력 (AIPerception stimulus)
  *  - Sight    : 첫 발견 시 SightOnSpotted 가산. Tick에서 시야 유지되면 감쇠량만큼 매번 보충.
