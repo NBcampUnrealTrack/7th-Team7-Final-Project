@@ -17,6 +17,8 @@ struct FGYHitContext
 	float Additive = 0.f;
 	float StaggerAmount = 0.f;
 	float StunAmount = 0.f;
+	//TODO 여기 채워주시면 패링 리액션 타점기준으로 잡을 수 있어요 공격자의 적과 닿은 부위
+	FName SourceHitBone = NAME_None;
 };
 
 UCLASS()

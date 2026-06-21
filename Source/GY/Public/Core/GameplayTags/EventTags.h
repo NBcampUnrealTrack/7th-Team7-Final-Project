@@ -30,6 +30,7 @@ namespace GYGameplayTags
 
 	// Parry events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Parry_Hit)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Parried)
 
 	// Block events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Block_Hit)
