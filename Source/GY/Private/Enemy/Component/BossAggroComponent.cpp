@@ -209,6 +209,24 @@ void UBossAggroComponent::TickAggro()
 	const float DeltaTime = UpdateInterval;
 	const float DecayAmount = Weights.ThreatDecayPerSecond * DeltaTime;
 
+	if (CachedPerception.IsValid())
+	{
+		TArray<AActor*> SightedActors;
+		CachedPerception->GetCurrentlyPerceivedActors(
+			UAISense_Sight::StaticClass(), SightedActors);
+
+		const float SightTickGain = DecayAmount + KINDA_SMALL_NUMBER;
+		for (AActor* A : SightedActors)
+		{
+			UAbilitySystemComponent* TargetASC =
+				UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(A);
+			if (TargetASC && TargetASC->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy))
+				continue;
+
+			InternalAddThreat(A, SightTickGain);
+		}
+	}
+
 	for (int32 i = ThreatList.Num() - 1; i >= 0; --i)
 	{
 		FAggroEntry& E = ThreatList[i];
