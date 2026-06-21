@@ -4,7 +4,7 @@
 #include "Enemy/Component/BossBootstrapComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AIController.h"
-#include "Enemy/Component/BossAggroComponent.h"
+#include "Enemy/Component/EnemyAggroComponent.h"
 
 USummonAddsAbility::USummonAddsAbility()
 {
@@ -33,7 +33,7 @@ void USummonAddsAbility::ExecuteSummon()
 		{
 			if (AAIController* AI = Cast<AAIController>(BossPawn->GetController()))
 			{
-				if (UBossAggroComponent* Aggro = AI->FindComponentByClass<UBossAggroComponent>())
+				if (UEnemyAggroComponent* Aggro = AI->FindComponentByClass<UEnemyAggroComponent>())
 				{
 					if (AActor* Target = Aggro->GetCurrentTarget())
 					{

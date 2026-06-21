@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Perception/AIPerceptionTypes.h"
-#include "BossAggroComponent.generated.h"
+#include "EnemyAggroComponent.generated.h"
 
 
 class UAIPerceptionComponent;
@@ -56,7 +56,7 @@ struct FAggroEntry
 
 /** 가중치/ 튜닝 */
 USTRUCT(BlueprintType)
-struct FBossAggroWeights
+struct FEnemyAggroWeights
 {
 	GENERATED_BODY()
 
@@ -89,35 +89,35 @@ struct FBossAggroWeights
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAggroTargetChanged, AActor*, OldTarget, AActor*, NewTarget);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class GY_API UBossAggroComponent : public UActorComponent
+class GY_API UEnemyAggroComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	UBossAggroComponent();
+	UEnemyAggroComponent();
 
-	UFUNCTION(BlueprintPure, Category = "Boss|Aggro")
+	UFUNCTION(BlueprintPure, Category = "Aggro")
 	AActor* GetCurrentTarget() const { return CurrentTarget.Get(); }
 
-	UFUNCTION(BlueprintPure, Category = "Boss|Aggro")
+	UFUNCTION(BlueprintPure, Category = "Aggro")
 	bool HasTarget() const { return CurrentTarget.IsValid(); }
 
-	UFUNCTION(BlueprintPure, Category = "Boss|Aggro")
+	UFUNCTION(BlueprintPure, Category = "Aggro")
 	float GetThreatFor(AActor* Actor) const;
 
-	UFUNCTION(BlueprintPure, Category = "Boss|Aggro")
+	UFUNCTION(BlueprintPure, Category = "Aggro")
 	TArray<FAggroEntry> GetTopThreats(int32 Count) const;
 
-	UFUNCTION(BlueprintCallable, Category ="Boss|Aggro")
+	UFUNCTION(BlueprintCallable, Category ="Aggro")
 	void AddThreat(AActor* Actor, float Amount);
 
-	UFUNCTION(BlueprintCallable, Category = "Boss|Aggro")
+	UFUNCTION(BlueprintCallable, Category = "Aggro")
 	void ClearAllThreat();
 
-	UFUNCTION(BlueprintCallable, Category = "Boss|Aggro")
+	UFUNCTION(BlueprintCallable, Category = "Aggro")
 	void ForceTarget(AActor* Actor, float ForcedThreatBonus = 1000.f);
 
-	UPROPERTY(BlueprintAssignable, Category = "Boss|Aggro")
+	UPROPERTY(BlueprintAssignable, Category = "Aggro")
 	FOnAggroTargetChanged OnTargetChanged;
 
 protected:
@@ -139,13 +139,13 @@ protected:
 	void TickAggro();
 	void InternalAddThreat(AActor* Actor, float Amount);
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Boss|Aggro")
-	FBossAggroWeights Weights;
+	UPROPERTY(EditDefaultsOnly, Category = "Aggro")
+	FEnemyAggroWeights Weights;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Boss|Aggro", meta = (ClampMin = "0.05"))
+	UPROPERTY(EditDefaultsOnly, Category = "Aggro", meta = (ClampMin = "0.05"))
 	float UpdateInterval = 0.2f;
 
-	UPROPERTY(VisibleInstanceOnly, Category = "Boss|Aggro|Debug")
+	UPROPERTY(VisibleInstanceOnly, Category = "Aggro|Debug")
 	TArray<FAggroEntry> ThreatList;
 
 	UPROPERTY(Transient)

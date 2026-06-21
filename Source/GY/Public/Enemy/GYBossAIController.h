@@ -5,7 +5,7 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "GYBossAIController.generated.h"
 
-class UBossAggroComponent;
+class UEnemyAggroComponent;
 class UAIPerceptionComponent;
 class UAISenseConfig_Sight;
 class UAISenseConfig_Damage;
@@ -33,7 +33,7 @@ public:
 	UGYBossStateTreeAIComponent* GetStateTreeComp() const { return StateTreeComponent; }
 
 	UFUNCTION(BlueprintPure, Category = "Boss|AI")
-	UBossAggroComponent* GetAggroComponent() const { return AggroComponent; }
+	UEnemyAggroComponent* GetAggroComponent() const { return AggroComponent; }
 
 	UFUNCTION(BlueprintPure, Category = "Boss|Components")
 	UBossPatternSelectorComponent* GetPatternSelector() const { return PatternSelector; }
@@ -71,7 +71,7 @@ protected:
 	TObjectPtr<UGYBossStateTreeAIComponent> StateTreeComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Components")
-	TObjectPtr<UBossAggroComponent> AggroComponent;
+	TObjectPtr<UEnemyAggroComponent> AggroComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Components")
 	TObjectPtr<UBossPatternSelectorComponent> PatternSelector;

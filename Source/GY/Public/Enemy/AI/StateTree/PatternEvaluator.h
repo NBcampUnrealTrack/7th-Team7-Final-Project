@@ -5,7 +5,7 @@
 #include "StateTreeExecutionContext.h"
 #include "PatternEvaluator.generated.h"
 
-class UBossAggroComponent;
+class UEnemyAggroComponent;
 class UBossPatternSelectorComponent;
 
 
@@ -40,6 +40,6 @@ struct GY_API FPatternEvaluator : public FStateTreeEvaluatorCommonBase
 
 	TStateTreeExternalDataHandle<UBossPatternSelectorComponent,
 		EStateTreeExternalDataRequirement::Optional> SelectorHandle;
-	TStateTreeExternalDataHandle<UBossAggroComponent,
+	TStateTreeExternalDataHandle<UEnemyAggroComponent,
 		EStateTreeExternalDataRequirement::Optional> AggroHandle;
 };
