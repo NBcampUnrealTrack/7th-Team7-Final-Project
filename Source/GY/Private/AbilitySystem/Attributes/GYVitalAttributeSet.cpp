@@ -20,6 +20,8 @@ UGYVitalAttributeSet::UGYVitalAttributeSet()
 	InitMaxStagger(0.f);
 	InitCurrentStun(0.f);
 	InitMaxStun(0.f);
+	InitStaggerRecoveryPerTick(-2.625f);
+	InitStunRecoveryPerTick(-2.8f);
 }
 
 void UGYVitalAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -32,6 +34,8 @@ void UGYVitalAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	DOREPLIFETIME(UGYVitalAttributeSet, MaxStagger);
 	DOREPLIFETIME(UGYVitalAttributeSet, CurrentStun);
 	DOREPLIFETIME(UGYVitalAttributeSet, MaxStun);
+	DOREPLIFETIME(UGYVitalAttributeSet, StaggerRecoveryPerTick);
+	DOREPLIFETIME(UGYVitalAttributeSet, StunRecoveryPerTick);
 }
 
 void UGYVitalAttributeSet::OnRep_CurrentHealth(const FGameplayAttributeData& OldCurrentHealth)
@@ -66,6 +70,16 @@ void UGYVitalAttributeSet::OnRep_CurrentStun(const FGameplayAttributeData& OldCu
 void UGYVitalAttributeSet::OnRep_MaxStun(const FGameplayAttributeData& OldMaxStun)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYVitalAttributeSet, MaxStun, OldMaxStun);
+}
+
+void UGYVitalAttributeSet::OnRep_StaggerRecoveryPerTick(const FGameplayAttributeData& OldStaggerRecoveryPerTick)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYVitalAttributeSet, StaggerRecoveryPerTick, OldStaggerRecoveryPerTick);
+}
+
+void UGYVitalAttributeSet::OnRep_StunRecoveryPerTick(const FGameplayAttributeData& OldStunRecoveryPerTick)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYVitalAttributeSet, StunRecoveryPerTick, OldStunRecoveryPerTick);
 }
 
 void UGYVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
