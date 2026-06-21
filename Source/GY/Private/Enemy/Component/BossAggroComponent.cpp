@@ -169,7 +169,12 @@ void UBossAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulu
 	{
 		if (Stimulus.WasSuccessfullySensed())
 		{
-			InternalAddThreat(Actor, Weights.NoiseOnHeard);
+			if (FAggroEntry* Entry = ThreatList.FindByPredicate(
+				[Actor](const FAggroEntry& E) { return E.Actor.Get() == Actor; }))
+			{
+				Entry->Threat += Weights.NoiseOnHeard;
+				Entry->LastUpdateTime = GetWorld()->GetTimeSeconds();
+			}
 		}
 	}
 }
