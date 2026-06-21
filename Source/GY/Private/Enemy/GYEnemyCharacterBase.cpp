@@ -1,8 +1,8 @@
 #include "Enemy/GYEnemyCharacterBase.h"
 
-#include "Enemy/DataTables/EnemyTypeTableRow.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/EnemyAnimInstance.h"
+#include "Enemy/Component/EnemyBootstrapComponent.h"
 
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
@@ -12,12 +12,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Engine/AssetManager.h"
 #include "Animation/BlendSpace.h"
-#include "BehaviorTree/BehaviorTree.h"
 #include "Core/GameplayTags/FactionTags.h"
 #include "Core/GameplayTags/StateTags.h"
-#include "Enemy/DataTables/EnemyStatRow.h"
 #include "GameStates/GYGameState.h"
 #include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
@@ -32,7 +29,8 @@
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 
-AGYEnemyCharacterBase::AGYEnemyCharacterBase()
+AGYEnemyCharacterBase::AGYEnemyCharacterBase(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -46,6 +44,7 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase()
 	PhysicalAnimationComponent = CreateDefaultSubobject<UPhysicalAnimationComponent>(TEXT("PhysicalAnimation"));
 	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReaction"));
 
+	Bootstrap = CreateDefaultSubobject<UEnemyBootstrapComponent>(TEXT("Bootstrap"));
 
 	VitalAttribute = CreateDefaultSubobject<UGYEnemyVitalAttributeSet>(TEXT("VitalAttribute"));
 	DamageAttribute = CreateDefaultSubobject<UGYEnemyDamageAttributeSet>(TEXT("DamageAttribute"));
@@ -70,14 +69,41 @@ UAbilitySystemComponent* AGYEnemyCharacterBase::GetAbilitySystemComponent() cons
 
 void AGYEnemyCharacterBase::InitWithType(const EEnemyType& InEnemyType)
 {
-	EnemyType = InEnemyType;
-	LoadDataAssetAndApply();
+	if (Bootstrap) Bootstrap->InitWithType(InEnemyType);
+}
+
+void AGYEnemyCharacterBase::InitWithLoadedData(EEnemyType InEnemyType, UEnemyDataAsset* InDataAsset)
+{
+	if (Bootstrap) Bootstrap->InitWithLoadedData(InEnemyType, InDataAsset);
+}
+
+UEnemyDataAsset* AGYEnemyCharacterBase::GetEnemyData() const
+{
+	return Bootstrap ? Bootstrap->GetDataAsset() : nullptr;
+}
+
+EEnemyType AGYEnemyCharacterBase::GetEnemyType() const
+{
+	return Bootstrap ? Bootstrap->GetEnemyType() : EEnemyType::None;
+}
+
+bool AGYEnemyCharacterBase::IsEnemyReady() const
+{
+	return Bootstrap && Bootstrap->IsReady();
+}
+
+float AGYEnemyCharacterBase::GetStatScaleValue() const
+{
+	if (const AGYGameState* GS = GetWorld()->GetGameState<AGYGameState>())
+		return GS->GetWorldLevel();
+	return 1.f;
 }
 
 void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance)
 {
-	if (!LoadedDataAsset || !AnimInstance) return;
-	InitAnimInstanceAssets(AnimInstance, LoadedDataAsset->AnimationConfig);
+	UEnemyDataAsset* Data = GetEnemyData();
+	if (!Data || !AnimInstance) return;
+	InitAnimInstanceAssets(AnimInstance, Data->AnimationConfig);
 }
 
 void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance,
@@ -103,24 +129,35 @@ void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInsta
 	}
 }
 
-void AGYEnemyCharacterBase::InitWithLoadedData(EEnemyType InEnemyType, UEnemyDataAsset* InDataAsset)
+void AGYEnemyCharacterBase::BeginPlay()
 {
-	if (!InDataAsset) return;
+	Super::BeginPlay();
 
-	EnemyType = InEnemyType;
-	LoadedDataAsset = InDataAsset;
-
-	if (UDataTable* TypeTable = EnemyTypeTable.LoadSynchronous())
+	if (EnemySpawnLocation.IsNearlyZero())
 	{
-		const FName RowKey = *UEnum::GetDisplayValueAsText(EnemyType).ToString();
-		if (const FEnemyTypeTableRow* Row =
-			TypeTable->FindRow<FEnemyTypeTableRow>(RowKey, TEXT("InitWithLoadedData")))
-		{
-			CachedStatRowName = Row->StatRowName;
-		}
+		EnemySpawnLocation = GetActorLocation();
+		EnemySpawnRotation = GetActorRotation();
 	}
 
-	OnDataAssetLoaded();
+	GetCapsuleComponent()->SetCollisionProfileName("Pawn");
+
+	if (HasAuthority())
+	{
+		bIsDead = false;
+	}
+
+	if (Bootstrap)
+	{
+		Bootstrap->OnConfigsApplied.AddDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapConfigsApplied);
+		Bootstrap->OnReady.AddDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapReady);
+	}
+
+	InitGAS();
+
+	if (HasAuthority())
+	{
+		bIsActivate = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
+	}
 }
 
 void AGYEnemyCharacterBase::OnRep_Controller()
@@ -129,120 +166,15 @@ void AGYEnemyCharacterBase::OnRep_Controller()
 	InitGAS();
 }
 
-void AGYEnemyCharacterBase::LoadDataAssetAndApply()
+void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
 {
-	if (EnemyType == EEnemyType::None) return;
+	Super::PossessedBy(NewController);
 
-	UDataTable* TypeTable = EnemyTypeTable.LoadSynchronous();
-	if (!TypeTable) return;
-
-	FName RowKey = *UEnum::GetDisplayValueAsText(EnemyType).ToString();
-
-	const FEnemyTypeTableRow* TypeRow = TypeTable->FindRow<FEnemyTypeTableRow>(
-		RowKey, TEXT("LoadDataAssetAndApply"));
-	if (!TypeRow) return;
-
-	CachedStatRowName = TypeRow->StatRowName;  // StatRowName 캐싱
-
-	FStreamableManager& Streamable = UAssetManager::Get().GetStreamableManager();
-	Streamable.RequestAsyncLoad(
-		TypeRow->DataAsset.ToSoftObjectPath(),
-		FStreamableDelegate::CreateWeakLambda(this, [this, TypeRow]()
-		{
-			LoadedDataAsset = TypeRow->DataAsset.Get();
-			if (!LoadedDataAsset)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("AGYEnemyCharacterBase: DataAsset 로드 실패"));
-				return;
-			}
-			OnDataAssetLoaded();
-		})
-	);
-}
-
-void AGYEnemyCharacterBase::OnDataAssetLoaded()
-{
-	ApplyVisualConfig(LoadedDataAsset->VisualConfig);
-	ApplyAnimConfig(LoadedDataAsset->AnimationConfig);
-	BuildMontageMap(LoadedDataAsset->AnimationConfig);
-	ApplyAIConfig(LoadedDataAsset->AIConfig);
-
-	CachedWeaponTraceSockets();
-
-	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance()))
+	if (HasAuthority() && Bootstrap && Bootstrap->GetDataAsset())
 	{
-		InitAnimInstanceAssets(AnimInst);
+		HandleBootstrapConfigsApplied();
 	}
-
-	TryGrantGASFromDataAsset();
-
-	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
-
-	if (HitReactionComponent)
-	{
-		HitReactionComponent->SetHitReactStartBone(LoadedDataAsset->HitReactStartBone);
-	}
-
-	if (auto* EnemyASC = Cast<UGYEnemyAbilitySystemComponent>(AbilitySystemComponent))
-	{
-		for (FGYDisableThreshold& Threshold : EnemyASC->DisableThresholds)
-		{
-			if (Threshold.StateTag == GYStateTags::State_Hit_Stagger)
-			{
-				Threshold.Duration = LoadedDataAsset->StaggerDuration;
-			}
-			else if (Threshold.StateTag == GYStateTags::State_Hit_Stun)
-			{
-				Threshold.Duration = LoadedDataAsset->StunDuration;
-			}
-		}
-	}
-
-	// 브로드캐스트
-	bIsInitialized = true;
-	OnEnemyReady.Broadcast(this);
-}
-
-void AGYEnemyCharacterBase::ApplyVisualConfig(const FEnemyVisualConfig& Config)
-{
-	if (USkeletalMesh* LoadedMesh = Config.SkeletalMesh.LoadSynchronous())
-	{
-		GetMesh()->SetSkeletalMesh(LoadedMesh);
-	}
-
-	for (int32 i = 0; i < Config.Materials.Num(); ++i)
-	{
-		if (UMaterialInterface* Mat = Config.Materials[i].LoadSynchronous())
-		{
-			GetMesh()->SetMaterial(i,Mat);
-		}
-	}
-}
-
-void AGYEnemyCharacterBase::ApplyAIConfig(const FEnemyAIConfig& Config)
-{
-	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController());
-	if (!AIC) return;
-
-	UBehaviorTree* BT = Config.BehaviorTree.LoadSynchronous();
-	if (!BT) return;
-
-	if (Config.bHasPatrol && Config.PatrolOffsets.Num() > 0)
-	{
-		AIC->SetPatrolPoints(Config.PatrolOffsets, GetActorLocation());
-	}
-	AIC->StartBehaviorTree(BT);
-
-	AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.bHasPatrol);
-
-}
-
-void AGYEnemyCharacterBase::ApplyAnimConfig(const FEnemyAnimationConfig& Config)
-{
-	if (TSubclassOf<UAnimInstance> AnimClass = Config.AnimInstanceClass.LoadSynchronous())
-	{
-		GetMesh()->SetAnimInstanceClass(AnimClass);
-	}
+	InitGAS();
 }
 
 void AGYEnemyCharacterBase::InitGAS()
@@ -279,147 +211,53 @@ void AGYEnemyCharacterBase::InitGAS()
 			EGameplayTagReplicationState::TagOnly);
 
 		bAttributeDelegatesBound = true;
-
 	}
 
-	TryGrantGASFromDataAsset();
+	if (Bootstrap)
+	{
+		Bootstrap->NotifyGASInitialized();
+	}
 }
 
-void AGYEnemyCharacterBase::GrantDefaultAbilities()
+void AGYEnemyCharacterBase::HandleBootstrapConfigsApplied()
 {
-	if (!LoadedDataAsset || !AbilitySystemComponent) return;
+	UEnemyDataAsset* Data = GetEnemyData();
+	if (!Data) return;
 
-	for (const TSoftClassPtr<UGameplayAbility>& AbilityClass :
-		LoadedDataAsset->GASConfig.GrantedAbilities)
+	BuildMontageMap(Data->AnimationConfig);
+	CachedWeaponTraceSockets();
+
+	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
-		if (TSubclassOf<UGameplayAbility> Loaded = AbilityClass.LoadSynchronous())
+		InitAnimInstanceAssets(AnimInst);
+	}
+
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+
+	if (HitReactionComponent)
+	{
+		HitReactionComponent->SetHitReactStartBone(Data->HitReactStartBone);
+	}
+
+	if (auto* EnemyASC = Cast<UGYEnemyAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		for (FGYDisableThreshold& Threshold : EnemyASC->DisableThresholds)
 		{
-			AbilitySystemComponent->GiveAbility(
-				FGameplayAbilitySpec(Loaded, 1, INDEX_NONE, this));
+			if (Threshold.StateTag == GYStateTags::State_Hit_Stagger)
+			{
+				Threshold.Duration = Data->StaggerDuration;
+			}
+			else if (Threshold.StateTag == GYStateTags::State_Hit_Stun)
+			{
+				Threshold.Duration = Data->StunDuration;
+			}
 		}
 	}
 }
 
-void AGYEnemyCharacterBase::ApplyPassiveEffects()
+void AGYEnemyCharacterBase::HandleBootstrapReady(AGYEnemyCharacterBase* /*Enemy*/)
 {
-	if (!LoadedDataAsset || !AbilitySystemComponent) return;
-
-	for (const TSoftClassPtr<UGameplayEffect>& EffectClass :
-	     LoadedDataAsset->GASConfig.PassiveEffects)
-	{
-		if (TSubclassOf<UGameplayEffect> Loaded = EffectClass.LoadSynchronous())
-		{
-			FGameplayEffectContextHandle Ctx =
-				AbilitySystemComponent->MakeEffectContext();
-			Ctx.AddSourceObject(this);
-
-			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
-				*AbilitySystemComponent->MakeOutgoingSpec(Loaded, 1.f, Ctx).Data.Get());
-		}
-	}
-}
-
-FEnemyComputedStats AGYEnemyCharacterBase::ComputeInitialStats(float MapLevel) const
-{
-	FEnemyComputedStats Out;
-
-
-	//TODO 은서 : 추후에 SyncManager를 통해서 EnemyType만 받아서 Row값 받아오는 방식이 더 깔끔할 듯
-	UDataTable* StatTable = EnemyStatTable.LoadSynchronous();
-	if (!StatTable) return Out;
-
-	const FEnemyStatRow* BaseRow = StatTable->FindRow<FEnemyStatRow>(
-		CachedStatRowName, TEXT("ComputeInitialStats"));
-	if (!BaseRow) return Out;
-
-	Out.MaxHealth          = BaseRow->MaxHP;
-	Out.Attack             = BaseRow->AttackPower;
-	Out.Defense            = BaseRow->Defense;
-	Out.MoveSpeed          = BaseRow->MoveSpeed;
-	Out.AttackSpeed        = BaseRow->AttackSpeed;
-	Out.MaxStagger         = BaseRow->MaxStagger;
-	Out.MaxStun            = BaseRow->MaxStun;
-	Out.CriticalRate       = BaseRow->CriticalRate;
-	Out.CriticalMultiplier = BaseRow->CriticalMultiplier;
-
-	UCurveTable* CurveTable = EnemyStatCurveTable.LoadSynchronous();
-	if (!CurveTable) return Out;
-
-	auto EvalMul = [CurveTable, MapLevel](FName RowName) -> float
-	{
-		const FRealCurve* Curve = CurveTable->FindCurve(RowName, TEXT("ComputeInitialStats"), false);
-		return Curve ? Curve->Eval(static_cast<float>(MapLevel)) : 1.f;
-	};
-
-	Out.MaxHealth          *= EvalMul(TEXT("MaxHealth"));
-	Out.Attack             *= EvalMul(TEXT("Attack"));
-	Out.Defense            *= EvalMul(TEXT("Defense"));
-	Out.MaxStagger         *= EvalMul(TEXT("MaxStagger"));
-	Out.MaxStun            *= EvalMul(TEXT("MaxStun"));
-	Out.CriticalRate       *= EvalMul(TEXT("CriticalRate"));
-	Out.CriticalMultiplier *= EvalMul(TEXT("CriticalMultiplier"));
-
-	return Out;
-}
-
-float AGYEnemyCharacterBase::GetStatScaleValue() const
-{
-	if (const AGYGameState* GS = GetWorld()->GetGameState<AGYGameState>())
-		return GS->GetWorldLevel();
-	return 1.f;
-}
-
-void AGYEnemyCharacterBase::ApplyInitialStats(const FEnemyComputedStats& Stats)
-{
-	if (VitalAttribute)
-	{
-		VitalAttribute->SetMaxHealth(Stats.MaxHealth);
-		VitalAttribute->SetCurrentHealth(Stats.MaxHealth);
-		VitalAttribute->SetMaxStagger(Stats.MaxStagger);
-		VitalAttribute->SetCurrentStagger(0.f);
-		VitalAttribute->SetMaxStun(Stats.MaxStun);
-		VitalAttribute->SetCurrentStun(0.f);
-	}
-
-	if (DamageAttribute)
-	{
-		DamageAttribute->SetAttack(Stats.Attack);
-		DamageAttribute->SetDefense(Stats.Defense);
-		DamageAttribute->SetCriticalRate(Stats.CriticalRate);
-		DamageAttribute->SetCriticalMultiplier(Stats.CriticalMultiplier);
-	}
-
-	//TODO 은서 : MoveSpeed와 AttackSpeed가 분리되어서 Attribute 추가되면 이쪽으로 이관
-	if (UCharacterMovementComponent* Move = GetCharacterMovement())
-	{
-		Move->MaxWalkSpeed = Stats.MoveSpeed;
-	}
-
-	if (UGYEnemyAbilitySystemComponent* EnemyASC = Cast<UGYEnemyAbilitySystemComponent>(AbilitySystemComponent))
-	{
-		EnemyASC->ApplyRegenEffects();
-	}
-}
-
-void AGYEnemyCharacterBase::TryGrantGASFromDataAsset()
-{
-	if (bGASGrantedFromDataAsset) return;
-	if (!HasAuthority()) return;
-	if (!AbilitySystemComponent || !LoadedDataAsset) return;
-	if (!AbilitySystemComponent->AbilityActorInfo.IsValid() ||
-		!AbilitySystemComponent->AbilityActorInfo->OwnerActor.IsValid())
-	{
-		return;
-	}
-
-	const float Scale = GetStatScaleValue();
-
-	const FEnemyComputedStats Stats = ComputeInitialStats(Scale);
-	ApplyInitialStats(Stats);
-
-	//ApplyPassiveEffects();
-	GrantDefaultAbilities();
-	bGASGrantedFromDataAsset = true;
+	OnEnemyReady.Broadcast(this);
 }
 
 void AGYEnemyCharacterBase::OnHealthChanged(const struct FOnAttributeChangeData& Data)
@@ -439,14 +277,14 @@ void AGYEnemyCharacterBase::OnHealthChanged(const struct FOnAttributeChangeData&
 
 void AGYEnemyCharacterBase::OnStunTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
-	if (NewCount > 0)
-	{
-		HandleStunBegin();
-	}
-	else
-	{
-		HandleStunEnd();
-	}
+	if (NewCount > 0) HandleStunBegin();
+	else              HandleStunEnd();
+}
+
+void AGYEnemyCharacterBase::OnStaggerTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	if (NewCount > 0) HandleStaggerBegin();
+	else              HandleStaggerEnd();
 }
 
 void AGYEnemyCharacterBase::DisableGameplay()
@@ -485,10 +323,7 @@ void AGYEnemyCharacterBase::OnDeathAnimFinished()
 
 	GetWorldTimerManager().SetTimer(
 		DeactivateTimerHandle,
-		FTimerDelegate::CreateWeakLambda(this, [this]()
-		{
-			Deactivate();
-		}),
+		FTimerDelegate::CreateWeakLambda(this, [this]() { Deactivate(); }),
 		DeactivateDelay,
 		false);
 }
@@ -510,10 +345,10 @@ void AGYEnemyCharacterBase::HandleDeathAuthority()
 
 void AGYEnemyCharacterBase::GrantRewards()
 {
-	if (!LoadedDataAsset) return;
-	const FEnemyRewardConfig& Reward = LoadedDataAsset->RewardConfig;
+	UEnemyDataAsset* Data = GetEnemyData();
+	if (!Data) return;
+	const FEnemyRewardConfig& Reward = Data->RewardConfig;
 
-	// 경험치 시스템과 연결 -> 관식 작업함
 	AGameStateBase* GS = GetWorld()->GetGameState<AGameStateBase>();
 	if (!GS || GS->PlayerArray.IsEmpty()) return;
 
@@ -541,9 +376,6 @@ void AGYEnemyCharacterBase::GrantRewards()
 		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
 		ASC->ApplyGameplayEffectToSelf(XPEffect, 1.f, Context);
 	}
-
-	// TODO: 골드/통화 시스템과 연결 → Reward.GoldReward
-	// TODO: DropTable 로드 후 드롭 액터 스폰
 }
 
 void AGYEnemyCharacterBase::DisableRagdoll()
@@ -563,9 +395,8 @@ void AGYEnemyCharacterBase::DisableRagdoll()
 	SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
 	SkeletalMesh->AttachToComponent(
-			GetCapsuleComponent(),
-			FAttachmentTransformRules::SnapToTargetIncludingScale);
-
+		GetCapsuleComponent(),
+		FAttachmentTransformRules::SnapToTargetIncludingScale);
 
 	if (const AGYEnemyCharacterBase* CDO = GetClass()->GetDefaultObject<AGYEnemyCharacterBase>())
 	{
@@ -584,7 +415,6 @@ void AGYEnemyCharacterBase::DisableRagdoll()
 		AnimInstance->StopAllMontages(0.f);
 	}
 	SkeletalMesh->InitAnim(true);
-
 }
 
 void AGYEnemyCharacterBase::EnableGameplay()
@@ -619,45 +449,9 @@ void AGYEnemyCharacterBase::Die()
 	}
 
 	OnEnemyDead.Broadcast(this);
-
 }
 
 #if WITH_EDITOR
-void AGYEnemyCharacterBase::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-	if (PropertyChangedEvent.GetPropertyName() != GET_MEMBER_NAME_CHECKED(AGYEnemyCharacterBase, EnemyType)) return;
-
-	if (EnemyType == EEnemyType::None)
-	{
-		GetMesh()->SetSkeletalMesh(nullptr);
-		return;
-	}
-	UDataTable* TypeTable = EnemyTypeTable.LoadSynchronous();
-	if (!TypeTable) return;
-
-	FName RowKey = *UEnum::GetDisplayValueAsText(EnemyType).ToString();
-	const FEnemyTypeTableRow* TypeRow = TypeTable->FindRow<FEnemyTypeTableRow>(
-		RowKey, TEXT("PostEditChangeProperty"));
-	if (!TypeRow) return;
-
-	UEnemyDataAsset* DataAsset = TypeRow->DataAsset.LoadSynchronous();
-	if (!DataAsset) return;
-
-	if (USkeletalMesh* SkeletalMesh = DataAsset->VisualConfig.SkeletalMesh.LoadSynchronous())
-	{
-		GetMesh()->SetSkeletalMesh(SkeletalMesh);
-	}
-
-	for (int32 i = 0; i < DataAsset->VisualConfig.Materials.Num(); ++i)
-	{
-		if (UMaterialInterface* Mat = DataAsset->VisualConfig.Materials[i].LoadSynchronous())
-		{
-			GetMesh()->SetMaterial(i, Mat);
-		}
-	}
-}
-
 void AGYEnemyCharacterBase::PostEditMove(bool bFinished)
 {
 	Super::PostEditMove(bFinished);
@@ -682,14 +476,12 @@ void AGYEnemyCharacterBase::Deactivate()
 			AIC->StopPerception();
 		}
 	}
-	//TODO 은서: 로드 중일 때 로드 취소 Handler 통해서 하면 되지 않을까??
 	GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorDeactivated(this);
 }
 
-
 void AGYEnemyCharacterBase::Activate()
 {
-	if (EnemyType == EEnemyType::None) return;
+	if (!Bootstrap || Bootstrap->GetEnemyType() == EEnemyType::None) return;
 
 	bIsDead = false;
 	bIsActivate = true;
@@ -700,27 +492,25 @@ void AGYEnemyCharacterBase::Activate()
 	}
 
 	DisableRagdoll();
-
 	EnableGameplay();
 
 	FVector SpawnLocation = EnemySpawnLocation;
 	SpawnLocation.Z += 30.f;
 	SetActorLocationAndRotation(
-	SpawnLocation,
-	EnemySpawnRotation,
-	/*bSweep=*/false,
-	nullptr,
-	ETeleportType::TeleportPhysics);
+		SpawnLocation,
+		EnemySpawnRotation,
+		/*bSweep=*/false,
+		nullptr,
+		ETeleportType::TeleportPhysics);
 
-	if (!LoadedDataAsset)
+	if (!Bootstrap->GetDataAsset())
 	{
-		InitWithType(EnemyType);
+		Bootstrap->InitWithType(Bootstrap->GetEnemyType());
 	}
 	else
 	{
-		bGASGrantedFromDataAsset = false;
-		TryGrantGASFromDataAsset();
-		ApplyAIConfig(LoadedDataAsset->AIConfig);
+		Bootstrap->NotifyGASInitialized();
+		HandleBootstrapConfigsApplied();
 
 		if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
 		{
@@ -732,7 +522,7 @@ void AGYEnemyCharacterBase::Activate()
 		}
 		if (HitReactionComponent)
 		{
-			HitReactionComponent->SetHitReactStartBone(LoadedDataAsset->HitReactStartBone);
+			HitReactionComponent->SetHitReactStartBone(Bootstrap->GetDataAsset()->HitReactStartBone);
 		}
 	}
 }
@@ -740,20 +530,8 @@ void AGYEnemyCharacterBase::Activate()
 void AGYEnemyCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AGYEnemyCharacterBase, EnemyType);
 	DOREPLIFETIME(AGYEnemyCharacterBase, bIsActivate);
 	DOREPLIFETIME(AGYEnemyCharacterBase, bIsDead);
-}
-
-void AGYEnemyCharacterBase::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-
-	if (HasAuthority() && LoadedDataAsset)
-	{
-		ApplyAIConfig(LoadedDataAsset->AIConfig);
-	}
-	InitGAS();
 }
 
 bool AGYEnemyCharacterBase::IsStunned() const
@@ -764,18 +542,6 @@ bool AGYEnemyCharacterBase::IsStunned() const
 bool AGYEnemyCharacterBase::IsStaggered() const
 {
 	return AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Hit_Stagger);
-}
-
-void AGYEnemyCharacterBase::OnStaggerTagChanged(const FGameplayTag Tag, int32 NewCount)
-{
-	if (NewCount > 0)
-	{
-		HandleStaggerBegin();
-	}
-	else
-	{
-		HandleStaggerEnd();
-	}
 }
 
 void AGYEnemyCharacterBase::HandleStunBegin()
@@ -802,7 +568,6 @@ void AGYEnemyCharacterBase::HandleStunBegin()
 			CancelTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
 			AbilitySystemComponent->CancelAbilities(&CancelTags);
 		}
-
 	}
 }
 
@@ -846,7 +611,6 @@ void AGYEnemyCharacterBase::HandleStaggerBegin()
 
 void AGYEnemyCharacterBase::HandleStaggerEnd()
 {
-	//TODO 은서 : VFX 종료 처리 등등 UI처리 종료 등등
 	if (!HasAuthority()) return;
 
 	if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
@@ -879,25 +643,16 @@ void AGYEnemyCharacterBase::BuildMontageMap(const FEnemyAnimationConfig& Config)
 	}
 }
 
-void AGYEnemyCharacterBase::OnRep_EnemyType()
-{
-	if (EnemyType != EEnemyType::None && !LoadedDataAsset)
-	{
-		LoadDataAssetAndApply();
-	}
-}
-
 void AGYEnemyCharacterBase::OnRep_IsActivate()
 {
 	if (bIsActivate)
 	{
 		DisableRagdoll();
-
 		SetActorHiddenInGame(false);
 
-		if (!LoadedDataAsset)
+		if (Bootstrap && !Bootstrap->GetDataAsset())
 		{
-			LoadDataAssetAndApply();
+			Bootstrap->InitWithType(Bootstrap->GetEnemyType());
 		}
 	}
 	else
@@ -931,7 +686,6 @@ void AGYEnemyCharacterBase::CachedWeaponTraceSockets()
 	WeaponTraceSockets = Found;
 }
 
-
 void AGYEnemyCharacterBase::FaceToTarget(AActor* Target)
 {
 	if (!Target) return;
@@ -945,31 +699,6 @@ void AGYEnemyCharacterBase::SetOrientToMovement(bool bEnable)
 {
 	GetCharacterMovement()->bOrientRotationToMovement = bEnable;
 	GetCharacterMovement()->bUseControllerDesiredRotation = !bEnable;
-}
-
-void AGYEnemyCharacterBase::BeginPlay()
-{
-	Super::BeginPlay();
-	if (EnemySpawnLocation.IsNearlyZero())
-	{
-		EnemySpawnLocation = GetActorLocation();
-		EnemySpawnRotation = GetActorRotation();
-	}
-
-	GetCapsuleComponent()->SetCollisionProfileName("Pawn");
-
-	if (HasAuthority())
-	{
-		bIsDead = false;
-	}
-
-	InitGAS();
-
-	if (HasAuthority())
-	{
-		bIsActivate = GetGameInstance()->GetSubsystem<UGYWorldResetSubsystem>()->OnActorBeginPlay(this);
-	}
-
 }
 
 void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -988,4 +717,3 @@ void AGYEnemyCharacterBase::OnRep_IsDead()
 		OnEnemyDead.Broadcast(this);
 	}
 }
-

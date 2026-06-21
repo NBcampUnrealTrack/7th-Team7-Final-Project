@@ -4,19 +4,18 @@
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "Enemy/GYBossAIController.h"
 #include "Enemy/EnemyAnimInstance.h"
-#include "Enemy/Abilities/GYBossPhaseAbility.h"
+#include "Enemy/Component/BossBootstrapComponent.h"
 #include "Enemy/Component/BossPhaseComponent.h"
 #include "Enemy/Component/BossPatternSelectorComponent.h"
 #include "Components/StateTreeAIComponent.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
-#include "Engine/AssetManager.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerState.h"
 
 #include "Net/UnrealNetwork.h"
 
-AGYBossCharacterBase::AGYBossCharacterBase()
+AGYBossCharacterBase::AGYBossCharacterBase(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UBossBootstrapComponent>(TEXT("Bootstrap")))
 {
 	PhaseComponent = CreateDefaultSubobject<UBossPhaseComponent>(TEXT("PhaseComponent"));
 	PhaseComponent->SetIsReplicated(true);
@@ -62,7 +61,10 @@ void AGYBossCharacterBase::SetParticipants(const TArray<APlayerState*>& InPartic
 	{
 		bEncounterStarted = true;
 
-		TryGrantGASFromDataAsset();
+		if (UEnemyBootstrapComponent* BS = GetBootstrap())
+		{
+			BS->NotifyGASInitialized();
+		}
 		Activate();
 
 		if (PhaseComponent)
@@ -144,7 +146,6 @@ void AGYBossCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProp
 	Params.bIsPushBased = true;
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(AGYBossCharacterBase, Participants, Params);
-
 }
 
 float AGYBossCharacterBase::GetStatScaleValue() const
@@ -205,122 +206,20 @@ void AGYBossCharacterBase::Die()
 	Super::Die();
 }
 
-void AGYBossCharacterBase::GrantDefaultAbilities()
+UBossDataAsset* AGYBossCharacterBase::GetBossData() const
 {
-	Super::GrantDefaultAbilities();
-
-	if (!AbilitySystemComponent) return;
-	UBossDataAsset* BossData = GetBossData();
-	if (!BossData) return;
-
-	TSet<TSubclassOf<UGameplayAbility>> UniqueClasses;
-
-	for (const FBossPatternEntry& Entry : BossData->NormalPatterns)
+	if (UBossBootstrapComponent* BB = Cast<UBossBootstrapComponent>(GetBootstrap()))
 	{
-		if (Entry.AbilityClass) UniqueClasses.Add(Entry.AbilityClass);
+		return BB->GetBossDataAsset();
 	}
-	for (const FBossPhaseTrigger& Trigger : BossData->PhaseTriggers)
-	{
-		UGYBossPhaseAbility::CollectAbilities(Trigger.PhaseAbilityClass, UniqueClasses);
-	}
-
-	for (const TSubclassOf<UGameplayAbility>& AbilityClass : UniqueClasses)
-	{
-		if (!AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass))
-		{
-			AbilitySystemComponent->GiveAbility(
-				FGameplayAbilitySpec(AbilityClass, 1, INDEX_NONE, this));
-		}
-	}
-}
-
-void AGYBossCharacterBase::OnDataAssetLoaded()
-{
-	Super::OnDataAssetLoaded();
-
-	if (UBossDataAsset* BossDataAsset = GetBossData())
-	{
-		bIsStationary = BossDataAsset->bIsStationary;
-
-		if (bIsStationary)
-		{
-			if (UCharacterMovementComponent* Movement = GetCharacterMovement())
-			{
-				Movement->DisableMovement();
-				Movement->StopMovementImmediately();
-				Movement->MaxWalkSpeed = 0.f;
-				Movement->MaxAcceleration = 0.f;
-			}
-		}
-	}
-
-	if (HasAuthority())
-	{
-		if (AGYBossAIController* AIC = Cast<AGYBossAIController>(GetController()))
-		{
-			if (UBossPatternSelectorComponent* Selector = AIC->GetPatternSelector())
-			{
-				if (UBossDataAsset* BossData = GetBossData())
-				{
-					Selector->InitializePatterns(BossData->NormalPatterns);
-				}
-			}
-		}
-	}
-
-	RequestSummonablePreload();
-}
-
-void AGYBossCharacterBase::RequestSummonablePreload()
-{
-	UBossDataAsset* BossData = GetBossData();
-	if (!BossData || BossData->SummonableEnemies.Num() == 0) return;
-
-	TArray<FSoftObjectPath> Paths;
-	Paths.Reserve(BossData->SummonableEnemies.Num() * 2);
-
-	for (const FBossSummonEntry& Entry : BossData->SummonableEnemies)
-	{
-		if (!Entry.DataAsset.IsNull())  Paths.Add(Entry.DataAsset.ToSoftObjectPath());
-		if (!Entry.ActorClass.IsNull()) Paths.Add(Entry.ActorClass.ToSoftObjectPath());
-	}
-	if (Paths.Num() == 0) return;
-
-	FStreamableManager& Streamable = UAssetManager::Get().GetStreamableManager();
-	Streamable.RequestAsyncLoad(Paths,
-		FStreamableDelegate::CreateWeakLambda(this, [this]()
-		{
-			OnSummonablesLoaded();
-		}));
-}
-
-void AGYBossCharacterBase::OnSummonablesLoaded()
-{
-	UBossDataAsset* BossData = GetBossData();
-	if (!BossData) return;
-
-	SummonCache.Reset();
-	for (const FBossSummonEntry& Entry : BossData->SummonableEnemies)
-	{
-		if (Entry.EnemyType == EEnemyType::None) continue;
-
-		FBossCachedSummonable Cached;
-		Cached.DataAsset  = Entry.DataAsset.Get();
-		Cached.ActorClass = Entry.ActorClass.Get();
-
-		if (Cached.DataAsset && Cached.ActorClass)
-		{
-			SummonCache.Add(Entry.EnemyType, Cached);
-		}
-	}
+	return nullptr;
 }
 
 bool AGYBossCharacterBase::GetSummonable(EEnemyType Type, FBossCachedSummonable& Out) const
 {
-	if (const FBossCachedSummonable* Found = SummonCache.Find(Type))
+	if (UBossBootstrapComponent* BB = Cast<UBossBootstrapComponent>(GetBootstrap()))
 	{
-		Out = *Found;
-		return true;
+		return BB->GetSummonable(Type, Out);
 	}
 	return false;
 }
