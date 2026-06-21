@@ -161,6 +161,7 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 				TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Parry_Hit, &Payload);
 			}
 		}
+		if (HitContext.bGivesParriedReaction)
 		{
 			FGameplayEventData Payload;
 			Payload.EventTag = GYGameplayTags::Event_Parry_Hit;
