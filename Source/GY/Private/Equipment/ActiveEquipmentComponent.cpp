@@ -11,6 +11,7 @@
 #include "Engine/DataTable.h"
 #include "Engine/GameInstance.h"
 #include "Equipment/EquipmentInstance.h"
+#include "Equipment/EquipmentLoadoutComponent.h"
 #include "Equipment/GYEquipmentSettings.h"
 #include "GameFramework/Pawn.h"
 #include "GameplayEffect.h"
@@ -63,9 +64,38 @@ void UActiveEquipmentComponent::BeginPlay()
 	}
 }
 
+void UActiveEquipmentComponent::InitializeLoadoutBinding()
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	const APawn* OwningPawn = Cast<APawn>(GetOwner());
+	if (!OwningPawn) return;
+
+	AGYPlayerState* PS = OwningPawn->GetPlayerState<AGYPlayerState>();
+	if (!IsValid(PS)) return;
+
+	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
+	if (!IsValid(Loadout)) return;
+
+	Loadout->OnLoadoutSlotChanged.AddUObject(this, &UActiveEquipmentComponent::OnLoadoutSlotChanged);
+	BoundLoadout = Loadout;
+
+	// 현재 로드아웃으로 초기 동기화.
+	for (const FEquipmentLoadoutEntry& Entry : Loadout->GetEntries())
+	{
+		OnLoadoutSlotChanged(Entry.SlotTag, Entry.InstanceId);
+	}
+}
+
 void UActiveEquipmentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	RemoveAllVisuals();
+
+	if (BoundLoadout.IsValid())
+	{
+		BoundLoadout->OnLoadoutSlotChanged.RemoveAll(this);
+		BoundLoadout.Reset();
+	}
 
 	if (EnchantedHandle.IsValid())
 	{

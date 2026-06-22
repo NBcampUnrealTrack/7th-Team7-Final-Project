@@ -10,7 +10,6 @@
 #include "Character/GYPawnExtensionComponent.h"
 #include "Character/GYPlayerActionConfig.h"
 #include "Components/GameFrameworkComponentManager.h"
-#include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AttackLogic/Charge/GYChargeFragment.h"
@@ -116,30 +115,12 @@ void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 	GY_LOG(Player, KHB, "HeroComp : [%s] -> [%s]", *CurrentState.ToString(), *DesiredState.ToString());
 
 	// 내가 DataInitialized 단계에 무사히 진입했다면(즉, PawnExtension도 준비가 끝났다면) 입력을 세팅합니다.
+	// AbilitySet 부여/ASC 초기화는 PawnExtension이 전담한다.
 	if (DesiredState == GYGameplayTags::InitState_DataInitialized)
 	{
 		APawn* Pawn = GetPawn<APawn>();
 		AGYPlayerState* GYPlayerState = GetPlayerState<AGYPlayerState>();
 		if (!Pawn || !GYPlayerState) return;
-
-		if (Pawn->HasAuthority())
-		{
-			if (UGYAbilitySystemComponent* ASC = GYPlayerState->GetGYAbilitySystemComponent())
-			{
-				CachedASC = ASC;
-				UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
-				if (ExtComp && ExtComp->PawnData)
-				{
-					for (const UAbilitySet* AbilitySet : ExtComp->PawnData->AbilitySets)
-					{
-						if (AbilitySet)
-						{
-							AbilitySet->GiveToAbilitySystem(ASC, &GrantedHandles);
-						}
-					}
-				}
-			}
-		}
 
 		if (!Pawn->IsLocallyControlled()) return;
 
@@ -189,7 +170,7 @@ void UGYHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompone
 	UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
 	check(ExtComp);
 
-	const UGYPawnData* PawnData = ExtComp->PawnData;
+	const UGYPawnData* PawnData = ExtComp->GetPawnData();
 	if (!PawnData)
 	{
 		GY_WARN(Player, KHB, "PawnData가 할당되지 않았습니다.")
@@ -207,7 +188,7 @@ void UGYHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompone
 	{
 		if (PawnData->DefaultIMC)
 		{
-			EnhancedInputSubsystem->AddMappingContext(ExtComp->PawnData->DefaultIMC, 0);
+			EnhancedInputSubsystem->AddMappingContext(PawnData->DefaultIMC, 0);
 		}
 	}
 	//커스텀 입력 컴포넌트로 캐스팅 후 태그 기반 바인딩
@@ -244,9 +225,10 @@ bool UGYHeroComponent::IsInputBlocked() const
 	if (!ASC) return false;
 
 	UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
-	if (!ExtComp || !ExtComp->PawnData || !ExtComp->PawnData->ActionConfig) return false;
+	const UGYPawnData* PawnData = ExtComp ? ExtComp->GetPawnData() : nullptr;
+	if (!PawnData || !PawnData->ActionConfig) return false;
 
-	return ASC->HasAnyMatchingGameplayTags(ExtComp->PawnData->ActionConfig->InputBlockTags);
+	return ASC->HasAnyMatchingGameplayTags(PawnData->ActionConfig->InputBlockTags);
 }
 
 void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
@@ -257,7 +239,7 @@ void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 	AController* Controller = Pawn ? Pawn->GetController() : nullptr;
 
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
-	if (PlayerController->PlayerCameraManager && PlayerController)
+	if (PlayerController && PlayerController->PlayerCameraManager)
 	{
 		const FVector2D Value = InputActionValue.Get<FVector2D>();
 		const FRotator CameraRotation(0.0f, PlayerController->PlayerCameraManager->GetCameraRotation().Yaw, 0.0f);
@@ -506,11 +488,6 @@ void UGYHeroComponent::BeginPlay()
 
 void UGYHeroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (CachedASC.IsValid())
-	{
-		GrantedHandles.TakeFromAbilitySystem(CachedASC.Get());
-		CachedASC.Reset();
-	}
 	UnregisterInitStateFeature();
 	Super::EndPlay(EndPlayReason);
 }

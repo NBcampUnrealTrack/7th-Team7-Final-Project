@@ -3,6 +3,9 @@
 
 #include "Character/GYPawnExtensionComponent.h"
 
+#include "AbilitySystemComponent.h"
+#include "AbilitySystem/AbilitySet.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Character/GYPawnData.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
@@ -17,6 +20,18 @@ UGYPawnExtensionComponent::UGYPawnExtensionComponent(const FObjectInitializer& O
 	:Super(ObjectInitializer)
 {
 	PrimaryComponentTick.bCanEverTick = false;
+}
+
+const UGYPawnData* UGYPawnExtensionComponent::GetPawnData() const
+{
+	if (const APawn* Pawn = GetPawn<APawn>())
+	{
+		if (const AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>())
+		{
+			return PS->GetPawnData();
+		}
+	}
+	return nullptr;
 }
 
 bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
@@ -39,17 +54,20 @@ bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManage
 	if (CurrentState == GYGameplayTags::InitState_Spawned &&
 		DesiredState == GYGameplayTags::InitState_DataAvailable)
 	{
-		// Pawn data is required.
-		if (!PawnData)
-		{
-			return false;
-		}
 		const bool bHasAuthority = Pawn->HasAuthority();
 		const bool bIsLocallyControlled = Pawn->IsLocallyControlled();
 
 		if (bHasAuthority || bIsLocallyControlled)
 		{
 			if (!GetController<AController>()) { return false; } // 컨트롤러 빙의 대기
+		}
+
+		// PawnData·ASC 모두 PlayerState 경유(GameMode가 Experience로 PS에 PawnData set).
+		// PS와 PS의 PawnData가 준비돼야 DataAvailable로 진행.
+		const AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>();
+		if (!PS || !PS->GetPawnData())
+		{
+			return false;
 		}
 
 		return true;
@@ -77,11 +95,45 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 	if (DesiredState == GYGameplayTags::InitState_DataAvailable)
 	{
 		APawn* Pawn = GetPawn<APawn>();
-		if (Pawn && Pawn->HasAuthority() && PawnData)
+		if (!Pawn) return;
+
+		AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>();
+		if (!PS) return; // CanChangeInitState에서 PS+PawnData를 요구하므로 여기선 항상 유효
+
+		UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
+		if (!ASC) return;
+
+		// ① ASC↔폰 바인딩(서버/클라 공통). 같은 아바타로 이미 묶였으면 스킵.
+		const bool bAlreadyBound = ASC->AbilityActorInfo.IsValid()
+			&& ASC->AbilityActorInfo->AvatarActor.Get() == Pawn;
+		if (!bAlreadyBound)
 		{
-			if (AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>())
+			ASC->InitAbilityActorInfo(PS, Pawn);
+		}
+
+		if (!Pawn->HasAuthority()) return;
+
+		const UGYPawnData* PawnData = PS->GetPawnData();
+
+		// ② 진영 태그 부여(서버). 데이터(PawnData)에서 읽음.
+		if (PawnData && PawnData->Faction.IsValid())
+		{
+			ASC->AddLooseGameplayTag(PawnData->Faction, 1, EGameplayTagReplicationState::TagOnly);
+		}
+
+		// ③ base 어트리뷰트 값 초기화(서버). 값 정책은 PlayerState 소관.
+		PS->InitializeBaseAttributes();
+
+		// ④ AbilitySet 부여(서버). ASC 초기화는 PawnExtension이 전담한다.
+		if (PawnData)
+		{
+			CachedASC = ASC;
+			for (const UAbilitySet* AbilitySet : PawnData->AbilitySets)
 			{
-				PS->SetPawnData(PawnData);
+				if (AbilitySet)
+				{
+					AbilitySet->GiveToAbilitySystem(ASC, &GrantedHandles);
+				}
 			}
 		}
 	}
@@ -133,6 +185,13 @@ void UGYPawnExtensionComponent::BeginPlay()
 
 void UGYPawnExtensionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	// 부여한 AbilitySet 회수(서버). 폰 파괴 시 ASC에서 어빌리티/GE 제거.
+	if (CachedASC.IsValid())
+	{
+		GrantedHandles.TakeFromAbilitySystem(CachedASC.Get());
+		CachedASC.Reset();
+	}
+
 	UnregisterInitStateFeature(); // 등록 해제
 	Super::EndPlay(EndPlayReason);
 }

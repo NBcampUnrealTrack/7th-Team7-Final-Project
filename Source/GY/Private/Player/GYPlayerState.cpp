@@ -1,5 +1,7 @@
 #include "Player/GYPlayerState.h"
 
+#include "Character/GYPawnExtensionComponent.h"
+#include "GameFramework/Pawn.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
@@ -9,7 +11,6 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "GameplayEffect.h"
 #include "Character/GYPawnData.h"
-#include "Core/GameplayTags/FactionTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Interaction/AltarStorageComponent.h"
@@ -17,7 +18,7 @@
 #include "Inventory/ItemTransactionComponent.h"
 #include "Loot/LootViewerComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Player/GYPlayerInitData.h"
+#include "Player/GYPlayerBaseStatsRow.h"
 #include "SkillTree/SkillTreeComponent.h"
 
 AGYPlayerState::AGYPlayerState()
@@ -79,44 +80,57 @@ void AGYPlayerState::SetLastCheckpointId(const FGuid& Id)
 
 void AGYPlayerState::OnRep_PawnData()
 {
+	// PS.PawnData가 폰보다 늦게 복제돼도 init 체인이 마저 진행되도록 재킥(데디 클라 타이밍).
+	if (APawn* OwningPawn = GetPawn())
+	{
+		if (UGYPawnExtensionComponent* ExtComp = OwningPawn->FindComponentByClass<UGYPawnExtensionComponent>())
+		{
+			ExtComp->CheckDefaultInitialization();
+		}
+	}
 }
 
-void AGYPlayerState::InitGAS(APawn* Avatar)
+void AGYPlayerState::InitializeBaseAttributes()
 {
-	if (!AbilitySystemComponent || !Avatar) return;
+	if (!AbilitySystemComponent) return;
+	if (!HasAuthority()) return;
 
-	AbilitySystemComponent->InitAbilityActorInfo(this, Avatar);
+	const UGYPawnData* CurrentPawnData = GetPawnData();
+	if (!CurrentPawnData) return;
 
-	if (GetLocalRole() != ROLE_Authority) return;
-
-	AbilitySystemComponent->AddLooseGameplayTag(
-		GYFactionTags::Character_Faction_Player, 1,
-		EGameplayTagReplicationState::TagOnly);
-
-	if (InitData)
+	UDataTable* StatsTable = CurrentPawnData->BaseStatsTable.LoadSynchronous();
+	const FGYPlayerBaseStatsRow* Stats = StatsTable
+		? StatsTable->FindRow<FGYPlayerBaseStatsRow>(CurrentPawnData->BaseStatsRowName, TEXT("InitializeBaseAttributes"))
+		: nullptr;
+	if (Stats)
 	{
-		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxHealthAttribute(),     InitData->MaxHealth);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentHealthAttribute(), InitData->MaxHealth);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYDamageAttributeSet::GetAttackAttribute(),        InitData->Attack);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYDamageAttributeSet::GetDefenseAttribute(),       InitData->Defense);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxHealthAttribute(),     Stats->MaxHealth);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentHealthAttribute(), Stats->MaxHealth);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYDamageAttributeSet::GetAttackAttribute(),        Stats->Attack);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYDamageAttributeSet::GetDefenseAttribute(),       Stats->Defense);
 
-		AbilitySystemComponent->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetMaxStaminaAttribute(),     InitData->MaxStamina);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute(), InitData->MaxStamina);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYCoreStatAttributeSet::GetStrengthAttribute(),       InitData->Strength);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYCoreStatAttributeSet::GetDexterityAttribute(),      InitData->Dexterity);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetMaxStaminaAttribute(),     Stats->MaxStamina);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute(), Stats->MaxStamina);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYCoreStatAttributeSet::GetStrengthAttribute(),       Stats->Strength);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYCoreStatAttributeSet::GetDexterityAttribute(),      Stats->Dexterity);
 
 		// 경직/무력화는 누적 통: 0에서 시작해 피격으로 차오르고, Max 도달 시 발동.
-		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxStaggerAttribute(),     InitData->MaxStagger);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxStaggerAttribute(),     Stats->MaxStagger);
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentStaggerAttribute(), 0.f);
-		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxStunAttribute(),        InitData->MaxStun);
+		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxStunAttribute(),        Stats->MaxStun);
 		AbilitySystemComponent->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentStunAttribute(),    0.f);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("InitializeBaseAttributes: BaseStats 행을 찾지 못함 (Table=%s, Row=%s)"),
+			*GetNameSafe(StatsTable), *CurrentPawnData->BaseStatsRowName.ToString());
 	}
 
 	// 파생 스탯(STR/DEX 기반) 무한 GE 적용. 1차 스탯 base 세팅 이후에 적용해야 캡처값이 맞음.
-	if (DerivedStatsEffect)
+	if (CurrentPawnData->DerivedStatsEffect)
 	{
 		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
-		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(DerivedStatsEffect, 1.f, Context);
+		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(CurrentPawnData->DerivedStatsEffect, 1.f, Context);
 		if (Spec.IsValid())
 		{
 			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());

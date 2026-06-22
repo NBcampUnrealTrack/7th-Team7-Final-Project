@@ -18,7 +18,6 @@
 #include "Core/GameplayTags/StateTags.h"
 #include "AbilitySystem/GYOnHitModifierComponent.h"
 #include "Equipment/ActiveEquipmentComponent.h"
-#include "Equipment/EquipmentLoadoutComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Core/GameplayTeams/GYTeams.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -57,11 +56,7 @@ void AGYCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
-	{
-		PS->InitGAS(this);
-	}
-
+	// ASC init(InitGAS)은 PawnExtension의 InitState(DataAvailable)로 이관됨.
 	SubscribeHealthDelegate();
 
 	if (PawnExtComponent)
@@ -82,28 +77,13 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	ensureMsgf(ClimbingComponent, TEXT("ClimbingComponent Is Null"));
 	ClimbingComponent->BindToASC(PS);
 
-
-	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
-	if (!IsValid(Loadout)) return;
-
-	Loadout->OnLoadoutSlotChanged.AddUObject(
-		ActiveEquipmentComponent.Get(),
-		&UActiveEquipmentComponent::OnLoadoutSlotChanged);
-
-	for (const FEquipmentLoadoutEntry& Entry : Loadout->GetEntries())
-	{
-		ActiveEquipmentComponent->OnLoadoutSlotChanged(Entry.SlotTag, Entry.InstanceId);
-	}
+	// 장비 로드아웃 구독·초기 동기화는 컴포넌트가 담당.
+	ActiveEquipmentComponent->InitializeLoadoutBinding();
 }
 
 void AGYCharacter::OnRep_Controller()
 {
 	Super::OnRep_Controller();
-
-	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
-	{
-		PS->InitGAS(this);
-	}
 
 	if (PawnExtComponent)
 	{
@@ -131,8 +111,6 @@ void AGYCharacter::OnRep_PlayerState()
 
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!IsValid(PS)) return;
-
-	PS->InitGAS(this);
 
 	ensureMsgf(LockOnComponent, TEXT("LockOnComponent Is Null"));
 	LockOnComponent->BindToASC(PS);
@@ -293,9 +271,12 @@ void AGYCharacter::HandleDeath()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	const UGYPlayerActionConfig* Config = nullptr;
-	if (PawnExtComponent && PawnExtComponent->PawnData)
+	if (PawnExtComponent)
 	{
-		Config = PawnExtComponent->PawnData->ActionConfig;
+		if (const UGYPawnData* PawnData = PawnExtComponent->GetPawnData())
+		{
+			Config = PawnData->ActionConfig;
+		}
 	}
 
 	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())

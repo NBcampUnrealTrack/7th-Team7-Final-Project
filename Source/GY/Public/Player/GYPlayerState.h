@@ -13,7 +13,6 @@ class UCurrencyComponent;
 class UEquipmentLoadoutComponent;
 class UGYAbilitySystemComponent;
 class UGYPawnData;
-class UGYPlayerInitData;
 class UInventoryComponent;
 class UItemTransactionComponent;
 class ULootViewerComponent;
@@ -61,19 +60,12 @@ public:
 	UFUNCTION(BlueprintPure)
 	UItemTransactionComponent* GetItemTransactionComponent() const { return ItemTransactionComponent; }
 
-	void InitGAS(APawn* Avatar);
-
-	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
-	TObjectPtr<UGYPlayerInitData> InitData;
+	// [SERVER] base 어트리뷰트 값 + 파생 스탯 초기화. 값 출처(테이블/행)는 PawnData에서 읽는다.
+	// ASC ActorInfo 바인딩/faction 태그는 PawnExtension 담당.
+	void InitializeBaseAttributes();
 
 	FORCEINLINE FGuid GetLastCheckpointId() const { return LastCheckpointId; }
 	void SetLastCheckpointId(const FGuid& Id);
-
-
-	// 1차 스탯(STR/DEX)에서 파생 스탯(MaxHealth/MaxStagger/CritRate/Evasion)을 계산하는 무한 GE.
-	// AttributeBased 모디파이어라 STR/DEX 변경 시 자동 재평가.
-	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
-	TSubclassOf<class UGameplayEffect> DerivedStatsEffect;
 
 protected:
 	UFUNCTION()
