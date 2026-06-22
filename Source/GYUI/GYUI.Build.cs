@@ -23,6 +23,7 @@ public class GYUI : ModuleRules
 			"GameplayTasks",
 			"DeveloperSettings",
 			"GY",
+			"EnhancedInput",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
