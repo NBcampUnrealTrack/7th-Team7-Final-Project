@@ -55,6 +55,7 @@ void UEnemyMeleeAttack::OnWeaponHit(FGameplayEventData Payload)
 	FGYHitContext HitContext;
 	HitContext.SourceASC = OwnerASC;
 	HitContext.TargetASC = TargetASC;
+	HitContext.bGivesParriedReaction = true;
 
 	if (Payload.ContextHandle.IsValid())
 	{

@@ -197,6 +197,7 @@ void UEnemySlamAttack::ExecuteImpact()
 		FGYHitContext HitContext;
 		HitContext.SourceASC = OwnerASC;
 		HitContext.TargetASC = TargetASC;
+		HitContext.bGivesParriedReaction = false;
 
 		if (HitDamageWeights.IsValidIndex(0))
 		{
