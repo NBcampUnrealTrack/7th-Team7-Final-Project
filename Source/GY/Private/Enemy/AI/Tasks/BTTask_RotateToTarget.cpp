@@ -1,6 +1,8 @@
 #include "Enemy/AI/Tasks/BTTask_RotateToTarget.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 
@@ -8,6 +10,9 @@ UBTTask_RotateToTarget::UBTTask_RotateToTarget()
 {
 	NodeName = TEXT("Rotate To Target");
 	bNotifyTick = true;
+
+	TargetKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_RotateToTarget, TargetKey), AActor::StaticClass());
+	TargetKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_RotateToTarget, TargetKey));
 }
 
 EBTNodeResult::Type UBTTask_RotateToTarget::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -18,9 +23,8 @@ EBTNodeResult::Type UBTTask_RotateToTarget::ExecuteTask(UBehaviorTreeComponent& 
 	AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(AIC->GetPawn());
 	if (!Enemy) return EBTNodeResult::Failed;
 
-	AActor* Target = Cast<AActor>(OwnerComp.GetBlackboardComponent()
-		->GetValueAsObject(EnemyBBKeys::TargetActor));
-	if (!Target) return EBTNodeResult::Failed;
+	FVector Dummy;
+	if (!GetTargetLocation(OwnerComp, Dummy)) return EBTNodeResult::Failed;
 
 	Enemy->SetOrientToMovement(false);
 
@@ -43,17 +47,20 @@ void UBTTask_RotateToTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* 
 		return;
 	}
 
-	AActor* Target = Cast<AActor>(OwnerComp.GetBlackboardComponent()
-		->GetValueAsObject(EnemyBBKeys::TargetActor));
-	if (!Target)
+	FVector TargetLoc;
+	if (!GetTargetLocation(OwnerComp, TargetLoc))
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return;
 	}
 
-	FVector ToTarget = (Target->GetActorLocation() - Enemy->GetActorLocation());
+	FVector ToTarget = TargetLoc - Enemy->GetActorLocation();
 	ToTarget.Z = 0.f;
-	ToTarget.Normalize();
+	if (!ToTarget.Normalize())
+	{
+		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+		return;
+	}
 
 	FRotator TargetRot = ToTarget.ToOrientationRotator();
 	FRotator CurrentRot = Enemy->GetActorRotation();
@@ -81,4 +88,39 @@ void UBTTask_RotateToTarget::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, u
 	if (!Enemy) return;
 
 	Enemy->SetOrientToMovement(true);
+}
+
+void UBTTask_RotateToTarget::InitializeFromAsset(UBehaviorTree& Asset)
+{
+	Super::InitializeFromAsset(Asset);
+
+	if (UBlackboardData* BBAsset = GetBlackboardAsset())
+	{
+		TargetKey.ResolveSelectedKey(*BBAsset);
+	}
+}
+
+bool UBTTask_RotateToTarget::GetTargetLocation(UBehaviorTreeComponent& OwnerComp, FVector& OutLocation) const
+{
+	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+	if (!BB) return false;
+
+	if (TargetKey.SelectedKeyType == UBlackboardKeyType_Object::StaticClass())
+	{
+		if (AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(TargetKey.SelectedKeyName)))
+		{
+			OutLocation = TargetActor->GetActorLocation();
+			return true;
+		}
+	}
+	else if (TargetKey.SelectedKeyType == UBlackboardKeyType_Vector::StaticClass())
+	{
+		const FVector V = BB->GetValueAsVector(TargetKey.SelectedKeyName);
+		if (!V.IsNearlyZero())
+		{
+			OutLocation = V;
+			return true;
+		}
+	}
+	return false;
 }

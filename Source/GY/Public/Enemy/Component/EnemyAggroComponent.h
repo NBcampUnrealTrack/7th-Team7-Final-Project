@@ -120,6 +120,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Aggro")
 	FOnAggroTargetChanged OnTargetChanged;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Aggro")
+	FEnemyAggroWeights Weights;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -140,9 +143,6 @@ protected:
 	void InternalAddThreat(AActor* Actor, float Amount);
 	void RemoveTargetCombatTag(AActor* Actor);
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Aggro")
-	FEnemyAggroWeights Weights;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Aggro", meta = (ClampMin = "0.05"))
 	float UpdateInterval = 0.2f;
 
