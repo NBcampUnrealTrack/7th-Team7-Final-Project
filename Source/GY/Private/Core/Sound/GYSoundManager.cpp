@@ -7,6 +7,7 @@
 #include "Core/Sound/SoundSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Logging/GYLogManager.h"
+#include "Core/Settings/GYUserSettings.h"
 
 UGYSoundManager* UGYSoundManager::Get(const UObject* WorldContext)
 {
@@ -46,14 +47,7 @@ void UGYSoundManager::Initialize(FSubsystemCollectionBase& Collection)
 		return;
 	}
 	BuildCache(DataTable);
-
-	// 볼륨 지정
-	CategoryVolumes.Add(EGYSoundCategory::Master, 1.0f);
-	CategoryVolumes.Add(EGYSoundCategory::BGM, 1.0f);
-	CategoryVolumes.Add(EGYSoundCategory::SFX, 1.0f);
-	CategoryVolumes.Add(EGYSoundCategory::UI, 1.0f);
-	CategoryVolumes.Add(EGYSoundCategory::Voice, 1.0f);
-	CategoryVolumes.Add(EGYSoundCategory::Ambient, 1.0f);
+	LoadAudioSettings(); // 볼륨 셋팅
 }
 
 void UGYSoundManager::Deinitialize()
@@ -284,12 +278,38 @@ float UGYSoundManager::GetCategoryVolume(EGYSoundCategory Category) const
 
 void UGYSoundManager::SaveAudioSettings()
 {
-	//TODO
+	UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
+	if (!Settings) return;
+
+	// 사운드 카테고리 접근
+	for (const TPair<EGYSoundCategory, float>& Pair : CategoryVolumes)
+	{
+		Settings->SetVolume(Pair.Key, Pair.Value);
+	}
+	Settings->SaveSettings(); // 바뀐 값 저장
 }
 
 void UGYSoundManager::LoadAudioSettings()
 {
-	//TODO
+	const UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
+	if (!Settings) // Fallback 셋팅
+	{
+		CategoryVolumes.Add(EGYSoundCategory::Master, 1.0f);
+		CategoryVolumes.Add(EGYSoundCategory::BGM, 1.0f);
+		CategoryVolumes.Add(EGYSoundCategory::SFX, 1.0f);
+		CategoryVolumes.Add(EGYSoundCategory::UI, 1.0f);
+		return;
+	}
+
+	// 카테고리 배열 정의
+	static const EGYSoundCategory Cats[] = {
+		EGYSoundCategory::Master, EGYSoundCategory::BGM, EGYSoundCategory::SFX, EGYSoundCategory::UI
+	};
+	// 배열 순회, 캐싱
+	for (EGYSoundCategory Cat : Cats)
+	{
+		CategoryVolumes.Add(Cat, Settings->GetVolume(Cat));
+	}
 }
 
 const FGYSoundDataTableRow* UGYSoundManager::FindSoundRow(FGameplayTag SoundTag) const
