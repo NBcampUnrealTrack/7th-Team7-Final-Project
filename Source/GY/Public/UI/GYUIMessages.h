@@ -326,3 +326,10 @@ struct GY_API FGYEndingCreditsFinishedMessage
 {
 	GENERATED_BODY()
 };
+
+/** 설정 화면 토글 신호 */
+USTRUCT(BlueprintType)
+struct GY_API FGYToggleSettingsMessage
+{
+	GENERATED_BODY()
+};
