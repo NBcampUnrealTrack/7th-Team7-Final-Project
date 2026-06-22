@@ -127,10 +127,10 @@ void AGYPlayerState::InitializeBaseAttributes()
 	}
 
 	// 파생 스탯(STR/DEX 기반) 무한 GE 적용. 1차 스탯 base 세팅 이후에 적용해야 캡처값이 맞음.
-	if (DerivedStatsEffect)
+	if (CurrentPawnData->DerivedStatsEffect)
 	{
 		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
-		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(DerivedStatsEffect, 1.f, Context);
+		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(CurrentPawnData->DerivedStatsEffect, 1.f, Context);
 		if (Spec.IsValid())
 		{
 			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());

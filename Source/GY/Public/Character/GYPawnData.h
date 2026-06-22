@@ -10,6 +10,7 @@
 class APawn;
 class UAbilitySet;
 class UDataTable;
+class UGameplayEffect;
 class UGYInputConfig;
 class UGYPlayerActionConfig;
 class UInputMappingContext;
@@ -47,4 +48,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Attributes")
 	FName BaseStatsRowName = "Default";
+
+	// 1차 스탯(STR/DEX)에서 파생 스탯을 계산하는 무한 GE. AttributeBased라 STR/DEX 변경 시 자동 재평가.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Attributes")
+	TSubclassOf<UGameplayEffect> DerivedStatsEffect;
 };

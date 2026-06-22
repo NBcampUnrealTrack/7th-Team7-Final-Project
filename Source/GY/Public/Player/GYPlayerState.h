@@ -67,12 +67,6 @@ public:
 	FORCEINLINE FGuid GetLastCheckpointId() const { return LastCheckpointId; }
 	void SetLastCheckpointId(const FGuid& Id);
 
-
-	// 1차 스탯(STR/DEX)에서 파생 스탯(MaxHealth/MaxStagger/CritRate/Evasion)을 계산하는 무한 GE.
-	// AttributeBased 모디파이어라 STR/DEX 변경 시 자동 재평가.
-	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
-	TSubclassOf<class UGameplayEffect> DerivedStatsEffect;
-
 protected:
 	UFUNCTION()
 	void OnRep_PawnData();
