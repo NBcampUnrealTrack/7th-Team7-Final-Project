@@ -28,6 +28,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI")
 	TSoftClassPtr<UCommonActivatableWidget> RevivalWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Config, Category="UI")
+	TSoftClassPtr<UCommonActivatableWidget> SettingsWidgetClass;
+
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI|WorldReset")
 	TSoftClassPtr<UGYWorldResetWidget> WorldResetWidgetClass;
 
