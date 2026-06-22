@@ -17,4 +17,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Parkour, "InputTag.Parkour");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Block, "InputTag.Block");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_LockOn, "InputTag.LockOn");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_UI_ToggleSettings, "InputTag.UI.ToggleSettings");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_UI_NextTab, "InputTag.UI.NextTab");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_UI_PrevTab, "InputTag.UI.PrevTab");
 }
