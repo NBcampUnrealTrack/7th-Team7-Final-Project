@@ -6,6 +6,17 @@
 #include "UI/GYUIMessages.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Experience/GYExperienceManagerComponent.h"
+
+AGYGameState::AGYGameState()
+{
+	ExperienceManagerComponent = CreateDefaultSubobject<UGYExperienceManagerComponent>(TEXT("ExperienceManagerComponent"));
+}
+
+UGYExperienceManagerComponent* AGYGameState::GetExperienceManagerComponent() const
+{
+	return ExperienceManagerComponent;
+}
 
 void AGYGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

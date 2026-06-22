@@ -8,6 +8,8 @@
 #include "Character/GYPlayerActionConfig.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "Equipment/ActiveEquipmentComponent.h"
+#include "Experience/GYExperienceDefinition.h"
+#include "Experience/GYExperienceManagerComponent.h"
 #include "GameStates/GYGameState.h"
 #include "Misc/TrackedActivity.h"
 #include "Player/GYPlayerController.h"
@@ -28,6 +30,69 @@ AGYGameMode::AGYGameMode()
 bool AGYGameMode::AllowCheats(APlayerController* P)
 {
 	return true;
+}
+
+void AGYGameMode::InitGameState()
+{
+	Super::InitGameState();
+
+	AGYGameState* GYGameState = GetGameState<AGYGameState>();
+	if (!IsValid(GYGameState)) return;
+
+	UGYExperienceManagerComponent* ExperienceComponent = GYGameState->GetExperienceManagerComponent();
+	if (!IsValid(ExperienceComponent)) return;
+
+	// 로드 완료 콜백을 먼저 등록한 뒤 로드를 시작한다(동기 완료 대비).
+	ExperienceComponent->CallOrRegister_OnExperienceLoaded(
+		FOnGYExperienceLoaded::FDelegate::CreateUObject(this, &AGYGameMode::OnExperienceLoaded));
+	ExperienceComponent->ServerSetCurrentExperience(DefaultExperience);
+}
+
+bool AGYGameMode::ShouldSpawnAtStartSpot(AController* Player)
+{
+	// Experience 로드 완료 후 OnExperienceLoaded에서 일괄 스폰하므로 시작 지점 자동 스폰을 막는다.
+	return false;
+}
+
+void AGYGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	// Experience가 로드되기 전엔 폰 스폰을 보류한다.
+	if (IsExperienceLoaded())
+	{
+		Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+	}
+}
+
+bool AGYGameMode::PlayerCanRestart_Implementation(APlayerController* Player)
+{
+	return IsExperienceLoaded() && Super::PlayerCanRestart_Implementation(Player);
+}
+
+bool AGYGameMode::IsExperienceLoaded() const
+{
+	const AGYGameState* GYGameState = GetGameState<AGYGameState>();
+	if (!IsValid(GYGameState)) return false;
+
+	const UGYExperienceManagerComponent* ExperienceComponent = GYGameState->GetExperienceManagerComponent();
+	if (!IsValid(ExperienceComponent)) return false;
+
+	return ExperienceComponent->IsExperienceLoaded();
+}
+
+void AGYGameMode::OnExperienceLoaded(const UGYExperienceDefinition* Experience)
+{
+	// 로드 완료 시점에 폰이 없는 모든 컨트롤러를 스폰한다.
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(*It);
+		if (IsValid(PlayerController) && PlayerController->GetPawn() == nullptr)
+		{
+			if (PlayerCanRestart(PlayerController))
+			{
+				RestartPlayer(PlayerController);
+			}
+		}
+	}
 }
 
 void AGYGameMode::Tick(float DeltaSeconds)

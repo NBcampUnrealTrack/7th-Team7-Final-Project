@@ -6,6 +6,7 @@
 #include "GYGameState.generated.h"
 
 struct FGYWorldResetMessage;
+class UGYExperienceManagerComponent;
 
 UCLASS()
 class GY_API AGYGameState : public AGameState
@@ -13,8 +14,11 @@ class GY_API AGYGameState : public AGameState
 	GENERATED_BODY()
 
 public:
+	AGYGameState();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UGYExperienceManagerComponent* GetExperienceManagerComponent() const;
 
 
 	FORCEINLINE float GetCurrentTime() const { return CurrentTime; }
@@ -56,6 +60,9 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	UPROPERTY()
+	TObjectPtr<UGYExperienceManagerComponent> ExperienceManagerComponent;
+
 	UPROPERTY(ReplicatedUsing=OnRep_CurrentTime)
 	float CurrentTime;
 	//06:00~24:00 <- 20minute

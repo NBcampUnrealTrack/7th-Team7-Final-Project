@@ -257,7 +257,7 @@ void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 	AController* Controller = Pawn ? Pawn->GetController() : nullptr;
 
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
-	if (PlayerController->PlayerCameraManager && PlayerController)
+	if (PlayerController && PlayerController->PlayerCameraManager)
 	{
 		const FVector2D Value = InputActionValue.Get<FVector2D>();
 		const FRotator CameraRotation(0.0f, PlayerController->PlayerCameraManager->GetCameraRotation().Yaw, 0.0f);
