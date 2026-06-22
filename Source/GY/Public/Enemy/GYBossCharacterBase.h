@@ -8,22 +8,11 @@
 
 class UCurveTable;
 class UBossPhaseComponent;
+struct FBossCachedSummonable;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBossEncounterStarted, int32, ParticipantCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBossParticipantCountChanged, int32, NewCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBossMinionCountChanged, int32, NewCount);
-
-USTRUCT()
-struct FBossCachedSummonable
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	TObjectPtr<UEnemyDataAsset> DataAsset;
-
-	UPROPERTY()
-	TSubclassOf<AGYEnemyCharacterBase> ActorClass;
-};
 
 UCLASS()
 class GY_API AGYBossCharacterBase : public AGYEnemyCharacterBase
@@ -31,7 +20,7 @@ class GY_API AGYBossCharacterBase : public AGYEnemyCharacterBase
 	GENERATED_BODY()
 
 public:
-	AGYBossCharacterBase();
+	AGYBossCharacterBase(const FObjectInitializer& ObjectInitializer);
 
 	UFUNCTION(BlueprintCallable, Category = "Boss|Encounter")
 	void SetParticipants(const TArray<APlayerState*>& InParticipants);
@@ -55,7 +44,7 @@ public:
 	FOnBossParticipantCountChanged OnParticipantCountChanged;
 
 	UFUNCTION(BlueprintPure, Category = "Boss|Data")
-	UBossDataAsset* GetBossData() const { return Cast<UBossDataAsset>(LoadedDataAsset); }
+	UBossDataAsset* GetBossData() const;
 
 	bool GetSummonable(EEnemyType Type, FBossCachedSummonable& Out) const;
 
@@ -69,25 +58,22 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Boss|Movement")
 	bool IsStationary() const { return bIsStationary; }
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual float GetStatScaleValue() const override;
-	virtual void OnDataAssetLoaded() override;
-	virtual void GrantDefaultAbilities() override;
 
 	UFUNCTION()
 	void OnRep_Participants();
 
-	void HandleStaggerBegin() override;
-	void HandleStunBegin() override;
-	void Die() override;
-
-	void RequestSummonablePreload();
-	void OnSummonablesLoaded();
+	virtual void HandleStaggerBegin() override;
+	virtual void HandleStunBegin() override;
+	virtual void Die() override;
 
 	UFUNCTION()
 	void HandleMinionDead(AGYEnemyCharacterBase* Minion);
+
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Participants, VisibleAnywhere, BlueprintReadOnly, Category = "Boss|Encounter")
 	TArray<TObjectPtr<APlayerState>> Participants;
@@ -99,12 +85,10 @@ protected:
 	bool bEncounterStarted = false;
 
 	UPROPERTY(Transient)
-	TMap<EEnemyType, FBossCachedSummonable> SummonCache;
-
-	UPROPERTY(Transient)
 	TSet<TObjectPtr<AGYEnemyCharacterBase>> ActiveMinions;
 
 	FTimerHandle TempEncounterTimer;
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Movement")
 	bool bIsStationary = false;

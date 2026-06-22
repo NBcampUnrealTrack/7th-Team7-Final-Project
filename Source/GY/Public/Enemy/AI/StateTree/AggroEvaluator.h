@@ -5,7 +5,7 @@
 #include "StateTreeExecutionContext.h"
 #include "AggroEvaluator.generated.h"
 
-class UBossAggroComponent;
+class UEnemyAggroComponent;
 
 USTRUCT()
 struct FAggroEvaluatorInstanceData
@@ -40,6 +40,6 @@ struct GY_API FAggroEvaluator : public FStateTreeEvaluatorCommonBase
 	virtual void TreeStart(FStateTreeExecutionContext& Context) const override;
 	virtual void Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
 
-	TStateTreeExternalDataHandle<UBossAggroComponent,
+	TStateTreeExternalDataHandle<UEnemyAggroComponent,
 		EStateTreeExternalDataRequirement::Optional> AggroComponentHandle;
 };

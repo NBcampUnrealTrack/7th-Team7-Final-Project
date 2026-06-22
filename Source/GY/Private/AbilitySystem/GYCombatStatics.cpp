@@ -254,6 +254,7 @@ void UGYCombatStatics::ReportDamageToPerception(UAbilitySystemComponent* TargetA
 	float Effective)
 {
 	if (Effective <= 0.f || !TargetASC || !SourceASC) return;
+	if (IsSameFaction(TargetASC, SourceASC)) return;
 
 	AActor* TargetActor = TargetASC->GetAvatarActor();
 	AActor* SourceActor = SourceASC->GetAvatarActor();

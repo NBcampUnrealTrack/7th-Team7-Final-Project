@@ -114,7 +114,7 @@ void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 		SetDamage(0.f);
 		if (LocalDamage > 0.f)
 		{
-			SetCurrentHealth(FMath::Clamp(GetCurrentHealth() - LocalDamage, 0.f, GetMaxHealth()));
+			HandleIncomingDamage(Data, LocalDamage);
 		}
 		UpdateLowHPState();
 		return;
@@ -163,6 +163,11 @@ void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 			GYASC->NotifyAttributeChanged(Data.EvaluatedData.Attribute);
 		}
 	}
+}
+
+void UGYVitalAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData& Data, float DamageAmount)
+{
+	SetCurrentHealth(FMath::Clamp(GetCurrentHealth() - DamageAmount, 0.f, GetMaxHealth()));
 }
 
 void UGYVitalAttributeSet::HandleHitReaction(const FGameplayEffectModCallbackData& Data, float DamageDone)

@@ -3,7 +3,7 @@
 #include "AIController.h"
 #include "GameFramework/Pawn.h"
 #include "StateTreeLinker.h"
-#include "Enemy/Component/BossAggroComponent.h"
+#include "Enemy/Component/EnemyAggroComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 
 bool FAggroEvaluator::Link(FStateTreeLinker& Linker)
@@ -32,7 +32,7 @@ void FAggroEvaluator::Tick(FStateTreeExecutionContext& Context, const float Delt
 		}
 	}
 
-	UBossAggroComponent* Aggro = Context.GetExternalDataPtr(AggroComponentHandle);
+	UEnemyAggroComponent* Aggro = Context.GetExternalDataPtr(AggroComponentHandle);
 	if (!Aggro)
 	{
 		Data.CurrentTarget = nullptr;

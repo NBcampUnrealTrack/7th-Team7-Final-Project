@@ -8,7 +8,7 @@
 #include "Components/StateTreeAIComponent.h"
 #include "Enemy/AI/GYBossStateTreeAIComponent.h"
 #include "Enemy/GYBossCharacterBase.h"
-#include "Enemy/Component/BossAggroComponent.h"
+#include "Enemy/Component/EnemyAggroComponent.h"
 
 AGYBossAIController::AGYBossAIController()
 {
@@ -40,7 +40,7 @@ AGYBossAIController::AGYBossAIController()
 	StateTreeComponent = CreateDefaultSubobject<UGYBossStateTreeAIComponent>(TEXT("StateTreeAI"));
 	StateTreeComponent->SetStartLogicAutomatically(false);
 
-	AggroComponent = CreateDefaultSubobject<UBossAggroComponent>(TEXT("AggroComponent"));
+	AggroComponent = CreateDefaultSubobject<UEnemyAggroComponent>(TEXT("AggroComponent"));
 	PatternSelector = CreateDefaultSubobject<UBossPatternSelectorComponent>(TEXT("PatternSelector"));
 }
 

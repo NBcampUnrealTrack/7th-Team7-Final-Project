@@ -6,7 +6,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EngineUtils.h"
-#include "Enemy/Component/BossAggroComponent.h"
+#include "Enemy/Component/EnemyAggroComponent.h"
 #include "TimerManager.h"
 
 UPhaseTeleport::UPhaseTeleport()
@@ -81,7 +81,7 @@ void UPhaseTeleport::HandleDisappearFinished()
 	AAIController* AI = Cast<AAIController>(BossPawn->GetController());
 	if (!AI) return;
 
-	if (UBossAggroComponent* Aggro = AI->FindComponentByClass<UBossAggroComponent>())
+	if (UEnemyAggroComponent* Aggro = AI->FindComponentByClass<UEnemyAggroComponent>())
 	{
 		if (AActor* Target = Aggro->GetCurrentTarget())
 		{
@@ -155,7 +155,7 @@ bool UPhaseTeleport::ResolveDestination(FVector& OutLocation) const
 			AAIController* AI = Cast<AAIController>(BossPawn->GetController());
 			if (!AI) return false;
 
-			UBossAggroComponent* Aggro = AI->FindComponentByClass<UBossAggroComponent>();
+			UEnemyAggroComponent* Aggro = AI->FindComponentByClass<UEnemyAggroComponent>();
 			if (!Aggro) return false;
 
 			AActor* Target = Aggro->GetCurrentTarget();

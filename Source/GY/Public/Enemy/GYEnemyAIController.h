@@ -10,6 +10,7 @@ class UAISenseConfig_Sight;
 class UAISenseConfig_Damage;
 class UAISenseConfig_Hearing;
 class UAISenseConfig_Touch;
+class UEnemyAggroComponent;
 class AGYEnemyCharacterBase;
 
 namespace  EnemyBBKeys
@@ -28,19 +29,6 @@ namespace  EnemyBBKeys
 	static const FName SelectedAbility		= TEXT("SelectedAbility");
 	static const FName PatrolPosition		= TEXT("PatrolPosition");
 }
-
-USTRUCT()
-struct FPerceivedActorInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	TWeakObjectPtr<AActor> Actor = nullptr;
-
-	FAIStimulus LastStimulus;
-	float LastPerceivedTime = 0.f;
-
-};
 
 UCLASS(BlueprintType, Blueprintable)
 class GY_API AGYEnemyAIController : public AAIController
@@ -64,16 +52,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "AI|Blackboard")
 	AActor* GetTargetActor() const;
 
-	const TArray<FPerceivedActorInfo>& GetPerceivedActors() const { return PerceivedActors; }
+	UFUNCTION(BlueprintPure, Category = "AI|Aggro")
+	UEnemyAggroComponent* GetAggroComponent() const { return AggroComponent; }
 
 	void SetPatrolPoints(const TArray<FVector>& Offsets, const FVector& StartLocation);
 	FVector GetCurrentPatrolPoints() const;
 	void AdvancePatrolIndex();
-
-	float GetLoseSightRadius() const;
-	void RemoveOutOfRangeActors(const FVector& EnemyLocation, float LoseSightDist);
-
-	void RemoveAllPerceivedActor();
 
 	void StopPerception();
 	void StartPerception();
@@ -88,11 +72,10 @@ protected:
 	UFUNCTION()
 	void OnTargetPerceptionForgotten(AActor* Actor);
 
+	UFUNCTION()
+	void OnAggroTargetChanged(AActor* OldTarget, AActor* NewTarget);
+
 	void SetupBlackboardDefaults();
-private:
-	void AddPerceivedActor(AActor* Actor, const FAIStimulus& Stimulus);
-	void RemovePerceivedActor(AActor* Actor);
-	void UpdateSelfCombatTagByPerception();
 public:
 	UPROPERTY()
 	TArray<FVector> PatrolPoints;
@@ -114,10 +97,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
 	TObjectPtr<UAISenseConfig_Touch> TouchConfig;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Aggro")
+	TObjectPtr<UEnemyAggroComponent> AggroComponent;
+
 	UPROPERTY()
 	TObjectPtr<AGYEnemyCharacterBase> ControlledEnemy;
-
-	UPROPERTY()
-	TArray<FPerceivedActorInfo> PerceivedActors;
-
 };

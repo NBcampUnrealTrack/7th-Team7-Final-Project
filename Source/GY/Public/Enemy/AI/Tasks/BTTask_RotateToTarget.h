@@ -15,7 +15,13 @@ public:
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 	virtual void OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult) override;
 
+	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
 private:
+	bool GetTargetLocation(UBehaviorTreeComponent& OwnerComp, FVector& OutLocation) const;
+private:
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector TargetKey;
+
 	UPROPERTY(EditAnywhere, Category = "Rotation")
 	float AcceptableAngle = 10.f;
 

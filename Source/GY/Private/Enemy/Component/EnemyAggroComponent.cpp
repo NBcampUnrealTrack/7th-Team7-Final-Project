@@ -1,4 +1,4 @@
-#include "Enemy/Component/BossAggroComponent.h"
+#include "Enemy/Component/EnemyAggroComponent.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
@@ -13,13 +13,13 @@
 #include "Logging/GYLogManager.h"
 
 
-UBossAggroComponent::UBossAggroComponent()
+UEnemyAggroComponent::UEnemyAggroComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(false);
 }
 
-void UBossAggroComponent::BeginPlay()
+void UEnemyAggroComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -30,15 +30,15 @@ void UBossAggroComponent::BeginPlay()
 
 	BindToPerception();
 
-	OnTargetChanged.AddDynamic(this, &UBossAggroComponent::HandleTargetChanged);
+	OnTargetChanged.AddDynamic(this, &UEnemyAggroComponent::HandleTargetChanged);
 
 	GetWorld()->GetTimerManager().SetTimer(
-		UpdateTimerHandle, this, &UBossAggroComponent::TickAggro, UpdateInterval, true);
+		UpdateTimerHandle, this, &UEnemyAggroComponent::TickAggro, UpdateInterval, true);
 }
 
-void UBossAggroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void UEnemyAggroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	OnTargetChanged.RemoveDynamic(this, &UBossAggroComponent::HandleTargetChanged);
+	OnTargetChanged.RemoveDynamic(this, &UEnemyAggroComponent::HandleTargetChanged);
 
 	UnbindFromPerception();
 
@@ -50,7 +50,7 @@ void UBossAggroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 }
 
 
-float UBossAggroComponent::GetThreatFor(AActor* Actor) const
+float UEnemyAggroComponent::GetThreatFor(AActor* Actor) const
 {
 	if (!Actor) return 0.f;
 	const FAggroEntry* Entry = ThreatList.FindByPredicate(
@@ -61,7 +61,7 @@ float UBossAggroComponent::GetThreatFor(AActor* Actor) const
 	return Entry ? Entry->Threat : 0.f;
 }
 
-TArray<FAggroEntry> UBossAggroComponent::GetTopThreats(int32 Count) const
+TArray<FAggroEntry> UEnemyAggroComponent::GetTopThreats(int32 Count) const
 {
 	TArray<FAggroEntry> Copy = ThreatList;
 	Copy.Sort([](const FAggroEntry& A, const FAggroEntry& B)
@@ -72,15 +72,20 @@ TArray<FAggroEntry> UBossAggroComponent::GetTopThreats(int32 Count) const
 	return Copy;
 }
 
-void UBossAggroComponent::AddThreat(AActor* Actor, float Amount)
+void UEnemyAggroComponent::AddThreat(AActor* Actor, float Amount)
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	InternalAddThreat(Actor, Amount);
 }
 
-void UBossAggroComponent::ClearAllThreat()
+void UEnemyAggroComponent::ClearAllThreat()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	for (const FAggroEntry& E : ThreatList)
+	{
+		RemoveTargetCombatTag(E.Actor.Get());
+	}
 
 	AActor* Old = CurrentTarget.Get();
 	ThreatList.Reset();
@@ -92,7 +97,18 @@ void UBossAggroComponent::ClearAllThreat()
 	}
 }
 
-void UBossAggroComponent::ForceTarget(AActor* Actor, float ForcedThreatBonus)
+void UEnemyAggroComponent::RemoveTargetCombatTag(AActor* Actor)
+{
+	if (!Actor) return;
+
+	if (auto* TargetASC = Cast<UGYAbilitySystemComponent>(
+		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor)))
+	{
+		TargetASC->RemoveCombatTag();
+	}
+}
+
+void UEnemyAggroComponent::ForceTarget(AActor* Actor, float ForcedThreatBonus)
 {
 	if (!Actor || !GetOwner() || !GetOwner()->HasAuthority()) return;
 
@@ -106,7 +122,7 @@ void UBossAggroComponent::ForceTarget(AActor* Actor, float ForcedThreatBonus)
 	}
 }
 
-void UBossAggroComponent::BindToPerception()
+void UEnemyAggroComponent::BindToPerception()
 {
 	if (!CachedAIController.IsValid()) return;
 
@@ -114,24 +130,30 @@ void UBossAggroComponent::BindToPerception()
 	if (!Perc) return;
 
 	CachedPerception = Perc;
-	Perc->OnTargetPerceptionUpdated.AddDynamic(this, &UBossAggroComponent::OnPerceptionUpdated);
-	Perc->OnTargetPerceptionForgotten.AddDynamic(this, &UBossAggroComponent::OnPerceptionForgotten);
+	Perc->OnTargetPerceptionUpdated.AddDynamic(this, &UEnemyAggroComponent::OnPerceptionUpdated);
+	Perc->OnTargetPerceptionForgotten.AddDynamic(this, &UEnemyAggroComponent::OnPerceptionForgotten);
 }
 
-void UBossAggroComponent::UnbindFromPerception()
+void UEnemyAggroComponent::UnbindFromPerception()
 {
 	if (CachedPerception.IsValid())
 	{
 		CachedPerception->OnTargetPerceptionUpdated.RemoveDynamic(this,
-			&UBossAggroComponent::OnPerceptionUpdated);
+			&UEnemyAggroComponent::OnPerceptionUpdated);
 		CachedPerception->OnTargetPerceptionForgotten.RemoveDynamic(this,
-			&UBossAggroComponent::OnPerceptionForgotten);
+			&UEnemyAggroComponent::OnPerceptionForgotten);
 	}
 	CachedPerception.Reset();
 }
 
-void UBossAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
+void UEnemyAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
+	UE_LOG(LogTemp, Warning,
+		TEXT("[EnemyAggro] PerceptionUpdated Actor=%s Type=%s Sensed=%d Strength=%.1f"),
+		*GetNameSafe(Actor),
+		*Stimulus.Type.Name.ToString(),
+		Stimulus.WasSuccessfullySensed() ? 1 : 0,
+		Stimulus.Strength);
 	if (!Actor || !GetOwner() || !GetOwner()->HasAuthority()) return;
 
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
@@ -169,16 +191,21 @@ void UBossAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulu
 	{
 		if (Stimulus.WasSuccessfullySensed())
 		{
-			InternalAddThreat(Actor, Weights.NoiseOnHeard);
+			if (FAggroEntry* Entry = ThreatList.FindByPredicate(
+				[Actor](const FAggroEntry& E) { return E.Actor.Get() == Actor; }))
+			{
+				Entry->Threat += Weights.NoiseOnHeard;
+				Entry->LastUpdateTime = GetWorld()->GetTimeSeconds();
+			}
 		}
 	}
 }
 
-void UBossAggroComponent::OnPerceptionForgotten(AActor* Actor)
+void UEnemyAggroComponent::OnPerceptionForgotten(AActor* Actor)
 {
 }
 
-void UBossAggroComponent::HandleTargetChanged(AActor* OldTarget, AActor* NewTarget)
+void UEnemyAggroComponent::HandleTargetChanged(AActor* OldTarget, AActor* NewTarget)
 {
 	UE_LOG(LogTemp, Warning, TEXT("[BossAggro] HandleTargetChanged Old=%s New=%s"),
 		*GetNameSafe(OldTarget), *GetNameSafe(NewTarget));
@@ -201,13 +228,31 @@ void UBossAggroComponent::HandleTargetChanged(AActor* OldTarget, AActor* NewTarg
 	}
 }
 
-void UBossAggroComponent::TickAggro()
+void UEnemyAggroComponent::TickAggro()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
 	const float Now = GetWorld()->GetTimeSeconds();
 	const float DeltaTime = UpdateInterval;
 	const float DecayAmount = Weights.ThreatDecayPerSecond * DeltaTime;
+
+	if (CachedPerception.IsValid())
+	{
+		TArray<AActor*> SightedActors;
+		CachedPerception->GetCurrentlyPerceivedActors(
+			UAISense_Sight::StaticClass(), SightedActors);
+
+		const float SightTickGain = DecayAmount + KINDA_SMALL_NUMBER;
+		for (AActor* A : SightedActors)
+		{
+			UAbilitySystemComponent* TargetASC =
+				UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(A);
+			if (TargetASC && TargetASC->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy))
+				continue;
+
+			InternalAddThreat(A, SightTickGain);
+		}
+	}
 
 	for (int32 i = ThreatList.Num() - 1; i >= 0; --i)
 	{
@@ -224,6 +269,7 @@ void UBossAggroComponent::TickAggro()
 		const bool bExpired = (Now - E.LastUpdateTime) > Weights.ForgetTime;
 		if (bExpired || E.Threat <= KINDA_SMALL_NUMBER)
 		{
+			RemoveTargetCombatTag(E.Actor.Get());
 			ThreatList.RemoveAt(i);
 		}
 	}
@@ -256,7 +302,7 @@ void UBossAggroComponent::TickAggro()
 	}
 }
 
-void UBossAggroComponent::InternalAddThreat(AActor* Actor, float Amount)
+void UEnemyAggroComponent::InternalAddThreat(AActor* Actor, float Amount)
 {
 	if (!Actor || Amount <= 0.f) return;
 

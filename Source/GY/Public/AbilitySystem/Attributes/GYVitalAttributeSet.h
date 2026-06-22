@@ -85,6 +85,10 @@ public:
 protected:
 	virtual void HandleHitReaction(const FGameplayEffectModCallbackData& Data, float DamageDone);
 
+	// Damage 메타어트리뷰트 → CurrentHealth 변환 + 자식 클래스(Enemy/Player) 고유 후처리 hook.
+	// 기본 동작은 HP 차감. Enemy는 AI Perception 보고를, Player는 향후 실드/회피 등을 override로 추가.
+	virtual void HandleIncomingDamage(const FGameplayEffectModCallbackData& Data, float DamageAmount);
+
 	// 현재 HP 비율에 따라 State.Life.LowHP 태그를 켜고/끈다 (저체력 조건부 효과의 단일 판정점).
 	void UpdateLowHPState();
 };

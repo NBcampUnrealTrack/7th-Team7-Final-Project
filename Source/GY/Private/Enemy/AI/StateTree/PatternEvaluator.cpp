@@ -1,7 +1,7 @@
 #include "Enemy/AI/StateTree/PatternEvaluator.h"
 
 #include "StateTreeLinker.h"
-#include "Enemy/Component/BossAggroComponent.h"
+#include "Enemy/Component/EnemyAggroComponent.h"
 #include "Enemy/Component/BossPatternSelectorComponent.h"
 
 bool FPatternEvaluator::Link(FStateTreeLinker& Linker)
@@ -23,7 +23,7 @@ void FPatternEvaluator::Tick(FStateTreeExecutionContext& Context, const float De
 	FInstanceDataType& Data = Context.GetInstanceData(*this);
 
 	UBossPatternSelectorComponent* Selector = Context.GetExternalDataPtr(SelectorHandle);
-	UBossAggroComponent* Aggro = Context.GetExternalDataPtr(AggroHandle);
+	UEnemyAggroComponent* Aggro = Context.GetExternalDataPtr(AggroHandle);
 
 	if (!Selector || !Aggro)
 	{

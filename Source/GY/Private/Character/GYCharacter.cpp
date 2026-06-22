@@ -198,12 +198,14 @@ void AGYCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 
 void AGYCharacter::MakeFootstepNoise()
 {
+	UE_LOG(LogTemp, Warning, TEXT("[Noise] Footstep at %s by %s"),
+		*GetActorLocation().ToString(), *GetName());
 	UAISense_Hearing::ReportNoiseEvent(
 		GetWorld(),
 		GetActorLocation(),
-		0.5f,
+		1.f,
 		this,
-		800.f,
+		1500.f,
 		FName("Footstep")
 	);
 }
