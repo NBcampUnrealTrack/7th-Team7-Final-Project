@@ -4,7 +4,6 @@
 #include "AbilitySystemInterface.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/CameraTags.h"
-#include "Core/GameplayTags/GameFeaturesInitTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/PlayerState.h"
 #include "Core/GameplayTags/StateTags.h"
@@ -23,7 +22,7 @@ ULockOnComponent::ULockOnComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 
-
+	SquaredSwitchAccumulatorThreshold = SwitchAccumulatorThreshold * SwitchAccumulatorThreshold;
 
 	SetIsReplicatedByDefault(true);
 }
@@ -50,7 +49,6 @@ void ULockOnComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void ULockOnComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		StopLockOn();
@@ -176,6 +174,26 @@ void ULockOnComponent::StopLockOn()
 	OnRep_CurrentTarget();
 }
 
+void ULockOnComponent::ServerSetLockOnTarget_Implementation(AActor* NewTarget)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	if (!NewTarget) return;
+	if (CurrentTarget.Get() == NewTarget) return;
+
+	const float DistSq = FVector::DistSquared(GetOwner()->GetActorLocation(), NewTarget->GetActorLocation());
+	if (DistSq > MaxLockOnDistance * MaxLockOnDistance) return;
+
+	if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(NewTarget))
+		if (Enemy->IsDead()) return;
+
+	AActor* PrevTarget = CurrentTarget.Get();
+	UnbindTargetDeathListener(PrevTarget);
+	BindTargetDeathListener(NewTarget);
+
+	CurrentTarget = NewTarget;
+	OnRep_CurrentTarget();
+}
+
 void ULockOnComponent::OnRep_CurrentTarget()
 {
 	const bool bCurrentActive = CurrentTarget.IsValid();
@@ -188,7 +206,6 @@ void ULockOnComponent::OnRep_CurrentTarget()
 		{
 			if (bCurrentActive)
 			{
-
 				Movement->bOrientRotationToMovement = false;
 				Character->bUseControllerRotationYaw = true;
 			}
@@ -215,6 +232,14 @@ void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 
 	UpdateRotationToTarget(DeltaTime);
+
+	if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
+	{
+		if (OwnerPawn->IsLocallyControlled())
+		{
+			ProcessTargetSwitchInput(DeltaTime);
+		}
+	}
 
 	if (GetOwner()->HasAuthority())
 	{
@@ -348,7 +373,6 @@ void ULockOnComponent::RetryFindTarget()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(RetryTargetHandle);
 	}
-
 }
 
 void ULockOnComponent::HandleTargetDied(AGYEnemyCharacterBase* DeadEnemy)
@@ -395,4 +419,139 @@ void ULockOnComponent::UnbindTargetDeathListener(AActor* Target)
 	{
 		Enemy->OnEnemyDead.RemoveDynamic(this, &ULockOnComponent::HandleTargetDied);
 	}
+}
+
+void ULockOnComponent::ProcessTargetSwitchInput(float DeltaTime)
+{
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (!OwnerPawn) return;
+	APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController());
+	if (!PC) return;
+
+	float CurX = 0.f, CurY = 0.f;
+	if (!PC->GetMousePosition(CurX, CurY))
+	{
+		bPrevMouseValid = false;
+
+		const float DecayFactorOut = FMath::Exp(-SwitchAccumulatorDecayRate * DeltaTime);
+		SwitchAccumulator *= DecayFactorOut;
+		return;
+	}
+
+	float Dx = 0.f, Dy = 0.f;
+	if (bPrevMouseValid)
+	{
+		Dx = CurX - PrevMousePosition.X;
+		Dy = CurY - PrevMousePosition.Y;
+	}
+	PrevMousePosition = { CurX, CurY };
+	bPrevMouseValid = true;
+
+	SwitchAccumulator += FVector2D(Dx, -Dy);
+
+	const float DecayFactor = FMath::Exp(-SwitchAccumulatorDecayRate * DeltaTime);
+	SwitchAccumulator *= DecayFactor;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	const float Now = World->GetTimeSeconds();
+	if (Now - LastSwitchTime < SwitchCooldown)
+	{
+		SwitchAccumulator = FVector2D::ZeroVector;
+		return;
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("%f"),SwitchAccumulator.SquaredLength()));
+	if ((SwitchAccumulator.SquaredLength()) < SquaredSwitchAccumulatorThreshold) return;
+
+	AActor* NewTarget = FindDirectionalTarget(SwitchAccumulator.GetSafeNormal());
+	SwitchAccumulator = FVector2D::ZeroVector;
+
+	if (!NewTarget || NewTarget == CurrentTarget.Get()) return;
+
+	LastSwitchTime = Now;
+	ServerSetLockOnTarget(NewTarget);
+}
+
+AActor* ULockOnComponent::FindDirectionalTarget(FVector2D Direction) const
+{
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (!OwnerPawn) return nullptr;
+	APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController());
+	if (!PC) return nullptr;
+
+	UWorld* World = OwnerPawn->GetWorld();
+	if (!World) return nullptr;
+
+	if (Direction.IsNearlyZero()) return nullptr;
+	Direction.Normalize();
+
+	const FVector CameraLoc = PC->PlayerCameraManager
+		                          ? PC->PlayerCameraManager->GetCameraLocation()
+		                          : OwnerPawn->GetActorLocation();
+	const FRotator CameraRot = PC->PlayerCameraManager
+		                           ? PC->PlayerCameraManager->GetCameraRotation()
+		                           : PC->GetControlRotation();
+	const FVector CameraRight = FRotationMatrix(CameraRot).GetUnitAxis(EAxis::Y);
+	const FVector CameraUp = FRotationMatrix(CameraRot).GetUnitAxis(EAxis::Z);
+
+	AActor* CurrentRef = CurrentTarget.Get();
+	FVector2D CurrentPlane = FVector2D::ZeroVector;
+	if (CurrentRef)
+	{
+		const FVector ToCur = CurrentRef->GetActorLocation() - CameraLoc;
+		CurrentPlane = FVector2D(
+			FVector::DotProduct(ToCur, CameraRight),
+			FVector::DotProduct(ToCur, CameraUp));
+	}
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(LockOnDirectional), false);
+	Params.AddIgnoredActor(OwnerPawn);
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
+
+	TArray<FOverlapResult> Overlaps;
+	World->OverlapMultiByObjectType(
+		Overlaps,
+		OwnerPawn->GetActorLocation(),
+		FQuat::Identity,
+		ObjectParams,
+		FCollisionShape::MakeSphere(MaxLockOnDistance),
+		Params);
+
+	constexpr float DirectionDotThreshold = 0.3f;
+	AActor* BestTarget = nullptr;
+	float BestScreenDist = FLT_MAX;
+
+	for (const FOverlapResult& Overlap : Overlaps)
+	{
+		AActor* Candidate = Overlap.GetActor();
+		if (!Candidate || Candidate == OwnerPawn || Candidate == CurrentRef) continue;
+
+		if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Candidate))
+		{
+			if (Enemy->IsDead()) continue;
+		}
+		// TODO 팀 판정
+
+		const FVector ToCand = Candidate->GetActorLocation() - CameraLoc;
+		const FVector2D CandPlane(
+			FVector::DotProduct(ToCand, CameraRight),
+			FVector::DotProduct(ToCand, CameraUp));
+
+		const FVector2D Delta = CandPlane - CurrentPlane;
+		const float ScreenDist = Delta.Size();
+		if (ScreenDist <= KINDA_SMALL_NUMBER) continue;
+
+		const float Dot = FVector2D::DotProduct(Delta / ScreenDist, Direction);
+		if (Dot < DirectionDotThreshold) continue;
+
+		if (ScreenDist < BestScreenDist)
+		{
+			BestScreenDist = ScreenDist;
+			BestTarget = Candidate;
+		}
+	}
+	return BestTarget;
 }

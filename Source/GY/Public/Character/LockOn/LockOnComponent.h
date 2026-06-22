@@ -3,10 +3,10 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
-#include "Components/GameFrameworkInitStateInterface.h"
 #include "LockOnComponent.generated.h"
 
 
+class AGYEnemyCharacterBase;
 class AGYPlayerState;
 class UAbilitySystemComponent;
 
@@ -29,6 +29,8 @@ public:
 	void StartLockOn();
 	void StopLockOn();
 
+	UFUNCTION(Server, Reliable)
+	void ServerSetLockOnTarget(AActor* NewTarget);
 protected:
 	UFUNCTION()
 	void OnRep_CurrentTarget();
@@ -52,6 +54,15 @@ protected:
 
 	FTimerHandle RetryTargetHandle;
 
+	UPROPERTY(EditDefaultsOnly, Category="LockOn|Switch")
+	float SwitchAccumulatorThreshold = 20.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="LockOn|Switch")
+	float SwitchCooldown = 1.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="LockOn|Switch")
+	float SwitchAccumulatorDecayRate = 1.f;
+
 
 private:
 	void BroadcastLockOnMessage();
@@ -70,4 +81,15 @@ private:
 	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
 	bool bSavedOrientToMovement = true;
 	bool bSavedUseControllerRotationYaw = false;
+
+	void ProcessTargetSwitchInput(float DeltaTime);
+	AActor* FindDirectionalTarget(FVector2D Direction) const;
+
+	float SquaredSwitchAccumulatorThreshold = 0.f;
+
+	FVector2D SwitchAccumulator = FVector2D::ZeroVector;
+	FVector2D PrevMousePosition = FVector2D::ZeroVector;
+	bool bPrevMouseValid = false;
+	float LastSwitchTime = 0.f;
+
 };
