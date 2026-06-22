@@ -46,6 +46,11 @@ void UGYExperienceManagerComponent::ServerSetCurrentExperience(const UGYExperien
 	StartExperienceLoad();
 }
 
+const UGYExperienceDefinition* UGYExperienceManagerComponent::GetCurrentExperience() const
+{
+	return CurrentExperience;
+}
+
 void UGYExperienceManagerComponent::OnRep_FeaturePluginsToActivate()
 {
 	if (FeaturePluginsToActivate.Num() > 0)

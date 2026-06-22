@@ -19,6 +19,18 @@ UGYPawnExtensionComponent::UGYPawnExtensionComponent(const FObjectInitializer& O
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+const UGYPawnData* UGYPawnExtensionComponent::GetPawnData() const
+{
+	if (const APawn* Pawn = GetPawn<APawn>())
+	{
+		if (const AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>())
+		{
+			return PS->GetPawnData();
+		}
+	}
+	return nullptr;
+}
+
 bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
 	FGameplayTag DesiredState) const
 {
@@ -39,11 +51,6 @@ bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManage
 	if (CurrentState == GYGameplayTags::InitState_Spawned &&
 		DesiredState == GYGameplayTags::InitState_DataAvailable)
 	{
-		// Pawn data is required.
-		if (!PawnData)
-		{
-			return false;
-		}
 		const bool bHasAuthority = Pawn->HasAuthority();
 		const bool bIsLocallyControlled = Pawn->IsLocallyControlled();
 
@@ -52,8 +59,10 @@ bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManage
 			if (!GetController<AController>()) { return false; } // 컨트롤러 빙의 대기
 		}
 
-		// ASC는 PlayerState 소유 → DataAvailable에서 InitGAS를 호출하려면 PS가 준비돼야 한다.
-		if (!Pawn->GetPlayerState<AGYPlayerState>())
+		// PawnData·ASC 모두 PlayerState 경유(GameMode가 Experience로 PS에 PawnData set).
+		// PS와 PS의 PawnData가 준비돼야 DataAvailable로 진행.
+		const AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>();
+		if (!PS || !PS->GetPawnData())
 		{
 			return false;
 		}
@@ -86,15 +95,10 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 		if (!Pawn) return;
 
 		AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>();
-		if (!PS) return; // CanChangeInitState에서 PS를 요구하므로 여기선 항상 유효
+		if (!PS) return; // CanChangeInitState에서 PS+PawnData를 요구하므로 여기선 항상 유효
 
-		if (Pawn->HasAuthority() && PawnData)
-		{
-			PS->SetPawnData(PawnData);
-		}
-
-		// ASC ActorInfo init + 어트리뷰트 초기화. 서버/클라 공통(내부에서 권위 분기).
-		// GYCharacter의 InitGAS 3중 호출을 대체 — InitState가 타이밍을 보장한다.
+		// PawnData는 GameMode가 Experience에서 PS에 set함. 여기선 ASC ActorInfo init + 어트리뷰트만.
+		// 서버/클라 공통(InitGAS 내부에서 권위 분기).
 		PS->InitGAS(Pawn);
 	}
 }

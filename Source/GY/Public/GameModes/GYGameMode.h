@@ -7,6 +7,7 @@
 #include "GYGameMode.generated.h"
 
 class UGYExperienceDefinition;
+class UGYPawnData;
 
 UCLASS()
 class GY_API AGYGameMode : public AGameMode
@@ -25,6 +26,9 @@ public:
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	virtual bool PlayerCanRestart_Implementation(APlayerController* Player) override;
 
+	// 폰 클래스를 Experience/PawnData에서 해결(데이터드리븐). 폴백은 DefaultPawnClass.
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+
 protected:
 	virtual void Tick(float DeltaSeconds) override;
 	bool AdvanceSecond(float Amount, AGYGameState* GYGameState);
@@ -39,4 +43,7 @@ private:
 
 	bool IsExperienceLoaded() const;
 	void OnExperienceLoaded(const UGYExperienceDefinition* Experience);
+
+	// PS에 PawnData가 있으면 그것, 없으면 현재 Experience의 DefaultPawnData.
+	const UGYPawnData* GetPawnDataForController(AController* InController) const;
 };

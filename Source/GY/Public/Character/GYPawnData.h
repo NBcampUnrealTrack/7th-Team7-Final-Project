@@ -6,6 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "GYPawnData.generated.h"
 
+class APawn;
 class UAbilitySet;
 class UGYInputConfig;
 class UGYPlayerActionConfig;
@@ -17,6 +18,10 @@ class GY_API UGYPawnData : public UPrimaryDataAsset
 	GENERATED_BODY()
 public:
 	UGYPawnData(const FObjectInitializer& ObjectInitializer);
+
+	// 이 PawnData로 스폰할 폰 클래스. 비우면 GameMode가 DefaultPawnClass로 폴백.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Pawn")
+	TSubclassOf<APawn> PawnClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Input")
 	TObjectPtr<UInputMappingContext> DefaultIMC;

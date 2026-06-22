@@ -87,12 +87,65 @@ void AGYGameMode::OnExperienceLoaded(const UGYExperienceDefinition* Experience)
 		APlayerController* PlayerController = Cast<APlayerController>(*It);
 		if (IsValid(PlayerController) && PlayerController->GetPawn() == nullptr)
 		{
+			// PawnData는 RestartPlayer 내부의 GetDefaultPawnClassForController에서 PS에 심는다.
 			if (PlayerCanRestart(PlayerController))
 			{
 				RestartPlayer(PlayerController);
 			}
 		}
 	}
+}
+
+const UGYPawnData* AGYGameMode::GetPawnDataForController(AController* InController) const
+{
+	// 이미 PS에 PawnData가 있으면 그것을 우선(리스폰 등 재진입 대응).
+	if (InController)
+	{
+		if (const AGYPlayerState* PS = InController->GetPlayerState<AGYPlayerState>())
+		{
+			if (const UGYPawnData* ExistingPawnData = PS->GetPawnData())
+			{
+				return ExistingPawnData;
+			}
+		}
+	}
+
+	// 없으면 현재 Experience의 DefaultPawnData.
+	if (const AGYGameState* GYGameState = GetGameState<AGYGameState>())
+	{
+		if (const UGYExperienceManagerComponent* ExperienceComponent = GYGameState->GetExperienceManagerComponent())
+		{
+			if (const UGYExperienceDefinition* Experience = ExperienceComponent->GetCurrentExperience())
+			{
+				return Experience->DefaultPawnData;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+UClass* AGYGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+	const UGYPawnData* PawnData = GetPawnDataForController(InController);
+
+	// 모든 스폰 경로(HandleStartingNewPlayer / OnExperienceLoaded → RestartPlayer)가 이 함수를 거친다.
+	// 폰이 스폰되기 전에 여기서 PS에 PawnData를 심어, 폰의 PawnExtension이 init될 때 항상 준비돼 있게 한다.
+	if (PawnData && InController)
+	{
+		if (AGYPlayerState* PS = InController->GetPlayerState<AGYPlayerState>())
+		{
+			PS->SetPawnData(PawnData);
+		}
+	}
+
+	if (PawnData && PawnData->PawnClass)
+	{
+		return PawnData->PawnClass;
+	}
+
+	// PawnData/PawnClass 미지정이면 기본 폰 클래스로 폴백.
+	return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
 
 void AGYGameMode::Tick(float DeltaSeconds)
@@ -170,7 +223,7 @@ void AGYGameMode::PerformRespawn(APlayerController* PC)
 	{
 		if (UGYPawnExtensionComponent* ExtComp = OldPawn->FindComponentByClass<UGYPawnExtensionComponent>())
 		{
-			if (ExtComp->PawnData) Config = ExtComp->PawnData->ActionConfig;
+			if (const UGYPawnData* PawnData = ExtComp->GetPawnData()) Config = PawnData->ActionConfig;
 		}
 	}
 

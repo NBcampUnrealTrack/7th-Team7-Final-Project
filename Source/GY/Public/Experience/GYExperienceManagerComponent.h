@@ -30,6 +30,9 @@ public:
 
 	bool IsExperienceLoaded() const { return bExperienceLoaded; }
 
+	// 현재 로드된 Experience(서버 권위 참조). 클라에선 null일 수 있음.
+	const UGYExperienceDefinition* GetCurrentExperience() const;
+
 private:
 	UFUNCTION()
 	void OnRep_FeaturePluginsToActivate();

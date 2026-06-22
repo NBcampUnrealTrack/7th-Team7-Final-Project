@@ -128,9 +128,10 @@ void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 			{
 				CachedASC = ASC;
 				UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
-				if (ExtComp && ExtComp->PawnData)
+				const UGYPawnData* PawnData = ExtComp ? ExtComp->GetPawnData() : nullptr;
+				if (PawnData)
 				{
-					for (const UAbilitySet* AbilitySet : ExtComp->PawnData->AbilitySets)
+					for (const UAbilitySet* AbilitySet : PawnData->AbilitySets)
 					{
 						if (AbilitySet)
 						{
@@ -189,7 +190,7 @@ void UGYHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompone
 	UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
 	check(ExtComp);
 
-	const UGYPawnData* PawnData = ExtComp->PawnData;
+	const UGYPawnData* PawnData = ExtComp->GetPawnData();
 	if (!PawnData)
 	{
 		GY_WARN(Player, KHB, "PawnData가 할당되지 않았습니다.")
@@ -207,7 +208,7 @@ void UGYHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompone
 	{
 		if (PawnData->DefaultIMC)
 		{
-			EnhancedInputSubsystem->AddMappingContext(ExtComp->PawnData->DefaultIMC, 0);
+			EnhancedInputSubsystem->AddMappingContext(PawnData->DefaultIMC, 0);
 		}
 	}
 	//커스텀 입력 컴포넌트로 캐스팅 후 태그 기반 바인딩
@@ -244,9 +245,10 @@ bool UGYHeroComponent::IsInputBlocked() const
 	if (!ASC) return false;
 
 	UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
-	if (!ExtComp || !ExtComp->PawnData || !ExtComp->PawnData->ActionConfig) return false;
+	const UGYPawnData* PawnData = ExtComp ? ExtComp->GetPawnData() : nullptr;
+	if (!PawnData || !PawnData->ActionConfig) return false;
 
-	return ASC->HasAnyMatchingGameplayTags(ExtComp->PawnData->ActionConfig->InputBlockTags);
+	return ASC->HasAnyMatchingGameplayTags(PawnData->ActionConfig->InputBlockTags);
 }
 
 void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)

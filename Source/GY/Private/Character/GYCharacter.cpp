@@ -282,9 +282,12 @@ void AGYCharacter::HandleDeath()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	const UGYPlayerActionConfig* Config = nullptr;
-	if (PawnExtComponent && PawnExtComponent->PawnData)
+	if (PawnExtComponent)
 	{
-		Config = PawnExtComponent->PawnData->ActionConfig;
+		if (const UGYPawnData* PawnData = PawnExtComponent->GetPawnData())
+		{
+			Config = PawnData->ActionConfig;
+		}
 	}
 
 	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())

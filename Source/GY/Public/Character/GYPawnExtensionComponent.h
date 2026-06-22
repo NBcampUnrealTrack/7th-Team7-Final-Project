@@ -21,8 +21,9 @@ public:
 
 	static const FName NAME_ActorFeatureName;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GY|PawnData")
-	const UGYPawnData* PawnData;
+	// PawnData는 PlayerState에서 옴(GameMode가 Experience로 set). 컴포넌트는 접근자만 제공.
+	UFUNCTION(BlueprintPure, Category = "GY|PawnData")
+	const UGYPawnData* GetPawnData() const;
 
 	// -- IGameFramework~ 인터페이스 구현부 override
 	//기능 이름 반환
