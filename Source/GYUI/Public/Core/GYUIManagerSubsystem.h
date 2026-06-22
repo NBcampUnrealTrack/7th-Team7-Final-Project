@@ -184,4 +184,7 @@ private:
 
 	FGameplayMessageListenerHandle WorldResetListenerHandle;
 	TWeakObjectPtr<UGYWorldResetWidget> ActiveWorldResetWidget;
+
+	void HandleToggleSettings(FGameplayTag Tag, const struct FGYToggleSettingsMessage& Msg);
+	FGameplayMessageListenerHandle ToggleSettingsListenerHandle;
 };
