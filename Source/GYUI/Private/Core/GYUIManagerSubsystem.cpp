@@ -40,6 +40,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 				MSG->UnregisterListener(EndingCinematicFinishedHandle);
 				MSG->UnregisterListener(EndingCreditsFinishedHandle);
 				MSG->UnregisterListener(WorldResetListenerHandle);
+				MSG->UnregisterListener(ToggleSettingsListenerHandle);
 			}
 		}
 		UnbindASC();
@@ -135,6 +136,10 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		{
 			MSG.UnregisterListener(WorldResetListenerHandle);
 		}
+		if (ToggleSettingsListenerHandle.IsValid())
+		{
+			MSG.UnregisterListener(ToggleSettingsListenerHandle);
+		}
 
 		RegionEnterListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Region_Entered, this, &UGYUIManagerSubsystem::HandleRegionEntered);
@@ -150,6 +155,8 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 			GYGameplayTags::Message_Ending_CreditsFinished, this, &UGYUIManagerSubsystem::HandleEndingCreditsFinished);
 		WorldResetListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_World_Reset, this, &UGYUIManagerSubsystem::HandleWorldReset);
+		ToggleSettingsListenerHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_UI_ToggleSettings, this, &UGYUIManagerSubsystem::HandleToggleSettings);
 	}
 }
 
@@ -799,4 +806,15 @@ void UGYUIManagerSubsystem::HandleWorldResetFinished()
 		PopWidget(ActiveWorldResetWidget.Get());
 		ActiveWorldResetWidget = nullptr;
 	}
+}
+
+void UGYUIManagerSubsystem::HandleToggleSettings(FGameplayTag, const FGYToggleSettingsMessage&)
+{
+	const UGYUISettings* UISettings = GetDefault<UGYUISettings>();
+	if (!UISettings) return;
+
+	TSubclassOf<UCommonActivatableWidget> Class = UISettings->SettingsWidgetClass.LoadSynchronous();
+	if (!Class) return;
+
+	ToggleWidgetInLayer(GYUILayerTags::UI_Layer_Menu, Class);
 }

@@ -39,6 +39,8 @@ public:
 	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
 	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
 
+	void Input_ToggleSettings();
+
 	// 임계 시간 미만 = 콤보, 이상 = 차지. 클라 단독 결정 (서버는 결과 RPC만 받음 — RTT race 없음)
 	UPROPERTY(EditDefaultsOnly, Category = "Attack", meta = (ClampMin = "0.0", Units = "s"))
 	float HoldToChargeTime = 0.3f;

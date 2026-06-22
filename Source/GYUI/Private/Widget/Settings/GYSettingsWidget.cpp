@@ -1,0 +1,488 @@
+#include "Widget/Settings/GYSettingsWidget.h"
+#include "Components/Button.h"
+#include "Components/CheckBox.h"
+#include "Components/ComboBoxString.h"
+#include "Components/Slider.h"
+#include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
+#include "Core/Settings/GYUserSettings.h"
+#include "Core/Sound/GYSoundManager.h"
+#include "GameFramework/GameUserSettings.h"
+#include "Internationalization/Culture.h"
+#include "Internationalization/Internationalization.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Character/GYInputComponent.h"
+#include "Core/GameplayTags/InputTag.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
+
+namespace GYSettingsPrivate
+{
+	// 해상도 목록
+    static void GatherResolutions(TArray<FIntPoint>& Out)
+    {
+        Out.Reset();
+        UKismetSystemLibrary::GetSupportedFullscreenResolutions(Out);
+        if (Out.Num() == 0)
+        {
+            static const FIntPoint Fallback[] = {
+                {1280, 720}, {1600, 900}, {1920, 1080}, {2560, 1440}, {3840, 2160}
+            };
+            for (const FIntPoint& R : Fallback) Out.Add(R);
+        }
+    }
+
+    static FString FormatResolution(const FIntPoint& R)
+    {
+        return FString::Printf(TEXT("%d x %d"), R.X, R.Y);
+    }
+
+	// 규격을 문자열로 파싱 -> 숫자값으로 쪼개어 반환
+    static bool ParseResolution(const FString& In, FIntPoint& Out)
+    {
+        FString L, R;
+        if (In.Split(TEXT("x"), &L, &R))
+        {
+            Out.X = FCString::Atoi(*L.TrimStartAndEnd());
+            Out.Y = FCString::Atoi(*R.TrimStartAndEnd());
+            return Out.X > 0 && Out.Y > 0;
+        }
+        return false;
+    }
+}
+
+UGYSettingsWidget::UGYSettingsWidget(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+    InputMode = EGYWidgetInputMode::Menu;
+
+    SupportedLanguages.Add(TEXT("ko"), TEXT("한국어"));
+    SupportedLanguages.Add(TEXT("en"), TEXT("English"));
+}
+
+void UGYSettingsWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+	SetIsFocusable(true);
+
+	InitGraphicsTab();
+	InitSoundTab();
+	InitLanguageTab();
+
+	ShowTab(EGYSettingsTab::Graphics);
+	SetupMenuInput();
+}
+
+void UGYSettingsWidget::NativeDestruct()
+{
+	TeardownMenuInput();
+	Super::NativeDestruct();
+}
+
+void UGYSettingsWidget::NativeOnInitialized()
+{
+    Super::NativeOnInitialized();
+
+    // 모든 위젯 이벤트 바인딩
+    if (GraphicsTabButton) GraphicsTabButton->OnClicked.AddDynamic(this, &UGYSettingsWidget::HandleGraphicsTabClicked);
+    if (SoundTabButton) SoundTabButton->OnClicked.AddDynamic(this, &UGYSettingsWidget::HandleSoundTabClicked);
+    if (ControlsTabButton) ControlsTabButton->OnClicked.AddDynamic(this, &UGYSettingsWidget::HandleControlsTabClicked);
+    if (LanguageTabButton) LanguageTabButton->OnClicked.AddDynamic(this, &UGYSettingsWidget::HandleLanguageTabClicked);
+    if (CloseButton) CloseButton->OnClicked.AddDynamic(this, &UGYSettingsWidget::HandleCloseClicked);
+
+    if (ResolutionCombo) ResolutionCombo->OnSelectionChanged.AddDynamic(this, &UGYSettingsWidget::HandleResolutionChanged);
+    if (WindowModeCombo) WindowModeCombo->OnSelectionChanged.AddDynamic(this, &UGYSettingsWidget::HandleWindowModeChanged);
+    if (OverallQualityCombo) OverallQualityCombo->OnSelectionChanged.AddDynamic(this, &UGYSettingsWidget::HandleOverallQualityChanged);
+    if (AntiAliasingCombo) AntiAliasingCombo->OnSelectionChanged.AddDynamic(this, &UGYSettingsWidget::HandleAntiAliasingChanged);
+    if (FrameRateLimitCombo) FrameRateLimitCombo->OnSelectionChanged.AddDynamic(this, &UGYSettingsWidget::HandleFrameRateLimitChanged);
+    if (VSyncCheck) VSyncCheck->OnCheckStateChanged.AddDynamic(this, &UGYSettingsWidget::HandleVSyncChanged);
+    if (MotionBlurCheck) MotionBlurCheck->OnCheckStateChanged.AddDynamic(this, &UGYSettingsWidget::HandleMotionBlurChanged);
+    if (ApplyGraphicsButton) ApplyGraphicsButton->OnClicked.AddDynamic(this, &UGYSettingsWidget::HandleApplyGraphicsClicked);
+
+    if (MasterVolumeSlider) MasterVolumeSlider->OnValueChanged.AddDynamic(this, &UGYSettingsWidget::HandleMasterVolumeChanged);
+    if (BGMVolumeSlider) BGMVolumeSlider->OnValueChanged.AddDynamic(this, &UGYSettingsWidget::HandleBGMVolumeChanged);
+    if (SFXVolumeSlider) SFXVolumeSlider->OnValueChanged.AddDynamic(this, &UGYSettingsWidget::HandleSFXVolumeChanged);
+    if (UIVolumeSlider) UIVolumeSlider->OnValueChanged.AddDynamic(this, &UGYSettingsWidget::HandleUIVolumeChanged);
+
+    if (LanguageCombo) LanguageCombo->OnSelectionChanged.AddDynamic(this, &UGYSettingsWidget::HandleLanguageChanged);
+}
+
+UWidget* UGYSettingsWidget::NativeGetDesiredFocusTarget() const
+{
+    // 키 이벤트를 받기 위해 자기 자신을 포커스 타겟으로
+    return const_cast<UGYSettingsWidget*>(this);
+}
+
+FReply UGYSettingsWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	// IMC가 미설정인 경우 대비한 ESC 폴백
+	if (InKeyEvent.GetKey() == EKeys::Escape)
+	{
+		DeactivateWidget();
+		return FReply::Handled();
+	}
+	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+void UGYSettingsWidget::ShowTab(EGYSettingsTab Tab)
+{
+    if (TabSwitcher)
+    {
+        TabSwitcher->SetActiveWidgetIndex(static_cast<int32>(Tab)); // 화면 전환
+    }
+    OnActiveTabChanged(Tab);
+}
+
+void UGYSettingsWidget::HandleGraphicsTabClicked()
+{
+	ShowTab(EGYSettingsTab::Graphics);
+}
+
+void UGYSettingsWidget::HandleSoundTabClicked()
+{
+	ShowTab(EGYSettingsTab::Sound);
+}
+
+void UGYSettingsWidget::HandleControlsTabClicked()
+{
+	ShowTab(EGYSettingsTab::Controls);
+}
+
+void UGYSettingsWidget::HandleLanguageTabClicked()
+{
+	ShowTab(EGYSettingsTab::Language);
+}
+
+void UGYSettingsWidget::HandleCloseClicked()
+{
+    DeactivateWidget();
+}
+
+void UGYSettingsWidget::InitGraphicsTab()
+{
+    UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
+    if (!Settings) return;
+
+    if (ResolutionCombo)
+    {
+        ResolutionCombo->ClearOptions();
+        TArray<FIntPoint> Resolutions;
+        GYSettingsPrivate::GatherResolutions(Resolutions);
+        for (const FIntPoint& R : Resolutions)
+        {
+            ResolutionCombo->AddOption(GYSettingsPrivate::FormatResolution(R));
+        }
+    	// 현재 설정된 해상도를 콤보박스 기본값으로 설정
+        ResolutionCombo->SetSelectedOption(GYSettingsPrivate::FormatResolution(Settings->GetScreenResolution()));
+    }
+
+    if (WindowModeCombo)
+    {
+        WindowModeCombo->ClearOptions();
+        WindowModeCombo->AddOption(TEXT("Fullscreen"));
+        WindowModeCombo->AddOption(TEXT("Windowed Fullscreen"));
+        WindowModeCombo->AddOption(TEXT("Windowed"));
+        const int32 Mode = static_cast<int32>(Settings->GetFullscreenMode());
+        WindowModeCombo->SetSelectedIndex(FMath::Clamp(Mode, 0, 2));
+    }
+
+    if (OverallQualityCombo)
+    {
+        OverallQualityCombo->ClearOptions();
+        OverallQualityCombo->AddOption(TEXT("Low"));
+        OverallQualityCombo->AddOption(TEXT("Medium"));
+        OverallQualityCombo->AddOption(TEXT("High"));
+        OverallQualityCombo->AddOption(TEXT("Epic"));
+        OverallQualityCombo->SetSelectedIndex(FMath::Clamp(Settings->GetOverallScalabilityLevel(), 0, 3));
+    }
+
+    if (AntiAliasingCombo)
+    {
+        AntiAliasingCombo->ClearOptions();
+        AntiAliasingCombo->AddOption(TEXT("Low"));
+        AntiAliasingCombo->AddOption(TEXT("Medium"));
+        AntiAliasingCombo->AddOption(TEXT("High"));
+        AntiAliasingCombo->AddOption(TEXT("Epic"));
+        AntiAliasingCombo->SetSelectedIndex(FMath::Clamp(Settings->GetAntiAliasingQuality(), 0, 3));
+    }
+
+    if (FrameRateLimitCombo)
+    {
+        FrameRateLimitCombo->ClearOptions();
+        FrameRateLimitCombo->AddOption(TEXT("30"));
+        FrameRateLimitCombo->AddOption(TEXT("60"));
+        FrameRateLimitCombo->AddOption(TEXT("120"));
+        FrameRateLimitCombo->AddOption(TEXT("144"));
+        FrameRateLimitCombo->AddOption(TEXT("Unlimited"));
+
+        const int32 Limit = Settings->GetCustomFrameRateLimit();
+        FString Sel;
+        switch (Limit)
+        {
+            case 30: Sel = TEXT("30"); break;
+            case 60: Sel = TEXT("60"); break;
+            case 120: Sel = TEXT("120"); break;
+            case 144: Sel = TEXT("144"); break;
+            default: Sel = TEXT("Unlimited"); break;
+        }
+        FrameRateLimitCombo->SetSelectedOption(Sel);
+    }
+
+    if (VSyncCheck)
+    {
+        VSyncCheck->SetIsChecked(Settings->IsVSyncEnabled());
+    }
+
+    if (MotionBlurCheck)
+    {
+        MotionBlurCheck->SetIsChecked(Settings->GetMotionBlurEnabled());
+    }
+}
+
+void UGYSettingsWidget::HandleResolutionChanged(FString SelectedItem, ESelectInfo::Type)
+{
+    UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
+    if (!Settings) return;
+    FIntPoint Parsed;
+    if (GYSettingsPrivate::ParseResolution(SelectedItem, Parsed))
+    {
+        Settings->SetScreenResolution(Parsed);
+    }
+}
+
+void UGYSettingsWidget::HandleWindowModeChanged(FString, ESelectInfo::Type)
+{
+    UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
+    if (!Settings || !WindowModeCombo) return;
+    Settings->SetFullscreenMode(static_cast<EWindowMode::Type>(WindowModeCombo->GetSelectedIndex()));
+}
+
+void UGYSettingsWidget::HandleOverallQualityChanged(FString, ESelectInfo::Type)
+{
+    UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
+    if (!Settings || !OverallQualityCombo) return;
+    Settings->SetOverallScalabilityLevel(OverallQualityCombo->GetSelectedIndex());
+}
+
+void UGYSettingsWidget::HandleAntiAliasingChanged(FString, ESelectInfo::Type)
+{
+    UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
+    if (!Settings || !AntiAliasingCombo) return;
+    Settings->SetAntiAliasingQuality(AntiAliasingCombo->GetSelectedIndex());
+}
+
+void UGYSettingsWidget::HandleFrameRateLimitChanged(FString SelectedItem, ESelectInfo::Type)
+{
+    UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
+    if (!Settings) return;
+    const int32 Limit = (SelectedItem == TEXT("Unlimited")) ? 0 : FCString::Atoi(*SelectedItem);
+    Settings->SetCustomFrameRateLimit(Limit);
+}
+
+void UGYSettingsWidget::HandleVSyncChanged(bool bIsChecked)
+{
+    if (UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings())
+        Settings->SetVSyncEnabled(bIsChecked);
+}
+
+void UGYSettingsWidget::HandleMotionBlurChanged(bool bIsChecked)
+{
+    if (UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings())
+        Settings->SetMotionBlurEnabled(bIsChecked);
+}
+
+void UGYSettingsWidget::HandleApplyGraphicsClicked()
+{
+    if (UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings())
+    {
+        Settings->ApplyAllSettings(this);
+        Settings->SaveSettings();
+    }
+}
+
+void UGYSettingsWidget::InitSoundTab()
+{
+    UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
+    if (!Settings) return;
+
+    if (MasterVolumeSlider)
+    {
+        const float V = Settings->GetVolume(EGYSoundCategory::Master);
+        MasterVolumeSlider->SetValue(V);
+        if (MasterVolumeLabel) MasterVolumeLabel->SetText(FText::AsPercent(V));
+    }
+    if (BGMVolumeSlider)
+    {
+        const float V = Settings->GetVolume(EGYSoundCategory::BGM);
+        BGMVolumeSlider->SetValue(V);
+        if (BGMVolumeLabel) BGMVolumeLabel->SetText(FText::AsPercent(V));
+    }
+    if (SFXVolumeSlider)
+    {
+        const float V = Settings->GetVolume(EGYSoundCategory::SFX);
+        SFXVolumeSlider->SetValue(V);
+        if (SFXVolumeLabel) SFXVolumeLabel->SetText(FText::AsPercent(V));
+    }
+    if (UIVolumeSlider)
+    {
+        const float V = Settings->GetVolume(EGYSoundCategory::UI);
+        UIVolumeSlider->SetValue(V);
+        if (UIVolumeLabel) UIVolumeLabel->SetText(FText::AsPercent(V));
+    }
+}
+
+void UGYSettingsWidget::ApplyVolume(EGYSoundCategory Category, float Value, UTextBlock* Label)
+{
+    const float Clamped = FMath::Clamp(Value, 0.f, 1.f);
+
+	// 슬라이더 변동 시 즉시 사운드매니저에 넘김
+    if (UGYSoundManager* Mgr = UGYSoundManager::Get(this))
+    {
+        if (Category == EGYSoundCategory::Master) Mgr->SetMasterVolume(Clamped);
+        else Mgr->SetCategoryVolume(Category, Clamped);
+    }
+
+	// 갱신 볼륨 저장
+    if (UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings())
+    {
+        Settings->SetVolume(Category, Clamped);
+        Settings->SaveSettings();
+    }
+
+    if (Label) Label->SetText(FText::AsPercent(Clamped)); // 퍼센트 존재 시 100분율로 변환
+}
+
+void UGYSettingsWidget::HandleMasterVolumeChanged(float V)
+{
+	ApplyVolume(EGYSoundCategory::Master, V, MasterVolumeLabel);
+}
+
+void UGYSettingsWidget::HandleBGMVolumeChanged(float V)
+{
+	ApplyVolume(EGYSoundCategory::BGM, V, BGMVolumeLabel);
+}
+
+void UGYSettingsWidget::HandleSFXVolumeChanged(float V)
+{
+	ApplyVolume(EGYSoundCategory::SFX, V, SFXVolumeLabel);
+}
+
+void UGYSettingsWidget::HandleUIVolumeChanged(float V)
+{
+	ApplyVolume(EGYSoundCategory::UI, V, UIVolumeLabel);
+}
+
+void UGYSettingsWidget::InitLanguageTab()
+{
+    if (!LanguageCombo) return;
+    LanguageCombo->ClearOptions();
+
+    const FString CurrentCulture = FInternationalization::Get().GetCurrentCulture()->GetName();
+    FString CurrentDisplay;
+
+    for (const TPair<FString, FString>& Pair : SupportedLanguages)
+    {
+        LanguageCombo->AddOption(Pair.Value);
+        if (Pair.Key == CurrentCulture) CurrentDisplay = Pair.Value;
+    }
+	// 현재 언어 선택 상태로
+    if (!CurrentDisplay.IsEmpty()) LanguageCombo->SetSelectedOption(CurrentDisplay);
+}
+
+FString UGYSettingsWidget::CultureCodeForDisplayName(const FString& DisplayName) const
+{
+    for (const TPair<FString, FString>& Pair : SupportedLanguages)
+    {
+        if (Pair.Value == DisplayName) return Pair.Key;
+    }
+    return FString();
+}
+
+void UGYSettingsWidget::HandleLanguageChanged(FString SelectedItem, ESelectInfo::Type)
+{
+    const FString Code = CultureCodeForDisplayName(SelectedItem);
+    if (Code.IsEmpty()) return;
+
+    if (UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings())
+    {
+        Settings->SetLanguage(Code);
+        Settings->SaveSettings();
+    }
+}
+
+void UGYSettingsWidget::SetupMenuInput()
+{
+	APlayerController* PC = GetOwningPlayer();
+	ULocalPlayer* LP = GetOwningLocalPlayer();
+	if (!PC || !LP) return;
+
+	// IMC 추가
+	if (UEnhancedInputLocalPlayerSubsystem* EIS =
+		LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+	{
+		if (SettingsMappingContext)
+		{
+			EIS->AddMappingContext(SettingsMappingContext, SettingsMappingPriority);
+		}
+	}
+
+	// 위젯 전용 InputComponent 생성
+	UGYInputComponent* GIC = NewObject<UGYInputComponent>(this);
+
+	if (InputConfig)
+	{
+		GIC->BindNativeAction(InputConfig,
+			GYGameplayTags::InputTag_UI_NextTab, ETriggerEvent::Started,
+			this, &UGYSettingsWidget::HandleNextTabInput, /*bLogIfNotFound=*/false);
+
+		GIC->BindNativeAction(InputConfig,
+			GYGameplayTags::InputTag_UI_PrevTab, ETriggerEvent::Started,
+			this, &UGYSettingsWidget::HandlePrevTabInput, /*bLogIfNotFound=*/false);
+	}
+
+	PC->PushInputComponent(GIC);
+	LocalInputComponent = GIC;
+}
+
+void UGYSettingsWidget::TeardownMenuInput()
+{
+    if (APlayerController* PC = GetOwningPlayer())
+    {
+        if (LocalInputComponent)
+        {
+            PC->PopInputComponent(LocalInputComponent);
+        }
+    }
+
+    if (LocalInputComponent)
+    {
+        LocalInputComponent->ClearActionBindings();
+        LocalInputComponent = nullptr;
+    }
+
+    if (ULocalPlayer* LP = GetOwningLocalPlayer())
+    {
+        if (UEnhancedInputLocalPlayerSubsystem* EIS =
+            LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+        {
+            if (SettingsMappingContext)
+            {
+                EIS->RemoveMappingContext(SettingsMappingContext);
+            }
+        }
+    }
+}
+
+void UGYSettingsWidget::HandleNextTabInput()
+{
+    if (!TabSwitcher) return;
+    const int32 Idx = TabSwitcher->GetActiveWidgetIndex();
+    ShowTab(static_cast<EGYSettingsTab>((Idx + 1) % 4));
+}
+
+void UGYSettingsWidget::HandlePrevTabInput()
+{
+    if (!TabSwitcher) return;
+    const int32 Idx = TabSwitcher->GetActiveWidgetIndex();
+    ShowTab(static_cast<EGYSettingsTab>((Idx + 3) % 4));
+}

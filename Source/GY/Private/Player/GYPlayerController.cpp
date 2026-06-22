@@ -2,9 +2,13 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Cheats/GYCheatManager.h"
 #include "Cheats/GYServerCheatProxy.h"
+#include "Components/InputComponent.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
+#include "UI/GYUIMessages.h"
 
 AGYPlayerController::AGYPlayerController()
 {
@@ -63,6 +67,16 @@ void AGYPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimePrope
 void AGYPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
+}
+
+void AGYPlayerController::RequestToggleSettings()
+{
+	if (!IsLocalController()) return;
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	FGYToggleSettingsMessage Msg;
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_UI_ToggleSettings, Msg);
 }
 
 void AGYPlayerController::OnRep_PlayerState()
