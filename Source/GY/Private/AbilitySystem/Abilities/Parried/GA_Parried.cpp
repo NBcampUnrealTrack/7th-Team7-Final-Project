@@ -40,11 +40,6 @@ void UGA_Parried::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 			return;
 		}
-		if (EffectGE){
-			FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
-			FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(EffectGE, GetAbilityLevel(), Context);
-			ASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data);
-		}
 	}
 
 	UHitReactionComponent* HitReact = AvatarActor->FindComponentByClass<UHitReactionComponent>();
