@@ -22,6 +22,7 @@
 #include "Logging/GYLogManager.h"
 #include "Player/GYPlayerState.h"
 #include "TimerManager.h"
+#include "Player/GYPlayerController.h"
 
 // 이 컴포넌트의 이름표는 "Hero"로 지정합니다.
 const FName UGYHeroComponent::NAME_ActorFeatureName("Hero");
@@ -216,6 +217,10 @@ void UGYHeroComponent::InitializePlayerInput(UInputComponent* PlayerInputCompone
 		InputComponent->BindNativeAction(PawnData->InputConfig, GYGameplayTags::InputTag_Move, ETriggerEvent::Triggered,
 										 this, &ThisClass::Input_Move, true);
 
+		// UI 토글 PC에 위임
+		InputComponent->BindNativeAction(PawnData->InputConfig,GYGameplayTags::InputTag_UI_ToggleSettings,
+			ETriggerEvent::Started, this, &UGYHeroComponent::Input_ToggleSettings, false);
+
 		// 어빌리티 입력(Interact 등)은 InputTag → ASC 라우팅으로 일괄 처리
 		InputComponent->BindAbilityActions(PawnData->InputConfig, this,
 			&ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased);
@@ -325,6 +330,17 @@ void UGYHeroComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 	if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
 	{
 		ASC->HandleAbilityInputReleased(InputTag);
+	}
+}
+
+void UGYHeroComponent::Input_ToggleSettings()
+{
+	APawn* Pawn = GetPawn<APawn>();
+	if (!Pawn) return;
+
+	if (AGYPlayerController* PC = Cast<AGYPlayerController>(Pawn->GetController()))
+	{
+		PC->RequestToggleSettings();
 	}
 }
 
