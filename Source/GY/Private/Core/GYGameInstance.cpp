@@ -4,10 +4,17 @@
 #include "Core/DataBridgeSubsystem.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
 #include "Kismet/GameplayStatics.h"
+#include "Core/Settings/GYUserSettings.h"
 
 void UGYGameInstance::Init()
 {
 	Super::Init();
+
+	// 저장된 설정값을 게임에 적용
+	if (UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings())
+	{
+		Settings->ApplyAllSettings(this);
+	}
 
 	// HasFeatureReachedInitState 가 >= 비교를 할 수 있도록 상태 순서를 전역 등록
 	if (UGameFrameworkComponentManager* Manager = GetSubsystem<UGameFrameworkComponentManager>())
