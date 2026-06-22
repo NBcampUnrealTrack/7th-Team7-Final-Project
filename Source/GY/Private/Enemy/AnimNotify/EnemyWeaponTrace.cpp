@@ -2,6 +2,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/GameplayAbilityTypes.h"
+#include "AbilitySystem/Abilities/Parried/ParriedEventContext.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 
@@ -85,6 +86,10 @@ void UEnemyWeaponTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
 			Payload.Instigator = Enemy;
 			Payload.Target = HitActor;
 			Payload.TargetData = TargetDataHandle;
+
+			FParriedEventContext* ParriedEventContext = new FParriedEventContext();
+			ParriedEventContext->SourceHitBone = MeshComp->GetSocketBoneName(Sockets[i]);
+			Payload.ContextHandle = FGameplayEffectContextHandle(ParriedEventContext);
 
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
 				Enemy,

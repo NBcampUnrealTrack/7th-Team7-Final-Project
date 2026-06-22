@@ -19,8 +19,11 @@ public:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ApplyHitReaction(const FVector& HitDirection, float Strength = -1.f, FName HitBone = NAME_None);
-	void SetHitReactStartBone(FName BoneName);
 	virtual void ApplyParriedReaction(const FVector& HitDirection, FName HitBone = NAME_None);
+
+	void ApplyPhysicsAnimation(const FVector& HitDirection, float Strength, FName HitBone, float Duration);
+
+	void SetHitReactStartBone(FName BoneName);
 
 protected:
 	TWeakObjectPtr<UPhysicalAnimationComponent> PhysicalAnimation;
@@ -33,6 +36,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
 	float HitReactDuration = 0.4f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
+	float ParriedReactDuration = 2.4f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
 	float HitReactBlendOutTime = 0.2f;
