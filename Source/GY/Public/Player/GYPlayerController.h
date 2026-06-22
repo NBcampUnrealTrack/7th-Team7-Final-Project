@@ -23,6 +23,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void ConnectToServer(const FString& Address);
 
+	/** ESC 입력 -> UI 토글 메시지 발행 */
+	UFUNCTION(BlueprintCallable, Category = "GY|UI")
+	void RequestToggleSettings();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
