@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "GameplayTagContainer.h"
 #include "GYPawnData.generated.h"
 
 class APawn;
 class UAbilitySet;
+class UDataTable;
 class UGYInputConfig;
 class UGYPlayerActionConfig;
 class UInputMappingContext;
@@ -23,6 +25,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Pawn")
 	TSubclassOf<APawn> PawnClass;
 
+	// 진영 태그(예: Character.Faction.Player). 폰 init 시 ASC에 루스 태그로 부여(서버).
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Pawn")
+	FGameplayTag Faction;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Input")
 	TObjectPtr<UInputMappingContext> DefaultIMC;
 
@@ -34,4 +40,11 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Actions")
 	TObjectPtr<UGYPlayerActionConfig> ActionConfig;
+
+	// base 어트리뷰트 초기값 출처. BaseStatsRowName 행을 폰 init 시 읽어 적용.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Attributes")
+	TSoftObjectPtr<UDataTable> BaseStatsTable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GY|Attributes")
+	FName BaseStatsRowName = "Default";
 };

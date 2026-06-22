@@ -11,7 +11,6 @@
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "GameplayEffect.h"
 #include "Character/GYPawnData.h"
-#include "Core/GameplayTags/FactionTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Interaction/AltarStorageComponent.h"
@@ -91,28 +90,17 @@ void AGYPlayerState::OnRep_PawnData()
 	}
 }
 
-void AGYPlayerState::InitGAS(APawn* Avatar)
+void AGYPlayerState::InitializeBaseAttributes()
 {
-	if (!AbilitySystemComponent || !Avatar) return;
+	if (!AbilitySystemComponent) return;
+	if (!HasAuthority()) return;
 
-	// 같은 아바타로 이미 초기화됐으면 재실행 방지(어트리뷰트 base 재설정으로 런타임 값이 리셋되는 것 방지).
-	if (AbilitySystemComponent->AbilityActorInfo.IsValid() &&
-		AbilitySystemComponent->AbilityActorInfo->AvatarActor.Get() == Avatar)
-	{
-		return;
-	}
+	const UGYPawnData* CurrentPawnData = GetPawnData();
+	if (!CurrentPawnData) return;
 
-	AbilitySystemComponent->InitAbilityActorInfo(this, Avatar);
-
-	if (GetLocalRole() != ROLE_Authority) return;
-
-	AbilitySystemComponent->AddLooseGameplayTag(
-		GYFactionTags::Character_Faction_Player, 1,
-		EGameplayTagReplicationState::TagOnly);
-
-	UDataTable* StatsTable = BaseStatsTable.LoadSynchronous();
+	UDataTable* StatsTable = CurrentPawnData->BaseStatsTable.LoadSynchronous();
 	const FGYPlayerBaseStatsRow* Stats = StatsTable
-		? StatsTable->FindRow<FGYPlayerBaseStatsRow>(BaseStatsRowName, TEXT("InitGAS"))
+		? StatsTable->FindRow<FGYPlayerBaseStatsRow>(CurrentPawnData->BaseStatsRowName, TEXT("InitializeBaseAttributes"))
 		: nullptr;
 	if (Stats)
 	{
@@ -134,8 +122,8 @@ void AGYPlayerState::InitGAS(APawn* Avatar)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("InitGAS: BaseStats 행을 찾지 못함 (Table=%s, Row=%s)"),
-			*GetNameSafe(StatsTable), *BaseStatsRowName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("InitializeBaseAttributes: BaseStats 행을 찾지 못함 (Table=%s, Row=%s)"),
+			*GetNameSafe(StatsTable), *CurrentPawnData->BaseStatsRowName.ToString());
 	}
 
 	// 파생 스탯(STR/DEX 기반) 무한 GE 적용. 1차 스탯 base 세팅 이후에 적용해야 캡처값이 맞음.

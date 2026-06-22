@@ -3,6 +3,8 @@
 
 #include "Character/GYPawnExtensionComponent.h"
 
+#include "AbilitySystemComponent.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Character/GYPawnData.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
@@ -97,9 +99,30 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 		AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>();
 		if (!PS) return; // CanChangeInitState에서 PS+PawnData를 요구하므로 여기선 항상 유효
 
-		// PawnData는 GameMode가 Experience에서 PS에 set함. 여기선 ASC ActorInfo init + 어트리뷰트만.
-		// 서버/클라 공통(InitGAS 내부에서 권위 분기).
-		PS->InitGAS(Pawn);
+		UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
+		if (!ASC) return;
+
+		// ① ASC↔폰 바인딩(서버/클라 공통). 같은 아바타로 이미 묶였으면 스킵.
+		const bool bAlreadyBound = ASC->AbilityActorInfo.IsValid()
+			&& ASC->AbilityActorInfo->AvatarActor.Get() == Pawn;
+		if (!bAlreadyBound)
+		{
+			ASC->InitAbilityActorInfo(PS, Pawn);
+		}
+
+		if (!Pawn->HasAuthority()) return;
+
+		// ② 진영 태그 부여(서버). 데이터(PawnData)에서 읽음.
+		if (const UGYPawnData* PawnData = PS->GetPawnData())
+		{
+			if (PawnData->Faction.IsValid())
+			{
+				ASC->AddLooseGameplayTag(PawnData->Faction, 1, EGameplayTagReplicationState::TagOnly);
+			}
+		}
+
+		// ③ base 어트리뷰트 값 초기화(서버). 값 정책은 PlayerState 소관.
+		PS->InitializeBaseAttributes();
 	}
 }
 

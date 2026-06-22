@@ -13,7 +13,6 @@ class UCurrencyComponent;
 class UEquipmentLoadoutComponent;
 class UGYAbilitySystemComponent;
 class UGYPawnData;
-class UDataTable;
 class UInventoryComponent;
 class UItemTransactionComponent;
 class ULootViewerComponent;
@@ -61,14 +60,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	UItemTransactionComponent* GetItemTransactionComponent() const { return ItemTransactionComponent; }
 
-	void InitGAS(APawn* Avatar);
-
-	// base 어트리뷰트 초기값 출처. DT_PlayerBaseStats의 BaseStatsRowName 행을 InitGAS에서 읽는다.
-	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
-	TSoftObjectPtr<UDataTable> BaseStatsTable;
-
-	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
-	FName BaseStatsRowName = "Default";
+	// [SERVER] base 어트리뷰트 값 + 파생 스탯 초기화. 값 출처(테이블/행)는 PawnData에서 읽는다.
+	// ASC ActorInfo 바인딩/faction 태그는 PawnExtension 담당.
+	void InitializeBaseAttributes();
 
 	FORCEINLINE FGuid GetLastCheckpointId() const { return LastCheckpointId; }
 	void SetLastCheckpointId(const FGuid& Id);
