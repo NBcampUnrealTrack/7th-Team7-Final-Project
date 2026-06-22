@@ -25,11 +25,12 @@ void UGYGameInstance::Init()
 		Manager->RegisterInitState(GYGameplayTags::InitState_GameplayReady,   false, GYGameplayTags::InitState_DataInitialized);
 	}
 
-	UDataBridgeSubsystem* DataBridge = GetSubsystem<UDataBridgeSubsystem>();
-	if (!IsValid(DataBridge)) return;
-
-	DataBridge->OnAllSourcesCompleted.AddDynamic(this, &UGYGameInstance::OnDataBridgeAllSourcesCompleted);
-	DataBridge->FetchAllSources();
+	// TODO: DataBridge 시트 동기화 임시 비활성화. 복구하려면 아래 블록 주석 해제.
+	// UDataBridgeSubsystem* DataBridge = GetSubsystem<UDataBridgeSubsystem>();
+	// if (!IsValid(DataBridge)) return;
+	//
+	// DataBridge->OnAllSourcesCompleted.AddDynamic(this, &UGYGameInstance::OnDataBridgeAllSourcesCompleted);
+	// DataBridge->FetchAllSources();
 }
 
 UGYGameInstance* UGYGameInstance::Get(const UObject* WorldContext)
