@@ -13,7 +13,7 @@ class UCurrencyComponent;
 class UEquipmentLoadoutComponent;
 class UGYAbilitySystemComponent;
 class UGYPawnData;
-class UGYPlayerInitData;
+class UDataTable;
 class UInventoryComponent;
 class UItemTransactionComponent;
 class ULootViewerComponent;
@@ -63,8 +63,12 @@ public:
 
 	void InitGAS(APawn* Avatar);
 
+	// base 어트리뷰트 초기값 출처. DT_PlayerBaseStats의 BaseStatsRowName 행을 InitGAS에서 읽는다.
 	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
-	TObjectPtr<UGYPlayerInitData> InitData;
+	TSoftObjectPtr<UDataTable> BaseStatsTable;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GAS|Combat")
+	FName BaseStatsRowName = "Default";
 
 	FORCEINLINE FGuid GetLastCheckpointId() const { return LastCheckpointId; }
 	void SetLastCheckpointId(const FGuid& Id);
