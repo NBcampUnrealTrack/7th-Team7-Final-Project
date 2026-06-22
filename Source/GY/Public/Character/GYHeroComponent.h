@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "Components/GameFrameworkInitStateInterface.h"
 #include "Components/PawnComponent.h"
 #include "GameplayTagContainer.h"
@@ -72,8 +71,6 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerSendGameplayEvent(FGameplayTag EventTag);
 
-	FAbilitySetGrantedHandles GrantedHandles;
-	TWeakObjectPtr<UGYAbilitySystemComponent> CachedASC;
 	FTimerHandle ChargeThresholdTimer;
 	bool bAttackHeld = false;
 	bool bParryHeld = false;

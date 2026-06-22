@@ -4,6 +4,7 @@
 #include "Character/GYPawnExtensionComponent.h"
 
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Character/GYPawnData.h"
 #include "Components/GameFrameworkComponentManager.h"
@@ -112,17 +113,29 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 
 		if (!Pawn->HasAuthority()) return;
 
+		const UGYPawnData* PawnData = PS->GetPawnData();
+
 		// ② 진영 태그 부여(서버). 데이터(PawnData)에서 읽음.
-		if (const UGYPawnData* PawnData = PS->GetPawnData())
+		if (PawnData && PawnData->Faction.IsValid())
 		{
-			if (PawnData->Faction.IsValid())
-			{
-				ASC->AddLooseGameplayTag(PawnData->Faction, 1, EGameplayTagReplicationState::TagOnly);
-			}
+			ASC->AddLooseGameplayTag(PawnData->Faction, 1, EGameplayTagReplicationState::TagOnly);
 		}
 
 		// ③ base 어트리뷰트 값 초기화(서버). 값 정책은 PlayerState 소관.
 		PS->InitializeBaseAttributes();
+
+		// ④ AbilitySet 부여(서버). ASC 초기화는 PawnExtension이 전담한다.
+		if (PawnData)
+		{
+			CachedASC = ASC;
+			for (const UAbilitySet* AbilitySet : PawnData->AbilitySets)
+			{
+				if (AbilitySet)
+				{
+					AbilitySet->GiveToAbilitySystem(ASC, &GrantedHandles);
+				}
+			}
+		}
 	}
 }
 
@@ -172,6 +185,13 @@ void UGYPawnExtensionComponent::BeginPlay()
 
 void UGYPawnExtensionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	// 부여한 AbilitySet 회수(서버). 폰 파괴 시 ASC에서 어빌리티/GE 제거.
+	if (CachedASC.IsValid())
+	{
+		GrantedHandles.TakeFromAbilitySystem(CachedASC.Get());
+		CachedASC.Reset();
+	}
+
 	UnregisterInitStateFeature(); // 등록 해제
 	Super::EndPlay(EndPlayReason);
 }

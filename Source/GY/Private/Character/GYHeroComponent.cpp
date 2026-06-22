@@ -10,7 +10,6 @@
 #include "Character/GYPawnExtensionComponent.h"
 #include "Character/GYPlayerActionConfig.h"
 #include "Components/GameFrameworkComponentManager.h"
-#include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AttackLogic/Charge/GYChargeFragment.h"
@@ -116,31 +115,12 @@ void UGYHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 	GY_LOG(Player, KHB, "HeroComp : [%s] -> [%s]", *CurrentState.ToString(), *DesiredState.ToString());
 
 	// 내가 DataInitialized 단계에 무사히 진입했다면(즉, PawnExtension도 준비가 끝났다면) 입력을 세팅합니다.
+	// AbilitySet 부여/ASC 초기화는 PawnExtension이 전담한다.
 	if (DesiredState == GYGameplayTags::InitState_DataInitialized)
 	{
 		APawn* Pawn = GetPawn<APawn>();
 		AGYPlayerState* GYPlayerState = GetPlayerState<AGYPlayerState>();
 		if (!Pawn || !GYPlayerState) return;
-
-		if (Pawn->HasAuthority())
-		{
-			if (UGYAbilitySystemComponent* ASC = GYPlayerState->GetGYAbilitySystemComponent())
-			{
-				CachedASC = ASC;
-				UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
-				const UGYPawnData* PawnData = ExtComp ? ExtComp->GetPawnData() : nullptr;
-				if (PawnData)
-				{
-					for (const UAbilitySet* AbilitySet : PawnData->AbilitySets)
-					{
-						if (AbilitySet)
-						{
-							AbilitySet->GiveToAbilitySystem(ASC, &GrantedHandles);
-						}
-					}
-				}
-			}
-		}
 
 		if (!Pawn->IsLocallyControlled()) return;
 
@@ -508,11 +488,6 @@ void UGYHeroComponent::BeginPlay()
 
 void UGYHeroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (CachedASC.IsValid())
-	{
-		GrantedHandles.TakeFromAbilitySystem(CachedASC.Get());
-		CachedASC.Reset();
-	}
 	UnregisterInitStateFeature();
 	Super::EndPlay(EndPlayReason);
 }

@@ -3,11 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "Components/GameFrameworkInitStateInterface.h"
 #include "Components/PawnComponent.h"
 #include "GYPawnExtensionComponent.generated.h"
 
 
+class UGYAbilitySystemComponent;
 class UGYPawnData;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -45,4 +47,9 @@ protected:
 	virtual void OnRegister() override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+private:
+	// PawnData의 AbilitySet 부여 핸들. EndPlay에서 ASC로부터 회수한다.
+	FAbilitySetGrantedHandles GrantedHandles;
+	TWeakObjectPtr<UGYAbilitySystemComponent> CachedASC;
 };
