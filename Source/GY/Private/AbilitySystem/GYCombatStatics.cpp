@@ -14,6 +14,7 @@
 #include "AbilitySystem/GYAdditionalResourceStatics.h"
 #include "AbilitySystem/GYCombatSettings.h"
 #include "AbilitySystem/GYOnHitModifierComponent.h"
+#include "AbilitySystem/Abilities/Parried/ParriedEventContext.h"
 #include "Core/GameplayTags/OptionTags.h"
 #include "Core/GameplayTags/EnchantTags.h"
 #include "Core/GameplayTags/StateTags.h"
@@ -146,13 +147,39 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	// Event_Parry_Hit 핸들러가 처리. (닷지는 GE_Damage의 ApplicationRequirement로 차단됨)
 	if (TargetASC->HasMatchingGameplayTag(GYGameplayTags::Ability_State_Parrying))
 	{
-		FGameplayEventData Payload;
-		Payload.EventTag = GYGameplayTags::Event_Parry_Hit;
-		Payload.Instigator = SourceASC->GetAvatarActor();
-		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
-			GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_Parry_Hit, Payload);
-		else
-			TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Parry_Hit, &Payload);
+		{
+			FGameplayEventData Payload;
+			Payload.EventTag = GYGameplayTags::Event_Parry_Hit;
+			Payload.Instigator = SourceASC->GetAvatarActor();
+
+			if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
+			{
+				GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_Parry_Hit, Payload);
+			}
+			else
+			{
+				TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Parry_Hit, &Payload);
+			}
+		}
+		if (HitContext.bGivesParriedReaction)
+		{
+			FGameplayEventData Payload;
+			Payload.EventTag = GYGameplayTags::Event_Parry_Hit;
+			Payload.Instigator = TargetASC->GetAvatarActor();
+
+			FParriedEventContext* ParriedEventContext = new FParriedEventContext();
+			ParriedEventContext->SourceHitBone = HitContext.SourceHitBone;
+			Payload.ContextHandle = FGameplayEffectContextHandle(ParriedEventContext);
+
+			if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(SourceASC))
+			{
+				GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_Parried, Payload);
+			}
+			else
+			{
+				SourceASC->HandleGameplayEvent(GYGameplayTags::Event_Parried, &Payload);
+			}
+		}
 		return;
 	}
 

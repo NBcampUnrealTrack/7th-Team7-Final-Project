@@ -24,6 +24,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Input_ParryRelease, "Event.Input.ParryRelease");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Parry_Hit, "Event.Parry.Hit");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Parried, "Event.Parried");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Block_Hit, "Event.Block.Hit");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Block_LoopEnd, "Event.Block.LoopEnd");

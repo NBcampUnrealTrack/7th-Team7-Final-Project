@@ -113,6 +113,11 @@ void UHitReactionComponent::SetHitReactStartBone(FName BoneName)
 	HitReactStartBone = BoneName;
 }
 
+void UHitReactionComponent::ApplyParriedReaction(const FVector& HitDirection, FName HitBone)
+{
+	ApplyHitReaction(HitDirection, 10000, HitBone);
+}
+
 void UHitReactionComponent::EndHitReaction()
 {
 	if (!PhysicalAnimation.IsValid()) return;
