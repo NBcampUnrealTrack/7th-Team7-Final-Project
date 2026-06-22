@@ -57,11 +57,7 @@ void AGYCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
-	{
-		PS->InitGAS(this);
-	}
-
+	// ASC init(InitGAS)은 PawnExtension의 InitState(DataAvailable)로 이관됨.
 	SubscribeHealthDelegate();
 
 	if (PawnExtComponent)
@@ -100,11 +96,6 @@ void AGYCharacter::OnRep_Controller()
 {
 	Super::OnRep_Controller();
 
-	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
-	{
-		PS->InitGAS(this);
-	}
-
 	if (PawnExtComponent)
 	{
 		PawnExtComponent->CheckDefaultInitialization();
@@ -131,8 +122,6 @@ void AGYCharacter::OnRep_PlayerState()
 
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();
 	if (!IsValid(PS)) return;
-
-	PS->InitGAS(this);
 
 	ensureMsgf(LockOnComponent, TEXT("LockOnComponent Is Null"));
 	LockOnComponent->BindToASC(PS);

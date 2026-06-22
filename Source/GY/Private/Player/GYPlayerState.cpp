@@ -85,6 +85,13 @@ void AGYPlayerState::InitGAS(APawn* Avatar)
 {
 	if (!AbilitySystemComponent || !Avatar) return;
 
+	// 같은 아바타로 이미 초기화됐으면 재실행 방지(어트리뷰트 base 재설정으로 런타임 값이 리셋되는 것 방지).
+	if (AbilitySystemComponent->AbilityActorInfo.IsValid() &&
+		AbilitySystemComponent->AbilityActorInfo->AvatarActor.Get() == Avatar)
+	{
+		return;
+	}
+
 	AbilitySystemComponent->InitAbilityActorInfo(this, Avatar);
 
 	if (GetLocalRole() != ROLE_Authority) return;

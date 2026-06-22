@@ -52,6 +52,12 @@ bool UGYPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManage
 			if (!GetController<AController>()) { return false; } // 컨트롤러 빙의 대기
 		}
 
+		// ASC는 PlayerState 소유 → DataAvailable에서 InitGAS를 호출하려면 PS가 준비돼야 한다.
+		if (!Pawn->GetPlayerState<AGYPlayerState>())
+		{
+			return false;
+		}
+
 		return true;
 	}
 	if (CurrentState == GYGameplayTags::InitState_DataAvailable &&
@@ -77,13 +83,19 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 	if (DesiredState == GYGameplayTags::InitState_DataAvailable)
 	{
 		APawn* Pawn = GetPawn<APawn>();
-		if (Pawn && Pawn->HasAuthority() && PawnData)
+		if (!Pawn) return;
+
+		AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>();
+		if (!PS) return; // CanChangeInitState에서 PS를 요구하므로 여기선 항상 유효
+
+		if (Pawn->HasAuthority() && PawnData)
 		{
-			if (AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>())
-			{
-				PS->SetPawnData(PawnData);
-			}
+			PS->SetPawnData(PawnData);
 		}
+
+		// ASC ActorInfo init + 어트리뷰트 초기화. 서버/클라 공통(내부에서 권위 분기).
+		// GYCharacter의 InitGAS 3중 호출을 대체 — InitState가 타이밍을 보장한다.
+		PS->InitGAS(Pawn);
 	}
 }
 
