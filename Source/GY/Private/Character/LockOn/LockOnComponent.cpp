@@ -461,7 +461,6 @@ void ULockOnComponent::ProcessTargetSwitchInput(float DeltaTime)
 		SwitchAccumulator = FVector2D::ZeroVector;
 		return;
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("%f"),SwitchAccumulator.SquaredLength()));
 	if ((SwitchAccumulator.SquaredLength()) < SquaredSwitchAccumulatorThreshold) return;
 
 	AActor* NewTarget = FindDirectionalTarget(SwitchAccumulator.GetSafeNormal());

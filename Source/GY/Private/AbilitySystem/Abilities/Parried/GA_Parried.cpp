@@ -66,7 +66,6 @@ void UGA_Parried::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 
 	if (TriggerEventData->ContextHandle.IsValid())
 	{
-		// 우리가 만든 커스텀 컨텍스트로 다운캐스팅
 		const FParriedEventContext* CustomContext = StaticCast<const FParriedEventContext*>(TriggerEventData->ContextHandle.Get());
 		if (CustomContext)
 		{

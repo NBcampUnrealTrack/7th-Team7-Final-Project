@@ -93,6 +93,7 @@ void URangedAttackBase::OnProjectileHit(FGameplayEventData Payload)
 	HitContext.Additive = Additive;
 	HitContext.StaggerAmount = StaggerAmount;
 	HitContext.StunAmount = StunAmount;
+	HitContext.bGivesParriedReaction = false;
 
 	UGYCombatStatics::ApplyHitImpact(HitContext);
 

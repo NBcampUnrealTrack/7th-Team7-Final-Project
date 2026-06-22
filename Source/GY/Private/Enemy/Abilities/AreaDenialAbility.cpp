@@ -186,7 +186,7 @@ void UAreaDenialAbility::OnProjectileHit(FGameplayEventData Payload)
 	HitContext.Additive         = Additive;
 	HitContext.StaggerAmount    = Stagger;
 	HitContext.StunAmount       = Stun;
-
+	HitContext.bGivesParriedReaction = false;
 	UGYCombatStatics::ApplyHitImpact(HitContext);
 }
 

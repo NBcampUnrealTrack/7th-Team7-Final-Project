@@ -42,6 +42,8 @@ void UGYMeleeHitLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEve
 	HitContext.MotionMultiplier = Impact.DamageMultiplier;
 	HitContext.StaggerAmount = Impact.StaggerAmount;
 	HitContext.StunAmount = Impact.StunAmount;
-
+	HitContext.bGivesParriedReaction = true;
+	//TODO 플레이어도 패링 당하거나 가드에 막힐떄 뭔가 하고싶다면 무기 적중부위 전달해야함
+	//HitContext.SourceHitBone =
 	UGYCombatStatics::ApplyHitImpact(HitContext);
 }

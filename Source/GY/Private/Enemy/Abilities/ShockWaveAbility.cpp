@@ -68,6 +68,7 @@ void UShockWaveAbility::ExecuteShockWave()
 		HitContext.Additive = BaseAdd * Falloff;
 		HitContext.StaggerAmount = BaseStagger * Falloff;
 		HitContext.StunAmount = BaseStun * Falloff;
+		HitContext.bGivesParriedReaction = false;
 
 		UGYCombatStatics::ApplyHitImpact(HitContext);
 	}

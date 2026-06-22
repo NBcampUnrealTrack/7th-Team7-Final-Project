@@ -4,6 +4,7 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystem/GYCombatStatics.h"
+#include "AbilitySystem/Abilities/Parried/ParriedEventContext.h"
 #include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
 #include "Core/GameplayTags/EventTags.h"
 
@@ -54,6 +55,17 @@ void UEnemyMeleeAttack::OnWeaponHit(FGameplayEventData Payload)
 	FGYHitContext HitContext;
 	HitContext.SourceASC = OwnerASC;
 	HitContext.TargetASC = TargetASC;
+	HitContext.bGivesParriedReaction = true;
+
+	if (Payload.ContextHandle.IsValid())
+	{
+		const FParriedEventContext* CustomContext = StaticCast<const FParriedEventContext*>(Payload.ContextHandle.Get());
+		if (CustomContext)
+		{
+			HitContext.SourceHitBone = CustomContext->SourceHitBone;
+		}
+	}
+
 	if (HitDamageWeights.IsValidIndex(HitCount))
 	{
 		const FHitDamageWeight& W = HitDamageWeights[HitCount];

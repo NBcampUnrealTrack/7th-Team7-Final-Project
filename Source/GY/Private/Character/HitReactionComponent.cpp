@@ -69,12 +69,29 @@ void UHitReactionComponent::TickComponent(float DeltaTime, enum ELevelTick TickT
 void UHitReactionComponent::ApplyHitReaction(const FVector& HitDirection, float Strength, FName HitBone)
 {
 //	if (bIsDead) return;
+
+	ApplyPhysicsAnimation(HitDirection, Strength, HitBone, HitReactDuration);
+
+
+}
+
+void UHitReactionComponent::SetHitReactStartBone(FName BoneName)
+{
+	HitReactStartBone = BoneName;
+}
+
+void UHitReactionComponent::ApplyParriedReaction(const FVector& HitDirection, FName HitBone)
+{
+	ApplyPhysicsAnimation(HitDirection, 1000000000, HitBone, ParriedReactDuration);
+}
+
+void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, float Strength, FName HitBone, float Duration)
+{
 	if (!PhysicalAnimation.IsValid()) return;
 
 	if (!MeshComp.IsValid()) return;
 	UWorld* World = GetWorld();
 	if (!World) return;
-
 
 
 	const float Impulse = (Strength > 0.f) ? Strength : DefaultHitImpulse;
@@ -104,18 +121,7 @@ void UHitReactionComponent::ApplyHitReaction(const FVector& HitDirection, float 
 	World->GetTimerManager().ClearTimer(HitReactTimerHandle);
 	World->GetTimerManager().SetTimer(HitReactTimerHandle,
 		this, &UHitReactionComponent::EndHitReaction,
-		HitReactDuration, false);
-
-}
-
-void UHitReactionComponent::SetHitReactStartBone(FName BoneName)
-{
-	HitReactStartBone = BoneName;
-}
-
-void UHitReactionComponent::ApplyParriedReaction(const FVector& HitDirection, FName HitBone)
-{
-	ApplyHitReaction(HitDirection, 10000, HitBone);
+		Duration, false);
 }
 
 void UHitReactionComponent::EndHitReaction()
