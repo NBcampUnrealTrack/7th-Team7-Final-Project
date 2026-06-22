@@ -11,6 +11,7 @@
 #include "Experience/GYExperienceDefinition.h"
 #include "Experience/GYExperienceManagerComponent.h"
 #include "GameStates/GYGameState.h"
+#include "Logging/GYLogManager.h"
 #include "Misc/TrackedActivity.h"
 #include "Player/GYPlayerController.h"
 #include "Player/GYPlayerState.h"
@@ -128,6 +129,13 @@ const UGYPawnData* AGYGameMode::GetPawnDataForController(AController* InControll
 UClass* AGYGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
 {
 	const UGYPawnData* PawnData = GetPawnDataForController(InController);
+
+	// PawnData가 없으면 PS에 심을 수 없고, 폰의 PawnExtension이 DataAvailable에서 영구 정지한다(입력/카메라 먹통).
+	// 설정 오류(Experience.DefaultPawnData 미지정 등)이므로 스폰 시점에 명확히 경고한다.
+	if (!PawnData)
+	{
+		GY_WARN(Game, KDY, "GetPawnDataForController: PawnData 해결 실패 — Experience.DefaultPawnData 확인 필요. 폰 init이 멈출 수 있음.");
+	}
 
 	// 모든 스폰 경로(HandleStartingNewPlayer / OnExperienceLoaded → RestartPlayer)가 이 함수를 거친다.
 	// 폰이 스폰되기 전에 여기서 PS에 PawnData를 심어, 폰의 PawnExtension이 init될 때 항상 준비돼 있게 한다.
