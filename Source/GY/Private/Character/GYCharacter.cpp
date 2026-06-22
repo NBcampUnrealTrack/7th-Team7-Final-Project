@@ -18,7 +18,6 @@
 #include "Core/GameplayTags/StateTags.h"
 #include "AbilitySystem/GYOnHitModifierComponent.h"
 #include "Equipment/ActiveEquipmentComponent.h"
-#include "Equipment/EquipmentLoadoutComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Core/GameplayTeams/GYTeams.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -78,18 +77,8 @@ void AGYCharacter::PossessedBy(AController* NewController)
 	ensureMsgf(ClimbingComponent, TEXT("ClimbingComponent Is Null"));
 	ClimbingComponent->BindToASC(PS);
 
-
-	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
-	if (!IsValid(Loadout)) return;
-
-	Loadout->OnLoadoutSlotChanged.AddUObject(
-		ActiveEquipmentComponent.Get(),
-		&UActiveEquipmentComponent::OnLoadoutSlotChanged);
-
-	for (const FEquipmentLoadoutEntry& Entry : Loadout->GetEntries())
-	{
-		ActiveEquipmentComponent->OnLoadoutSlotChanged(Entry.SlotTag, Entry.InstanceId);
-	}
+	// 장비 로드아웃 구독·초기 동기화는 컴포넌트가 담당.
+	ActiveEquipmentComponent->InitializeLoadoutBinding();
 }
 
 void AGYCharacter::OnRep_Controller()

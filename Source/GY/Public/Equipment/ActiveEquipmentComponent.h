@@ -8,6 +8,7 @@
 
 class UAbilitySystemComponent;
 class UEquipmentInstance;
+class UEquipmentLoadoutComponent;
 class UItemDefinition;
 
 UCLASS(ClassGroup = (Equipment), meta = (BlueprintSpawnableComponent))
@@ -37,6 +38,9 @@ public:
 
 	void OnLoadoutSlotChanged(FGameplayTag SlotTag, FGuid NewInstanceId);
 
+	// [SERVER] owner 폰의 PlayerState Loadout 변경을 구독하고 현재 로드아웃으로 초기 동기화한다.
+	void InitializeLoadoutBinding();
+
 	void HandleItemEnchanted(FGuid InstanceId);
 
 protected:
@@ -52,4 +56,7 @@ protected:
 	FEquipmentList EquippedItems;
 
 	FDelegateHandle EnchantedHandle;
+
+	// 구독한 Loadout(PlayerState 소유). EndPlay에서 구독 해제용.
+	TWeakObjectPtr<UEquipmentLoadoutComponent> BoundLoadout;
 };
