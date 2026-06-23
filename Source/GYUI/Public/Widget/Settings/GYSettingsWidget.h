@@ -151,8 +151,9 @@ private:
     void InitSoundTab();
     void InitLanguageTab();
     void ApplyVolume(EGYSoundCategory Category, float Value, UTextBlock* Label);
-    FString CultureCodeForDisplayName(const FString& DisplayName) const;
 
+	UPROPERTY(Transient)
+	TArray<FString> LanguageCultureCodes;
 	UPROPERTY(Transient)
 	TObjectPtr<UGYInputComponent> LocalInputComponent;
 

@@ -59,7 +59,7 @@ UGYSettingsWidget::UGYSettingsWidget(const FObjectInitializer& ObjectInitializer
     InputMode = EGYWidgetInputMode::Menu;
 
 	SupportedLanguages.Add(TEXT("ko"), LOCTEXT("Lang_Korean", "한국어"));
-	SupportedLanguages.Add(TEXT("en"), LOCTEXT("Lang_English", "영어"));
+	SupportedLanguages.Add(TEXT("en"), LOCTEXT("Lang_English", "English"));
 }
 
 void UGYSettingsWidget::NativeConstruct()
@@ -190,6 +190,7 @@ void UGYSettingsWidget::InitGraphicsTab()
 
     if (OverallQualityCombo)
     {
+    	OverallQualityCombo->ClearOptions();
     	OverallQualityCombo->AddOption(LOCTEXT("Quality_Low", "Low").ToString());
     	OverallQualityCombo->AddOption(LOCTEXT("Quality_Medium", "Medium").ToString());
     	OverallQualityCombo->AddOption(LOCTEXT("Quality_High", "High").ToString());
@@ -199,6 +200,7 @@ void UGYSettingsWidget::InitGraphicsTab()
 
     if (AntiAliasingCombo)
     {
+    	AntiAliasingCombo->ClearOptions();
     	AntiAliasingCombo->AddOption(LOCTEXT("Quality_Low", "Low").ToString());
     	AntiAliasingCombo->AddOption(LOCTEXT("Quality_Medium", "Medium").ToString());
     	AntiAliasingCombo->AddOption(LOCTEXT("Quality_High", "High").ToString());
@@ -233,8 +235,9 @@ void UGYSettingsWidget::InitGraphicsTab()
     }
 }
 
-void UGYSettingsWidget::HandleResolutionChanged(FString SelectedItem, ESelectInfo::Type)
+void UGYSettingsWidget::HandleResolutionChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
+	if (SelectionType == ESelectInfo::Direct) return;
     UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
     if (!Settings) return;
     FIntPoint Parsed;
@@ -244,29 +247,33 @@ void UGYSettingsWidget::HandleResolutionChanged(FString SelectedItem, ESelectInf
     }
 }
 
-void UGYSettingsWidget::HandleWindowModeChanged(FString, ESelectInfo::Type)
+void UGYSettingsWidget::HandleWindowModeChanged(FString, ESelectInfo::Type SelectionType)
 {
+	if (SelectionType == ESelectInfo::Direct) return;
     UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
     if (!Settings || !WindowModeCombo) return;
     Settings->SetFullscreenMode(static_cast<EWindowMode::Type>(WindowModeCombo->GetSelectedIndex()));
 }
 
-void UGYSettingsWidget::HandleOverallQualityChanged(FString, ESelectInfo::Type)
+void UGYSettingsWidget::HandleOverallQualityChanged(FString, ESelectInfo::Type SelectionType)
 {
+	if (SelectionType == ESelectInfo::Direct) return;
     UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
     if (!Settings || !OverallQualityCombo) return;
     Settings->SetOverallScalabilityLevel(OverallQualityCombo->GetSelectedIndex());
 }
 
-void UGYSettingsWidget::HandleAntiAliasingChanged(FString, ESelectInfo::Type)
+void UGYSettingsWidget::HandleAntiAliasingChanged(FString, ESelectInfo::Type SelectionType)
 {
+	if (SelectionType == ESelectInfo::Direct) return;
     UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
     if (!Settings || !AntiAliasingCombo) return;
     Settings->SetAntiAliasingQuality(AntiAliasingCombo->GetSelectedIndex());
 }
 
-void UGYSettingsWidget::HandleFrameRateLimitChanged(FString SelectedItem, ESelectInfo::Type)
+void UGYSettingsWidget::HandleFrameRateLimitChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
+	if (SelectionType == ESelectInfo::Direct) return;
 	UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
 	if (!Settings || !FrameRateLimitCombo) return;
 
@@ -373,39 +380,46 @@ void UGYSettingsWidget::InitLanguageTab()
 {
     if (!LanguageCombo) return;
     LanguageCombo->ClearOptions();
+	LanguageCultureCodes.Reset();
 
 	const FString CurrentCulture = FInternationalization::Get().GetCurrentCulture()->GetName();
-	FText CurrentDisplay;
+	int32 CurrentIdx = INDEX_NONE;
+	int32 Index = 0;
 	for (const TPair<FString, FText>& Pair : SupportedLanguages)
 	{
 		LanguageCombo->AddOption(Pair.Value.ToString());
-		if (Pair.Key == CurrentCulture) CurrentDisplay = Pair.Value;
-	}
-	if (!CurrentDisplay.IsEmpty()) LanguageCombo->SetSelectedOption(CurrentDisplay.ToString());
-}
-
-FString UGYSettingsWidget::CultureCodeForDisplayName(const FString& DisplayName) const
-{
-	for (const TPair<FString, FText>& Pair : SupportedLanguages)
-	{
-		if (Pair.Value.ToString() == DisplayName)
+		LanguageCultureCodes.Add(Pair.Key);
+		if (Pair.Key == CurrentCulture)
 		{
-			return Pair.Key;
+			CurrentIdx = Index;
 		}
+		++Index;
 	}
-	return FString();
+
+	if (CurrentIdx != INDEX_NONE)
+	{
+		LanguageCombo->SetSelectedIndex(CurrentIdx);
+	}
 }
 
-void UGYSettingsWidget::HandleLanguageChanged(FString SelectedItem, ESelectInfo::Type)
+void UGYSettingsWidget::HandleLanguageChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
-    const FString Code = CultureCodeForDisplayName(SelectedItem);
-    if (Code.IsEmpty()) return;
+	if (SelectionType == ESelectInfo::Direct) return;
+	if (!LanguageCombo) return;
 
-    if (UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings())
-    {
-        Settings->SetLanguage(Code);
-        Settings->SaveSettings();
-    }
+	const int32 Idx = LanguageCombo->GetSelectedIndex();
+	if (!LanguageCultureCodes.IsValidIndex(Idx)) return;
+
+	const FString Code = LanguageCultureCodes[Idx];
+	if (Code.IsEmpty()) return;
+
+	if (UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings())
+	{
+		Settings->SetLanguage(Code);
+		Settings->SaveSettings();
+	}
+	InitGraphicsTab();
+	InitLanguageTab();
 }
 
 void UGYSettingsWidget::SetupMenuInput()
