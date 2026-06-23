@@ -183,6 +183,15 @@ void UGYParryInputLogic::PlayEndMontage()
 	}
 }
 
+void UGYParryInputLogic::CancelCounterMontageTask()
+{
+	if (CounterMontageTask)
+	{
+		CounterMontageTask->EndTask();
+		CounterMontageTask = nullptr;
+	}
+}
+
 void UGYParryInputLogic::RemoveParryTag()
 {
 	if (!CachedAbility.IsValid() || !CachedParryData) return;

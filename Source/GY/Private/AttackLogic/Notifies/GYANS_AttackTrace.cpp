@@ -1,6 +1,8 @@
 #include "AttackLogic/Notifies/GYANS_AttackTrace.h"
 #include "AttackLogic/Combo/GYComboInputLogic.h"
 #include "AttackLogic/Charge/GYChargeInputLogic.h"
+#include "AttackLogic/Block/GYBlockAttackLogic.h"
+#include "AttackLogic/Parry/GYParryCounterLogic.h"
 #include "AttackLogic/Shared/GYCollisionFragment.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystemBlueprintLibrary.h"
@@ -30,6 +32,14 @@ static const FGYCollisionShapeData* GetCurrentCollisionData(AActor* Owner)
 		if (UGYChargeInputLogic* Logic = Ability->GetLogic<UGYChargeInputLogic>())
 		{
 			return Logic->GetCurrentCollisionData();
+		}
+		if (UGYBlockAttackLogic* Logic = Ability->GetLogic<UGYBlockAttackLogic>())
+		{
+			if (const FGYCollisionShapeData* Data = Logic->GetCurrentCollisionData()) return Data;
+		}
+		if (UGYParryCounterLogic* Logic = Ability->GetLogic<UGYParryCounterLogic>())
+		{
+			if (const FGYCollisionShapeData* Data = Logic->GetCurrentCollisionData()) return Data;
 		}
 	}
 	return nullptr;

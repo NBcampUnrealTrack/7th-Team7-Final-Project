@@ -8,5 +8,6 @@ namespace GYWindowTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Window_ForceActivate_Ability_Charge)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Window_ForceActivate_Ability_Parry)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Window_ForceActivate_Ability_Block)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Window_ForceActivate_Ability_BlockOverride)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Window_ForceActivate_Ability_Dodge)
 }

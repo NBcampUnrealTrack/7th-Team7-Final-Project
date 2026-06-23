@@ -221,7 +221,15 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 
 	if (ActiveBlock)
 	{
-		// 블로킹 성공
+		// 블록 성공 시 GYBlockInputLogic·GYBlockAttackLogic에 피격 사실 전달
+		FGameplayEventData BlockPayload;
+		BlockPayload.EventTag = GYGameplayTags::Event_Block_Hit;
+		BlockPayload.Instigator = SourceASC->GetAvatarActor();
+		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
+			GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_Block_Hit, BlockPayload);
+		else
+			TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Block_Hit, &BlockPayload);
+
 		TargetASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Player_Block_Success);
 	}
 }

@@ -377,6 +377,22 @@ void UGYHeroComponent::OnAttackPressed()
 
 	SendGameplayEventLocal(GYGameplayTags::Event_Input_Attack);
 
+	// Block/Parry GA가 활성 중이면 서버에도 이벤트 전달 (콤보 Server_AdvanceCombo와 충돌 방지를 위해 해당 GA만 체크)
+	APawn* Pawn = GetPawn<APawn>();
+	if (Pawn && !Pawn->HasAuthority())
+	{
+		for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+		{
+			if (!Spec.IsActive() || !Spec.Ability) continue;
+			const FGameplayTagContainer& Tags = Spec.Ability->GetAssetTags();
+			if (Tags.HasTag(GYGameplayTags::Ability_Block) || Tags.HasTag(GYGameplayTags::Ability_Parry))
+			{
+				ServerSendGameplayEvent(GYGameplayTags::Event_Input_Attack);
+				break;
+			}
+		}
+	}
+
 	if (HoldToChargeTime > 0.f)
 	{
 		GetWorld()->GetTimerManager().SetTimer(

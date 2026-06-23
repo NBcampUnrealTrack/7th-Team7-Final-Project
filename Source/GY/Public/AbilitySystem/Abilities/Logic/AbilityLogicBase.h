@@ -22,6 +22,9 @@ class GY_API UAbilityLogicBase : public UObject
 
 public:
 
+	// 인젝션 로직 전용 — LogicList OnExecute 이전에 호출, RuntimeFragment 교체 등 선행 처리에 사용
+	virtual void OnPreExecute(UGYPlayerGameplayAbility* Ability) {}
+
 	/**
 	 * 어빌리티 활성화(ActivateAbility) 시 호출
 	 */

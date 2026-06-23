@@ -31,6 +31,13 @@ namespace GYGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Block, "Ability.Fragment.Block");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_BlockMontage, "Ability.Fragment.BlockMontage");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_BlockAttack, "Ability.Fragment.BlockAttack");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ParryCounter, "Ability.Fragment.ParryCounter");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ComboMontageOverride, "Ability.Fragment.ComboMontageOverride");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ChargeMontageOverride, "Ability.Fragment.ChargeMontageOverride");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ParryMontageOverride, "Ability.Fragment.ParryMontageOverride");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_BlockMontageOverride, "Ability.Fragment.BlockMontageOverride");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_DodgeMontageOverride, "Ability.Fragment.DodgeMontageOverride");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_HitStop, "Ability.Fragment.HitStop");
 
 	// State
