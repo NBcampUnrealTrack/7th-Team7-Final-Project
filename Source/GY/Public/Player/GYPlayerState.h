@@ -71,8 +71,16 @@ protected:
 	UFUNCTION()
 	void OnRep_PawnData();
 
+	// Owner(소유 컨트롤러)가 복제돼 오는 시점. 폰 초기화의 컨트롤러↔PS 페어링 검사 중
+	// "PS->GetOwner() == Controller" 조건이 여기서 비로소 만족될 수 있어, 멈춰 있던 초기화를 다시 검사시킨다.
+	virtual void OnRep_Owner() override;
+
 	UPROPERTY(ReplicatedUsing = OnRep_PawnData)
 	TObjectPtr<const UGYPawnData> PawnData;
+
+private:
+	// 빙의 중인 폰의 초기화 단계 검사를 다시 한 번 시킨다. (init에 필요한 값이 복제로 늦게 도착할 때 호출)
+	void RecheckPawnInitialization();
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UGYAbilitySystemComponent> AbilitySystemComponent;
