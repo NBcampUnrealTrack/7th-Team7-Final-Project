@@ -25,11 +25,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category="GY")
 	TArray<FGameplayTag> QuestTags;
 
-	UPROPERTY(VisibleAnywhere)
-	bool bTriggered = false;
-
 	UPROPERTY(EditAnywhere, Category="GY")
 	bool bIsLoop = false;
+
+	UPROPERTY(VisibleAnywhere)
+	bool bQuestStarted = false;
+
+	UPROPERTY(VisibleAnywhere)
+	bool bDialoguePlayed = false;
 
 	UFUNCTION()
 	void OnMeshBeginOverlap(

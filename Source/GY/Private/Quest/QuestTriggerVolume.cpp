@@ -48,23 +48,21 @@ void AQuestTriggerVolume::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp
 			GY_ERROR(Content,CYS,"퀘스트 트리거 볼륨 태그 빠짐. 에디터 수정 필수");
 			return;
 		}
-
 		if (!QS->ArePrerequisitesMet(QuestTags[0]))
 			return; // 선행 퀘스트 완료 체크
-		if (!bTriggered)
+		if (!bQuestStarted)
 		{
-			bTriggered = true;
+			bQuestStarted = true;
 			QS->StartQuest(QuestTags[0]);
 			GY_LOG(Content, CYS, "퀘스트 활성화:%s", *QuestTags[0].ToString());
 		}
-		return;
 	}
 
 	// 클라이언트: 자신의 캐릭터만, 각 플레이어 독립적으로 한 번
 	if (!Character->IsLocallyControlled()) return;
-	if (bTriggered && !bIsLoop) return;
+	if (bDialoguePlayed && !bIsLoop) return;
 
-	bTriggered = true;
+	bDialoguePlayed = true;
 	GY_LOG(Content, CYS, "NPC와의 대화");
 	PlayNarrativeDialogue(GetRandomQuestTag());
 }
