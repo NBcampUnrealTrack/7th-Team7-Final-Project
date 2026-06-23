@@ -47,6 +47,11 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	ApplyCost(ASC, DodgeData->StaminaCost);
 
 	// ----------입력에 따른 몽타주 재생 로직
+	//서버, 클라 판별
+	const bool bIsLocallyControlled = Ability->GetActorInfo().IsLocallyControlled();
+	const bool bIsAuthority = Ability->GetActorInfo().IsNetAuthority();
+
+
 	ACharacter* Character = Cast<ACharacter>(Ability->GetAvatarActorFromActorInfo());
 	UCharacterMovementComponent* CMC = Character ? Character->GetCharacterMovement() : nullptr;
 
@@ -69,28 +74,43 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	float sint = FVector::CrossProduct(Forward, CachedDodgeDirection).Z;
 	float DodgeAngle = FMath::RadiansToDegrees(FMath::Atan2(sint, cost));
 
+	//-----------------------------------
+	//구조체에 계산한 값(DodgeAngle) 넣기
+	//--------------------------------------
+	FGYTargetData_DodgeAngle* TargetData = new FGYTargetData_DodgeAngle();
+	TargetData->DodgeAngle = DodgeAngle;
+
+	//핸들에 만든 구조체 삽입
+	FGameplayAbilityTargetDataHandle TargetDataHandle;;
+	TargetDataHandle.Add(TargetData);
+
+	//Prediction Window 열기 : '예측'된 액션으로 등록하여 서버에서 보정 하지 않게 만듬
+	FScopedPredictionWindow Window(ASC, true);
+
+	// ASC를 통해 서버로 전송 (RPC)
+	ASC->CallServerSetReplicatedTargetData(
+		Ability->GetCurrentAbilitySpecHandle(),
+		Ability->GetCurrentActivationInfo().GetActivationPredictionKey(),
+		TargetDataHandle,
+		FGameplayTag(),
+		ASC->ScopedPredictionKey
+	);
+
 
 	UAnimMontage* SelectedMontage = MontageSet->GetMontageByAngle(DodgeAngle);
 	if (!SelectedMontage) { return; }
-
 
 	// 기존 몽타주 전부 중단
 	if (USkeletalMeshComponent* Mesh = Character->GetMesh())
 	{
 		if (UAnimInstance* AnimInst = Mesh->GetAnimInstance())
 		{
-			AnimInst->StopAllMontages(0.1f);  // 0.1f = 블렌드아웃 시간
+			AnimInst->StopAllMontages(0.1f); // 0.1f = 블렌드아웃 시간
 		}
 	}
 
 
 	const float Duration = Ability->PlayMontageForLogic(SelectedMontage, 1.f);
-
-
-
-
-
-
 
 
 	float InvincibilityDuration = DodgeData->InvincibilityDuration;
@@ -103,7 +123,8 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	{
 		ASC->AddLooseGameplayTag(CachedDodgeAppliedTag);
 
-		IFrameTask = UAbilityTask_WaitDelay::WaitDelay(Ability, FMath::Max(DodgeData->InvincibilityDuration, KINDA_SMALL_NUMBER));
+		IFrameTask = UAbilityTask_WaitDelay::WaitDelay(
+			Ability, FMath::Max(DodgeData->InvincibilityDuration, KINDA_SMALL_NUMBER));
 		IFrameTask->OnFinish.AddDynamic(this, &UGYDodgeInputLogic::OnIFrameFinished);
 		IFrameTask->ReadyForActivation();
 	}
@@ -130,8 +151,16 @@ void UGYDodgeInputLogic::OnDodgeEndFinished()
 
 void UGYDodgeInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
 {
-	if (IFrameTask) { IFrameTask->EndTask(); IFrameTask = nullptr; }
-	if (DodgeEndTask) { DodgeEndTask->EndTask(); DodgeEndTask = nullptr; }
+	if (IFrameTask)
+	{
+		IFrameTask->EndTask();
+		IFrameTask = nullptr;
+	}
+	if (DodgeEndTask)
+	{
+		DodgeEndTask->EndTask();
+		DodgeEndTask = nullptr;
+	}
 	RemoveDodgeTag();
 	CachedAbility.Reset();
 }
