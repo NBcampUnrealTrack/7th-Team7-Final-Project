@@ -7,4 +7,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Interaction_TimeRift_Sit, "Interaction.TimeRift.Sit")
 	UE_DEFINE_GAMEPLAY_TAG(Interaction_Ladder_Activate, "Interaction.Ladder.Activate")
 	UE_DEFINE_GAMEPLAY_TAG(Interaction_Ending_Start, "Interaction.Ending.Start");
+	UE_DEFINE_GAMEPLAY_TAG(Interaction_Boss_Intro, "Interaction.Boss.Intro");
+	UE_DEFINE_GAMEPLAY_TAG(Interaction_Boss_Outro, "Interaction.Boss.Outro");
 }
