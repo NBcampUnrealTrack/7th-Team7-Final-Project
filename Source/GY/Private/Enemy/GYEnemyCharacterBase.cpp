@@ -22,6 +22,7 @@
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Player/GYPlayerState.h"
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "Character/GYCharacter.h"
 #include "Character/HitReactionComponent.h"
 #include "Character/LockOn/LockOnComponent.h"
@@ -171,7 +172,9 @@ void AGYEnemyCharacterBase::BeginPlay()
 
 	if (Bootstrap)
 	{
+		Bootstrap->OnConfigsApplied.RemoveDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapConfigsApplied);
 		Bootstrap->OnConfigsApplied.AddDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapConfigsApplied);
+		Bootstrap->OnReady.RemoveDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapReady);
 		Bootstrap->OnReady.AddDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapReady);
 	}
 
@@ -532,6 +535,7 @@ void AGYEnemyCharacterBase::Activate()
 	}
 	else
 	{
+		Bootstrap->NotifyRespawn();
 		Bootstrap->NotifyGASInitialized();
 		HandleBootstrapConfigsApplied();
 

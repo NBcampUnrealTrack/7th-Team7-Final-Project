@@ -195,6 +195,10 @@ void AGYEnemyAIController::SetupBlackboardDefaults()
 
 	BB->SetValueAsBool(EnemyBBKeys::IsStunned, false);
 	BB->SetValueAsBool(EnemyBBKeys::IsDead, false);
+	BB->ClearValue(EnemyBBKeys::TargetActor);
+	BB->ClearValue(EnemyBBKeys::SelectedAbility);
+	BB->ClearValue(EnemyBBKeys::LastUsedAbility);
+	BB->ClearValue(EnemyBBKeys::AttackPosition);
 
 	if (!PatrolPoints.IsEmpty())
 	{

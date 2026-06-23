@@ -74,6 +74,8 @@ public:
 
 	void SetEnemyType(EEnemyType InType) { EnemyType = InType; }
 
+	void NotifyRespawn();
+
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Bootstrap")
 	FOnEnemyDataAssetLoaded OnDataAssetLoaded;
 
