@@ -6966,6 +6966,15 @@
                                                                                                                }
                                                                                                            ]
                                                                                            },
+                   "CarnivorousPlant/Mesh/MainPlant/SKEL_MainPlant_Full_Skeleton_Sequence.uasset":  {
+                                                                                                        "history":  [
+                                                                                                                        {
+                                                                                                                            "by":  "mints",
+                                                                                                                            "at":  "2026-06-23 19:03:59",
+                                                                                                                            "note":  null
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                    },
                    "CarnivorousPlant/Mesh/PlantRoot/SKEL_PlantRoot_Skeleton.uasset":  {
                                                                                           "history":  [
                                                                                                           {
