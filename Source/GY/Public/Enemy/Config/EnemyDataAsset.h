@@ -77,6 +77,11 @@ struct FEnemyAIConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Patrol", meta = (EditCondition = "bHasPatrol"))
 	TArray<FVector> PatrolOffsets;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Perception")
+	FName SightSocketName = TEXT("head");
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Perception")
+	FRotator SightSocketRotationOffset = FRotator::ZeroRotator;
 };
 
 USTRUCT(BlueprintType)
