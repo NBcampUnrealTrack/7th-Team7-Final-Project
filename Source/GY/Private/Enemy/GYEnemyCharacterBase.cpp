@@ -99,6 +99,29 @@ float AGYEnemyCharacterBase::GetStatScaleValue() const
 	return 1.f;
 }
 
+void AGYEnemyCharacterBase::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
+{
+	const USkeletalMeshComponent* MeshComponent = GetMesh();
+	if (MeshComponent && MeshComponent->DoesSocketExist(SightSocketName))
+	{
+		OutLocation = MeshComponent->GetSocketLocation(SightSocketName);
+		const FQuat SocketQuat = MeshComponent->GetSocketQuaternion(SightSocketName);
+		const FQuat OffsetQuat = SightSocketRotationOffset.Quaternion();
+		OutRotation = (SocketQuat * OffsetQuat).Rotator();
+		return;
+	}
+	Super::GetActorEyesViewPoint(OutLocation, OutRotation);
+}
+
+void AGYEnemyCharacterBase::SetSightSocket(FName InSocketName, const FRotator& InRotationOffset)
+{
+	if (!InSocketName.IsNone())
+	{
+		SightSocketName = InSocketName;
+	}
+	SightSocketRotationOffset = InRotationOffset;
+}
+
 void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInstance)
 {
 	UEnemyDataAsset* Data = GetEnemyData();

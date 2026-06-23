@@ -89,6 +89,9 @@ public:
 
 	virtual float GetStatScaleValue() const;
 
+	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
+
+	void SetSightSocket(FName InSocketName, const FRotator& InRotationOffset);
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -181,6 +184,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Death")
 	float DeactivateDelay = 3.f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Perception")
+	FName SightSocketName = TEXT("head");
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Perception")
+	FRotator SightSocketRotationOffset = FRotator::ZeroRotator;
 private:
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	FString WeaponTraceBonePrefix = TEXT("WeaponTrace_");

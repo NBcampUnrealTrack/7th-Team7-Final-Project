@@ -205,6 +205,8 @@ void UEnemyBootstrapComponent::ApplyAIConfig(const FEnemyAIConfig& Config)
 	AGYEnemyCharacterBase* Owner = GetEnemyOwner();
 	if (!Owner) return;
 
+	Owner->SetSightSocket(Config.SightSocketName, Config.SightSocketRotationOffset);
+
 	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(Owner->GetController());
 	if (!AIC) return;
 
@@ -216,7 +218,6 @@ void UEnemyBootstrapComponent::ApplyAIConfig(const FEnemyAIConfig& Config)
 		AIC->SetPatrolPoints(Config.PatrolOffsets, Owner->GetActorLocation());
 	}
 	AIC->StartBehaviorTree(BT);
-
 	AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.bHasPatrol);
 }
 
