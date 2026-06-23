@@ -9,9 +9,12 @@
 #include "Character/GYPawnData.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
+#include "Engine/World.h"
+#include "GameFramework/Controller.h"
 #include "GameFramework/Pawn.h"
 #include "Logging/GYLogManager.h"
 #include "Player/GYPlayerState.h"
+#include "TimerManager.h"
 
 // 이 extcomp의 이름은 PawnExtension 임
 const FName UGYPawnExtensionComponent::NAME_ActorFeatureName("PawnExtension");
@@ -167,6 +170,16 @@ void UGYPawnExtensionComponent::CheckDefaultInitialization()
 	ContinueInitStateChain(StateChain);
 }
 
+void UGYPawnExtensionComponent::RequestInitStateRecheck(APawn* Pawn)
+{
+	if (!Pawn) return;
+
+	if (UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>())
+	{
+		ExtComp->CheckDefaultInitialization();
+	}
+}
+
 
 
 void UGYPawnExtensionComponent::OnRegister()
@@ -181,10 +194,22 @@ void UGYPawnExtensionComponent::BeginPlay()
 	BindOnActorInitStateChanged(NAME_None, FGameplayTag(), false);
 	ensure(TryToChangeInitState(GYGameplayTags::InitState_Spawned));
 	CheckDefaultInitialization();
+
+	UWorld* World = GetWorld();
+	if (InitWatchdogSeconds > 0.f && World && World->IsGameWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			InitWatchdogTimer, this, &UGYPawnExtensionComponent::OnInitWatchdog, InitWatchdogSeconds, false);
+	}
 }
 
 void UGYPawnExtensionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(InitWatchdogTimer);
+	}
+
 	// 부여한 AbilitySet 회수(서버). 폰 파괴 시 ASC에서 어빌리티/GE 제거.
 	if (CachedASC.IsValid())
 	{
@@ -194,6 +219,40 @@ void UGYPawnExtensionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason
 
 	UnregisterInitStateFeature(); // 등록 해제
 	Super::EndPlay(EndPlayReason);
+}
+
+void UGYPawnExtensionComponent::OnInitWatchdog()
+{
+	APawn* Pawn = GetPawn<APawn>();
+	if (!Pawn) return;
+
+	// 혹시 도착-시-검사 트리거를 놓친 경우를 대비해 마지막으로 한 번 더 깨워본다.
+	CheckDefaultInitialization();
+
+	UGameFrameworkComponentManager* Manager = UGameFrameworkComponentManager::GetForActor(Pawn);
+	if (Manager && Manager->HaveAllFeaturesReachedInitState(Pawn, GYGameplayTags::InitState_GameplayReady))
+	{
+		return; // 정상적으로 초기화 완료됨
+	}
+
+	// 여기까지 왔으면 초기화가 조용히 멈춘 상태 — 관문이 기다리는 복제값 중 무엇이 안 왔는지 노출한다.
+	const AController* Controller = Pawn->GetController();
+	const AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>();
+	const bool bHasController = Controller != nullptr;
+	const bool bHasPS = PS != nullptr;
+	const bool bHasPawnData = PS && PS->GetPawnData();
+	const bool bOwnerPaired = Controller && Controller->PlayerState && (Controller->PlayerState->GetOwner() == Controller);
+
+	GY_ERROR(Player, KDY,
+		"init watchdog: %.0f초 내 GameplayReady 미도달(초기화 멈춤). PawnExtState=%s | Controller=%s PS=%s PawnData=%s OwnerPaired=%s | Role=%d Local=%d",
+		InitWatchdogSeconds,
+		*GetInitState().ToString(),
+		bHasController ? TEXT("O") : TEXT("X"),
+		bHasPS ? TEXT("O") : TEXT("X"),
+		bHasPawnData ? TEXT("O") : TEXT("X"),
+		bOwnerPaired ? TEXT("O") : TEXT("X"),
+		(int32)Pawn->GetLocalRole(),
+		Pawn->IsLocallyControlled() ? 1 : 0);
 }
 
 

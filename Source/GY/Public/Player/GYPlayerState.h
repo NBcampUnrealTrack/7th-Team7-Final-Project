@@ -79,9 +79,6 @@ protected:
 	TObjectPtr<const UGYPawnData> PawnData;
 
 private:
-	// 빙의 중인 폰의 초기화 단계 검사를 다시 한 번 시킨다. (init에 필요한 값이 복제로 늦게 도착할 때 호출)
-	void RecheckPawnInitialization();
-
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UGYAbilitySystemComponent> AbilitySystemComponent;
 

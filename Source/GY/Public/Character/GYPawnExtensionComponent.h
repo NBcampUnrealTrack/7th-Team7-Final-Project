@@ -6,9 +6,11 @@
 #include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "Components/GameFrameworkInitStateInterface.h"
 #include "Components/PawnComponent.h"
+#include "Engine/TimerHandle.h"
 #include "GYPawnExtensionComponent.generated.h"
 
 
+class APawn;
 class UGYAbilitySystemComponent;
 class UGYPawnData;
 
@@ -42,6 +44,10 @@ public:
 	virtual void CheckDefaultInitialization() override;
 	// -- 끝 --
 
+	// init에 필요한 복제값이 늦게 도착한 외부(PC/PS 등)에서, 해당 폰의 초기화 체인을 다시 검사하도록 요청한다.
+	// PawnExtension에서 검사를 다시 돌리면 같은 폰의 다른 init 컴포넌트(HeroComponent 등)도 함께 검사된다.
+	static void RequestInitStateRecheck(APawn* Pawn);
+
 protected:
 	//컴포넌트 생명주기 함수
 	virtual void OnRegister() override;
@@ -49,7 +55,16 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
+	// 일정 시간 내 초기화가 GameplayReady까지 못 가면(=복제값 누락 등으로 조용히 멈춤) 어디서 막혔는지 경고로 노출한다.
+	void OnInitWatchdog();
+
 	// PawnData의 AbilitySet 부여 핸들. EndPlay에서 ASC로부터 회수한다.
 	FAbilitySetGrantedHandles GrantedHandles;
 	TWeakObjectPtr<UGYAbilitySystemComponent> CachedASC;
+
+	FTimerHandle InitWatchdogTimer;
+
+	// 0 이하면 워치독 비활성. 정상 로딩이 길어도 오탐하지 않도록 넉넉히 잡는다.
+	UPROPERTY(EditDefaultsOnly, Category = "GY|Init")
+	float InitWatchdogSeconds = 20.f;
 };
