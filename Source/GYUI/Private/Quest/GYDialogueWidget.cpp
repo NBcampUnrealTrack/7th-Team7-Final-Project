@@ -4,6 +4,8 @@
 #include "Components/TextBlock.h"
 #include "Quest/QuestSubsystem.h"
 
+#define LOCTEXT_NAMESPACE "GYUI"
+
 void UGYDialogueWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -57,7 +59,7 @@ void UGYDialogueWidget::ShowCurrentDialogue()
 	const FDialogueRow& Row = DialogueRows[CurrentIndex];
 
 	const FText SpeakerName = Row.bIsPlayer
-		                          ? FText::FromString(TEXT("플레이어")) // TODO:: 플레이어 이름 가져오기
+		                          ? LOCTEXT("Dialogue_DefaultSpeaker_Player", "플레이어") // TODO:: 플레이어 이름 가져오기
 		                          : Row.Speaker;
 
 	SpeakerText->SetText(SpeakerName);
@@ -77,3 +79,5 @@ void UGYDialogueWidget::AdvanceDialogue()
 
 	ShowCurrentDialogue();
 }
+
+#undef LOCTEXT_NAMESPACE

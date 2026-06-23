@@ -4,6 +4,8 @@
 #include "UI/GYUIMessages.h"
 #include "Components/Image.h"
 
+#define LOCTEXT_NAMESPACE "GYUI"
+
 void UGYRegionInfoWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -29,9 +31,11 @@ void UGYRegionInfoWidget::HandleWorldTimeChanged(FGameplayTag Channel, const FGY
 {
 	if (!Text_WorldTime) return;
 
+	FNumberFormattingOptions Pad;
+	Pad.MinimumIntegralDigits = 2;
 	Text_WorldTime->SetText(FText::Format(TimeFormat,
-		FText::FromString(FString::Printf(TEXT("%02d"), Message.Hours)),
-		FText::FromString(FString::Printf(TEXT("%02d"), Message.Minutes))));
+		FText::AsNumber(Message.Hours, &Pad),
+		FText::AsNumber(Message.Minutes, &Pad)));
 }
 
 void UGYRegionInfoWidget::HandleRegionEntered(FGameplayTag, const FGYRegionEnteredMessage& Message)
@@ -63,3 +67,5 @@ void UGYRegionInfoWidget::HandleRegionEntered(FGameplayTag, const FGYRegionEnter
 		}
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

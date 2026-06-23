@@ -118,4 +118,6 @@ private:
 	FGuid CurrentInstanceId;
 	FGameplayMessageListenerHandle TriggerListenerHandle;
 	FGameplayMessageListenerHandle EntryListenerHandle;
+
+	TMap<FGameplayTag, FText> GradeDisplayNames;
 };
