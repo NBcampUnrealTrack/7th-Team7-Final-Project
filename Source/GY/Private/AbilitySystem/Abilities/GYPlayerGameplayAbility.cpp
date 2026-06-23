@@ -24,7 +24,7 @@ UGYPlayerGameplayAbility::UGYPlayerGameplayAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	bReplicateInputDirectly = true;
-	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
+
 }
 
 
