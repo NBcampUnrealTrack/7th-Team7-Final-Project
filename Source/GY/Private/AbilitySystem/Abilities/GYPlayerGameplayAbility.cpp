@@ -64,19 +64,19 @@ void UGYPlayerGameplayAbility::ActivateAbility(
 
 	ScanAndApplyGEModifiers();
 
+	// 인젝션 로직 선행 실행: RuntimeFragment 교체 등 OnExecute 전 처리
+	for (UAbilityLogicBase* Logic : InjectedLogics)
+	{
+		if (Logic) Logic->OnPreExecute(this);
+	}
+
 	for (UAbilityLogicBase* Logic : LogicList)
 	{
-		if (Logic)
-		{
-			Logic->OnExecute(this);
-		}
+		if (Logic) Logic->OnExecute(this);
 	}
 	for (UAbilityLogicBase* Logic : InjectedLogics)
 	{
-		if (Logic)
-		{
-			Logic->OnExecute(this);
-		}
+		if (Logic) Logic->OnExecute(this);
 	}
 
 	if (!IsActive()) return;

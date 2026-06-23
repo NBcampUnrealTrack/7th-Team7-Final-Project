@@ -20,6 +20,9 @@ public:
 	virtual void OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload) override;
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 
+	// 패리 추가입력 로직이 인젝션된 경우, 카운터 몽타주 타이머를 취소해 이중 RequestEnd 방지
+	void CancelCounterMontageTask();
+
 private:
 	UFUNCTION()
 	void OnParryWindowExpired();
