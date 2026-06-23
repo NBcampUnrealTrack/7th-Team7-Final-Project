@@ -75,23 +75,22 @@ void UGYParryCounterLogic::OpenWindow()
 
 	bWindowOpen = true;
 
-	CachedAbility->GetWorld()->GetTimerManager().ClearTimer(WindowTimer);
-	TWeakObjectPtr<UGYParryCounterLogic> WeakThis(this);
-	CachedAbility->GetWorld()->GetTimerManager().SetTimer(
-		WindowTimer,
-		[WeakThis]() { if (UGYParryCounterLogic* Self = WeakThis.Get()) Self->CloseWindow(); },
-		CachedWindowTimeout,
-		false
-	);
+	if (WindowTimeoutTask) { WindowTimeoutTask->EndTask(); WindowTimeoutTask = nullptr; }
+	WindowTimeoutTask = UAbilityTask_WaitDelay::WaitDelay(CachedAbility.Get(), CachedWindowTimeout);
+	WindowTimeoutTask->OnFinish.AddDynamic(this, &UGYParryCounterLogic::OnWindowTimedOut);
+	WindowTimeoutTask->ReadyForActivation();
 }
 
 void UGYParryCounterLogic::CloseWindow()
 {
 	bWindowOpen = false;
-	if (CachedAbility.IsValid())
-	{
-		CachedAbility->GetWorld()->GetTimerManager().ClearTimer(WindowTimer);
-	}
+	if (WindowTimeoutTask) { WindowTimeoutTask->EndTask(); WindowTimeoutTask = nullptr; }
+}
+
+void UGYParryCounterLogic::OnWindowTimedOut()
+{
+	WindowTimeoutTask = nullptr;
+	CloseWindow();
 }
 
 void UGYParryCounterLogic::ExecuteCounterAttack()

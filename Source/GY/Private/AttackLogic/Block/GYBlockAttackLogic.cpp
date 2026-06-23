@@ -75,23 +75,22 @@ void UGYBlockAttackLogic::OpenWindow()
 
 	bWindowOpen = true;
 
-	CachedAbility->GetWorld()->GetTimerManager().ClearTimer(WindowTimer);
-	TWeakObjectPtr<UGYBlockAttackLogic> WeakThis(this);
-	CachedAbility->GetWorld()->GetTimerManager().SetTimer(
-		WindowTimer,
-		[WeakThis]() { if (UGYBlockAttackLogic* Self = WeakThis.Get()) Self->CloseWindow(); },
-		CachedWindowTimeout,
-		false
-	);
+	if (WindowTimeoutTask) { WindowTimeoutTask->EndTask(); WindowTimeoutTask = nullptr; }
+	WindowTimeoutTask = UAbilityTask_WaitDelay::WaitDelay(CachedAbility.Get(), CachedWindowTimeout);
+	WindowTimeoutTask->OnFinish.AddDynamic(this, &UGYBlockAttackLogic::OnWindowTimedOut);
+	WindowTimeoutTask->ReadyForActivation();
 }
 
 void UGYBlockAttackLogic::CloseWindow()
 {
 	bWindowOpen = false;
-	if (CachedAbility.IsValid())
-	{
-		CachedAbility->GetWorld()->GetTimerManager().ClearTimer(WindowTimer);
-	}
+	if (WindowTimeoutTask) { WindowTimeoutTask->EndTask(); WindowTimeoutTask = nullptr; }
+}
+
+void UGYBlockAttackLogic::OnWindowTimedOut()
+{
+	WindowTimeoutTask = nullptr;
+	CloseWindow();
 }
 
 void UGYBlockAttackLogic::ExecuteBlockAttack()

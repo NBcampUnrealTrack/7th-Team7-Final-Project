@@ -42,12 +42,18 @@ private:
 	// 추가 공격 몽타주 종료 후 블록 홀드 자세로 복귀
 	void OnAttackMontageFinished();
 
+	UFUNCTION()
+	// 윈도우 타임아웃 완료 시 호출
+	void OnWindowTimedOut();
+
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
 	// 현재 재생 중인 세트 포인터 — 몽타주 종료 시 null 초기화
 	const FGYBlockAttackSet* CachedAttackSet = nullptr;
 	bool bWindowOpen = false;
 	float CachedWindowTimeout = 2.0f;
-	FTimerHandle WindowTimer;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> WindowTimeoutTask;
 
 	UPROPERTY()
 	TObjectPtr<UAbilityTask_WaitDelay> AttackMontageTask;
