@@ -60,4 +60,7 @@ protected:
 
 	UPROPERTY(Config)
 	int32 CustomFrameRateLimit;
+
+private:
+	void ApplyLanguageInternal(const FString& InCulture);
 };

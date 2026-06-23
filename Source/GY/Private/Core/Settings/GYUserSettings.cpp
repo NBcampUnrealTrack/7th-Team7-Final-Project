@@ -29,7 +29,26 @@ void UGYUserSettings::SetVolume(EGYSoundCategory Category, float Volume)
 void UGYUserSettings::SetLanguage(const FString& InCulture)
 {
     Language = InCulture;
-    FInternationalization::Get().SetCurrentCulture(InCulture);
+    ApplyLanguageInternal(InCulture);
+}
+
+void UGYUserSettings::ApplyLanguageInternal(const FString& InCulture)
+{
+    if (InCulture.IsEmpty())
+    {
+        return;
+    }
+
+	// 에디터 프로세스에서는 Culture 안바꿈
+	// 로컬라이징 검증은 Standalone Game 또는 패키지 빌드에서 수행
+#if WITH_EDITOR
+	if (GIsEditor)
+	{
+		return;
+	}
+#endif
+
+    FInternationalization::Get().SetCurrentLanguageAndLocale(InCulture);
 }
 
 void UGYUserSettings::SetMotionBlurEnabled(bool bEnabled)
@@ -55,10 +74,7 @@ void UGYUserSettings::ApplyAllSettings(const UObject* WorldContext)
     SetMotionBlurEnabled(bMotionBlurEnabled);
     SetCustomFrameRateLimit(CustomFrameRateLimit);
 
-    if (!Language.IsEmpty())
-    {
-        FInternationalization::Get().SetCurrentCulture(Language);
-    }
+    ApplyLanguageInternal(Language);
 
     if (WorldContext)
     {
