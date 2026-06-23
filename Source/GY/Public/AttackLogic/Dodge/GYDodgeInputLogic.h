@@ -48,8 +48,8 @@ public:
 
 
 
-
-
+	//서버측 콜백 함수
+	void OnTargetDataReceived(const FGameplayAbilityTargetDataHandle& Data, FGameplayTag ActivationTag);
 	FGameplayAbilityTargetDataHandle TargetDataHandle;
 
 
