@@ -24,6 +24,7 @@ UGYPlayerGameplayAbility::UGYPlayerGameplayAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	bReplicateInputDirectly = true;
+
 }
 
 
