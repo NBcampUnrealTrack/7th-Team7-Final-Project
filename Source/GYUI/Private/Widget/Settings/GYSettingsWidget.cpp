@@ -16,6 +16,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 
+#define LOCTEXT_NAMESPACE "GYUI"
+
 namespace GYSettingsPrivate
 {
 	// 해상도 목록
@@ -56,8 +58,8 @@ UGYSettingsWidget::UGYSettingsWidget(const FObjectInitializer& ObjectInitializer
 {
     InputMode = EGYWidgetInputMode::Menu;
 
-    SupportedLanguages.Add(TEXT("ko"), TEXT("한국어"));
-    SupportedLanguages.Add(TEXT("en"), TEXT("English"));
+	SupportedLanguages.Add(TEXT("ko"), LOCTEXT("Lang_Korean", "한국어"));
+	SupportedLanguages.Add(TEXT("en"), LOCTEXT("Lang_English", "English"));
 }
 
 void UGYSettingsWidget::NativeConstruct()
@@ -178,54 +180,48 @@ void UGYSettingsWidget::InitGraphicsTab()
 
     if (WindowModeCombo)
     {
-        WindowModeCombo->ClearOptions();
-        WindowModeCombo->AddOption(TEXT("Fullscreen"));
-        WindowModeCombo->AddOption(TEXT("Windowed Fullscreen"));
-        WindowModeCombo->AddOption(TEXT("Windowed"));
+    	WindowModeCombo->ClearOptions();
+    	WindowModeCombo->AddOption(LOCTEXT("WindowMode_Fullscreen", "Fullscreen").ToString());
+    	WindowModeCombo->AddOption(LOCTEXT("WindowMode_WindowedFullscreen", "Windowed Fullscreen").ToString());
+    	WindowModeCombo->AddOption(LOCTEXT("WindowMode_Windowed", "Windowed").ToString());
         const int32 Mode = static_cast<int32>(Settings->GetFullscreenMode());
         WindowModeCombo->SetSelectedIndex(FMath::Clamp(Mode, 0, 2));
     }
 
     if (OverallQualityCombo)
     {
-        OverallQualityCombo->ClearOptions();
-        OverallQualityCombo->AddOption(TEXT("Low"));
-        OverallQualityCombo->AddOption(TEXT("Medium"));
-        OverallQualityCombo->AddOption(TEXT("High"));
-        OverallQualityCombo->AddOption(TEXT("Epic"));
+    	OverallQualityCombo->ClearOptions();
+    	OverallQualityCombo->AddOption(LOCTEXT("Quality_Low", "Low").ToString());
+    	OverallQualityCombo->AddOption(LOCTEXT("Quality_Medium", "Medium").ToString());
+    	OverallQualityCombo->AddOption(LOCTEXT("Quality_High", "High").ToString());
+    	OverallQualityCombo->AddOption(LOCTEXT("Quality_Epic", "Epic").ToString());
         OverallQualityCombo->SetSelectedIndex(FMath::Clamp(Settings->GetOverallScalabilityLevel(), 0, 3));
     }
 
     if (AntiAliasingCombo)
     {
-        AntiAliasingCombo->ClearOptions();
-        AntiAliasingCombo->AddOption(TEXT("Low"));
-        AntiAliasingCombo->AddOption(TEXT("Medium"));
-        AntiAliasingCombo->AddOption(TEXT("High"));
-        AntiAliasingCombo->AddOption(TEXT("Epic"));
+    	AntiAliasingCombo->ClearOptions();
+    	AntiAliasingCombo->AddOption(LOCTEXT("Quality_Low", "Low").ToString());
+    	AntiAliasingCombo->AddOption(LOCTEXT("Quality_Medium", "Medium").ToString());
+    	AntiAliasingCombo->AddOption(LOCTEXT("Quality_High", "High").ToString());
+    	AntiAliasingCombo->AddOption(LOCTEXT("Quality_Epic", "Epic").ToString());
         AntiAliasingCombo->SetSelectedIndex(FMath::Clamp(Settings->GetAntiAliasingQuality(), 0, 3));
     }
 
     if (FrameRateLimitCombo)
     {
         FrameRateLimitCombo->ClearOptions();
-        FrameRateLimitCombo->AddOption(TEXT("30"));
-        FrameRateLimitCombo->AddOption(TEXT("60"));
-        FrameRateLimitCombo->AddOption(TEXT("120"));
-        FrameRateLimitCombo->AddOption(TEXT("144"));
-        FrameRateLimitCombo->AddOption(TEXT("Unlimited"));
+    	FrameRateLimitCombo->AddOption(TEXT("30"));
+    	FrameRateLimitCombo->AddOption(TEXT("60"));
+    	FrameRateLimitCombo->AddOption(TEXT("120"));
+    	FrameRateLimitCombo->AddOption(TEXT("144"));
+    	FrameRateLimitCombo->AddOption(LOCTEXT("FrameRate_Unlimited", "Unlimited").ToString());
 
-        const int32 Limit = Settings->GetCustomFrameRateLimit();
-        FString Sel;
-        switch (Limit)
-        {
-            case 30: Sel = TEXT("30"); break;
-            case 60: Sel = TEXT("60"); break;
-            case 120: Sel = TEXT("120"); break;
-            case 144: Sel = TEXT("144"); break;
-            default: Sel = TEXT("Unlimited"); break;
-        }
-        FrameRateLimitCombo->SetSelectedOption(Sel);
+    	const int32 Limit = Settings->GetCustomFrameRateLimit();
+    	int32 SelIdx = 4; // Unlimited
+    	switch (Limit) { case 30: SelIdx=0; break; case 60: SelIdx=1; break;
+    	case 120: SelIdx=2; break; case 144: SelIdx=3; break; }
+    	FrameRateLimitCombo->SetSelectedIndex(SelIdx);
     }
 
     if (VSyncCheck)
@@ -239,8 +235,9 @@ void UGYSettingsWidget::InitGraphicsTab()
     }
 }
 
-void UGYSettingsWidget::HandleResolutionChanged(FString SelectedItem, ESelectInfo::Type)
+void UGYSettingsWidget::HandleResolutionChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
+	if (SelectionType == ESelectInfo::Direct) return;
     UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
     if (!Settings) return;
     FIntPoint Parsed;
@@ -250,33 +247,40 @@ void UGYSettingsWidget::HandleResolutionChanged(FString SelectedItem, ESelectInf
     }
 }
 
-void UGYSettingsWidget::HandleWindowModeChanged(FString, ESelectInfo::Type)
+void UGYSettingsWidget::HandleWindowModeChanged(FString, ESelectInfo::Type SelectionType)
 {
+	if (SelectionType == ESelectInfo::Direct) return;
     UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
     if (!Settings || !WindowModeCombo) return;
     Settings->SetFullscreenMode(static_cast<EWindowMode::Type>(WindowModeCombo->GetSelectedIndex()));
 }
 
-void UGYSettingsWidget::HandleOverallQualityChanged(FString, ESelectInfo::Type)
+void UGYSettingsWidget::HandleOverallQualityChanged(FString, ESelectInfo::Type SelectionType)
 {
+	if (SelectionType == ESelectInfo::Direct) return;
     UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
     if (!Settings || !OverallQualityCombo) return;
     Settings->SetOverallScalabilityLevel(OverallQualityCombo->GetSelectedIndex());
 }
 
-void UGYSettingsWidget::HandleAntiAliasingChanged(FString, ESelectInfo::Type)
+void UGYSettingsWidget::HandleAntiAliasingChanged(FString, ESelectInfo::Type SelectionType)
 {
+	if (SelectionType == ESelectInfo::Direct) return;
     UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
     if (!Settings || !AntiAliasingCombo) return;
     Settings->SetAntiAliasingQuality(AntiAliasingCombo->GetSelectedIndex());
 }
 
-void UGYSettingsWidget::HandleFrameRateLimitChanged(FString SelectedItem, ESelectInfo::Type)
+void UGYSettingsWidget::HandleFrameRateLimitChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
-    UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
-    if (!Settings) return;
-    const int32 Limit = (SelectedItem == TEXT("Unlimited")) ? 0 : FCString::Atoi(*SelectedItem);
-    Settings->SetCustomFrameRateLimit(Limit);
+	if (SelectionType == ESelectInfo::Direct) return;
+	UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings();
+	if (!Settings || !FrameRateLimitCombo) return;
+
+	const int32 Idx = FrameRateLimitCombo->GetSelectedIndex();
+	static const int32 LimitTable[] = { 30, 60, 120, 144, 0 };
+	const int32 Limit = (Idx >= 0 && Idx < 5) ? LimitTable[Idx] : 60;
+	Settings->SetCustomFrameRateLimit(Limit);
 }
 
 void UGYSettingsWidget::HandleVSyncChanged(bool bIsChecked)
@@ -376,38 +380,46 @@ void UGYSettingsWidget::InitLanguageTab()
 {
     if (!LanguageCombo) return;
     LanguageCombo->ClearOptions();
+	LanguageCultureCodes.Reset();
 
-    const FString CurrentCulture = FInternationalization::Get().GetCurrentCulture()->GetName();
-    FString CurrentDisplay;
+	const FString CurrentCulture = FInternationalization::Get().GetCurrentCulture()->GetName();
+	int32 CurrentIdx = INDEX_NONE;
+	int32 Index = 0;
+	for (const TPair<FString, FText>& Pair : SupportedLanguages)
+	{
+		LanguageCombo->AddOption(Pair.Value.ToString());
+		LanguageCultureCodes.Add(Pair.Key);
+		if (Pair.Key == CurrentCulture)
+		{
+			CurrentIdx = Index;
+		}
+		++Index;
+	}
 
-    for (const TPair<FString, FString>& Pair : SupportedLanguages)
-    {
-        LanguageCombo->AddOption(Pair.Value);
-        if (Pair.Key == CurrentCulture) CurrentDisplay = Pair.Value;
-    }
-	// 현재 언어 선택 상태로
-    if (!CurrentDisplay.IsEmpty()) LanguageCombo->SetSelectedOption(CurrentDisplay);
+	if (CurrentIdx != INDEX_NONE)
+	{
+		LanguageCombo->SetSelectedIndex(CurrentIdx);
+	}
 }
 
-FString UGYSettingsWidget::CultureCodeForDisplayName(const FString& DisplayName) const
+void UGYSettingsWidget::HandleLanguageChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
-    for (const TPair<FString, FString>& Pair : SupportedLanguages)
-    {
-        if (Pair.Value == DisplayName) return Pair.Key;
-    }
-    return FString();
-}
+	if (SelectionType == ESelectInfo::Direct) return;
+	if (!LanguageCombo) return;
 
-void UGYSettingsWidget::HandleLanguageChanged(FString SelectedItem, ESelectInfo::Type)
-{
-    const FString Code = CultureCodeForDisplayName(SelectedItem);
-    if (Code.IsEmpty()) return;
+	const int32 Idx = LanguageCombo->GetSelectedIndex();
+	if (!LanguageCultureCodes.IsValidIndex(Idx)) return;
 
-    if (UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings())
-    {
-        Settings->SetLanguage(Code);
-        Settings->SaveSettings();
-    }
+	const FString Code = LanguageCultureCodes[Idx];
+	if (Code.IsEmpty()) return;
+
+	if (UGYUserSettings* Settings = UGYUserSettings::GetGYUserSettings())
+	{
+		Settings->SetLanguage(Code);
+		Settings->SaveSettings();
+	}
+	InitGraphicsTab();
+	InitLanguageTab();
 }
 
 void UGYSettingsWidget::SetupMenuInput()
@@ -486,3 +498,5 @@ void UGYSettingsWidget::HandlePrevTabInput()
     const int32 Idx = TabSwitcher->GetActiveWidgetIndex();
     ShowTab(static_cast<EGYSettingsTab>((Idx + 3) % 4));
 }
+
+#undef LOCTEXT_NAMESPACE

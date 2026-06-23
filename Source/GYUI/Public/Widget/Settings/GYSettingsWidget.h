@@ -19,10 +19,11 @@ class UGYInputComponent;
 UENUM(BlueprintType)
 enum class EGYSettingsTab : uint8
 {
-    Graphics  UMETA(DisplayName = "그래픽"),
-    Sound     UMETA(DisplayName = "사운드"),
-    Controls  UMETA(DisplayName = "조작키"),
-    Language  UMETA(DisplayName = "언어"),
+	// Localization Dashboard 표준 권장 방식은 영어
+	Graphics UMETA(DisplayName = "Graphics"),
+	Sound UMETA(DisplayName = "Sound"),
+	Controls UMETA(DisplayName = "Controls"),
+	Language UMETA(DisplayName = "Language"),
 };
 
 /**
@@ -102,8 +103,8 @@ protected:
 	UPROPERTY(meta = (BindWidget))
     TObjectPtr<UButton> CloseButton;
 
-    UPROPERTY(EditDefaultsOnly, Category = "GY|Settings|Language")
-    TMap<FString, FString> SupportedLanguages;
+	UPROPERTY(EditDefaultsOnly, Category = "GY|Settings|Language")
+	TMap<FString, FText> SupportedLanguages;
 
 	/** 위젯 활성화 시 추가될 IMC (Next/Prev Tab 등 메뉴 전용 입력). */
 	UPROPERTY(EditDefaultsOnly, Category = "GY|Settings|Input")
@@ -150,8 +151,9 @@ private:
     void InitSoundTab();
     void InitLanguageTab();
     void ApplyVolume(EGYSoundCategory Category, float Value, UTextBlock* Label);
-    FString CultureCodeForDisplayName(const FString& DisplayName) const;
 
+	UPROPERTY(Transient)
+	TArray<FString> LanguageCultureCodes;
 	UPROPERTY(Transient)
 	TObjectPtr<UGYInputComponent> LocalInputComponent;
 

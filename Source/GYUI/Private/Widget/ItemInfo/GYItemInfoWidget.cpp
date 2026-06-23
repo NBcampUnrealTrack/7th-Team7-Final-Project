@@ -17,6 +17,8 @@
 #include "Widget/ItemInfo/EnchantMagnitudeDisplayRow.h"
 #include "Enchant/RolledEnchantOption.h"
 
+#define LOCTEXT_NAMESPACE "GYUI"
+
 EGYItemInfoTrigger UGYItemInfoWidget::GetEffectiveTrigger() const
 {
 	return bPinned ? EGYItemInfoTrigger::Direct : Trigger;
@@ -194,7 +196,8 @@ void UGYItemInfoWidget::ApplyView(const FGYItemViewData& Item)
 		{
 			GradeName = TagString;
 		}
-		Text_Grade->SetText(FText::FromString(GradeName));
+		const FText* Found = GradeDisplayNames.Find(Item.GradeTag);
+		Text_Grade->SetText(Found ? *Found : FText::FromString(GradeName));
 	}
 
 	ApplyGradeBorder(Item.GradeTag);
@@ -294,3 +297,5 @@ FText UGYItemInfoWidget::FormatMagnitude(const FRolledMagnitude& Magnitude, UDat
 	}
 	return FText::Format(INVTEXT("{0} {1}"), FText::FromString(TagLeaf), ValueText);
 }
+
+#undef LOCTEXT_NAMESPACE

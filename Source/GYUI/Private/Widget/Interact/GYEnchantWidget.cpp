@@ -20,6 +20,8 @@
 #include "Widget/Inventory/GYInventoryScreenWidget.h"
 #include "Widget/ItemInfo/GYItemInfoWidget.h"
 
+#define LOCTEXT_NAMESPACE "GYUI"
+
 void UGYEnchantWidget::OnCurrencyChanged(FGameplayTag GameplayTag, int32 Amount)
 {
 	const UGYEnchantSettings* Settings = GetDefault<UGYEnchantSettings>();
@@ -40,7 +42,8 @@ void UGYEnchantWidget::OnCurrencyChanged(FGameplayTag GameplayTag, int32 Amount)
 	}
 	if (Text_TimeShard)
 	{
-		Text_TimeShard->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), Amount, MaxAmount)));
+		Text_TimeShard->SetText(FText::Format(LOCTEXT("Enchant_TimeShardFormat", "{0} / {1}"),
+			FText::AsNumber(Amount), FText::AsNumber(MaxAmount)));
 	}
 }
 
@@ -76,7 +79,8 @@ void UGYEnchantWidget::NativeConstruct()
 	ProgressBar->SetPercent(static_cast<float>(CurrentAmount)/MaxAmount);
 	if (Text_TimeShard)
 	{
-		Text_TimeShard->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), CurrentAmount, MaxAmount)));
+		Text_TimeShard->SetText(FText::Format(LOCTEXT("Enchant_TimeShardFormat", "{0} / {1}"),
+			FText::AsNumber(CurrentAmount), FText::AsNumber(MaxAmount)));
 	}
 
 	if (CloseButton)
@@ -192,3 +196,5 @@ void UGYEnchantWidget::OnExecuteButtonClicked()
 		InventoryComponent->Server_RequestEnchant(EnchantSlotWidget->GetItemInstanceId());
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

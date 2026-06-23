@@ -3,6 +3,8 @@
 #include "CommonTextBlock.h"
 #include "Components/Button.h"
 
+#define LOCTEXT_NAMESPACE "GYUI"
+
 void UGYQuestEntryWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -21,7 +23,7 @@ void UGYQuestEntryWidget::SetQuestData(FGameplayTag InQuestTag, const FText& InQ
 		if (bCompleted)
 		{ // 완료된 퀘스트
 			Text_QuestName->SetText(
-				FText::FromString(TEXT("[완료] ") + InQuestName.ToString())
+			FText::Format(LOCTEXT("QuestCompletedPrefix", "[완료] {0}"), InQuestName)
 			);
 			Text_QuestName->SetColorAndOpacity(CompletedTextColor);
 		}
@@ -38,3 +40,5 @@ void UGYQuestEntryWidget::HandleButtonClicked()
 {
 	OnEntrySelected.Broadcast(QuestTag);
 }
+
+#undef LOCTEXT_NAMESPACE

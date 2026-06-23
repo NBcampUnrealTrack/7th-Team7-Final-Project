@@ -9,6 +9,8 @@
 #include "GameStates/GYGameState.h"
 #include "Logging/GYLogManager.h"
 
+#define LOCTEXT_NAMESPACE "GYUI"
+
 UGYQuestListWidget::UGYQuestListWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -110,7 +112,8 @@ void UGYQuestListWidget::RefreshList()
 	}
 	if (Text_QuestProgress)
 	{
-		Text_QuestProgress->SetText(FText::FromString(FString::Printf(TEXT("%d/%d"), CompletedCount, TotalCount)));
+		Text_QuestProgress->SetText(FText::Format(LOCTEXT("QuestProgressFormat", "{0}/{1}"),
+			FText::AsNumber(CompletedCount), FText::AsNumber(TotalCount)));
 	}
 	GY_LOG(Content, CYS, "RefreshList - 전체 진행도: %d/%d", CompletedCount, TotalCount);
 }
@@ -210,3 +213,5 @@ AGYGameState* UGYQuestListWidget::GetGYGameState() const
 {
 	return GetWorld() ? Cast<AGYGameState>(GetWorld()->GetGameState()) : nullptr;
 }
+
+#undef LOCTEXT_NAMESPACE
