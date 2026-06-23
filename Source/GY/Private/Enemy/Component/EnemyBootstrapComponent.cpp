@@ -45,6 +45,16 @@ UEnemyBootstrapComponent::UEnemyBootstrapComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void UEnemyBootstrapComponent::NotifyRespawn()
+{
+	if (!LoadedDataAsset) return;
+
+	bGASGrantedFromDataAsset = false;
+	TryGrantGASFromDataAsset();
+
+	ApplyAIConfig(LoadedDataAsset->AIConfig);
+}
+
 void UEnemyBootstrapComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
