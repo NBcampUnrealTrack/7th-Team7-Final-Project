@@ -1,10 +1,12 @@
 #include "Player/GYPlayerController.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "Character/GYPawnExtensionComponent.h"
 #include "Cheats/GYCheatManager.h"
 #include "Cheats/GYServerCheatProxy.h"
 #include "Components/InputComponent.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
+#include "GameFramework/Pawn.h"
 #include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
@@ -87,6 +89,10 @@ void AGYPlayerController::OnRep_PlayerState()
 	{
 		OnPlayerStateInitialized.Broadcast(this);
 	}
+
+	// 컨트롤러가 PS를 받는 이 시점이 컨트롤러↔PS 페어링이 완성되는 지점.
+	// 폰의 OnRep이 이보다 먼저 와서 init 체인이 Spawned에 멈춰 있었다면 여기서 마저 굴려준다.
+	RecheckPossessedPawnInitialization();
 }
 
 void AGYPlayerController::OnPossess(APawn* InPawn)
@@ -96,6 +102,20 @@ void AGYPlayerController::OnPossess(APawn* InPawn)
 	if (PlayerState)
 	{
 		OnPlayerStateInitialized.Broadcast(this);
+	}
+
+	RecheckPossessedPawnInitialization();
+}
+
+void AGYPlayerController::RecheckPossessedPawnInitialization()
+{
+	APawn* ControlledPawn = GetPawn();
+	if (!ControlledPawn) return;
+
+	if (UGYPawnExtensionComponent* ExtComp = ControlledPawn->FindComponentByClass<UGYPawnExtensionComponent>())
+	{
+		// PawnExt의 재킥은 CheckDefaultInitializationForImplementers로 HeroComp까지 전파된다.
+		ExtComp->CheckDefaultInitialization();
 	}
 }
 

@@ -34,6 +34,11 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 
+private:
+	// 컨트롤러가 PS를 받는 시점에 빙의 폰의 init 체인을 다시 굴린다.
+	// 별도 프로세스 클라(autonomous proxy)에서 컨트롤러↔PS 페어링이 폰 OnRep보다 늦게 완성되는 레이스 대응.
+	void RecheckPossessedPawnInitialization();
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Cheat")
 	TSubclassOf<AGYServerCheatProxy> ServerCheatProxyClass;
