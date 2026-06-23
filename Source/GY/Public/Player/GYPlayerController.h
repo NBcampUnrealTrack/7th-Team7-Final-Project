@@ -35,8 +35,8 @@ protected:
 	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 
 private:
-	// 컨트롤러가 PS를 받는 시점에 빙의 폰의 init 체인을 다시 굴린다.
-	// 별도 프로세스 클라(autonomous proxy)에서 컨트롤러↔PS 페어링이 폰 OnRep보다 늦게 완성되는 레이스 대응.
+	// 컨트롤러가 PlayerState를 받은 시점에 빙의 중인 폰의 초기화 단계 검사를 다시 한 번 시킨다.
+	// 네트워크 클라이언트에서 컨트롤러와 PlayerState의 복제 도착 순서가 어긋나 초기화가 멈추는 문제 대응.
 	void RecheckPossessedPawnInitialization();
 
 public:
