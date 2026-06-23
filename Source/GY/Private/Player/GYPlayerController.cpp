@@ -1,10 +1,12 @@
 #include "Player/GYPlayerController.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "Character/GYPawnExtensionComponent.h"
 #include "Cheats/GYCheatManager.h"
 #include "Cheats/GYServerCheatProxy.h"
 #include "Components/InputComponent.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
+#include "GameFramework/Pawn.h"
 #include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
@@ -87,6 +89,11 @@ void AGYPlayerController::OnRep_PlayerState()
 	{
 		OnPlayerStateInitialized.Broadcast(this);
 	}
+
+	// 폰의 초기화는 "컨트롤러에 PlayerState가 연결됨"을 조건으로 한다.
+	// 클라이언트에서는 이 연결이 폰 쪽 초기화 검사보다 늦게 완성될 수 있고, 그러면 초기화가 멈춘 채 방치된다.
+	// 컨트롤러가 PlayerState를 받는 이 지점에서 다시 검사시켜 멈춘 초기화를 마저 진행시킨다.
+	RecheckPossessedPawnInitialization();
 }
 
 void AGYPlayerController::OnPossess(APawn* InPawn)
@@ -96,6 +103,20 @@ void AGYPlayerController::OnPossess(APawn* InPawn)
 	if (PlayerState)
 	{
 		OnPlayerStateInitialized.Broadcast(this);
+	}
+
+	RecheckPossessedPawnInitialization();
+}
+
+void AGYPlayerController::RecheckPossessedPawnInitialization()
+{
+	APawn* ControlledPawn = GetPawn();
+	if (!ControlledPawn) return;
+
+	if (UGYPawnExtensionComponent* ExtComp = ControlledPawn->FindComponentByClass<UGYPawnExtensionComponent>())
+	{
+		// PawnExtension에서 검사를 다시 돌리면 같은 폰의 다른 컴포넌트(HeroComponent 등)도 함께 검사된다.
+		ExtComp->CheckDefaultInitialization();
 	}
 }
 

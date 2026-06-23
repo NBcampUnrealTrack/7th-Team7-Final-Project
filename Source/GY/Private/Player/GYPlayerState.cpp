@@ -80,13 +80,26 @@ void AGYPlayerState::SetLastCheckpointId(const FGuid& Id)
 
 void AGYPlayerState::OnRep_PawnData()
 {
-	// PS.PawnData가 폰보다 늦게 복제돼도 init 체인이 마저 진행되도록 재킥(데디 클라 타이밍).
-	if (APawn* OwningPawn = GetPawn())
+	// PS.PawnData가 폰보다 늦게 복제돼 와도 초기화가 마저 진행되도록 다시 검사시킨다.
+	RecheckPawnInitialization();
+}
+
+void AGYPlayerState::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+
+	// Owner(소유 컨트롤러)가 폰의 초기화 검사보다 늦게 복제돼 와도 초기화가 마저 진행되도록 다시 검사시킨다.
+	RecheckPawnInitialization();
+}
+
+void AGYPlayerState::RecheckPawnInitialization()
+{
+	APawn* OwningPawn = GetPawn();
+	if (!OwningPawn) return;
+
+	if (UGYPawnExtensionComponent* ExtComp = OwningPawn->FindComponentByClass<UGYPawnExtensionComponent>())
 	{
-		if (UGYPawnExtensionComponent* ExtComp = OwningPawn->FindComponentByClass<UGYPawnExtensionComponent>())
-		{
-			ExtComp->CheckDefaultInitialization();
-		}
+		ExtComp->CheckDefaultInitialization();
 	}
 }
 
