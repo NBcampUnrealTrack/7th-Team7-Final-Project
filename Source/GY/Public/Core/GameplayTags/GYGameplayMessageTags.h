@@ -97,6 +97,9 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Ending_CreditsFinished);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Ending_WaitingForPlayers);
 
+	// 시네마틱 재생 상태
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Cinematic_State);
+
 	// 설정 화면 토글
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_ToggleSettings);
 

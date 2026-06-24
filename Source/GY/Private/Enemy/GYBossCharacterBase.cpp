@@ -17,6 +17,7 @@
 #include "GameFramework/PlayerState.h"
 
 #include "Net/UnrealNetwork.h"
+#include "UI/GYUIMessages.h"
 
 AGYBossCharacterBase::AGYBossCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UBossBootstrapComponent>(TEXT("Bootstrap")))
@@ -279,6 +280,10 @@ void AGYBossCharacterBase::HandleCinematicFinished()
 		ActiveSequenceActor = nullptr;
 	}
 	ActiveSequencePlayer = nullptr;
+	// UI 켜줘
+	FGYCinematicMessage Msg;
+	Msg.bIsPlaying = false;
+	UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
 }
 
 void AGYBossCharacterBase::Multicast_PlayCinematic_Implementation(const FSoftObjectPath& SequencePath)
@@ -305,6 +310,10 @@ void AGYBossCharacterBase::Multicast_PlayCinematic_Implementation(const FSoftObj
 	ActiveSequenceActor = OutActor;
 
 	Player->OnFinished.AddDynamic(this, &AGYBossCharacterBase::HandleCinematicFinished);
+	// UI 꺼줘
+	FGYCinematicMessage Msg;
+	Msg.bIsPlaying = true;
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
 
 	// Spawnable 캐릭터의 AnimInstance 초기화 대기 후 재생
 	GetWorldTimerManager().SetTimerForNextTick(

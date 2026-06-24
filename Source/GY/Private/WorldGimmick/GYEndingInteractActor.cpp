@@ -207,6 +207,11 @@ void AGYEndingInteractActor::Multicast_PlayCinematic_Implementation(const FSoftO
 				LocalPawn->SetActorHiddenInGame(true);
 			}
 		}
+
+		// UI 꺼줘
+		FGYCinematicMessage Msg;
+		Msg.bIsPlaying = true;
+		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
 	}
 
 	Player->Play();
@@ -264,6 +269,11 @@ void AGYEndingInteractActor::Multicast_ShowAllPawns_Implementation()
 			LocalPawn->SetActorHiddenInGame(false);
 		}
 	}
+
+	// UI 켜줘
+	FGYCinematicMessage Msg;
+	Msg.bIsPlaying = false;
+	UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
 }
 
 void AGYEndingInteractActor::BroadcastCinematicFinishedLocal()

@@ -310,6 +310,15 @@ struct GY_API FGYEndingStartedMessage
 	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<APawn> Pawn;
 };
 
+/** 시네마틱 재생 상태 */
+USTRUCT(BlueprintType)
+struct GY_API FGYCinematicMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) bool bIsPlaying = false;
+};
+
 /** 상호작용 카운트 */
 USTRUCT(BlueprintType)
 struct GY_API FGYInteractionWaitingMessage
