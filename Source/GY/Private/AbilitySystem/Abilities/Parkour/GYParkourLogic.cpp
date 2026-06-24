@@ -137,16 +137,19 @@ void UGYParkourLogic::TryParkour()
 	FGameplayAbilityTargetDataHandle ParkourDataHandle;
 	ParkourDataHandle.Add(ParkourData);
 
-	//데이터 보내기
-	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
-	if (ASC)
+	//데이터 보내기 - 서버가 아닐때만 
+	if (!CachedAbility->GetActorInfo().IsNetAuthority())
 	{
-		FScopedPredictionWindow Window(ASC, true);
+		UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+		if (ASC)
+		{
+			FScopedPredictionWindow Window(ASC, true);
 
-		ASC->CallServerSetReplicatedTargetData(
-			CachedAbility->GetCurrentAbilitySpecHandle(),
-			CachedAbility->GetCurrentActivationInfo().GetActivationPredictionKey(),
-			ParkourDataHandle, FGameplayTag(), ASC->ScopedPredictionKey);
+			ASC->CallServerSetReplicatedTargetData(
+				CachedAbility->GetCurrentAbilitySpecHandle(),
+				CachedAbility->GetCurrentActivationInfo().GetActivationPredictionKey(),
+				ParkourDataHandle, FGameplayTag(), ASC->ScopedPredictionKey);
+		}
 	}
 
 	ExecuteParkour(TopHit.ImpactPoint, EnumMontage);
@@ -448,10 +451,6 @@ void UGYParkourLogic::OnParkourDataRecive(const FGameplayAbilityTargetDataHandle
 		CachedAbility->GetCurrentAbilitySpecHandle(),
 		CachedAbility->GetCurrentActivationInfo().GetActivationPredictionKey());
 
-	if (CachedAbility->GetActorInfo().IsLocallyControlled())
-	{
-		return;
-	}
 
 	if (Data.Data.Num() > 0 && Data.Data[0].IsValid())
 	{
