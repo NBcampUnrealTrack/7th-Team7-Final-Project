@@ -30,8 +30,9 @@ public class GY : ModuleRules
 			"GameplayStateTreeModule",
 			"LevelSequence",
 			"MovieScene",
+			"HTTP",
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "Niagara" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "Niagara", "Json", "JsonUtilities" });
 	}
 }

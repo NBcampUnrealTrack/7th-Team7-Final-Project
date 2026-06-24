@@ -1,0 +1,14 @@
+# Supabase
+.branches
+.temp
+
+# CLI 바이너리 (db-setup.bat 가 받음)
+.bin
+
+# Studio SQL Editor 스크래치 (커밋 불필요)
+snippets
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
