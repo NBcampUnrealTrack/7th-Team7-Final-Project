@@ -227,6 +227,11 @@ void AGYEndingInteractActor::HandleCinematicFinished()
 		ActiveSequenceActor = nullptr;
 	}
 	ActiveSequencePlayer = nullptr;
+
+	// UI 켜줘
+	FGYCinematicMessage Msg;
+	Msg.bIsPlaying = false;
+	UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
 }
 
 void AGYEndingInteractActor::OnIntroTimerExpired()
@@ -269,11 +274,6 @@ void AGYEndingInteractActor::Multicast_ShowAllPawns_Implementation()
 			LocalPawn->SetActorHiddenInGame(false);
 		}
 	}
-
-	// UI 켜줘
-	FGYCinematicMessage Msg;
-	Msg.bIsPlaying = false;
-	UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
 }
 
 void AGYEndingInteractActor::BroadcastCinematicFinishedLocal()
