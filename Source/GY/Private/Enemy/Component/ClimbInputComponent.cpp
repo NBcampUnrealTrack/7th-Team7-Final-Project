@@ -1,36 +1,60 @@
 #include "Enemy/Component/ClimbInputComponent.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "AIController.h"
 #include "Character/GYCharacterMovementComponent.h"
+#include "Core/GameplayTags/StateTags.h"
+#include "Enemy/GYEnemyCharacterBase.h"
 #include "GameFramework/Character.h"
 #include "Navigation/PathFollowingComponent.h"
 
 UClimbInputComponent::UClimbInputComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.bStartWithTickEnabled = true;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 }
 
 void UClimbInputComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	OwnerCharacter = Cast<ACharacter>(GetOwner());
-	if (OwnerCharacter.IsValid())
+	if (AAIController* AIController = Cast<AAIController>(GetOwner()))
 	{
-		CachedCMC = Cast<UGYCharacterMovementComponent>(OwnerCharacter->GetCharacterMovement());
+		if (APawn* Pawn = AIController->GetPawn())
+		{
+			BindToPawn(Pawn);
+		}
+	}
+}
+
+void UClimbInputComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	UnbindFromPawn();
+	Super::EndPlay(EndPlayReason);
+}
+
+void UClimbInputComponent::OnClimbingTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	if (NewCount > 0)
+	{
+		SetComponentTickEnabled(true);
+	}
+	else
+	{
+		SetComponentTickEnabled(false);
 	}
 }
 
 void UClimbInputComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction)
+                                         FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!CachedCMC.IsValid() || !OwnerCharacter.IsValid()) return;
+	if (!CachedCMC.IsValid() || !ControlledPawn.IsValid()) return;
 	if (!CachedCMC->IsClimbing()) return;
 
-	AAIController* AICon = Cast<AAIController>(OwnerCharacter->GetController());
-	UPathFollowingComponent* PFC = AICon ? AICon->GetPathFollowingComponent() : nullptr;
+	AAIController* AIController = Cast<AAIController>(GetOwner());
+	UPathFollowingComponent* PFC = AIController ? AIController->GetPathFollowingComponent() : nullptr;
 	if (!PFC)
 	{
 		return;
@@ -51,7 +75,7 @@ void UClimbInputComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		return;
 	}
 
-	const float DeltaZ = TargetZ - OwnerCharacter->GetActorLocation().Z;
+	const float DeltaZ = TargetZ - ControlledPawn->GetActorLocation().Z;
 	if (FMath::Abs(DeltaZ) <= ArrivedZTolerance)
 	{
 		return;
@@ -61,4 +85,43 @@ void UClimbInputComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	const float Direction = FMath::Sign(DeltaZ);
 	CachedCMC->AddInputVector(ClimbAxis * Direction * CachedCMC->GetMaxClimbSpeed());
 
+}
+
+void UClimbInputComponent::BindToPawn(APawn* InPawn)
+{
+	UnbindFromPawn();
+
+	if (!InPawn) return;
+	ACharacter* Char = Cast<ACharacter>(InPawn);
+	if (!Char) return;
+
+	ControlledPawn = InPawn;
+	CachedCMC = Cast<UGYCharacterMovementComponent>(Char->GetCharacterMovement());
+
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InPawn);
+	if (!ASC) return;
+
+	CachedASC = ASC;
+	ClimbingTagHandle = ASC->RegisterGameplayTagEvent(
+		GYStateTags::State_Climbing,
+		EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &UClimbInputComponent::OnClimbingTagChanged);
+
+	if (ASC->HasMatchingGameplayTag(GYStateTags::State_Climbing))
+	{
+		SetComponentTickEnabled(true);
+	}
+}
+
+void UClimbInputComponent::UnbindFromPawn()
+{
+	if (CachedASC.IsValid())
+	{
+		CachedASC->UnregisterGameplayTagEvent(ClimbingTagHandle,
+			GYStateTags::State_Climbing, EGameplayTagEventType::NewOrRemoved);
+	}
+	SetComponentTickEnabled(false);
+	CachedASC.Reset();
+	CachedCMC.Reset();
+	ControlledPawn.Reset();
 }

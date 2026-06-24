@@ -5,6 +5,7 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "GYEnemyAIController.generated.h"
 
+class UClimbInputComponent;
 class UAIPerceptionComponent;
 class UAISenseConfig_Sight;
 class UAISenseConfig_Damage;
@@ -99,6 +100,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Aggro")
 	TObjectPtr<UEnemyAggroComponent> AggroComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Input")
+	TObjectPtr<UClimbInputComponent> ClimbInputComponent ;
+
 
 	UPROPERTY()
 	TObjectPtr<AGYEnemyCharacterBase> ControlledEnemy;
