@@ -72,6 +72,15 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Boss|Phase")
 	FOnBossPhaseFinished OnPhaseFinished;
+
+	void ServerSetAOEWindow(bool bActive, float Duration);
+
+	UFUNCTION(BlueprintPure, Category = "Boss|AOE")
+	bool IsAOEWindowActive() const { return bAOEWindowActive; }
+
+	UFUNCTION(BlueprintPure, Category = "Boss|AOE")
+	float GetAOEWindowDuration() const { return AOEWindowDuration; }
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -85,6 +94,11 @@ protected:
 	UFUNCTION()
 	void OnRep_TriggeredFlags();
 
+	UFUNCTION()
+	void OnRep_AOEWindowActive();
+
+	void BroadcastAOEWindowMessage() const;
+
 protected:
 	UPROPERTY(Transient, VisibleAnywhere, Category = "Boss|Phase")
 	TArray<FBossPhaseTrigger> PhaseTriggers;
@@ -94,6 +108,12 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_TriggeredFlags, Transient)
 	TArray<bool> TriggeredFlags;
+
+	UPROPERTY(ReplicatedUsing = OnRep_AOEWindowActive, Transient)
+	bool bAOEWindowActive = false;
+
+	UPROPERTY(Replicated, Transient)
+	float AOEWindowDuration = 0.f;
 
 	float LastObservedRatio = 1.f;
 

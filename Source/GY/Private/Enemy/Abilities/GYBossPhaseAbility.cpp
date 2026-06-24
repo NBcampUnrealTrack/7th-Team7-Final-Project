@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Enemy/GYBossCharacterBase.h"
+#include "Enemy/Component/BossPhaseComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerState.h"
 #include "TimerManager.h"
@@ -48,6 +49,9 @@ void UGYBossPhaseAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	bSequenceRunning = false;
 	CurrentSubAbilityIndex = INDEX_NONE;
 
+	CachedBoss.Reset();
+	CachedPhaseComp.Reset();
+
 	CachingParticipants();
 	ApplyPhaseEntry();
 	OnPhaseExecute();
@@ -74,6 +78,10 @@ void UGYBossPhaseAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 					MinionGateTimeoutTimer, this, &UGYBossPhaseAbility::OnMinionGateTimeout,
 					MinionGateTimeoutDuration, false);
 			}
+			if (UBossPhaseComponent* PC = GetPhaseComp())
+			{
+				PC->ServerSetAOEWindow(true, MinionGateTimeoutDuration);
+			}
 		}
 	}
 }
@@ -88,6 +96,8 @@ void UGYBossPhaseAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
 		World->GetTimerManager().ClearTimer(SequenceDelayTimer);
 		World->GetTimerManager().ClearTimer(MinionGateTimeoutTimer);
 	}
+
+	EndAOEWindow();
 
 	if (AGYBossCharacterBase* Boss = Cast<AGYBossCharacterBase>(GetAvatarActorFromActorInfo()))
 	{
@@ -490,6 +500,7 @@ void UGYBossPhaseAbility::OnBossMinionCountChanged(int32 NewCount)
 	{
 		World->GetTimerManager().ClearTimer(MinionGateTimeoutTimer);
 	}
+	EndAOEWindow();
 
 	EnterMinionGateStun();
 }
@@ -541,6 +552,8 @@ void UGYBossPhaseAbility::OnMinionGateTimeout()
 	if (bMinionGateTriggered) return;
 	bMinionGateTriggered = true;
 
+	EndAOEWindow();
+
 	if (MinionTimeoutPunishAbility)
 	{
 		ActivateSubAbility(MinionTimeoutPunishAbility);
@@ -572,4 +585,32 @@ void UGYBossPhaseAbility::UnbindStunTagObserver()
 		.Remove(StunTagDelegateHandle);
 
 	StunTagDelegateHandle.Reset();
+}
+
+AGYBossCharacterBase* UGYBossPhaseAbility::GetBoss()
+{
+	if (CachedBoss.IsValid()) return CachedBoss.Get();
+	AGYBossCharacterBase* Boss = Cast<AGYBossCharacterBase>(GetAvatarActorFromActorInfo());
+	CachedBoss = Boss;
+	return Boss;
+}
+
+UBossPhaseComponent* UGYBossPhaseAbility::GetPhaseComp()
+{
+	if (CachedPhaseComp.IsValid()) return CachedPhaseComp.Get();
+	if (AGYBossCharacterBase* Boss = GetBoss())
+	{
+		UBossPhaseComponent* PC = Boss->GetPhaseComponent();
+		CachedPhaseComp = PC;
+		return PC;
+	}
+	return nullptr;
+}
+
+void UGYBossPhaseAbility::EndAOEWindow()
+{
+	if (UBossPhaseComponent* PC = GetPhaseComp())
+	{
+		PC->ServerSetAOEWindow(false, 0.f);
+	}
 }

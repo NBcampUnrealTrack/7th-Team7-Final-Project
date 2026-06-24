@@ -134,6 +134,17 @@ struct FGYBossStateMessage
 	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<AActor> TargetBoss;
 };
 
+/** 보스 광역기 카운트다운 */
+USTRUCT(BlueprintType)
+struct GY_API FGYBossAOETimerMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) TWeakObjectPtr<AActor> SourceBoss;
+	UPROPERTY(BlueprintReadWrite) bool  bActive  = false;
+	UPROPERTY(BlueprintReadWrite) float Duration = 0.f;
+};
+
 /** 채팅 */
 USTRUCT(BlueprintType)
 struct GY_API FGYChatMessage

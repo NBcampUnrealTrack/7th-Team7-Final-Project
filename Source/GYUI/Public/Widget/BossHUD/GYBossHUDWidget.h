@@ -11,6 +11,7 @@ class UProgressBar;
 class UTextBlock;
 struct FGYBossStateMessage;
 struct FGYAttributeValueMessage;
+struct FGYBossAOETimerMessage;
 
 /**
  * 보스 HUD - 이름, 체력, Poise
@@ -33,9 +34,16 @@ protected:
 	TObjectPtr<UProgressBar> PoiseBar;
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> BossNameText;
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UProgressBar> AOEBar;
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> AOETimeText;
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Boss")
 	void OnBossStateReceived(bool bVisible); // TODO : 연출
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Boss")
+	void OnAOEWindowChanged(bool bActive, float Duration);
 
 private:
 	void HandleState(FGameplayTag, const FGYBossStateMessage& Msg);
@@ -80,4 +88,18 @@ private:
 
 	void StartInterpTimer();
 	void ProcessInterp();
+
+	void HandleAOETimer(FGameplayTag, const FGYBossAOETimerMessage& Msg);
+	void StartAOECountdown(float Duration);
+	void StopAOECountdown();
+	void TickAOECountdown();
+
+	FGameplayMessageListenerHandle AOETimerHandle;
+	FTimerHandle AOETickHandle;
+
+	float AOEDuration = 0.f;
+	float AOEEndTime  = 0.f;
+	bool  bAOEActive  = false;
+
+	const float AOETickRate = 0.05f;
 };

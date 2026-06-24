@@ -59,6 +59,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Boss|Movement")
 	bool IsStationary() const { return bIsStationary; }
 
+	UFUNCTION(BlueprintPure, Category = "Boss|Components")
+	UBossPhaseComponent* GetPhaseComponent() const { return PhaseComponent; }
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;

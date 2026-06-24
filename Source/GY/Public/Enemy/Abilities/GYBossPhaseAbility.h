@@ -4,6 +4,9 @@
 #include "AbilitySystem/Abilities/GYGameplayAbility.h"
 #include "GYBossPhaseAbility.generated.h"
 
+class AGYBossCharacterBase;
+class UBossPhaseComponent;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSubAbilityFinished, TSubclassOf<UGameplayAbility>, AbilityClass);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPhaseSequenceFinished);
 
@@ -119,10 +122,19 @@ private:
 	void RemoveInvulnerabilityTagsNow();
 	void UnbindStunTagObserver();
 
+	AGYBossCharacterBase* GetBoss();
+	UBossPhaseComponent*  GetPhaseComp();
+
+	void EndAOEWindow();
+
 	FTimerHandle MinionGateTimeoutTimer;
 	FActiveGameplayEffectHandle StunEffectHandle;
 	FDelegateHandle StunTagDelegateHandle;
 	bool bMinionGateTriggered = false;
+
+	TWeakObjectPtr<AGYBossCharacterBase> CachedBoss;
+	TWeakObjectPtr<UBossPhaseComponent>  CachedPhaseComp;
+
 protected:
 	/** 진입 시 부여할 무적/슈퍼아머 태그 */
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Entry",

@@ -32,7 +32,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Region")
 	TSoftObjectPtr<URegionLootData> RegionData;
 
-	UPROPERTY(EditAnywhere, Replicated, Category = "Region")
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_TargetBossActor, Category = "Region")
 	TObjectPtr<AActor> TargetBossActor;
 
 private:
@@ -45,10 +45,15 @@ private:
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void OnRep_TargetBossActor();
+
 	void HandlePawnEntered(APawn* Pawn);
 	void HandlePawnExited(APawn* Pawn);
 	void ProcessInitialOverlappingPawns(); // 시작 시 볼륨 내부 폰 누락 방지
 	void TryNotifyLocalPawn(); // 로컬 폰 동기화 지연 방어 - 재시도
+
+	void TryBroadcastForLocalPawn();
 
 	FTimerHandle LocalPawnRetryTimer;
 	int32 LocalPawnRetryCount = 0;
