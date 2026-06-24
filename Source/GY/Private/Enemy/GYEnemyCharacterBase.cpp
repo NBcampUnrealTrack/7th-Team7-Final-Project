@@ -64,6 +64,13 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase(const FObjectInitializer& ObjectIni
 	bNetLoadOnClient = false;
 
 	TeamId = FGenericTeamId(GYTeams::Enemy);
+
+	GetCharacterMovement()->bUseRVOAvoidance = true;
+	GetCharacterMovement()->AvoidanceConsiderationRadius = 200.0f;
+	GetCharacterMovement()->AvoidanceWeight = 0.5f;
+	GetCharacterMovement()->SetAvoidanceGroupMask(1);
+	GetCharacterMovement()->SetGroupsToAvoidMask(1);
+	GetCharacterMovement()->SetGroupsToIgnoreMask(0);
 }
 
 UAbilitySystemComponent* AGYEnemyCharacterBase::GetAbilitySystemComponent() const
