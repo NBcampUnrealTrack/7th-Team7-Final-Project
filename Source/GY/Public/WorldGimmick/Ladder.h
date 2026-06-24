@@ -62,9 +62,10 @@ protected:
 	float UnfoldDuration = 1.0f;
 
 	//TODO 저장해야함 Save
-	UPROPERTY(EditDefaultsOnly, ReplicatedUsing=OnRep_Activated)
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Activated)
 	bool bActivated = false;
 
+	UPROPERTY()
 	bool bCanClimb = false;
 
 	UPROPERTY(EditDefaultsOnly, Category="Ladder|Interaction")

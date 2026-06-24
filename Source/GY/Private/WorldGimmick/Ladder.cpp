@@ -39,8 +39,6 @@ ALadder::ALadder()
 	ClimbOutBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ClimbOutBox"));
 	ClimbOutBox->SetupAttachment(SceneRoot);
 	ClimbOutBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
-
-
 }
 
 void ALadder::OnConstruction(const FTransform& Transform)
@@ -148,13 +146,21 @@ float ALadder::GetRungSpacing() const
 
 void ALadder::OnRep_Activated()
 {
-	if (bActivated)
+	if (!bActivated) return;
+
+	const float CurrentZ = LadderRoot ? LadderRoot->GetRelativeLocation().Z : 0.f;
+	if (FMath::IsNearlyZero(CurrentZ, 0.5f))
 	{
-		UnfoldAlpha = 0.f;
-		bUnfolding = true;
-		bCanClimb = false;
-		SetActorTickEnabled(true);
+		bUnfolding = false;
+		bCanClimb = true;
+		SetActorTickEnabled(false);
+		return;
 	}
+
+	UnfoldAlpha = 0.f;
+	bUnfolding = true;
+	bCanClimb = false;
+	SetActorTickEnabled(true);
 }
 
 void ALadder::BuildLadder()
