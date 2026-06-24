@@ -23,6 +23,8 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 
+	virtual void NativeDestruct() override;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> Button_Quest;
 
