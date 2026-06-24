@@ -167,3 +167,27 @@ void AGYRegionVolume::TryNotifyLocalPawn()
 			this, &AGYRegionVolume::TryNotifyLocalPawn), 0.5f, false);
 	}
 }
+
+void AGYRegionVolume::OnRep_TargetBossActor()
+{
+	// BossActor 가 클라에 늦게 도착했을 때 메시지 재발행
+	if (GetNetMode() == NM_DedicatedServer) return;
+	if (!IsValid(TargetBossActor)) return;
+	TryBroadcastForLocalPawn();
+}
+
+void AGYRegionVolume::TryBroadcastForLocalPawn()
+{
+	if (!IsValid(TriggerBox)) return;
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	APlayerController* PC = World->GetFirstPlayerController();
+	APawn* LocalPawn = PC ? PC->GetPawn() : nullptr;
+	if (!LocalPawn) return;
+
+	if (TriggerBox->IsOverlappingActor(LocalPawn))
+	{
+		HandlePawnEntered(LocalPawn);
+	}
+}
