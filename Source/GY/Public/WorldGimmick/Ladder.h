@@ -5,7 +5,7 @@
 #include "Interaction/Interactable.h"
 #include "Ladder.generated.h"
 
-class UNavLinkCustomComponent;
+class ULadderNavLinkComponent;
 class UBoxComponent;
 
 UCLASS()
@@ -106,7 +106,7 @@ protected:
 	TObjectPtr<UBoxComponent> BottomBox;
 
 	UPROPERTY(VisibleAnywhere, Category="Ladder|Navigation")
-	TObjectPtr<UNavLinkCustomComponent> NavLink;
+	TObjectPtr<ULadderNavLinkComponent> NavLink;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UStaticMeshComponent>> RungMeshes;

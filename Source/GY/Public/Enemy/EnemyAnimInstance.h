@@ -5,6 +5,7 @@
 #include "Animation/AnimInstance.h"
 #include "EnemyAnimInstance.generated.h"
 
+class UGYCharacterMovementComponent;
 class UCharacterMovementComponent;
 class AGYEnemyCharacterBase;
 class UBlackboardComponent;
@@ -17,6 +18,7 @@ enum class EEnemyState : uint8
 	Run			UMETA(DisplayName = "Run"),
 	Stunned		UMETA(DisplayName = "Stunned"),
 	Staggered	UMETA(DisplayName = "Staggered"),
+	Climbing	UMETA(DisplayName = "Climbing"),
 	Dead		UMETA(DisplayName = "Dead"),
 };
 
@@ -39,8 +41,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "AnimInstance|Setup")
 	void SetStaggerSequence(UAnimSequence* InSequence);
 
+	UFUNCTION(BlueprintCallable, Category = "AnimInstance|Setup")
+	void SetClimbingSequence(UAnimSequence* InSequence);
+
 	UFUNCTION(BlueprintPure, Category = "AnimInstance|Assets")
 	UAnimSequence* GetStunSequence() const { return StunSequence; }
+
+	UFUNCTION(BlueprintPure, Category = "AnimInstance|Assets")
+	UAnimSequence* GetClimbingSequence() const { return ClimbingSequence; }
 
 	UFUNCTION(BlueprintPure, Category = "AnimInstance|Assets")
 	UAnimSequence* GetDeadSequence() const { return DeadSequence; }
@@ -59,6 +67,13 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "AnimInstance|State")
 	bool GetIsDead() const { return bIsDead; }
+
+	UFUNCTION(BlueprintPure, Category = "AnimInstance|State")
+	bool GetIsClimbing() const { return bIsClimbing; }
+
+	UFUNCTION(BlueprintPure, Category="AnimInstance|Climb")
+	float GetClimbPlayRate() const { return ClimbPlayRate; }
+
 protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
@@ -71,6 +86,7 @@ protected:
 
 	void OnStaggerTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
+	void OnClimbingTagChanged(const FGameplayTag Tag, int32 NewCount);
 private:
 	void UpdateStateFromBlackboard();
 	void UpdateMovementData();
@@ -81,7 +97,7 @@ private:
 	TObjectPtr<AGYEnemyCharacterBase> OwnerEnemy;
 
 	UPROPERTY()
-	TObjectPtr<UCharacterMovementComponent> MovementComponent;
+	TObjectPtr<UGYCharacterMovementComponent> MovementComponent;
 
 	UPROPERTY()
 	TObjectPtr<UBlackboardComponent> BlackboardComponent;
@@ -118,6 +134,14 @@ private:
 		meta = (AllowPrivateAccess = "true"))
 	bool bIsStaggered = false;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="AnimInstance|Climb",
+		meta = (AllowPrivateAccess = "true"))
+	bool bIsClimbing = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="AnimInstance|Climb",
+		meta = (AllowPrivateAccess = "true"))
+	float ClimbPlayRate = 0.f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AnimInstance|State",
 		meta = (AllowPrivateAccess = "true"))
 	bool bHasTarget = false;
@@ -141,11 +165,17 @@ private:
 		meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimSequence> StaggerSequence;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AnimInstance|Assets",
+	meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimSequence> ClimbingSequence;
+
 	static const FName BB_Key_TargetActor;
 	static const FName BB_Key_IsStunned;
 	static const FName BB_Key_IsDead;
 
 	FDelegateHandle StaggerTagHandle;
 	FDelegateHandle StunTagHandle;
+	FDelegateHandle ClimbingTagHandle;
+
 	TWeakObjectPtr<UAbilitySystemComponent> CachedASC;
 };

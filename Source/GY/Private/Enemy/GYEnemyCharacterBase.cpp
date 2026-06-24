@@ -24,6 +24,7 @@
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "Character/GYCharacter.h"
+#include "Character/GYCharacterMovementComponent.h"
 #include "Character/HitReactionComponent.h"
 #include "Character/LockOn/LockOnComponent.h"
 #include "Core/GameplayTeams/GYTeams.h"
@@ -31,7 +32,8 @@
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UGYCharacterMovementComponent>(
+		ACharacter::CharacterMovementComponentName))
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -150,6 +152,10 @@ void AGYEnemyCharacterBase::InitAnimInstanceAssets(UEnemyAnimInstance* AnimInsta
 	if (UAnimSequence* StaggerSeq = Config.StaggerSequence.LoadSynchronous())
 	{
 		AnimInstance->SetStaggerSequence(StaggerSeq);
+	}
+	if (UAnimSequence* ClimbingSeq = Config.ClimbingSequence.LoadSynchronous())
+	{
+		AnimInstance->SetClimbingSequence(ClimbingSeq);
 	}
 }
 

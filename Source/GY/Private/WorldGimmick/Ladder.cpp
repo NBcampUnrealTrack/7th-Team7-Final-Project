@@ -1,10 +1,10 @@
 #include "WorldGimmick/Ladder.h"
 
-#include "NavLinkCustomComponent.h"
 #include "Abilities/GameplayAbility.h"
 #include "Components/BoxComponent.h"
 #include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTags/InteractionTags.h"
+#include "Enemy/Component/LadderNavLinkComponent.h"
 #include "NavAreas/NavArea_Default.h"
 #include "Net/UnrealNetwork.h"
 #include "WorldGimmick/LadderTypeDataTableRow.h"
@@ -42,7 +42,7 @@ ALadder::ALadder()
 	ClimbOutBox->SetupAttachment(SceneRoot);
 	ClimbOutBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 
-	NavLink = CreateDefaultSubobject<UNavLinkCustomComponent>(TEXT("NavLink"));
+	NavLink = CreateDefaultSubobject<ULadderNavLinkComponent>(TEXT("NavLink"));
 	NavLink->SetEnabledArea(UNavArea_Default::StaticClass());
 	NavLink->SetEnabled(false);
 }
