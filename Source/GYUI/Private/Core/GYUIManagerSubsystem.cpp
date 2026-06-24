@@ -23,6 +23,7 @@
 #include "Widget/EndingCredits/GYEndingCreditsWidget.h"
 #include "Widget/Interaction/GYInteractionWaitingWidget.h"
 #include "Widget/WorldReset/GYWorldResetWidget.h"
+#include "Enemy/GYEnemyCharacterBase.h"
 
 void UGYUIManagerSubsystem::Deinitialize()
 {
@@ -583,6 +584,10 @@ void UGYUIManagerSubsystem::HandleRegionEntered(FGameplayTag, const FGYRegionEnt
 	ActiveRegionId = Msg.RegionId;
 	if (IsValid(Msg.BossActor))
 	{
+		// 재진입 시 없는 보스의 HP 위젯 다시 뜨는 문제 방지
+		const AGYEnemyCharacterBase* Boss = Cast<AGYEnemyCharacterBase>(Msg.BossActor);
+		if (Boss && Boss->IsDead()) return;
+
 		FGYBossStateMessage State;
 		State.bVisible = true;
 		State.TargetBoss = Msg.BossActor;
