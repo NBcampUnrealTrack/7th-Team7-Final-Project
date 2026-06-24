@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerState.h"
 #include "GYUIManagerSubsystem.generated.h"
 
+struct FGYCinematicMessage;
 class AGYPlayerController;
 class UCommonActivatableWidget;
 class UGYPrimaryGameLayout;
@@ -19,6 +20,7 @@ struct FGYEndingCinematicFinishedMessage;
 struct FGYEndingCreditsFinishedMessage;
 struct FGYInteractionWaitingMessage;
 struct FGYEndingStartedMessage;
+struct FGYIntroCinematicMessage;
 struct FGYWorldResetMessage;
 /**
  * 로컬마다 생성, 관리되는 UI 총괄 매니저
@@ -187,4 +189,7 @@ private:
 
 	void HandleToggleSettings(FGameplayTag Tag, const struct FGYToggleSettingsMessage& Msg);
 	FGameplayMessageListenerHandle ToggleSettingsListenerHandle;
+
+	void HandleEnterCinematic(FGameplayTag, const FGYCinematicMessage& Msg);
+	FGameplayMessageListenerHandle EnterCinematicHandle;
 };

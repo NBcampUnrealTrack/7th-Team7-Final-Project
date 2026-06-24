@@ -1,5 +1,6 @@
 ﻿#include "Core/GYUIManagerSubsystem.h"
 #include "GYUI/Public/Core/GYPrimaryGameLayout.h"
+#include "Widgets/CommonActivatableWidgetContainer.h"
 #include "Core/GYUISettings.h"
 #include "GameplayTags/GYUILayerTags.h"
 #include "CommonActivatableWidget.h"
@@ -42,6 +43,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 				MSG->UnregisterListener(EndingCreditsFinishedHandle);
 				MSG->UnregisterListener(WorldResetListenerHandle);
 				MSG->UnregisterListener(ToggleSettingsListenerHandle);
+				MSG->UnregisterListener(EnterCinematicHandle);
 			}
 		}
 		UnbindASC();
@@ -141,6 +143,10 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		{
 			MSG.UnregisterListener(ToggleSettingsListenerHandle);
 		}
+		if (EnterCinematicHandle.IsValid())
+		{
+			MSG.UnregisterListener(EnterCinematicHandle);
+		}
 
 		RegionEnterListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Region_Entered, this, &UGYUIManagerSubsystem::HandleRegionEntered);
@@ -158,6 +164,8 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 			GYGameplayTags::Message_World_Reset, this, &UGYUIManagerSubsystem::HandleWorldReset);
 		ToggleSettingsListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_UI_ToggleSettings, this, &UGYUIManagerSubsystem::HandleToggleSettings);
+		EnterCinematicHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_Cinematic_State, this, &UGYUIManagerSubsystem::HandleEnterCinematic);
 	}
 }
 
@@ -822,4 +830,14 @@ void UGYUIManagerSubsystem::HandleToggleSettings(FGameplayTag, const FGYToggleSe
 	if (!Class) return;
 
 	ToggleWidgetInLayer(GYUILayerTags::UI_Layer_Menu, Class);
+}
+
+void UGYUIManagerSubsystem::HandleEnterCinematic(FGameplayTag, const FGYCinematicMessage& Msg)
+{
+	if (!PrimaryGameLayout) return;
+
+	UCommonActivatableWidgetContainerBase* Layer = PrimaryGameLayout->GetLayerWidget(GYUILayerTags::UI_Layer_Game);
+	if (!Layer) return;
+
+	Layer->SetVisibility(Msg.bIsPlaying ? ESlateVisibility::Collapsed : ESlateVisibility::SelfHitTestInvisible);
 }
