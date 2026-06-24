@@ -104,9 +104,21 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Camera")
 	TArray<TObjectPtr<UGYCameraModeData>> CameraModeAssets;
 
+	void SetCameraTargetActor(AActor* InActor)
+	{
+		CameraTargetActor = InActor;
+	}
+
+	AActor* GetCameraTargetActor() const
+	{
+		return CameraTargetActor.Get();
+	}
+
 private:
 	bool bInitializedView = false;
 
+	UPROPERTY()
+	TWeakObjectPtr<AActor> CameraTargetActor;
 protected:
 	//카메라 데이터 캐싱
 	void InitializeCameraModes();
