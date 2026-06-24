@@ -1,0 +1,65 @@
+# ============================================================
+# GY local Supabase backend setup (Windows / PowerShell)
+#   Run: double-click db-setup.bat
+#        (or: powershell -ExecutionPolicy Bypass -File supabase\db-setup.ps1)
+#   Steps: check Docker -> download supabase CLI -> init (first run) -> start -> db reset
+#   See README.md (Korean) for details.
+# ============================================================
+
+$ErrorActionPreference = "Stop"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Repo root = parent of this script's folder (supabase/)
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+Set-Location $RepoRoot
+
+$BinDir = Join-Path $PSScriptRoot ".bin"
+$Sb     = Join-Path $BinDir "supabase.exe"
+
+# 1) Docker (manual install; reboot involved so not scripted)
+if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+    Write-Host "[setup] Docker Desktop not found. Install it first, then re-run:" -ForegroundColor Red
+    Write-Host "        https://www.docker.com/products/docker-desktop/  (use WSL2, reboot required)" -ForegroundColor Red
+    exit 1
+}
+docker info *> $null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[setup] Start Docker Desktop (tray whale icon must be green), then re-run." -ForegroundColor Red
+    exit 1
+}
+
+# 2) supabase CLI binary (download if missing; no Node/scoop/npm)
+if (-not (Test-Path $Sb)) {
+    Write-Host "[setup] Downloading supabase CLI..." -ForegroundColor Yellow
+    New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
+    $rel = Invoke-RestMethod "https://api.github.com/repos/supabase/cli/releases/latest" `
+        -Headers @{ "User-Agent" = "gy-setup"; "Accept" = "application/vnd.github+json" }
+    $asset = $rel.assets | Where-Object { $_.name -match "windows.*amd64.*\.zip$" } | Select-Object -First 1
+    if (-not $asset) { throw "supabase windows zip asset not found (manual install needed)" }
+    $zip = Join-Path $env:TEMP "supabase_cli.zip"
+    Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zip
+    Expand-Archive -Path $zip -DestinationPath $BinDir -Force
+    Remove-Item $zip
+    Write-Host "[setup] supabase CLI installed ($($rel.tag_name))" -ForegroundColor Green
+}
+
+# 3) first run only: init (creates config.toml)
+if (-not (Test-Path (Join-Path $RepoRoot "supabase\config.toml"))) {
+    Write-Host "[setup] supabase init (answer 'n' to editor-settings prompts)..." -ForegroundColor Yellow
+    & $Sb init
+    Write-Host "[setup] Commit the generated supabase\config.toml so teammates can skip init." -ForegroundColor Cyan
+}
+
+# 4) start local stack + apply migrations/seed
+Write-Host "[setup] supabase start (first run pulls images, a few minutes)..." -ForegroundColor Yellow
+& $Sb start
+Write-Host "[setup] supabase db reset (migrations + seed)..." -ForegroundColor Yellow
+& $Sb db reset
+
+# Config\DefaultGYPersistence.ini has committed local values (no auto-write).
+# If the service_role key from 'supabase status' differs, update the ini with it.
+
+Write-Host ""
+Write-Host "[setup] Done!  Studio: http://127.0.0.1:54323   API: http://127.0.0.1:54321" -ForegroundColor Green
+Write-Host "[setup] Rebuild UE, then console: gy.Persist.Load 1 / gy.Persist.Save 1" -ForegroundColor Green
+Write-Host "[setup] Stop: supabase\.bin\supabase.exe stop" -ForegroundColor DarkGray
