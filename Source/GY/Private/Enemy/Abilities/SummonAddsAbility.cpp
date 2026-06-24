@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "AIController.h"
 #include "Enemy/Component/EnemyAggroComponent.h"
+#include "Logging/GYLogManager.h"
 
 USummonAddsAbility::USummonAddsAbility()
 {
@@ -15,6 +16,12 @@ void USummonAddsAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	const AActor* Avatar = GetAvatarActorFromActorInfo();
+	GY_LOG(AI, ESK, "SummonAddsAbility: ActivateAbility 진입 (Avatar=%s, HasAuth=%d, PoolSize=%d, MinionCount=%d)",
+		Avatar ? *Avatar->GetName() : TEXT("NULL"),
+		Avatar ? Avatar->HasAuthority() : -1,
+		SummonPool.Num(), MinionCount);
 
 	PlayAttackMontage();
 	ExecuteSummon();
@@ -50,14 +57,26 @@ void USummonAddsAbility::ExecuteSummon()
 void USummonAddsAbility::ExecuteSummonAt(FVector CenterLocation)
 {
 	UWorld* World = GetWorld();
-	if (!World || SummonPool.Num() == 0) return;
+	if (!World || SummonPool.Num() == 0)
+	{
+		GY_WARN(AI, ESK, "SummonAddsAbility: ExecuteSummonAt 조기 종료 (World=%d, PoolSize=%d)",
+			World != nullptr, SummonPool.Num());
+		return;
+	}
+
+	GY_LOG(AI, ESK, "SummonAddsAbility: ExecuteSummonAt 시작 (Count=%d, Center=%s)",
+		MinionCount, *CenterLocation.ToString());
 
 	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
 
 	for (int32 i = 0; i < MinionCount; ++i)
 	{
 		const FSummonEntry* Entry = PickRandomEntry();
-		if (!Entry) continue;
+		if (!Entry)
+		{
+			GY_WARN(AI, ESK, "SummonAddsAbility: PickRandomEntry NULL (i=%d) — Weight 0 또는 EnemyType=None", i);
+			continue;
+		}
 
 		const float Angle = FMath::FRandRange(0.f, 2.f * PI);
 		const float Radius = FMath::FRandRange(SpawnRadiusMin, SpawnRadiusMax);
@@ -65,7 +84,15 @@ void USummonAddsAbility::ExecuteSummonAt(FVector CenterLocation)
 		const FVector SpawnLoc = CenterLocation + Offset;
 
 		AGYEnemyCharacterBase* Minion = SpawnAndInitMinion(*Entry, SpawnLoc, FRotator::ZeroRotator);
-		if (!Minion) continue;
+		if (!Minion)
+		{
+			GY_WARN(AI, ESK, "SummonAddsAbility: SpawnAndInitMinion 실패 (i=%d, Type=%d, Loc=%s)",
+				i, static_cast<int32>(Entry->EnemyType), *SpawnLoc.ToString());
+			continue;
+		}
+
+		GY_LOG(AI, ESK, "SummonAddsAbility: Minion Spawn 성공 (i=%d, Type=%d, Name=%s)",
+			i, static_cast<int32>(Entry->EnemyType), *Minion->GetName());
 
 		if (SummonCueTag.IsValid() && SourceASC)
 		{
@@ -113,11 +140,17 @@ AGYEnemyCharacterBase* USummonAddsAbility::SpawnAndInitMinion(const FSummonEntry
 	FBossCachedSummonable Cached;
 	if (!Boss->GetSummonable(Entry.EnemyType, Cached))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Summon failed: type=%d not in boss cache"),
-			   static_cast<int32>(Entry.EnemyType));
+		GY_WARN(AI, ESK, "SummonAddsAbility: GetSummonable 실패 — Boss 캐시에 Type=%d 없음",
+			static_cast<int32>(Entry.EnemyType));
 		return nullptr;
 	}
-	if (!Cached.ActorClass || !Cached.DataAsset) return nullptr;
+	if (!Cached.ActorClass || !Cached.DataAsset)
+	{
+		GY_WARN(AI, ESK, "SummonAddsAbility: Cached 데이터 무효 (Type=%d, ActorClass=%d, DataAsset=%d)",
+			static_cast<int32>(Entry.EnemyType),
+			Cached.ActorClass != nullptr, Cached.DataAsset != nullptr);
+		return nullptr;
+	}
 
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;

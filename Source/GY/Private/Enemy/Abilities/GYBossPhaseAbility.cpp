@@ -181,6 +181,15 @@ void UGYBossPhaseAbility::ApplyPhaseEntry()
 	UAbilitySystemComponent* BossASC = GetAbilitySystemComponentFromActorInfo();
 	if (!BossASC) return;
 
+	// 무적이 부여되기 직전 남아 있던 CC 등 ActiveGameplayEffect 잔재를 강제로 청소.
+	// (Immunity 는 application 시점에만 작동하므로, 이미 붙어 있던 효과는 별도 제거가 필요.)
+	if (!CleanseTagsOnEntry.IsEmpty())
+	{
+		const FGameplayEffectQuery Query =
+			FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(CleanseTagsOnEntry);
+		BossASC->RemoveActiveEffects(Query);
+	}
+
 	if (!CancelAbilitiesWithTags.IsEmpty())
 	{
 		FGameplayTagContainer NoBlock;
