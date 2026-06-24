@@ -1,9 +1,11 @@
 #include "WorldGimmick/Ladder.h"
 
+#include "NavLinkCustomComponent.h"
 #include "Abilities/GameplayAbility.h"
 #include "Components/BoxComponent.h"
 #include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTags/InteractionTags.h"
+#include "NavAreas/NavArea_Default.h"
 #include "Net/UnrealNetwork.h"
 #include "WorldGimmick/LadderTypeDataTableRow.h"
 
@@ -39,6 +41,10 @@ ALadder::ALadder()
 	ClimbOutBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ClimbOutBox"));
 	ClimbOutBox->SetupAttachment(SceneRoot);
 	ClimbOutBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+
+	NavLink = CreateDefaultSubobject<UNavLinkCustomComponent>(TEXT("NavLink"));
+	NavLink->SetEnabledArea(UNavArea_Default::StaticClass());
+	NavLink->SetEnabled(false);
 }
 
 void ALadder::OnConstruction(const FTransform& Transform)
@@ -53,6 +59,8 @@ void ALadder::OnConstruction(const FTransform& Transform)
 		LadderRoot->SetRelativeLocation(FVector(0, 0, bActivated ? 0.f : ActivateHeight));
 	}
 	bCanClimb = bActivated;
+	UpdateNavLink();
+	ApplyNavLinkEnabled();
 }
 
 //펼칠때만 켜짐
@@ -73,6 +81,7 @@ void ALadder::Tick(float DeltaSeconds)
 		bUnfolding = false;
 		bCanClimb = true;
 		SetActorTickEnabled(false);
+		ApplyNavLinkEnabled();
 	}
 }
 
@@ -144,6 +153,12 @@ float ALadder::GetRungSpacing() const
 	return 30.f;
 }
 
+FVector ALadder::GetTopExitNavPoint() const
+{
+	const FVector Top = GetActorLocation() + FVector(0, 0, LadderHeight);
+	return Top - GetActorForwardVector() * TopExitForwardOffset;
+}
+
 void ALadder::OnRep_Activated()
 {
 	if (!bActivated) return;
@@ -154,6 +169,7 @@ void ALadder::OnRep_Activated()
 		bUnfolding = false;
 		bCanClimb = true;
 		SetActorTickEnabled(false);
+		ApplyNavLinkEnabled();
 		return;
 	}
 
@@ -161,6 +177,7 @@ void ALadder::OnRep_Activated()
 	bUnfolding = true;
 	bCanClimb = false;
 	SetActorTickEnabled(true);
+	ApplyNavLinkEnabled();
 }
 
 void ALadder::BuildLadder()
@@ -278,4 +295,19 @@ void ALadder::UpdateColliders()
 		ClimbOutBox->SetRelativeLocation(FVector(50, 0, LadderHeight));
 		ClimbOutBox->SetBoxExtent(FVector(50, 50, 30));
 	}
+}
+
+void ALadder::UpdateNavLink()
+{
+	const FVector BottomLocal = FVector(70.f, 0.f, 0.f);
+	const FVector TopLocal    = FVector(-TopExitForwardOffset, 0, LadderHeight);
+
+	NavLink->SetLinkData(BottomLocal, TopLocal, ENavLinkDirection::BothWays);
+}
+
+void ALadder::ApplyNavLinkEnabled()
+{
+	if (!NavLink) return;
+
+	NavLink->SetEnabled(bCanClimb);
 }

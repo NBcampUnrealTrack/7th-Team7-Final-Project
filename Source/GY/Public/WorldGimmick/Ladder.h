@@ -5,6 +5,7 @@
 #include "Interaction/Interactable.h"
 #include "Ladder.generated.h"
 
+class UNavLinkCustomComponent;
 class UBoxComponent;
 
 UCLASS()
@@ -41,12 +42,18 @@ public:
 	UFUNCTION(BlueprintPure, Category="Ladder")
 	UBoxComponent* GetTopEntryBox() const { return ClimbIntoFromTopBox; }
 
+	UFUNCTION(BlueprintPure, Category="Ladder")
+	FVector GetTopExitNavPoint() const;
+
 protected:
 	UFUNCTION()
 	void OnRep_Activated();
 
 	void BuildLadder();
 	void UpdateColliders();
+
+	void UpdateNavLink();
+	void ApplyNavLinkEnabled();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ladder")
 	FDataTableRowHandle LadderDataHandle;
@@ -58,8 +65,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ladder")
 	float LadderHeight = 1000.f;
 
+	UPROPERTY(EditAnywhere, Category="Ladder|Exit")
+	float TopExitForwardOffset = 80.f;
+
 	UPROPERTY(EditAnywhere, Category="Ladder|Activation")
 	float UnfoldDuration = 1.0f;
+
+
 
 	//TODO 저장해야함 Save
 	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Activated)
@@ -71,6 +83,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Ladder|Interaction")
 	TSubclassOf<UGameplayAbility> ActivateAbilityClass;
 
+#pragma region Component
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> SceneRoot;
 
@@ -92,6 +105,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category="Ladder|Collision")
 	TObjectPtr<UBoxComponent> BottomBox;
 
+	UPROPERTY(VisibleAnywhere, Category="Ladder|Navigation")
+	TObjectPtr<UNavLinkCustomComponent> NavLink;
+
 	UPROPERTY()
 	TArray<TObjectPtr<UStaticMeshComponent>> RungMeshes;
 
@@ -103,6 +119,8 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UStaticMeshComponent> TopGrabBarMesh;
+
+#pragma endregion
 
 private:
 	//내리는거 관리

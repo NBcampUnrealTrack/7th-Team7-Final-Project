@@ -37,6 +37,7 @@ protected:
 	UFUNCTION()
 	void OnClimbExit(ELadderExitReason Reason);
 
+
 	bool ShouldEnterFromTop(const ACharacter* Character, const ALadder* Ladder) const;
 
 	UPROPERTY()
@@ -55,7 +56,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Climb")
 	float TopEntryThreshold = 50.f;
 
-
+	//TODO avater에서 가져오는게 이상적임
 	UPROPERTY(EditDefaultsOnly, Category="Climb|Anim")
 	TObjectPtr<UAnimMontage> EntryFromTopMontage;
 
@@ -71,7 +72,20 @@ protected:
 	TObjectPtr<UAbilityTask_ApplyRootMotionMoveToForce> EntryMoveTask;
 
 	FTransform PendingEntryTransform;
+#pragma region ExitNavSnap
+	UFUNCTION()
+	void OnExitNavSnapFinished();
 
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_ApplyRootMotionMoveToForce> ExitNavSnapTask;
+
+	UPROPERTY(EditDefaultsOnly, Category="Climb|Exit")
+	float ExitNavSnapDuration = 0.25f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Climb|Exit")
+	FVector NavProjectExtent = FVector(200.f, 200.f, 300.f);
+
+#pragma endregion
 	UFUNCTION()
 	void OnEntryMoveFinished();
 
