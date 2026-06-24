@@ -13,6 +13,7 @@
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "Components/BoxComponent.h"
 #include "Core/GYCollisionChannels.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/GYUIMessages.h"
 
@@ -40,6 +41,26 @@ void AGYEndingInteractActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 	DOREPLIFETIME(AGYEndingInteractActor, Mode);
 	DOREPLIFETIME(AGYEndingInteractActor, bConsumed);
+}
+
+void AGYEndingInteractActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorldTimerManager().ClearTimer(IntroTimerHandle);
+
+	if (ActiveSequencePlayer)
+	{
+		ActiveSequencePlayer->OnFinished.RemoveDynamic(this, &AGYEndingInteractActor::HandleCinematicFinished);
+		ActiveSequencePlayer->Stop();
+		ActiveSequencePlayer = nullptr;
+	}
+
+	if (ActiveSequenceActor)
+	{
+		ActiveSequenceActor->Destroy();
+		ActiveSequenceActor = nullptr;
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void AGYEndingInteractActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const
@@ -97,6 +118,11 @@ void AGYEndingInteractActor::OnInteract(FGameplayTag OptionTag, APawn* Interacto
 	{
 		bConsumed = true;
 		Multicast_PlayCinematic(Cinematic.ToSoftObjectPath()); // 시네마틱 전체 작동
+		if (Mode == EGYCinematicGateMode::Intro)
+		{
+			GetWorldTimerManager().SetTimer(IntroTimerHandle, this,
+				&AGYEndingInteractActor::OnIntroTimerExpired, CinematicDuration, false);
+		}
 	}
 	else
 	{
@@ -171,6 +197,18 @@ void AGYEndingInteractActor::Multicast_PlayCinematic_Implementation(const FSoftO
 	ActiveSequenceActor = OutActor;
 
 	Player->OnFinished.AddDynamic(this, &AGYEndingInteractActor::HandleCinematicFinished);
+
+	if (Mode == EGYCinematicGateMode::Intro)
+	{
+		if (APlayerController* LocalPC = UGameplayStatics::GetPlayerController(this, 0))
+		{
+			if (APawn* LocalPawn = LocalPC->GetPawn())
+			{
+				LocalPawn->SetActorHiddenInGame(true);
+			}
+		}
+	}
+
 	Player->Play();
 }
 
@@ -184,6 +222,48 @@ void AGYEndingInteractActor::HandleCinematicFinished()
 		ActiveSequenceActor = nullptr;
 	}
 	ActiveSequencePlayer = nullptr;
+}
+
+void AGYEndingInteractActor::OnIntroTimerExpired()
+{
+	// 시네마틱 타이머 종료 후 로직
+	if (!HasAuthority() || !PostCinematicSpawnPoint) return;
+
+	AGameStateBase* GS = GetWorld() ? GetWorld()->GetGameState() : nullptr;
+	if (!GS) return;
+
+	const FVector DestLoc = PostCinematicSpawnPoint->GetActorLocation();
+	const FRotator DestRot = PostCinematicSpawnPoint->GetActorRotation();
+
+	for (APlayerState* PS : GS->PlayerArray)
+	{
+		if (PS && PS->GetPawn())
+		{
+			// 플레이어 보스전 내부 이동
+			PS->GetPawn()->TeleportTo(DestLoc, DestRot);
+		}
+	}
+
+	if (BlockingActor)
+	{
+		// 보스전 블로킹 제거
+		BlockingActor->Destroy();
+	}
+
+	Multicast_ShowAllPawns();
+}
+
+void AGYEndingInteractActor::Multicast_ShowAllPawns_Implementation()
+{
+	if (IsRunningDedicatedServer()) return;
+
+	if (APlayerController* LocalPC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		if (APawn* LocalPawn = LocalPC->GetPawn())
+		{
+			LocalPawn->SetActorHiddenInGame(false);
+		}
+	}
 }
 
 void AGYEndingInteractActor::BroadcastCinematicFinishedLocal()
