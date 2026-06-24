@@ -5,7 +5,9 @@
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "Enemy/Abilities/GYBossPhaseAbility.h"
 #include "Net/UnrealNetwork.h"
-
+#include "GameFramework/GameplayMessageSubsystem.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "UI/GYUIMessages.h"
 
 UBossPhaseComponent::UBossPhaseComponent()
 {
@@ -96,6 +98,8 @@ void UBossPhaseComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePrope
 	Params.bIsPushBased = true;
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(UBossPhaseComponent, TriggeredFlags, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(UBossPhaseComponent, bAOEWindowActive, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(UBossPhaseComponent, AOEWindowDuration, Params);
 }
 
 void UBossPhaseComponent::BindToHealthAttribute()
@@ -174,3 +178,40 @@ void UBossPhaseComponent::OnRep_TriggeredFlags()
 	}
 }
 
+void UBossPhaseComponent::ServerSetAOEWindow(bool bActive, float Duration)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	const float NewDuration = bActive ? FMath::Max(0.f, Duration) : 0.f;
+	if (bAOEWindowActive == bActive && FMath::IsNearlyEqual(AOEWindowDuration, NewDuration)) return;
+
+	bAOEWindowActive = bActive;
+	AOEWindowDuration = NewDuration;
+
+	MARK_PROPERTY_DIRTY_FROM_NAME(UBossPhaseComponent, bAOEWindowActive, this);
+	MARK_PROPERTY_DIRTY_FROM_NAME(UBossPhaseComponent, AOEWindowDuration, this);
+
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		BroadcastAOEWindowMessage();
+	}
+}
+
+void UBossPhaseComponent::OnRep_AOEWindowActive()
+{
+	BroadcastAOEWindowMessage();
+}
+
+void UBossPhaseComponent::BroadcastAOEWindowMessage() const
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	FGYBossAOETimerMessage Msg;
+	Msg.SourceBoss = GetOwner();
+	Msg.bActive = bAOEWindowActive;
+	Msg.Duration = bAOEWindowActive ? AOEWindowDuration : 0.f;
+
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(
+		GYGameplayTags::Message_Boss_AOETimer, Msg);
+}
