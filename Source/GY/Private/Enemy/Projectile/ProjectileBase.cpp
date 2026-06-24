@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "Core/GameplayTags/FactionTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
@@ -60,6 +61,11 @@ void AProjectileBase::OnProjectileOverlap(UPrimitiveComponent* OverlappedCompone
 
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 	if (!TargetASC) return;
+
+	if (TargetASC->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy))
+	{
+		return;
+	}
 
 	OnHitTarget(OtherActor, SweepResult);
 	Destroy();

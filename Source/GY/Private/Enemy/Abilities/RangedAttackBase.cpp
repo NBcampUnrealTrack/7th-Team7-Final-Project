@@ -11,6 +11,7 @@
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Enemy/GYEnemyAIController.h"
+#include "Enemy/GYEnemyCharacterBase.h"
 #include "Enemy/Projectile/ProjectileBase.h"
 
 void URangedAttackBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -18,7 +19,19 @@ void URangedAttackBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                         const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(ActorInfo->AvatarActor.Get());
+	if (!Enemy) return;
 
+	AAIController* AIC = Cast<AAIController>(Enemy->GetController());
+	if (!AIC) return;
+
+	UBlackboardComponent* BB = AIC->GetBlackboardComponent();
+	if (!BB) return;
+
+	AActor* Target = Cast<AActor>(BB->GetValueAsObject(EnemyBBKeys::TargetActor));
+	if (!Target) return;
+
+	Enemy->FaceToTarget(Target);
 	UAbilityTask_WaitGameplayEvent* LaunchTask =
 		UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
 			this,
