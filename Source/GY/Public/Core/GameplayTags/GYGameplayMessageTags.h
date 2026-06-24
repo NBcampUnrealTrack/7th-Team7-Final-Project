@@ -99,4 +99,7 @@ namespace GYGameplayTags
 
 	// 설정 화면 토글
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_ToggleSettings);
+
+	// 보스 광역기 시간
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Boss_AOETimer);
 }
