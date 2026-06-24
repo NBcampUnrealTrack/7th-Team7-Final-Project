@@ -41,5 +41,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	float MidMantleMaxHeight   = 150.f;  // Walk 몽타주 상한 높이 (cm)
 	// MidMantleMaxHeight 초과 → Stand 몽타주
-
+	// 달리기 애니메이션 전용 Z 오프셋
+	UPROPERTY(EditDefaultsOnly)
+	float RunMantleZOffset = 30.f;
+	UPROPERTY(EditDefaultsOnly)
+	float WalkMantleZOffset = -10.f;
 };

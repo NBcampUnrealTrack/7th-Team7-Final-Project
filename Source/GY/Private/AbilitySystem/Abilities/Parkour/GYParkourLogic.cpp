@@ -13,6 +13,7 @@
 #include "DrawDebugHelpers.h"
 #include "MotionWarpingComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Components/CapsuleComponent.h"
 #include "Core/GYCollisionChannels.h"
 #include "Logging/GYLogManager.h"
 
@@ -59,6 +60,7 @@ void UGYParkourLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasC
 	if (ACharacter* Character = Cast<ACharacter>(Ability->GetAvatarActorFromActorInfo()))
 	{
 		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
 	}
 	CachedFragment = nullptr;
 	CachedAbility.Reset();
@@ -113,7 +115,7 @@ void UGYParkourLogic::TryParkour()
 	const float Height = GetMantleHeight(TopHit.ImpactPoint);
 
 	// 높이가 범위를 벗어나면 파쿠르 불가
-	if (Height > CachedFragment->MidMantleMaxHeight)
+	if (Height > CachedFragment->MidMantleMaxHeight || Height < 0.47f) //0.47 그냥 걸어서 넘을 수 있는 높이 최대값
 	{
 		CachedAbility->RequestEnd(false);
 		return;
@@ -133,25 +135,29 @@ void UGYParkourLogic::TryParkour()
 	FGYTargetData_Parkour* ParkourData = new FGYTargetData_Parkour();
 	ParkourData->ParkourType = EnumMontage;
 	ParkourData->TopHitLoc = TopHit.ImpactPoint;
+	ParkourData->ObstacleHeight = Height;
 	FGameplayAbilityTargetDataHandle ParkourDataHandle;
 	ParkourDataHandle.Add(ParkourData);
 
-	//데이터 보내기
-	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
-	if (ASC)
+	//데이터 보내기 - 서버가 아닐때만
+	if (!CachedAbility->GetActorInfo().IsNetAuthority())
 	{
-		FScopedPredictionWindow Window(ASC, true);
+		UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+		if (ASC)
+		{
+			FScopedPredictionWindow Window(ASC, true);
 
-		ASC->CallServerSetReplicatedTargetData(
-			CachedAbility->GetCurrentAbilitySpecHandle(),
-			CachedAbility->GetCurrentActivationInfo().GetActivationPredictionKey(),
-			ParkourDataHandle, FGameplayTag(), ASC->ScopedPredictionKey);
+			ASC->CallServerSetReplicatedTargetData(
+				CachedAbility->GetCurrentAbilitySpecHandle(),
+				CachedAbility->GetCurrentActivationInfo().GetActivationPredictionKey(),
+				ParkourDataHandle, FGameplayTag(), ASC->ScopedPredictionKey);
+		}
 	}
 
-	ExecuteParkour(TopHit.ImpactPoint, EnumMontage);
+	ExecuteParkour(TopHit.ImpactPoint, EnumMontage, Height);
 }
 
-void UGYParkourLogic::ExecuteParkour(FVector& TopHitLoc, EParkourMontageType MontageType)
+void UGYParkourLogic::ExecuteParkour(FVector& TopHitLoc, EParkourMontageType MontageType, float Height)
 {
 	if (!CachedAbility.IsValid() || !CachedFragment) return;
 
@@ -184,13 +190,45 @@ void UGYParkourLogic::ExecuteParkour(FVector& TopHitLoc, EParkourMontageType Mon
 		return;
 	}
 
+
+
 	Character->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+
+
 	//모션워핑 코드
 	if (UMotionWarpingComponent* MotionWarpingComponent = Character->FindComponentByClass<UMotionWarpingComponent>())
 	{
+		UCapsuleComponent* MotionWarpingCapsule = Character->GetCapsuleComponent();
+		const float CapsuleRadius = MotionWarpingCapsule->GetScaledCapsuleRadius();
+		const float CapsuleHalfHeight = MotionWarpingCapsule->GetScaledCapsuleHalfHeight();
+
+		// 기본 위치 보정
+		FVector AdjustedTarget = TopHitLoc;
+		//달리기시 높이 보정
+		if (Height > CapsuleHalfHeight)
+		{
+			if (MontageType == EParkourMontageType::Run_L || MontageType == EParkourMontageType::Run_R)
+			{
+				AdjustedTarget.Z += CachedFragment->RunMantleZOffset;
+			}
+		}
+		//허리보다 낮을 때 걷기파쿠르 공중에 뜨는것 보정
+		if (Height < CapsuleHalfHeight)
+		{
+			if (MontageType == EParkourMontageType::Walk_L || MontageType == EParkourMontageType::Walk_R)
+			{
+				AdjustedTarget.Z += CachedFragment->WalkMantleZOffset;
+			}
+		}
+
+
+
+
+
+
 		FMotionWarpingTarget WarpTarget;
 		WarpTarget.Name = FName("ParkourTarget");
-		WarpTarget.Location = TopHitLoc;
+		WarpTarget.Location = AdjustedTarget;
 		WarpTarget.Rotation = Character->GetActorRotation();
 
 		MotionWarpingComponent->AddOrUpdateWarpTarget(WarpTarget);
@@ -430,12 +468,14 @@ void UGYParkourLogic::OnParkourDataRecive(const FGameplayAbilityTargetDataHandle
 		CachedAbility->GetCurrentAbilitySpecHandle(),
 		CachedAbility->GetCurrentActivationInfo().GetActivationPredictionKey());
 
+
 	if (Data.Data.Num() > 0 && Data.Data[0].IsValid())
 	{
 		const FGYTargetData_Parkour* ParkourData = static_cast<const FGYTargetData_Parkour*>(Data.Data[0].Get());
 		FVector TopLoc = ParkourData->TopHitLoc;
 		EParkourMontageType MontageType = ParkourData->ParkourType;
+		float Height = ParkourData->ObstacleHeight;
 
-		ExecuteParkour(TopLoc, MontageType);
+		ExecuteParkour(TopLoc, MontageType, Height);
 	}
 }
