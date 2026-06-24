@@ -25,6 +25,9 @@ void UGYBossHUDWidget::NativeConstruct()
 
 	UGameplayMessageSubsystem& MSG = UGameplayMessageSubsystem::Get(World);
 	StateHandle = MSG.RegisterListener(GYGameplayTags::Message_Boss_State,this, &UGYBossHUDWidget::HandleState);
+	AOETimerHandle = MSG.RegisterListener(GYGameplayTags::Message_Boss_AOETimer, this, &UGYBossHUDWidget::HandleAOETimer);
+
+	if (AOEBar) AOEBar->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UGYBossHUDWidget::NativeDestruct()
@@ -37,10 +40,12 @@ void UGYBossHUDWidget::NativeDestruct()
 			if (UGameplayMessageSubsystem* MSG = GI->GetSubsystem<UGameplayMessageSubsystem>())
 			{
 				MSG->UnregisterListener(StateHandle);
+				MSG->UnregisterListener(AOETimerHandle);
 			}
 		}
 	}
 	UnbindFromBoss();
+	StopAOECountdown();
 	Super::NativeDestruct();
 }
 
@@ -119,6 +124,7 @@ void UGYBossHUDWidget::UnbindFromBoss()
 
 	BossASC = nullptr;
 	CurrentBoss = nullptr;
+	StopAOECountdown();
 }
 
 void UGYBossHUDWidget::UpdateHealthUI()
@@ -258,4 +264,78 @@ void UGYBossHUDWidget::ProcessInterp()
             World->GetTimerManager().ClearTimer(InterpTimerHandle);
         }
     }
+}
+
+void UGYBossHUDWidget::HandleAOETimer(FGameplayTag, const FGYBossAOETimerMessage& Msg)
+{
+	// 현재 트래킹 중인 보스의 신호만 수용
+	if (CurrentBoss.IsValid() && Msg.SourceBoss.IsValid() && Msg.SourceBoss.Get() != CurrentBoss.Get())
+	{
+		return;
+	}
+
+	if (Msg.bActive && Msg.Duration > 0.f)
+	{
+		StartAOECountdown(Msg.Duration);
+	}
+	else
+	{
+		StopAOECountdown();
+	}
+	OnAOEWindowChanged(Msg.bActive, Msg.Duration);
+}
+
+void UGYBossHUDWidget::StartAOECountdown(float Duration)
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	AOEDuration = Duration;
+	AOEEndTime = World->GetTimeSeconds() + Duration;
+	bAOEActive = true;
+
+	if (AOEBar)
+	{
+		AOEBar->SetPercent(1.f);
+		AOEBar->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+
+	World->GetTimerManager().SetTimer(AOETickHandle, this, &UGYBossHUDWidget::TickAOECountdown, AOETickRate, true);
+}
+
+void UGYBossHUDWidget::StopAOECountdown()
+{
+	bAOEActive = false;
+	AOEDuration = 0.f;
+	AOEEndTime  = 0.f;
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(AOETickHandle);
+	}
+	if (AOEBar)
+	{
+		AOEBar->SetPercent(0.f);
+		AOEBar->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (AOETimeText) AOETimeText->SetText(FText::GetEmpty());
+}
+
+void UGYBossHUDWidget::TickAOECountdown()
+{
+	if (!bAOEActive) { StopAOECountdown(); return; }
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	const float Remaining = FMath::Max(0.f, AOEEndTime - World->GetTimeSeconds());
+	const float Percent   = (AOEDuration > 0.f) ? (Remaining / AOEDuration) : 0.f;
+
+	if (AOEBar) AOEBar->SetPercent(Percent);
+	if (AOETimeText) AOETimeText->SetText(FText::FromString(FString::Printf(TEXT("%.1fs"), Remaining)));
+
+	if (Remaining <= 0.f)
+	{
+		StopAOECountdown();
+	}
 }
