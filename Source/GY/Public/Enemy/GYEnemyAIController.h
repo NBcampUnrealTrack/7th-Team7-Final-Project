@@ -107,4 +107,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<AGYEnemyCharacterBase> ControlledEnemy;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Investigation")
+	float InvestigateScatterRadius = 250.f;
 };
