@@ -6,6 +6,9 @@
 #include "Component/BossPhaseComponent.h"
 #include "GYBossCharacterBase.generated.h"
 
+class ALevelSequenceActor;
+class ULevelSequencePlayer;
+class ULevelSequence;
 class UCurveTable;
 class UBossPhaseComponent;
 struct FBossCachedSummonable;
@@ -92,4 +95,20 @@ protected:
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Movement")
 	bool bIsStationary = false;
+
+private:
+	// 보스 시네마틱
+	UPROPERTY(EditAnywhere, Category = "Cinematic")
+	TSoftObjectPtr<ULevelSequence> Cinematic;
+
+	UPROPERTY(Transient)
+	TObjectPtr<ULevelSequencePlayer> ActiveSequencePlayer;
+
+	UPROPERTY(Transient)
+	TObjectPtr<ALevelSequenceActor> ActiveSequenceActor;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayCinematic(const FSoftObjectPath& SequencePath);
+	UFUNCTION()
+	void HandleCinematicFinished();
 };

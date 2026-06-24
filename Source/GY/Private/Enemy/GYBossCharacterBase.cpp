@@ -1,6 +1,8 @@
 #include "Enemy/GYBossCharacterBase.h"
 
 #include "AbilitySystemComponent.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "Enemy/GYBossAIController.h"
 #include "Enemy/EnemyAnimInstance.h"
@@ -8,8 +10,10 @@
 #include "Enemy/Component/BossPhaseComponent.h"
 #include "Enemy/Component/BossPatternSelectorComponent.h"
 #include "Components/StateTreeAIComponent.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "GameFramework/PlayerState.h"
 
 #include "Net/UnrealNetwork.h"
@@ -203,6 +207,10 @@ void AGYBossCharacterBase::Die()
 		}
 	}
 
+	// 보스 시퀀서 재생
+	Multicast_PlayCinematic(Cinematic.ToSoftObjectPath());
+	//보스 죽는 동작 후 사라지게 해도 될 것 같아요.
+	// TODO::보스 구체 드롭 or 시퀀서로 다 연출
 	Super::Die();
 }
 
@@ -243,4 +251,50 @@ void AGYBossCharacterBase::HandleMinionDead(AGYEnemyCharacterBase* Minion)
 	ActiveMinions.Remove(Minion);
 
 	OnMinionCountChanged.Broadcast(ActiveMinions.Num());
+}
+
+void AGYBossCharacterBase::HandleCinematicFinished()
+{
+	if (ActiveSequenceActor)
+	{
+		ActiveSequenceActor->Destroy();
+		ActiveSequenceActor = nullptr;
+	}
+	ActiveSequencePlayer = nullptr;
+}
+
+void AGYBossCharacterBase::Multicast_PlayCinematic_Implementation(const FSoftObjectPath& SequencePath)
+{
+	if (IsRunningDedicatedServer()) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	ULevelSequence* Sequence = Cast<ULevelSequence>(SequencePath.TryLoad());
+	if (!Sequence) return;
+
+	FMovieSceneSequencePlaybackSettings Settings;
+	Settings.bAutoPlay = false;
+	Settings.bPauseAtEnd = false;
+
+	ALevelSequenceActor* OutActor = nullptr;
+	ULevelSequencePlayer* Player = ULevelSequencePlayer::CreateLevelSequencePlayer(
+	   World, Sequence, Settings, OutActor);
+
+	if (!Player) return;
+
+	ActiveSequencePlayer = Player;
+	ActiveSequenceActor = OutActor;
+
+	Player->OnFinished.AddDynamic(this, &AGYBossCharacterBase::HandleCinematicFinished);
+
+	// Spawnable 캐릭터의 AnimInstance 초기화 대기 후 재생
+	GetWorldTimerManager().SetTimerForNextTick(
+		FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			if (ActiveSequencePlayer)
+			{
+				ActiveSequencePlayer->Play();
+			}
+		}));
 }
