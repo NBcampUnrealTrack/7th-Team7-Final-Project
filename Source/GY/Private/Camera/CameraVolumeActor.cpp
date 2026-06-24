@@ -2,6 +2,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "Camera/GYCameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "Logging/GYLogManager.h"
 
@@ -48,6 +49,17 @@ void ACameraVolumeActor::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedCompo
 	}
 	ASC->AddLooseGameplayTag(CameraTag);
 	GY_LOG(Player, CYS, "카메라 볼륨 입장 - %s", *CameraTag.ToString());
+	if (TargetActor)
+	{
+		if (APawn* Pawn = Cast<APawn>(OtherActor))
+		{
+			if (UGYCameraComponent* CameraComp =
+				Pawn->FindComponentByClass<UGYCameraComponent>())
+			{
+				CameraComp->SetCameraTargetActor(TargetActor);
+			}
+		}
+	}
 }
 
 void ACameraVolumeActor::OnMeshEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -64,4 +76,15 @@ void ACameraVolumeActor::OnMeshEndOverlap(UPrimitiveComponent* OverlappedCompone
 	}
 	ASC->RemoveLooseGameplayTag(CameraTag);
 	GY_LOG(Player, CYS, "카메라 볼륨 퇴장 - %s", *CameraTag.ToString());
+	if (TargetActor)
+	{
+		if (APawn* Pawn = Cast<APawn>(OtherActor))
+		{
+			if (UGYCameraComponent* CameraComp =
+				Pawn->FindComponentByClass<UGYCameraComponent>())
+			{
+				CameraComp->SetCameraTargetActor(nullptr);
+			}
+		}
+	}
 }

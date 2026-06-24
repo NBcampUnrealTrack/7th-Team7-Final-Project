@@ -3,6 +3,7 @@
 #include "EngineUtils.h"
 #include "Camera/GYCameraComponent.h"
 #include "Camera/GYCameraModeData.h"
+#include "Logging/GYLogManager.h"
 
 void UCameraMode_Exploration::ExitMode()
 {
@@ -42,26 +43,12 @@ void UCameraMode_Exploration::UpdateCamera(float DeltaTime, FGYCameraView& OutVi
 
 AActor* UCameraMode_Exploration::FindTargetActor() const
 {
-	if (!CameraComponent)
+	AActor* TargetActor = CameraComponent->GetCameraTargetActor();
+
+	if (!TargetActor)
 	{
 		return nullptr;
 	}
-
-	UWorld* World = CameraComponent->GetWorld();
-	if (!World)
-	{
-		return nullptr;
-	}
-
-	// 월드의 모든 Actor 중 TargetActorTag를 가진 액터를 찾음
-	for (TActorIterator<AActor> It(World); It; ++It)
-	{
-		AActor* Actor = *It;
-		if (Actor->ActorHasTag(TargetActorTag))
-		{
-			return Actor;
-		}
-	}
-
-	return nullptr;
+	GY_LOG(Player, CYS, "탐구모드 카메라 타겟 찾음");
+	return TargetActor;
 }

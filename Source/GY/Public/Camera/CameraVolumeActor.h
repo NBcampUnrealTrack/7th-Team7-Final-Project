@@ -15,13 +15,18 @@ class GY_API ACameraVolumeActor : public AActor
 public:
 	ACameraVolumeActor();
 
+	AActor* GetTargetActor() const
+	{
+		return TargetActor;
+	}
+
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* BoxComponent;
 
-	UPROPERTY(EditAnywhere, Category="GameplayTag")
+	UPROPERTY(EditAnywhere, Category="GY|GameplayTag")
 	FGameplayTag CameraTag;
 
 	UFUNCTION()
@@ -39,4 +44,7 @@ protected:
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="GY|Camera")
+	TObjectPtr<AActor> TargetActor;
 };
