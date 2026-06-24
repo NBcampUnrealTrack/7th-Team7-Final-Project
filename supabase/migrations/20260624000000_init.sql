@@ -9,7 +9,7 @@
 create table accounts (
   id            bigint generated always as identity primary key,
   steam_id      text unique not null,
-  persona_name  text,
+  persona_name  varchar(50),
   created_at    timestamptz default now(),
   last_login_at timestamptz default now()
 );
@@ -18,7 +18,7 @@ create table accounts (
 create table characters (
   id           bigint generated always as identity primary key,
   account_id   bigint not null,               -- 논리적 참조 (FK 제약 안 검)
-  name         text not null,
+  name         varchar(20) not null,
   level        int  not null default 1,
   xp           int  not null default 0,
   data         jsonb not null default '{}',   -- 인벤/장비/인첸트 blob (큰 월드데이터는 Storage/S3)
