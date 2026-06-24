@@ -23,12 +23,16 @@ struct FGYTargetData_Parkour : public FGameplayAbilityTargetData
 	UPROPERTY()
 	FVector TopHitLoc = FVector::ZeroVector;
 	UPROPERTY()
+	float ObstacleHeight;
+	UPROPERTY()
 	EParkourMontageType ParkourType = EParkourMontageType::None;
 
 	virtual UScriptStruct* GetScriptStruct() const override{ return FGYTargetData_Parkour::StaticStruct(); }
 	bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
 	{
 		Ar << TopHitLoc;
+		Ar << ObstacleHeight;
+
 		uint8 MontageByte = static_cast<uint8>(ParkourType);
 		Ar << MontageByte;
 
@@ -67,7 +71,7 @@ public:
 
 
 	void TryParkour();
-	void ExecuteParkour(FVector& TopHitLoc, EParkourMontageType MontageType);
+	void ExecuteParkour(FVector& TopHitLoc, EParkourMontageType MontageType, float Height);
 	EParkourMontageType SelectParkourMontage(bool bLeftFoot);
 
 	bool DoForwardTrace(FHitResult& OutHit);

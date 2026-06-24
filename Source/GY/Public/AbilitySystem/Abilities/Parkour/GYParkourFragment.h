@@ -43,5 +43,7 @@ public:
 	// MidMantleMaxHeight 초과 → Stand 몽타주
 	// 달리기 애니메이션 전용 Z 오프셋
 	UPROPERTY(EditDefaultsOnly)
-	float RunMantleZOffset = 80.f;
+	float RunMantleZOffset = 30.f;
+	UPROPERTY(EditDefaultsOnly)
+	float WalkMantleZOffset = -10.f;
 };
