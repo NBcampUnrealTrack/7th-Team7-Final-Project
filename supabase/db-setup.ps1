@@ -43,11 +43,12 @@ if (-not (Test-Path $Sb)) {
     Write-Host "[setup] supabase CLI installed ($($rel.tag_name))" -ForegroundColor Green
 }
 
-# 3) first run only: init (creates config.toml)
+# 3) config.toml is committed, so normally skipped.
+#    Fallback only (if missing): init non-interactively so no y/N prompts appear.
 if (-not (Test-Path (Join-Path $RepoRoot "supabase\config.toml"))) {
-    Write-Host "[setup] supabase init (answer 'n' to editor-settings prompts)..." -ForegroundColor Yellow
-    & $Sb init
-    Write-Host "[setup] Commit the generated supabase\config.toml so teammates can skip init." -ForegroundColor Cyan
+    Write-Host "[setup] config.toml missing - running supabase init (fallback)..." -ForegroundColor Yellow
+    & $Sb init --force --with-vscode-settings=false --with-intellij-settings=false 2>$null
+    if ($LASTEXITCODE -ne 0) { & $Sb init }  # 플래그 미지원 CLI 버전 대비
 }
 
 # 4) start local stack + apply migrations/seed
@@ -61,5 +62,5 @@ Write-Host "[setup] supabase db reset (migrations + seed)..." -ForegroundColor Y
 
 Write-Host ""
 Write-Host "[setup] Done!  Studio: http://127.0.0.1:54323   API: http://127.0.0.1:54321" -ForegroundColor Green
-Write-Host "[setup] Rebuild UE, then console: gy.Persist.Load 1 / gy.Persist.Save 1" -ForegroundColor Green
-Write-Host "[setup] Stop: supabase\.bin\supabase.exe stop" -ForegroundColor DarkGray
+Write-Host "[setup] Check tables in Studio (Table Editor): accounts / characters" -ForegroundColor Green
+Write-Host "[setup] Stop: supabase\.bin\supabase.exe stop  (or db-stop.bat)" -ForegroundColor DarkGray
