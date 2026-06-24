@@ -85,5 +85,20 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<ALevelSequenceActor> ActiveSequenceActor;
 
+	// Intro 모드 전용
+	UPROPERTY(EditInstanceOnly, Category = "Cinematic|Intro")
+	TObjectPtr<AActor> PostCinematicSpawnPoint;
 
+	UPROPERTY(EditInstanceOnly, Category = "Cinematic|Intro")
+	TObjectPtr<AActor> BlockingActor;
+
+	UPROPERTY(EditInstanceOnly, Category = "Cinematic|Intro")
+	float CinematicDuration = 5.0f;
+
+	FTimerHandle IntroTimerHandle;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ShowAllPawns();
+
+	void OnIntroTimerExpired();
 };
