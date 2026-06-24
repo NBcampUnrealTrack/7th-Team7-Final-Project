@@ -15,7 +15,8 @@ class GYUI_API UGYWorldResetWidget : public UCommonActivatableWidget
 public:
 	UGYWorldResetWidget(const FObjectInitializer& ObjectInitializer);
 
-	void PlayResetSequence(float DurationOverride);
+	void PlayResetSequence(float HoldOverride);
+	void RequestFadeOut();
 
 	FOnWorldResetSequenceFinished OnSequenceFinished;
 
