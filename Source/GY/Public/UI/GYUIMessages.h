@@ -353,3 +353,13 @@ struct GY_API FGYToggleSettingsMessage
 {
 	GENERATED_BODY()
 };
+
+/** UI 시계 오버레이 */
+USTRUCT(BlueprintType)
+struct GY_API FGYClockOverlayMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) float HoldDuration = 0.f;
+	UPROPERTY(BlueprintReadWrite) FGameplayTag Reason;
+};

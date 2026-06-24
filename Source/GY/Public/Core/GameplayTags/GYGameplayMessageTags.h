@@ -105,4 +105,7 @@ namespace GYGameplayTags
 
 	// 보스 광역기 시간
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Boss_AOETimer);
+
+	// UI 시계 오버레이
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_UI_ClockOverlay);
 }
