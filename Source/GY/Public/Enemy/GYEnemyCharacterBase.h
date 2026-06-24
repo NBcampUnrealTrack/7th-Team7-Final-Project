@@ -9,6 +9,7 @@
 #include "World/ActorManagement/WorldPartitionLevelPlacedActor.h"
 #include "GYEnemyCharacterBase.generated.h"
 
+class UClimbInputComponent;
 class UHitReactionComponent;
 class UPhysicalAnimationComponent;
 class UGYEnemyVitalAttributeSet;
@@ -160,6 +161,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
 	TObjectPtr<UGYEnemyAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Climb")
+	TObjectPtr<UClimbInputComponent> ClimbInputComponent;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
 	TObjectPtr<UGYEnemyVitalAttributeSet> VitalAttribute;

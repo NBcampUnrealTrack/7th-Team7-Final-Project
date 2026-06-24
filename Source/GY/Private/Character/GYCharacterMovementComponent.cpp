@@ -16,6 +16,11 @@ void UGYCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iterations
     }
 }
 
+FVector UGYCharacterMovementComponent::GetClimbAxis() const
+{
+	return ClimbingLadder.IsValid() ? ClimbingLadder->GetClimbAxis() : FVector::UpVector;
+}
+
 void UGYCharacterMovementComponent::PhysClimbing(float DeltaTime, int32 Iterations)
 {
 	if (!ClimbingLadder.IsValid() || !CharacterOwner)
@@ -25,13 +30,22 @@ void UGYCharacterMovementComponent::PhysClimbing(float DeltaTime, int32 Iteratio
 	}
 	// 사다리방향 이동벡터
 	const FTransform LadderT = ClimbingLadder->GetActorTransform();
+	const FVector ClimbAxis = ClimbingLadder->GetClimbAxis();
 	const FVector InputVec = Acceleration.GetSafeNormal();
-	const FVector LocalInput = LadderT.InverseTransformVector(InputVec);
 
-	const float ForwardInput = -LocalInput.X;
+	//수직입력 있는 경우
+	float ForwardInput = FVector::DotProduct(InputVec, ClimbAxis);
+
+	//수직입력 없으면 xy기준
+	if (FMath::Abs(ForwardInput) < KINDA_SMALL_NUMBER && !InputVec.IsNearlyZero())
+	{
+		const FVector LocalInput = LadderT.InverseTransformVector(InputVec);
+		ForwardInput = -LocalInput.X;
+	}
+
+	ForwardInput = FMath::Sign(ForwardInput);
 
 	// 위/아래 이동
-	const FVector ClimbAxis = ClimbingLadder->GetClimbAxis();
 	Velocity = ClimbAxis * ForwardInput * MaxClimbSpeed;
 
 	const FQuat TargetQuat = ClimbingLadder->GetClimbFacing().Quaternion();

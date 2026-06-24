@@ -29,6 +29,7 @@
 #include "Character/LockOn/LockOnComponent.h"
 #include "Core/GameplayTeams/GYTeams.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
+#include "Enemy/Component/ClimbInputComponent.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase(const FObjectInitializer& ObjectInitializer)
@@ -48,6 +49,8 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase(const FObjectInitializer& ObjectIni
 	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReaction"));
 
 	Bootstrap = CreateDefaultSubobject<UEnemyBootstrapComponent>(TEXT("Bootstrap"));
+
+	ClimbInputComponent = CreateDefaultSubobject<UClimbInputComponent>(TEXT("ClimbInputComponent"));
 
 	VitalAttribute = CreateDefaultSubobject<UGYEnemyVitalAttributeSet>(TEXT("VitalAttribute"));
 	DamageAttribute = CreateDefaultSubobject<UGYEnemyDamageAttributeSet>(TEXT("DamageAttribute"));
