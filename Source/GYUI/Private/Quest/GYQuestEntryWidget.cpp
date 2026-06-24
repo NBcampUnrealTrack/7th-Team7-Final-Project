@@ -11,8 +11,17 @@ void UGYQuestEntryWidget::NativeConstruct()
 
 	if (Button_Quest)
 	{
-		Button_Quest->OnClicked.AddDynamic(this, &ThisClass::HandleButtonClicked);
+		Button_Quest->OnClicked.AddUniqueDynamic(this, &ThisClass::HandleButtonClicked);
 	}
+}
+
+void UGYQuestEntryWidget::NativeDestruct()
+{
+	if (Button_Quest)
+	{
+		Button_Quest->OnClicked.RemoveDynamic(this, &ThisClass::HandleButtonClicked);
+	}
+	Super::NativeDestruct();
 }
 
 void UGYQuestEntryWidget::SetQuestData(FGameplayTag InQuestTag, const FText& InQuestName, bool bCompleted)
