@@ -10,6 +10,7 @@ UBTTask_ExecuteAttack::UBTTask_ExecuteAttack()
 {
 	NodeName = TEXT("Execute Ability");
 	bNotifyTaskFinished = true;
+	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

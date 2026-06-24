@@ -9,6 +9,8 @@
 UBTTask_ExecuteSelectedAbility::UBTTask_ExecuteSelectedAbility()
 {
 	NodeName = TEXT("Execute Selected Ability");
+	bNotifyTaskFinished = true;
+	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTTask_ExecuteSelectedAbility::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
