@@ -86,5 +86,8 @@ public:
 
 private:
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
+	UPROPERTY()
 	const UGYParkourFragment* CachedFragment = nullptr;
+
+
 };

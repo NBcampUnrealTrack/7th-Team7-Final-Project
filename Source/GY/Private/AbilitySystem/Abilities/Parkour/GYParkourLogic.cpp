@@ -13,6 +13,7 @@
 #include "DrawDebugHelpers.h"
 #include "MotionWarpingComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Components/CapsuleComponent.h"
 #include "Core/GYCollisionChannels.h"
 #include "Logging/GYLogManager.h"
 
@@ -184,13 +185,30 @@ void UGYParkourLogic::ExecuteParkour(FVector& TopHitLoc, EParkourMontageType Mon
 		return;
 	}
 
+
+
 	Character->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	//모션워핑 코드
 	if (UMotionWarpingComponent* MotionWarpingComponent = Character->FindComponentByClass<UMotionWarpingComponent>())
 	{
+		UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+		const float CapsuleRadius = Capsule->GetScaledCapsuleRadius();
+		const float CapsuleHalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+
+		// 기본 위치 보정
+		FVector AdjustedTarget = TopHitLoc;
+		//AdjustedTarget.Z += CapsuleHalfHeight;
+
+
+		// 달리기 몽타주인 경우에만 추가 Z 오프셋 적용
+		if (MontageType == EParkourMontageType::Run_L || MontageType == EParkourMontageType::Run_R)
+		{
+			AdjustedTarget.Z += CachedFragment->RunMantleZOffset;
+		}
+
 		FMotionWarpingTarget WarpTarget;
 		WarpTarget.Name = FName("ParkourTarget");
-		WarpTarget.Location = TopHitLoc;
+		WarpTarget.Location = AdjustedTarget;
 		WarpTarget.Rotation = Character->GetActorRotation();
 
 		MotionWarpingComponent->AddOrUpdateWarpTarget(WarpTarget);
@@ -429,6 +447,11 @@ void UGYParkourLogic::OnParkourDataRecive(const FGameplayAbilityTargetDataHandle
 	ASC->ConsumeClientReplicatedTargetData(
 		CachedAbility->GetCurrentAbilitySpecHandle(),
 		CachedAbility->GetCurrentActivationInfo().GetActivationPredictionKey());
+
+	if (CachedAbility->GetActorInfo().IsLocallyControlled())
+	{
+		return;
+	}
 
 	if (Data.Data.Num() > 0 && Data.Data[0].IsValid())
 	{
