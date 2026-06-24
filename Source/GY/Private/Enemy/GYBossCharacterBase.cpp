@@ -142,6 +142,24 @@ void AGYBossCharacterBase::BeginPlay()
 		0.5f, /*bLoop=*/ true);
 }
 
+void AGYBossCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (ActiveSequencePlayer)
+	{
+		ActiveSequencePlayer->OnFinished.RemoveDynamic(this, &AGYBossCharacterBase::HandleCinematicFinished);
+		ActiveSequencePlayer->Stop();
+		ActiveSequencePlayer = nullptr;
+	}
+
+	if (ActiveSequenceActor)
+	{
+		ActiveSequenceActor->Destroy();
+		ActiveSequenceActor = nullptr;
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void AGYBossCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

@@ -43,6 +43,26 @@ void AGYEndingInteractActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	DOREPLIFETIME(AGYEndingInteractActor, bConsumed);
 }
 
+void AGYEndingInteractActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorldTimerManager().ClearTimer(IntroTimerHandle);
+
+	if (ActiveSequencePlayer)
+	{
+		ActiveSequencePlayer->OnFinished.RemoveDynamic(this, &AGYEndingInteractActor::HandleCinematicFinished);
+		ActiveSequencePlayer->Stop();
+		ActiveSequencePlayer = nullptr;
+	}
+
+	if (ActiveSequenceActor)
+	{
+		ActiveSequenceActor->Destroy();
+		ActiveSequenceActor = nullptr;
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void AGYEndingInteractActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const
 {
 	if (!Interactor) return;

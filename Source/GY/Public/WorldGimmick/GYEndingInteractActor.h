@@ -62,6 +62,8 @@ protected:
 private:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_NotifyWaiting(APlayerState* ChangedPlayer, int32 Current, int32 Required, bool bAdded);
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayCinematic(const FSoftObjectPath& SequencePath);
 	UFUNCTION()
