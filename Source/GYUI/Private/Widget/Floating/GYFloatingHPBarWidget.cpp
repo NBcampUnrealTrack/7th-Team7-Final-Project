@@ -42,7 +42,6 @@ void UGYFloatingHPBarWidget::BindToASC(UAbilitySystemComponent* InASC)
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(BindRetryTimerHandle);
-		BindTime = World->GetTimeSeconds();
 	}
 
 	// 델리게이트에서 값 변경 폭을 체크하여 데미지인지 판별
@@ -77,8 +76,18 @@ void UGYFloatingHPBarWidget::RefreshHealth(bool bShowBar)
 
 	OnHealthUpdated(Cur, Max);
 
+	if (Mode == EBarMode::PlayerAlways)
+	{
+		// 플레이어 모드는 항상 표시 유지
+		if (CurrentAlpha < 1.f)
+		{
+			CurrentAlpha = 1.f;
+			SetRenderOpacity(1.f);
+		}
+	}
+
 	// 적 모드, 데미지를 입었을 때만 작동
-	if (Mode == EBarMode::EnemyFade && bShowBar)
+	else if (Mode == EBarMode::EnemyFade && bShowBar)
 	{
 		if (const UWorld* World = GetWorld())
 		{
@@ -127,8 +136,8 @@ void UGYFloatingHPBarWidget::TryBindToOwner(AActor* InCharacter)
 	StoredOwner = InCharacter;
 	const APawn* Pawn = Cast<APawn>(InCharacter);
 
-	const bool bIsLocalPlayerPawn =
-		Pawn && (Pawn->IsLocallyControlled() || Pawn->GetLocalRole() == ROLE_AutonomousProxy);
+	const bool bIsLocalPlayerPawn = Pawn && Pawn->IsPlayerControlled()
+		&& (Pawn->IsLocallyControlled() || Pawn->GetLocalRole() == ROLE_AutonomousProxy);
 
 	if (bIsLocalPlayerPawn) // 본인은 표시 x
 	{
@@ -222,13 +231,19 @@ void UGYFloatingHPBarWidget::SetWidgetOwnerActor(AActor* InOwner)
 {
 	Super::SetWidgetOwnerActor(InOwner);
 	BindRetryCount = 0;
-	// 바인딩 재시도 타이머 가동
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimer(
-			BindRetryTimerHandle, this, &UGYFloatingHPBarWidget::ProcessBindRetry, BindRetryInterval, true);
-	}
+
 	TryBindToOwner(InOwner);
+
+	// 바인딩 재시도 타이머 가동
+	if (!TargetASC.IsValid())
+	{
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(BindRetryTimerHandle);
+			World->GetTimerManager().SetTimer(
+				BindRetryTimerHandle, this, &UGYFloatingHPBarWidget::ProcessBindRetry, BindRetryInterval, true);
+		}
+	}
 }
 
 void UGYFloatingHPBarWidget::ProcessBindRetry()
@@ -268,9 +283,8 @@ void UGYFloatingHPBarWidget::ProcessFadeOut()
 	UWorld* World = GetWorld();
 	if (!World) return;
 
-	float DeltaTime = World->GetDeltaSeconds();
-
-	CurrentAlpha = FMath::FInterpTo(CurrentAlpha, 0.f, DeltaTime, FadeSpeed);
+	constexpr float FadeInterval = 0.016f;
+	CurrentAlpha = FMath::FInterpTo(CurrentAlpha, 0.f, FadeInterval, FadeSpeed);
 	SetRenderOpacity(CurrentAlpha);
 
 	if (CurrentAlpha <= KINDA_SMALL_NUMBER)

@@ -45,9 +45,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "GY|UI")
 	float FadeSpeed = 4.0f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "GY|UI")
-	float BindGracePeriod = 0.5f;
-
 	UFUNCTION(BlueprintImplementableEvent, Category = "GY|UI")
 	void OnHealthUpdated(float Current, float Max);
 
@@ -94,7 +91,6 @@ private:
 	TWeakObjectPtr<APlayerState> TargetPS;
 
 	float CurrentAlpha = 0.f;
-	double BindTime = -1000.0;
 
 	/** 바인딩 재시도 */
 	UPROPERTY(EditDefaultsOnly, Category="GY|UI")
