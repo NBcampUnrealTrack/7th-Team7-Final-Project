@@ -3,6 +3,8 @@
 
 #include "AbilitySystem/Abilities/Parkour/GYParkourLogic.h"
 
+#include "AbilitySystemComponent.h"
+#include "AudioMixerBlueprintLibrary.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystem/Abilities/Parkour/GYParkourFragment.h"
 #include "Core/GameplayTags/AbilityTags.h"
@@ -12,6 +14,7 @@
 #include "MotionWarpingComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Core/GYCollisionChannels.h"
+#include "Logging/GYLogManager.h"
 
 void UGYParkourLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
@@ -25,7 +28,30 @@ void UGYParkourLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		return;
 	}
 
-	TryParkour();
+	UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return;
+
+	const bool bIsAuthority = Ability->GetActorInfo().IsNetAuthority();
+	const bool bIsLocallyControlled = Ability->GetActorInfo().IsLocallyControlled();
+
+	if (bIsAuthority)
+	{
+		//서버에서는 함수 바인딩만
+		FAbilityTargetDataSetDelegate& Delegate = ASC->AbilityTargetDataSetDelegate(
+			Ability->GetCurrentAbilitySpecHandle(),
+			Ability->GetCurrentActivationInfo().GetActivationPredictionKey());
+
+		Delegate.AddUObject(this, &UGYParkourLogic::OnParkourDataRecive);
+
+		//바인딩보다 데이터가 빨리 전달됐을 때 안전장치
+		ASC->CallReplicatedTargetDataDelegatesIfSet(
+			Ability->GetCurrentAbilitySpecHandle(),
+			Ability->GetCurrentActivationInfo().GetActivationPredictionKey());
+	}
+	if (bIsLocallyControlled)
+	{
+		TryParkour();
+	}
 }
 
 void UGYParkourLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
@@ -58,7 +84,15 @@ TArray<FGameplayTag> UGYParkourLogic::GetRequiredFragmentTags() const
 void UGYParkourLogic::TryParkour()
 {
 	FHitResult WallHit; // 벽의 옆면 충돌정보
-	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	//ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+
+	const bool bIsLocallyControlled = CachedAbility->GetActorInfo().IsLocallyControlled();
+
+	// 로컬에서만 계산 실행
+	if (!bIsLocallyControlled)
+	{
+		return;
+	}
 
 	// 벽 없으면 리턴
 	if (!DoForwardTrace(WallHit))
@@ -87,27 +121,120 @@ void UGYParkourLogic::TryParkour()
 
 	//발 판별 + 몽타주 선택
 	const bool bLeftFoot = IsLeftFootForward();
-	UAnimMontage* Montage = SelectMontage(bLeftFoot);
+	EParkourMontageType EnumMontage = SelectParkourMontage(bLeftFoot);
 
-	if (!Montage)
+	if (EnumMontage == EParkourMontageType::None)
 	{
 		CachedAbility->RequestEnd(false);
 		return;
 	}
 
+	//데이터구조체 패킹
+	FGYTargetData_Parkour* ParkourData = new FGYTargetData_Parkour();
+	ParkourData->ParkourType = EnumMontage;
+	ParkourData->TopHitLoc = TopHit.ImpactPoint;
+	FGameplayAbilityTargetDataHandle ParkourDataHandle;
+	ParkourDataHandle.Add(ParkourData);
+
+	//데이터 보내기
+	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+	if (ASC)
+	{
+		FScopedPredictionWindow Window(ASC, true);
+
+		ASC->CallServerSetReplicatedTargetData(
+			CachedAbility->GetCurrentAbilitySpecHandle(),
+			CachedAbility->GetCurrentActivationInfo().GetActivationPredictionKey(),
+			ParkourDataHandle, FGameplayTag(), ASC->ScopedPredictionKey);
+	}
+
+	ExecuteParkour(TopHit.ImpactPoint, EnumMontage);
+}
+
+void UGYParkourLogic::ExecuteParkour(FVector& TopHitLoc, EParkourMontageType MontageType)
+{
+	if (!CachedAbility.IsValid() || !CachedFragment) return;
+
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	if (!Character) return;
+
+	UAnimMontage* PlayToMontage = nullptr;
+
+	switch (MontageType)
+	{
+	case EParkourMontageType::Stand_L: PlayToMontage = CachedFragment->Montage_Stand_Lfoot;
+		break;
+	case EParkourMontageType::Stand_R: PlayToMontage = CachedFragment->Montage_Stand_Rfoot;
+		break;
+	case EParkourMontageType::Walk_L: PlayToMontage = CachedFragment->Montage_Walk_Lfoot;
+		break;
+	case EParkourMontageType::Walk_R: PlayToMontage = CachedFragment->Montage_Walk_Rfoot;
+		break;
+	case EParkourMontageType::Run_L: PlayToMontage = CachedFragment->Montage_Run_Lfoot;
+		break;
+	case EParkourMontageType::Run_R: PlayToMontage = CachedFragment->Montage_Run_Rfoot;
+		break;
+	default:
+		break;
+	}
+
+	if (!PlayToMontage)
+	{
+		CachedAbility->RequestEnd(false);
+		return;
+	}
 
 	Character->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	//모션워핑 코드
 	if (UMotionWarpingComponent* MotionWarpingComponent = Character->FindComponentByClass<UMotionWarpingComponent>())
 	{
 		FMotionWarpingTarget WarpTarget;
 		WarpTarget.Name = FName("ParkourTarget");
-		WarpTarget.Location = TopHit.ImpactPoint;
+		WarpTarget.Location = TopHitLoc;
 		WarpTarget.Rotation = Character->GetActorRotation();
 
 		MotionWarpingComponent->AddOrUpdateWarpTarget(WarpTarget);
 	}
 
-	PlayMontage(Montage);
+	const bool bIsAuthority = CachedAbility->GetActorInfo().IsNetAuthority();
+	const bool bIsLocallyControlled = CachedAbility->GetActorInfo().IsLocallyControlled();
+if (bIsAuthority)
+{
+	GY_WARN(Game, KHB, "[Server] Executing Parkour with Montage: %s", PlayToMontage ? *PlayToMontage->GetName() : TEXT("NULL"))
+}
+else
+{
+	GY_WARN(Game, KHB, "[Client] Executing Parkour with Montage: %s", PlayToMontage ? *PlayToMontage->GetName() : TEXT("NULL"))
+}
+	PlayMontage(PlayToMontage);
+}
+
+EParkourMontageType UGYParkourLogic::SelectParkourMontage(bool bLeftFoot)
+{
+	if (!CachedAbility.IsValid() || !CachedFragment) return EParkourMontageType::None;
+
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	if (!Character) return EParkourMontageType::None;
+
+	UCharacterMovementComponent* CMC = Character->GetCharacterMovement();
+	if (!CMC) return EParkourMontageType::None;
+
+	const float Speed = CMC->Velocity.Size2D(); // 수평 속도
+	const bool bShouldMoving = !CMC->GetCurrentAcceleration().IsNearlyZero();
+
+	if (!bShouldMoving)
+	{
+		return bLeftFoot ? EParkourMontageType::Stand_L : EParkourMontageType::Stand_R;
+	}
+
+	if (Speed < 500.f) // 달리기 600, 걷기 300 중간값 500이하면 걷기판단. 하드코딩이지만 봐주세요ㅜ
+	{
+		// 걷는 상태
+		return bLeftFoot ? EParkourMontageType::Walk_L : EParkourMontageType::Walk_R;
+	}
+
+	// 달리는 상태
+	return bLeftFoot ? EParkourMontageType::Run_L : EParkourMontageType::Run_R;
 }
 
 bool UGYParkourLogic::DoForwardTrace(FHitResult& OutHit)
@@ -126,7 +253,7 @@ bool UGYParkourLogic::DoForwardTrace(FHitResult& OutHit)
 	const float FootZ = Character->GetActorLocation().Z - HalfHeight; // 발 높이(발 위치)
 
 	//허리 ~ 발 사이에 n 등분 해서 검사
-	const int32 TraceCount = 4;
+	const int32 TraceCount = 8;
 	const float HeightStep = HalfHeight / (TraceCount - 1);
 
 
@@ -164,7 +291,7 @@ bool UGYParkourLogic::DoForwardTrace(FHitResult& OutHit)
 	return false;
 }
 
-bool UGYParkourLogic::DoTopTrace(FVector WallLoc, FHitResult& OutHit)
+bool UGYParkourLogic::DoTopTrace(FVector& WallLoc, FHitResult& OutHit)
 {
 	if (!CachedAbility.IsValid()) return false;
 
@@ -193,7 +320,7 @@ bool UGYParkourLogic::DoTopTrace(FVector WallLoc, FHitResult& OutHit)
 	return bHit;
 }
 
-float UGYParkourLogic::GetMantleHeight(FVector TopHitLoc)
+float UGYParkourLogic::GetMantleHeight(FVector& TopHitLoc)
 {
 	if (!CachedAbility.IsValid()) return -1.f;
 
@@ -218,7 +345,7 @@ UAnimMontage* UGYParkourLogic::SelectMontage(bool bLeftFoot)
 
 	const float Speed = CMC->Velocity.Size2D(); // 수평 속도
 	const bool bShouldMoving = !CMC->GetCurrentAcceleration().IsNearlyZero();
-	const float MaxWalk = CMC->MaxWalkSpeed;
+
 
 	if (!bShouldMoving)
 	{
@@ -286,4 +413,29 @@ void UGYParkourLogic::OnMontageEnded()
 	}
 
 	CachedAbility->RequestEnd(false);
+}
+
+void UGYParkourLogic::OnParkourDataRecive(const FGameplayAbilityTargetDataHandle& Data, FGameplayTag tag)
+{
+
+	GY_WARN(Game, KHB,"서버 콜백함수 호출");
+
+	if (!CachedAbility.IsValid()) return;
+
+	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return;
+
+	//수신 버퍼 제거
+	ASC->ConsumeClientReplicatedTargetData(
+		CachedAbility->GetCurrentAbilitySpecHandle(),
+		CachedAbility->GetCurrentActivationInfo().GetActivationPredictionKey());
+
+	if (Data.Data.Num() > 0 && Data.Data[0].IsValid())
+	{
+		const FGYTargetData_Parkour* ParkourData = static_cast<const FGYTargetData_Parkour*>(Data.Data[0].Get());
+		FVector TopLoc = ParkourData->TopHitLoc;
+		EParkourMontageType MontageType = ParkourData->ParkourType;
+
+		ExecuteParkour(TopLoc, MontageType);
+	}
 }
