@@ -2,6 +2,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "GenericTeamAgentInterface.h"
 #include "Components/SphereComponent.h"
 #include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTags/EventTags.h"
@@ -59,13 +60,13 @@ void AProjectileBase::OnProjectileOverlap(UPrimitiveComponent* OverlappedCompone
 	if (OtherActor == InstigatorActor.Get()) return;
 	if (OtherActor == this) return;
 
+	const IGenericTeamAgentInterface* InstigatorTeamAgent = Cast<IGenericTeamAgentInterface>(InstigatorActor.Get());
+	if (!InstigatorTeamAgent) return;
+
+	if (InstigatorTeamAgent->GetTeamAttitudeTowards(*OtherActor) != ETeamAttitude::Hostile) return;
+
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 	if (!TargetASC) return;
-
-	if (TargetASC->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy))
-	{
-		return;
-	}
 
 	OnHitTarget(OtherActor, SweepResult);
 	Destroy();
