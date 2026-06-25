@@ -29,6 +29,8 @@ public:
 	void StartLockOn();
 	void StopLockOn();
 
+	void SetRotationSuppressed(bool bSuppressed) { bRotationSuppressed = bSuppressed; }
+
 	UFUNCTION(Server, Reliable)
 	void ServerSetLockOnTarget(AActor* NewTarget);
 protected:
@@ -79,6 +81,7 @@ private:
 
 	FDelegateHandle InCombatTagHandle;
 	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
+	bool bRotationSuppressed = false;
 	bool bSavedOrientToMovement = true;
 	bool bSavedUseControllerRotationYaw = false;
 

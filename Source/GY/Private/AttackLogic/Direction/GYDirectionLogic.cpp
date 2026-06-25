@@ -1,53 +1,12 @@
 #include "AttackLogic/Direction/GYDirectionLogic.h"
 #include "AttackLogic/Direction/GYDirectionFragment.h"
+#include "AbilitySystem/Abilities/Tasks/AbilityTask_RotateTo.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "Character/GYCharacter.h"
+#include "Character/LockOn/LockOnComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "GameFramework/PlayerController.h"
-
-namespace
-{
-	TOptional<float> ComputeTargetYaw(EGYDirectionMode Mode, AGYCharacter* Character)
-	{
-		if (!Character) return {};
-
-		switch (Mode)
-		{
-		case EGYDirectionMode::ByMouseDirection:
-		{
-			APlayerController* PC = Cast<APlayerController>(Character->GetController());
-			if (!PC || !PC->IsLocalPlayerController()) return {};
-
-			FVector RayOrigin, RayDir;
-			if (!PC->DeprojectMousePositionToWorld(RayOrigin, RayDir)) return {};
-
-			if (FMath::Abs(RayDir.Z) < KINDA_SMALL_NUMBER) return {};
-
-			const float PlaneZ = Character->GetActorLocation().Z;
-			const float T = (PlaneZ - RayOrigin.Z) / RayDir.Z;
-			if (T < 0.f) return {};
-
-			const FVector HitPoint = RayOrigin + RayDir * T;
-			const FVector ToHit = HitPoint - Character->GetActorLocation();
-			if (ToHit.SizeSquared2D() < 1.f) return {};
-
-			return ToHit.Rotation().Yaw;
-		}
-
-		case EGYDirectionMode::ByMovementDirection:
-		{
-			const FVector Input = Character->GetLastMovementInputVector();
-			if (Input.IsNearlyZero()) return {};
-			return Input.Rotation().Yaw;
-		}
-
-		case EGYDirectionMode::ByCharacterForward:
-		default:
-			return {};
-		}
-	}
-}
 
 void UGYDirectionLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
@@ -58,19 +17,31 @@ void UGYDirectionLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	if (!Fragment) return;
 
 	CachedCharacter = Character;
+	CachedAbility = Ability;
 	CachedDirectionMode = Fragment->DirectionMode;
 	CachedLerpTime = Fragment->LerpTime;
+	bCachedCanOverrideLockOn = Fragment->bCanOverrideLockOn;
 
 	BeginRotation();
 }
 
 void UGYDirectionLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
 {
-	if (AGYCharacter* Character = CachedCharacter.Get())
+	if (bSuppressedLockOn)
 	{
-		Character->GetWorld()->GetTimerManager().ClearTimer(RotationTimer);
+		if (AGYCharacter* Character = CachedCharacter.Get())
+		{
+			if (ULockOnComponent* LockOn = Character->GetLockOnComponent())
+			{
+				LockOn->SetRotationSuppressed(false);
+			}
+		}
+		bSuppressedLockOn = false;
 	}
+
+	ActiveRotateTask = nullptr;
 	CachedCharacter.Reset();
+	CachedAbility.Reset();
 }
 
 TArray<FGameplayTag> UGYDirectionLogic::GetSubscribedEventTags() const
@@ -88,66 +59,106 @@ TArray<FGameplayTag> UGYDirectionLogic::GetRequiredFragmentTags() const
 	return { GYGameplayTags::Ability_Fragment_Direction };
 }
 
+TOptional<float> UGYDirectionLogic::ResolveTargetYaw() const
+{
+	const AGYCharacter* Character = CachedCharacter.Get();
+	if (!Character) return {};
+
+	const ULockOnComponent* LockOn = Character->GetLockOnComponent();
+	const bool bLockedOn = LockOn && LockOn->IsLockedOn();
+
+	if (CachedDirectionMode == EGYDirectionMode::ByLockOnTarget)
+	{
+		if (!bLockedOn) return {};
+		const AActor* Target = LockOn->GetCurrentTarget();
+		if (!Target) return {};
+		const FVector ToTarget = Target->GetActorLocation() - Character->GetActorLocation();
+		if (ToTarget.SizeSquared2D() < 1.f) return {};
+		return ToTarget.Rotation().Yaw;
+	}
+
+	if (bLockedOn && !bCachedCanOverrideLockOn)
+		return {};
+
+	switch (CachedDirectionMode)
+	{
+	case EGYDirectionMode::ByMouseDirection:
+	{
+		const APlayerController* PC = Cast<APlayerController>(Character->GetController());
+		if (!PC || !PC->IsLocalPlayerController()) return {};
+
+		FVector RayOrigin, RayDir;
+		if (!PC->DeprojectMousePositionToWorld(RayOrigin, RayDir)) return {};
+		if (FMath::Abs(RayDir.Z) < KINDA_SMALL_NUMBER) return {};
+
+		const float T = (Character->GetActorLocation().Z - RayOrigin.Z) / RayDir.Z;
+		if (T < 0.f) return {};
+
+		const FVector HitPoint = RayOrigin + RayDir * T;
+		const FVector ToHit = HitPoint - Character->GetActorLocation();
+		if (ToHit.SizeSquared2D() < 1.f) return {};
+		return ToHit.Rotation().Yaw;
+	}
+
+	case EGYDirectionMode::ByMovementDirection:
+	{
+		const FVector Input = Character->GetLastMovementInputVector();
+		if (Input.IsNearlyZero()) return {};
+		return Input.Rotation().Yaw;
+	}
+
+	case EGYDirectionMode::ByCharacterForward:
+	default:
+		return {};
+	}
+}
+
 void UGYDirectionLogic::BeginRotation()
 {
 	AGYCharacter* Character = CachedCharacter.Get();
-	if (!Character) return;
+	UGYPlayerGameplayAbility* Ability = CachedAbility.Get();
+	if (!Character || !Ability) return;
 
-	// Cancel any in-progress lerp before starting a new one
-	Character->GetWorld()->GetTimerManager().ClearTimer(RotationTimer);
+	if (IsValid(ActiveRotateTask))
+	{
+		ActiveRotateTask->EndTask();
+		ActiveRotateTask = nullptr;
+	}
 
-	const TOptional<float> TargetYaw = ComputeTargetYaw(CachedDirectionMode, Character);
+	ULockOnComponent* LockOn = Character->GetLockOnComponent();
+	const bool bShouldSuppress = LockOn && LockOn->IsLockedOn()
+		&& bCachedCanOverrideLockOn
+		&& CachedDirectionMode != EGYDirectionMode::ByLockOnTarget;
+
+	if (bShouldSuppress && !bSuppressedLockOn)
+	{
+		LockOn->SetRotationSuppressed(true);
+		bSuppressedLockOn = true;
+	}
+	else if (!bShouldSuppress && bSuppressedLockOn)
+	{
+		LockOn->SetRotationSuppressed(false);
+		bSuppressedLockOn = false;
+	}
+
+	const TOptional<float> TargetYaw = ResolveTargetYaw();
 	if (!TargetYaw.IsSet()) return;
 
-	// Owning client sends the computed yaw to the server so root motion runs in the correct direction.
-	// HasAuthority check prevents listen-server host from calling an RPC on itself.
-	if (Character->IsLocallyControlled() && !Character->HasAuthority())
+	const float StartYaw = Character->GetActorRotation().Yaw;
+	if (FMath::IsNearlyZero(FRotator::NormalizeAxis(TargetYaw.GetValue() - StartYaw))) return;
+
+	if (CachedDirectionMode == EGYDirectionMode::ByMouseDirection
+		&& Character->IsLocallyControlled()
+		&& !Character->HasAuthority())
 	{
-		Character->Server_SetFacingYaw(TargetYaw.GetValue());
+		Character->Server_StartFacingLerp(StartYaw, TargetYaw.GetValue(), CachedLerpTime);
 	}
 
-	StartYaw = Character->GetActorRotation().Yaw;
-	DeltaYaw = FRotator::NormalizeAxis(TargetYaw.GetValue() - StartYaw);
-
-	if (FMath::IsNearlyZero(DeltaYaw)) return;
-
-	if (CachedLerpTime <= 0.f)
-	{
-		FRotator NewRot = Character->GetActorRotation();
-		NewRot.Yaw = TargetYaw.GetValue();
-		Character->SetActorRotation(NewRot);
+	// Server cannot resolve mouse direction locally — it lerps via the RPC above.
+	if (!Character->IsLocallyControlled() && CachedDirectionMode == EGYDirectionMode::ByMouseDirection)
 		return;
-	}
 
-	LerpDuration = CachedLerpTime;
-	RotationStartTime = Character->GetWorld()->GetTimeSeconds();
-
-	TWeakObjectPtr<UGYDirectionLogic> WeakThis(this);
-	Character->GetWorld()->GetTimerManager().SetTimer(
-		RotationTimer,
-		[WeakThis]() { if (UGYDirectionLogic* Self = WeakThis.Get()) Self->TickRotation(); },
-		0.016f,
-		true
-	);
-}
-
-void UGYDirectionLogic::TickRotation()
-{
-	AGYCharacter* Character = CachedCharacter.Get();
-	if (!Character) return;
-
-	const float Elapsed = Character->GetWorld()->GetTimeSeconds() - RotationStartTime;
-	const float Alpha = FMath::Clamp(Elapsed / LerpDuration, 0.f, 1.f);
-
-	// Ease-out quadratic: fast start, decelerates to final position
-	const float EasedAlpha = 1.f - FMath::Square(1.f - Alpha);
-
-	FRotator NewRot = Character->GetActorRotation();
-	NewRot.Yaw = StartYaw + DeltaYaw * EasedAlpha;
-	Character->SetActorRotation(NewRot);
-
-	if (Alpha >= 1.f)
-	{
-		Character->GetWorld()->GetTimerManager().ClearTimer(RotationTimer);
-	}
+	UAbilityTask_RotateTo* Task = UAbilityTask_RotateTo::Create(Ability, Character, StartYaw, TargetYaw.GetValue(), CachedLerpTime);
+	ActiveRotateTask = Task;
+	Task->ReadyForActivation();
 }

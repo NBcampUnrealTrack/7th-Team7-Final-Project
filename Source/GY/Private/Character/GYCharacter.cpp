@@ -152,11 +152,44 @@ void AGYCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 P
 	}
 }
 
-void AGYCharacter::Server_SetFacingYaw_Implementation(float Yaw)
+void AGYCharacter::Server_StartFacingLerp_Implementation(float StartYaw, float TargetYaw, float LerpTime)
 {
+	GetWorldTimerManager().ClearTimer(FacingLerpTimer);
+
+	const float Delta = FRotator::NormalizeAxis(TargetYaw - StartYaw);
+	if (FMath::IsNearlyZero(Delta)) return;
+
+	if (LerpTime <= 0.f)
+	{
+		FRotator NewRot = GetActorRotation();
+		NewRot.Yaw = TargetYaw;
+		SetActorRotation(NewRot);
+		return;
+	}
+
+	FacingLerpStartYaw = StartYaw;
+	FacingLerpTargetYaw = TargetYaw;
+	FacingLerpDuration = LerpTime;
+	FacingLerpStartTime = GetWorld()->GetTimeSeconds();
+
+	GetWorldTimerManager().SetTimer(FacingLerpTimer, this, &AGYCharacter::TickFacingLerp, 0.016f, true);
+}
+
+void AGYCharacter::TickFacingLerp()
+{
+	const float Elapsed = GetWorld()->GetTimeSeconds() - FacingLerpStartTime;
+	const float Alpha = FMath::Clamp(Elapsed / FacingLerpDuration, 0.f, 1.f);
+	const float EasedAlpha = 1.f - FMath::Square(1.f - Alpha);
+	const float DeltaYaw = FRotator::NormalizeAxis(FacingLerpTargetYaw - FacingLerpStartYaw);
+
 	FRotator NewRot = GetActorRotation();
-	NewRot.Yaw = Yaw;
+	NewRot.Yaw = FacingLerpStartYaw + DeltaYaw * EasedAlpha;
 	SetActorRotation(NewRot);
+
+	if (Alpha >= 1.f)
+	{
+		GetWorldTimerManager().ClearTimer(FacingLerpTimer);
+	}
 }
 
 void AGYCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)

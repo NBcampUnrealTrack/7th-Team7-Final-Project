@@ -321,6 +321,8 @@ AActor* ULockOnComponent::FindBestTarget() const
 
 void ULockOnComponent::UpdateRotationToTarget(float DeltaTime)
 {
+	if (bRotationSuppressed) return;
+
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (!OwnerPawn || !OwnerPawn->IsLocallyControlled()) return;
 	if (!CurrentTarget.IsValid()) return;

@@ -3,9 +3,11 @@
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Logic/AbilityLogicBase.h"
 #include "AttackLogic/Direction/GYDirectionFragment.h"
+#include "AbilitySystem/Abilities/Tasks/AbilityTask_RotateTo.h"
 #include "GYDirectionLogic.generated.h"
 
 class AGYCharacter;
+class UGYPlayerGameplayAbility;
 
 UCLASS()
 class GY_API UGYDirectionLogic : public UAbilityLogicBase
@@ -21,14 +23,16 @@ public:
 
 private:
 	void BeginRotation();
-	void TickRotation();
+	TOptional<float> ResolveTargetYaw() const;
 
 	TWeakObjectPtr<AGYCharacter> CachedCharacter;
+	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
+
 	EGYDirectionMode CachedDirectionMode = EGYDirectionMode::ByCharacterForward;
 	float CachedLerpTime = 0.f;
-	float StartYaw = 0.f;
-	float DeltaYaw = 0.f;
-	float LerpDuration = 0.f;
-	float RotationStartTime = 0.f;
-	FTimerHandle RotationTimer;
+	bool bCachedCanOverrideLockOn = false;
+	bool bSuppressedLockOn = false;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityTask_RotateTo> ActiveRotateTask;
 };
