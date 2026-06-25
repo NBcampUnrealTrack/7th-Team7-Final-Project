@@ -97,6 +97,9 @@ Content/ThirdParty/PaidAssets/
 # Poorforce — 토큰 포함하므로 절대 커밋 금지
 PoorforceConfig.json
 
+# 영속 설정 — 로컬 키 포함, db-setup 이 supabase status 에서 생성 (커밋 금지)
+Config/DefaultGYPersistence.ini
+
 Docs
 Content/UsdAssets
 Content/UsdAssetCache.uasset

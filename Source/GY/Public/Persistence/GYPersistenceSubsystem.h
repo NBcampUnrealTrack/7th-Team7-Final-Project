@@ -30,7 +30,7 @@ private:
 	void OnSaveComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bSuccess);
 
 	FString BaseUrl;
-	FString ServiceRoleKey;
+	FString SecretKey;
 
 	// 마지막으로 load/save 한 save_version. 콘솔 Save가 expectedVersion으로 사용
 	int32 CachedSaveVersion = 0;

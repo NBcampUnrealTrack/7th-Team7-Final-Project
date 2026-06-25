@@ -57,8 +57,22 @@ Write-Host "[setup] supabase start (first run pulls images, a few minutes)..." -
 Write-Host "[setup] supabase db reset (migrations + seed)..." -ForegroundColor Yellow
 & $Sb db reset
 
-# Config\DefaultGYPersistence.ini has committed local values (no auto-write).
-# If the service_role key from 'supabase status' differs, update the ini with it.
+# 5) generate Config\DefaultGYPersistence.ini from local supabase status
+#    (key is NOT committed; each dev's local key is written here, file is gitignored)
+Write-Host "[setup] writing Config\DefaultGYPersistence.ini (local URL + secret key)..." -ForegroundColor Yellow
+$envOut  = (& $Sb status -o env) | Out-String
+$apiUrl  = ([regex]::Match($envOut, 'API_URL="?([^"\r\n]+)"?')).Groups[1].Value
+$secret  = ([regex]::Match($envOut, 'SECRET_KEY="?([^"\r\n]+)"?')).Groups[1].Value
+if ($apiUrl -and $secret) {
+    $iniText = "[/Script/GY.GYPersistenceSettings]`r`n" +
+               "; 로컬 전용 (db-setup 자동 생성, gitignore). 호스티드 값은 여기 넣지 말 것 - CI/env 주입.`r`n" +
+               "ServerBaseUrl=`"$apiUrl`"`r`n" +
+               "SecretKey=$secret`r`n"
+    Set-Content -Path (Join-Path $RepoRoot "Config\DefaultGYPersistence.ini") -Value $iniText -Encoding ascii
+    Write-Host "[setup] ini written." -ForegroundColor Green
+} else {
+    Write-Host "[setup] WARN: could not parse status; copy supabase\... or set ini manually." -ForegroundColor Red
+}
 
 Write-Host ""
 Write-Host "[setup] Done!  Studio: http://127.0.0.1:54323   API: http://127.0.0.1:54321" -ForegroundColor Green

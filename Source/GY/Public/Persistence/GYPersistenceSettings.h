@@ -17,7 +17,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Config, Category="Persistence")
 	FString ServerBaseUrl;
 
-	// service_role 키 — RLS 우회, 서버 전용. 클라 빌드에 절대 X.
+	// Supabase Secret key (service_role 등가) — RLS 우회, 서버 전용. 클라 빌드에 절대 X.
 	UPROPERTY(EditDefaultsOnly, Config, Category="Persistence")
-	FString ServiceRoleKey;
+	FString SecretKey;
 };
