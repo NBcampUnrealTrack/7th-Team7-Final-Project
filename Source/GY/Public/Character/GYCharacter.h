@@ -50,7 +50,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetFacingYaw(float Yaw);
+	void Server_StartFacingLerp(float StartYaw, float TargetYaw, float LerpTime);
 
 	UFUNCTION(BlueprintCallable, Category = "AI|Noise")
 	void MakeFootstepNoise();
@@ -112,5 +112,12 @@ private:
 	TObjectPtr<UGYPawnExtensionComponent> PawnExtComponent;
 
 	FGenericTeamId TeamId;
-	//TODO::타겟을 정해주는 로직 필요
+
+	void TickFacingLerp();
+
+	FTimerHandle FacingLerpTimer;
+	float FacingLerpStartYaw = 0.f;
+	float FacingLerpTargetYaw = 0.f;
+	float FacingLerpDuration = 0.f;
+	float FacingLerpStartTime = 0.f;
 };
