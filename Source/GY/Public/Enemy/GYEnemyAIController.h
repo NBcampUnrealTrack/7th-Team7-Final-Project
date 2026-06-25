@@ -23,12 +23,14 @@ namespace  EnemyBBKeys
 	static const FName IsStaggered			= TEXT("IsStaggered");
 	static const FName IsDead				= TEXT("IsDead");
 	static const FName AttackRadius			= TEXT("AttackRadius");
+	static const FName AttackRadiusMin		= TEXT("AttackRadiusMin");
 	static const FName InvestigateLocation	= TEXT("InvestigateLocation");
 	static const FName HasPatrol			= TEXT("HasPatrol");
 	static const FName LastUsedAbility		= TEXT("LastUsedAbility");
 	static const FName AttackPosition		= TEXT("AttackPosition");
 	static const FName SelectedAbility		= TEXT("SelectedAbility");
 	static const FName PatrolPosition		= TEXT("PatrolPosition");
+	static const FName EnvQuery				= TEXT("EnvQuery");
 }
 
 UCLASS(BlueprintType, Blueprintable)

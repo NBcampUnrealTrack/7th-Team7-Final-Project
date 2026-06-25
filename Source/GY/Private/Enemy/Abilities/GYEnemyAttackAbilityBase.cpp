@@ -4,8 +4,7 @@
 #include "Core/GameplayTags/StateTags.h"
 #include "Animation/AnimSequence.h"
 #include "Core/GameplayTags/AbilityTags.h"
-#include "Editor/AnimationBlueprintLibrary/Public/AnimationBlueprintLibrary.h"
-#include "Enemy/GYEnemyAIController.h"
+#include "EnvironmentQuery/EnvQuery.h"
 #include "Enemy/AnimNotify/EnemyWeaponTrace.h"
 #include "Engine/SkeletalMeshSocket.h"
 

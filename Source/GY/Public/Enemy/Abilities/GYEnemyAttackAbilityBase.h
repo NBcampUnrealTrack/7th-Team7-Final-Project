@@ -5,6 +5,8 @@
 #include "Enemy/DataTables/EnemyAbilityWeightRow.h"
 #include "GYEnemyAttackAbilityBase.generated.h"
 
+class UEnvQuery;
+
 UENUM(BlueprintType)
 enum class EGYEnemyAttackType : uint8
 {
@@ -82,4 +84,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (Categories = "GameplayCue"))
 	FGameplayTag AttackCueTag; // 사운드 비주얼 FX 용
+
+	UPROPERTY(EditAnywhere, Category = "Config")
+	TObjectPtr<UEnvQuery> EQSAsset;
 };
