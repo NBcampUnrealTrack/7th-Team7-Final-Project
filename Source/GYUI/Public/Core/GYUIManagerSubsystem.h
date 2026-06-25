@@ -22,6 +22,7 @@ struct FGYInteractionWaitingMessage;
 struct FGYEndingStartedMessage;
 struct FGYIntroCinematicMessage;
 struct FGYWorldResetMessage;
+struct FGYClockOverlayMessage;
 /**
  * 로컬마다 생성, 관리되는 UI 총괄 매니저
  */
@@ -151,20 +152,16 @@ private:
 
 	FGameplayTag ActiveRegionId;
 
-	/** 부활 브로드캐스트 */
-	void StartRevivalBroadcast();
-	void StopRevivalBroadcast();
-	void TickRevivalBroadcast();
-	void BroadcastRevivalProgress(float Current, float Max) const;
+	/** 시계 오버레이 - 휴식/부활 공용 연출 */
+	void HandleClockOverlay(FGameplayTag, const FGYClockOverlayMessage& Msg);
+	void PlayClockOverlay(float HoldDuration, FGameplayTag Reason);
+	void StopClockOverlay();
+	void RequestStopClockOverlay();
+	void HandleClockOverlayFinished();
 
 	FDelegateHandle DeathTagHandle;
-	FTimerHandle RevivalTickHandle;
-	float RevivalElapsed = 0.f;
-	float RevivalDuration = 0.f;
-	bool bRevivalActive = false;
-
-	UPROPERTY(EditDefaultsOnly, Category = "GY|UI")
-	float RevivalBroadcastInterval = 0.05f;
+	FGameplayMessageListenerHandle ClockOverlayHandle;
+	TWeakObjectPtr<UGYWorldResetWidget> ActiveClockOverlayWidget;
 
 	/** 엔딩 흐름 */
 	void HandleEndingStarted(FGameplayTag, const FGYEndingStartedMessage& Msg);
@@ -180,12 +177,6 @@ private:
 
 	TWeakObjectPtr<UCommonActivatableWidget> ActiveCreditsWidget;
 	TWeakObjectPtr<UGYInteractionWaitingWidget> ActiveWaitingWidget;
-
-	void HandleWorldReset(FGameplayTag Tag, const FGYWorldResetMessage& Msg);
-	void HandleWorldResetFinished();
-
-	FGameplayMessageListenerHandle WorldResetListenerHandle;
-	TWeakObjectPtr<UGYWorldResetWidget> ActiveWorldResetWidget;
 
 	void HandleToggleSettings(FGameplayTag Tag, const struct FGYToggleSettingsMessage& Msg);
 	FGameplayMessageListenerHandle ToggleSettingsListenerHandle;

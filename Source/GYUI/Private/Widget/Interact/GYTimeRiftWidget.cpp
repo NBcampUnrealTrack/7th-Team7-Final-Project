@@ -8,6 +8,9 @@
 #include "Player/GYPlayerState.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
+#include "UI/GYUIMessages.h"
 
 void UGYTimeRiftWidget::NativeConstruct()
 {
@@ -62,6 +65,15 @@ void UGYTimeRiftWidget::OnRestButtonClicked()
 	if (!PS) return;
 	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
 	if (!ASC) return;
+
+	if (UWorld* World = GetWorld())
+	{
+		FGYClockOverlayMessage Out;
+		Out.HoldDuration = RestOverlayDuration;
+		Out.Reason = GYGameplayTags::Event_TimeRift_Rest;
+		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_UI_ClockOverlay, Out);
+	}
+
 	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_Rest, FGameplayEventData());
 }
 

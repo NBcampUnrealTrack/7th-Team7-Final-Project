@@ -14,16 +14,19 @@ void UGYWorldResetWidget::NativeConstruct()
 	ResetHands();
 }
 
-void UGYWorldResetWidget::PlayResetSequence(float DurationOverride)
+void UGYWorldResetWidget::PlayResetSequence(float HoldOverride)
 {
-    if (DurationOverride > KINDA_SMALL_NUMBER)
-    {
-        HoldDuration = DurationOverride;
-    }
+	HoldDuration = HoldOverride;
 
-    ResetHands();
-    EnterPhase(EPhase::FadeIn);
-    SetVisibility(ESlateVisibility::HitTestInvisible);
+	ResetHands();
+	EnterPhase(EPhase::FadeIn);
+	SetVisibility(ESlateVisibility::HitTestInvisible);
+}
+
+void UGYWorldResetWidget::RequestFadeOut()
+{
+	if (Phase == EPhase::Idle || Phase == EPhase::FadeOut) return;
+	EnterPhase(EPhase::FadeOut);
 }
 
 void UGYWorldResetWidget::EnterPhase(EPhase NewPhase)
@@ -77,14 +80,14 @@ void UGYWorldResetWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
         break;
     }
     case EPhase::Hold:
-    {
-        ApplyVisuals(1.f, 1.f);
-        if (PhaseElapsed >= HoldDuration)
-        {
-            EnterPhase(EPhase::FadeOut);
-        }
-        break;
-    }
+    	{
+    		ApplyVisuals(1.f, 1.f);
+    		if (HoldDuration > 0.f && PhaseElapsed >= HoldDuration)
+    		{
+    			EnterPhase(EPhase::FadeOut);
+    		}
+    		break;
+    	}
     case EPhase::FadeOut:
     	{
     		const float T = (FadeOutDuration > 0.f) ? FMath::Clamp(PhaseElapsed / FadeOutDuration, 0.f, 1.f) : 1.f;

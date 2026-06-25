@@ -41,7 +41,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 				MSG->UnregisterListener(EndingWaitingHandle);
 				MSG->UnregisterListener(EndingCinematicFinishedHandle);
 				MSG->UnregisterListener(EndingCreditsFinishedHandle);
-				MSG->UnregisterListener(WorldResetListenerHandle);
+				MSG->UnregisterListener(ClockOverlayHandle);
 				MSG->UnregisterListener(ToggleSettingsListenerHandle);
 				MSG->UnregisterListener(EnterCinematicHandle);
 			}
@@ -74,10 +74,6 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		if (UClass* HUDClass = Settings->HUDWidgetClass.LoadSynchronous())
 		{
 			PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDClass);
-		}
-		if (UClass* ReviveClass = Settings->RevivalWidgetClass.LoadSynchronous())
-		{
-			RegisterTagDrivenWidget(GYStateTags::State_Life_Dead,GYUILayerTags::UI_Layer_Modal, ReviveClass);
 		}
 	}
 
@@ -135,9 +131,9 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		{
 			MSG.UnregisterListener(EndingCreditsFinishedHandle);
 		}
-		if (WorldResetListenerHandle.IsValid())
+		if (ClockOverlayHandle.IsValid())
 		{
-			MSG.UnregisterListener(WorldResetListenerHandle);
+			MSG.UnregisterListener(ClockOverlayHandle);
 		}
 		if (ToggleSettingsListenerHandle.IsValid())
 		{
@@ -153,19 +149,19 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		RegionExitListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Region_Exited, this, &UGYUIManagerSubsystem::HandleRegionExited);
 		EndingStartedHandle = MSG.RegisterListener(
-	GYGameplayTags::Message_Ending_Started, this, &UGYUIManagerSubsystem::HandleEndingStarted);
+			GYGameplayTags::Message_Ending_Started, this, &UGYUIManagerSubsystem::HandleEndingStarted);
 		EndingWaitingHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Ending_WaitingForPlayers, this, &UGYUIManagerSubsystem::HandleEndingWaiting);
 		EndingCinematicFinishedHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Ending_CinematicFinished, this, &UGYUIManagerSubsystem::HandleEndingCinematicFinished);
 		EndingCreditsFinishedHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Ending_CreditsFinished, this, &UGYUIManagerSubsystem::HandleEndingCreditsFinished);
-		WorldResetListenerHandle = MSG.RegisterListener(
-			GYGameplayTags::Message_World_Reset, this, &UGYUIManagerSubsystem::HandleWorldReset);
+		ClockOverlayHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_UI_ClockOverlay, this, &UGYUIManagerSubsystem::HandleClockOverlay);
 		ToggleSettingsListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_UI_ToggleSettings, this, &UGYUIManagerSubsystem::HandleToggleSettings);
 		EnterCinematicHandle = MSG.RegisterListener(
-			GYGameplayTags::Message_Cinematic_State, this, &UGYUIManagerSubsystem::HandleEnterCinematic);
+			   GYGameplayTags::Message_Cinematic_State, this, &UGYUIManagerSubsystem::HandleEnterCinematic);
 	}
 }
 
@@ -298,16 +294,22 @@ void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 	{
 		Pair.Value.DelegateHandle =
 			InASC->RegisterGameplayTagEvent(Pair.Key, EGameplayTagEventType::NewOrRemoved)
-			     .AddUObject(this, &UGYUIManagerSubsystem::OnTagChanged);
+				 .AddUObject(this, &UGYUIManagerSubsystem::OnTagChanged);
 	}
 	RegisterStatBroadcast(InASC);
 
-	// 부활 진행도 브로드캐스트 트리거
+	// 부활 표현 - 시계 오버레이
 	DeathTagHandle = InASC->RegisterGameplayTagEvent(GYStateTags::State_Life_Dead, EGameplayTagEventType::NewOrRemoved)
-	.AddWeakLambda(this, [this](const FGameplayTag, int32 NewCount)
+		.AddWeakLambda(this, [this](const FGameplayTag, int32 NewCount)
 		{
-		if (NewCount > 0) StartRevivalBroadcast(); // 사망 시 부활 브로드캐스트
-		else StopRevivalBroadcast(); // 부활 시 브로드캐스트
+			if (NewCount > 0)
+			{
+				PlayClockOverlay(0.f, GYStateTags::State_Life_Dead);
+			}
+			else
+			{
+				RequestStopClockOverlay();
+			}
 		});
 
 	for (const auto& Pair : TagWidgetMap)
@@ -318,7 +320,7 @@ void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 
 	if (InASC->GetTagCount(GYStateTags::State_Life_Dead) > 0)
 	{
-		StartRevivalBroadcast();
+		PlayClockOverlay(0.f, GYStateTags::State_Life_Dead);
 	}
 }
 
@@ -484,7 +486,7 @@ void UGYUIManagerSubsystem::UnbindASC()
 			                                     EGameplayTagEventType::NewOrRemoved);
 			DeathTagHandle.Reset();
 		}
-		StopRevivalBroadcast();
+		StopClockOverlay();
 		UnregisterStatBroadcast();
 	}
 	BoundASC = nullptr;
@@ -621,72 +623,49 @@ void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegion
 	}
 }
 
-void UGYUIManagerSubsystem::StartRevivalBroadcast()
+void UGYUIManagerSubsystem::HandleClockOverlay(FGameplayTag, const FGYClockOverlayMessage& Msg)
 {
-	if (bRevivalActive) return;
+	PlayClockOverlay(Msg.HoldDuration, Msg.Reason);
+}
 
-	RevivalDuration = 5.f;
-	if (APlayerState* PS = GetLocalPlayerState())
+void UGYUIManagerSubsystem::PlayClockOverlay(float HoldDuration, FGameplayTag /*Reason*/)
+{
+	const UGYUISettings* Settings = GetDefault<UGYUISettings>();
+	UClass* WidgetClass = Settings ? Settings->WorldResetWidgetClass.LoadSynchronous() : nullptr;
+	if (!WidgetClass) return;
+
+	StopClockOverlay();
+
+	UCommonActivatableWidget* W = PushWidgetToLayer(GYUILayerTags::UI_Layer_Menu, WidgetClass);
+	UGYWorldResetWidget* Overlay = Cast<UGYWorldResetWidget>(W);
+	if (!Overlay) return;
+
+	ActiveClockOverlayWidget = Overlay;
+	Overlay->OnSequenceFinished.AddUObject(this, &UGYUIManagerSubsystem::HandleClockOverlayFinished);
+	Overlay->PlayResetSequence(HoldDuration);
+}
+
+void UGYUIManagerSubsystem::StopClockOverlay()
+{
+	if (ActiveClockOverlayWidget.IsValid())
 	{
-		if (const AGYPlayerState* GYPS = Cast<AGYPlayerState>(PS))
-		{
-			if (const UGYPawnData* Data = GYPS->GetPawnData())
-			{
-				if (Data->ActionConfig)
-				{
-					RevivalDuration = FMath::Max(Data->ActionConfig->RespawnDelay, 0.01f);
-				}
-			}
-		}
-	}
-	RevivalElapsed = 0.f;
-	bRevivalActive = true;
-
-	BroadcastRevivalProgress(0.f, RevivalDuration);
-
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimer(
-			RevivalTickHandle,FTimerDelegate::CreateUObject(
-			this, &UGYUIManagerSubsystem::TickRevivalBroadcast),RevivalBroadcastInterval, true);
+		ActiveClockOverlayWidget->OnSequenceFinished.RemoveAll(this);
+		PopWidget(ActiveClockOverlayWidget.Get());
+		ActiveClockOverlayWidget = nullptr;
 	}
 }
 
-void UGYUIManagerSubsystem::StopRevivalBroadcast()
+void UGYUIManagerSubsystem::RequestStopClockOverlay()
 {
-	if (UWorld* World = GetWorld())
+	if (ActiveClockOverlayWidget.IsValid())
 	{
-		World->GetTimerManager().ClearTimer(RevivalTickHandle);
-	}
-	bRevivalActive = false;
-	RevivalElapsed = 0.f;
-	RevivalDuration = 0.f;
-}
-
-void UGYUIManagerSubsystem::TickRevivalBroadcast()
-{
-	if (!bRevivalActive) return;
-
-	RevivalElapsed = FMath::Min(RevivalElapsed + RevivalBroadcastInterval, RevivalDuration);
-	BroadcastRevivalProgress(RevivalElapsed, RevivalDuration);
-	if (RevivalElapsed >= RevivalDuration)
-	{
-		if (UWorld* World = GetWorld())
-		{
-			World->GetTimerManager().ClearTimer(RevivalTickHandle);
-		}
-		bRevivalActive = false;
+		ActiveClockOverlayWidget->RequestFadeOut();
 	}
 }
 
-void UGYUIManagerSubsystem::BroadcastRevivalProgress(float Current, float Max) const
+void UGYUIManagerSubsystem::HandleClockOverlayFinished()
 {
-	if (!GetWorld()) return;
-	FGYRevivalProgressMessage Msg;
-	Msg.CurrentValue = Current;
-	Msg.MaxValue = Max;
-	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(
-		GYGameplayTags::Message_Player_RevivalProgress, Msg);
+	StopClockOverlay();
 }
 
 void UGYUIManagerSubsystem::HandleEndingWaiting(FGameplayTag, const FGYInteractionWaitingMessage& Msg)
@@ -787,38 +766,6 @@ void UGYUIManagerSubsystem::TravelToMainMenu() const
 	if (!PC) return;
 
 	PC->ClientTravel(MenuMap.GetLongPackageName(), ETravelType::TRAVEL_Absolute); // 클라 이동 - 추후 메인화면으로 설정
-}
-
-void UGYUIManagerSubsystem::HandleWorldReset(FGameplayTag, const FGYWorldResetMessage& Msg)
-{
-	const UGYUISettings* Settings = GetDefault<UGYUISettings>();
-	UClass* WidgetClass = Settings ? Settings->WorldResetWidgetClass.LoadSynchronous() : nullptr;
-	if (!WidgetClass) return;
-
-	if (ActiveWorldResetWidget.IsValid())
-	{
-		ActiveWorldResetWidget->PlayResetSequence(Msg.DurationOverride);
-		return;
-	}
-
-	UCommonActivatableWidget* W = PushWidgetToLayer(GYUILayerTags::UI_Layer_Menu, WidgetClass);
-	UGYWorldResetWidget* Reset = Cast<UGYWorldResetWidget>(W);
-	if (!Reset) return;
-
-	ActiveWorldResetWidget = Reset;
-	Reset->OnSequenceFinished.AddUObject(this, &UGYUIManagerSubsystem::HandleWorldResetFinished);
-	Reset->PlayResetSequence(Msg.DurationOverride);
-}
-
-void UGYUIManagerSubsystem::HandleWorldResetFinished()
-{
-	if (ActiveWorldResetWidget.IsValid())
-	{
-		// 중복 바인딩 방지
-		ActiveWorldResetWidget->OnSequenceFinished.RemoveAll(this);
-		PopWidget(ActiveWorldResetWidget.Get());
-		ActiveWorldResetWidget = nullptr;
-	}
 }
 
 void UGYUIManagerSubsystem::HandleToggleSettings(FGameplayTag, const FGYToggleSettingsMessage&)

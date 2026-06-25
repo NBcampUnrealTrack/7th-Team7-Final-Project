@@ -33,6 +33,9 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> SkillTreeButton;
 
+	UPROPERTY(EditDefaultsOnly, Category = "GY|TimeRift|UI", meta = (ClampMin = "0.0"))
+	float RestOverlayDuration = 3.f;
+
 private:
 	UFUNCTION()
 	void  OnExitButtonClicked();

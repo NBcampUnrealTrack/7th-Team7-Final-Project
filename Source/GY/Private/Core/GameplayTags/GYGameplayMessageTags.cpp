@@ -79,4 +79,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Message_UI_ToggleSettings, "GY.Message.UI.ToggleSettings");
 
 	UE_DEFINE_GAMEPLAY_TAG(Message_Boss_AOETimer, "Message.Boss.AOETimer");
+
+	UE_DEFINE_GAMEPLAY_TAG(Message_UI_ClockOverlay, "Message.UI.ClockOverlay");
 }
