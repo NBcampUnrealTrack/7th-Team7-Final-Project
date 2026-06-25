@@ -7,6 +7,7 @@
 #include "Core/GameplayTags/FactionTags.h"
 #include "Enemy/Component/EnemyAggroComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
+#include "Enemy/Component/ClimbInputComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Damage.h"
 #include "Perception/AISenseConfig_Sight.h"
@@ -50,6 +51,9 @@ AGYEnemyAIController::AGYEnemyAIController()
 	SetPerceptionComponent(*AIPerceptionComponent);
 
 	AggroComponent = CreateDefaultSubobject<UEnemyAggroComponent>(TEXT("AggroComponent"));
+
+	ClimbInputComponent = CreateDefaultSubobject<UClimbInputComponent>(TEXT("ClimbInputComponent"));
+
 }
 
 void AGYEnemyAIController::StartBehaviorTree(UBehaviorTree* BT)
@@ -141,15 +145,23 @@ void AGYEnemyAIController::AdvancePatrolIndex()
 void AGYEnemyAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
+	if (ClimbInputComponent)
+	{
+		ClimbInputComponent->BindToPawn(InPawn);
+	}
 	ControlledEnemy = Cast<AGYEnemyCharacterBase>(InPawn);
 }
 
 void AGYEnemyAIController::OnUnPossess()
 {
 	Super::OnUnPossess();
+	if (ClimbInputComponent)
+	{
+		ClimbInputComponent->UnbindFromPawn();
+	}
 	StopBehaviorTree();
 	ControlledEnemy = nullptr;
+
 }
 
 void AGYEnemyAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)

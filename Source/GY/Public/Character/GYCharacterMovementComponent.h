@@ -45,6 +45,8 @@ public:
 	virtual float GetMaxSpeed() const override;
 	virtual bool CanAttemptJump() const override;
 	float GetMaxClimbSpeed() const { return MaxClimbSpeed; };
+	FVector GetClimbAxis() const;
+
 
 protected:
 	void PhysClimbing(float DeltaTime, int32 Iterations);

@@ -1,5 +1,6 @@
 #include "Enemy/EnemyAnimInstance.h"
 
+#include "Character/GYCharacterMovementComponent.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -34,6 +35,11 @@ void UEnemyAnimInstance::SetStaggerSequence(UAnimSequence* InSequence)
 	StaggerSequence = InSequence;
 }
 
+void UEnemyAnimInstance::SetClimbingSequence(UAnimSequence* InSequence)
+{
+	ClimbingSequence = InSequence;
+}
+
 void UEnemyAnimInstance::NativeBeginPlay()
 {
 	Super::NativeBeginPlay();
@@ -62,6 +68,11 @@ void UEnemyAnimInstance::BindASCTagCallbacks()
 		GYStateTags::State_Hit_Stun, EGameplayTagEventType::NewOrRemoved)
 	.AddUObject(this, &UEnemyAnimInstance::OnStunTagChanged);
 
+	ClimbingTagHandle  = ASC->RegisterGameplayTagEvent(
+	GYStateTags::State_Climbing, EGameplayTagEventType::NewOrRemoved)
+	.AddUObject(this, &UEnemyAnimInstance::OnClimbingTagChanged);
+
+
 	bIsStaggered = ASC->HasMatchingGameplayTag(GYStateTags::State_Hit_Stagger);
 	bIsStunned = ASC->HasMatchingGameplayTag(GYStateTags::State_Hit_Stun);
 }
@@ -74,6 +85,8 @@ void UEnemyAnimInstance::UnbindASCTagCallbacks()
 			GYStateTags::State_Hit_Stagger, EGameplayTagEventType::NewOrRemoved);
 		ASC->UnregisterGameplayTagEvent(StunTagHandle,
 			GYStateTags::State_Hit_Stun, EGameplayTagEventType::NewOrRemoved);
+		ASC->UnregisterGameplayTagEvent(ClimbingTagHandle,
+			GYStateTags::State_Climbing, EGameplayTagEventType::NewOrRemoved);
 	}
 	CachedASC.Reset();
 }
@@ -88,6 +101,11 @@ void UEnemyAnimInstance::OnStunTagChanged(const FGameplayTag Tag, int32 NewCount
 	bIsStunned = (NewCount > 0);
 }
 
+void UEnemyAnimInstance::OnClimbingTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	bIsClimbing = (NewCount > 0);
+}
+
 void UEnemyAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
@@ -95,7 +113,7 @@ void UEnemyAnimInstance::NativeInitializeAnimation()
 	OwnerEnemy = Cast<AGYEnemyCharacterBase>(GetOwningActor());
 	if (!OwnerEnemy) return;
 
-	MovementComponent = OwnerEnemy->GetCharacterMovement();
+	MovementComponent = Cast<UGYCharacterMovementComponent> (OwnerEnemy->GetCharacterMovement());
 
 	if (AAIController* AIC = Cast<AAIController>(OwnerEnemy->GetController()))
 	{
@@ -114,7 +132,7 @@ void UEnemyAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		OwnerEnemy = Cast<AGYEnemyCharacterBase>(GetOwningActor());
 		if (OwnerEnemy)
 		{
-			MovementComponent = OwnerEnemy->GetCharacterMovement();
+			MovementComponent = Cast<UGYCharacterMovementComponent> (OwnerEnemy->GetCharacterMovement());
 		}
 	}
 
@@ -169,6 +187,21 @@ void UEnemyAnimInstance::UpdateMovementData()
 		Direction = 0.f;
 		bIsMoving = false;
 	}
+
+	bIsClimbing = MovementComponent->IsClimbing();
+
+	if (bIsClimbing)
+	{
+		const FVector ClimbAxis = OwnerEnemy->GetActorUpVector();
+		const float VertSpeedAlong = FVector::DotProduct(Velocity, ClimbAxis);
+		const float MaxSpeed = MovementComponent->GetMaxClimbSpeed();
+		check(MaxSpeed > KINDA_SMALL_NUMBER);
+		ClimbPlayRate =  FMath::Clamp(VertSpeedAlong / MaxSpeed, -1.f, 1.f);
+	}
+	else
+	{
+		ClimbPlayRate = 0.f;
+	}
 }
 
 void UEnemyAnimInstance::UpdateStateEnum()
@@ -186,6 +219,11 @@ void UEnemyAnimInstance::UpdateStateEnum()
 	if (bIsStaggered)
 	{
 		CurrentState = EEnemyState::Staggered;
+		return;
+	}
+	if (bIsClimbing)
+	{
+		CurrentState = EEnemyState::Climbing;
 		return;
 	}
 	if (bIsMoving)

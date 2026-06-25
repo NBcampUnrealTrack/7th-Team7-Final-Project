@@ -52,6 +52,9 @@ struct FEnemyAnimationConfig
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|State")
 	TSoftObjectPtr<UAnimSequence> StaggerSequence;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|State")
+	TSoftObjectPtr<UAnimSequence> ClimbingSequence;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation|Montage",
 		meta = (Categories = "Anim"))
 	TMap<FGameplayTag, TSoftObjectPtr<UAnimMontage>> TaggedMontages;

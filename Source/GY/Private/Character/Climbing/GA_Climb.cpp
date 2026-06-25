@@ -1,5 +1,6 @@
 #include "Character/Climbing/GA_Climb.h"
 
+#include "NavigationSystem.h"
 #include "Abilities/Tasks/AbilityTask_ApplyRootMotionMoveToForce.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Character/GYCharacterMovementComponent.h"
@@ -32,6 +33,13 @@ bool UGA_Climb::ShouldEnterFromTop(const ACharacter* Character, const ALadder* L
 	const float LadderTopZ = Ladder->GetActorLocation().Z + Ladder->GetClimbDistance();
 
 	return CharZ > (LadderTopZ - TopEntryThreshold);
+}
+
+void UGA_Climb::OnExitNavSnapFinished()
+{
+	ExitNavSnapTask = nullptr;
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+
 }
 
 void UGA_Climb::OnEntryMoveFinished()
@@ -99,7 +107,47 @@ void UGA_Climb::OnEntryMontageInterrupted()
 
 void UGA_Climb::OnExitMontageCompleted()
 {
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+	if (!Character || !CurrentLadder.IsValid())
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+		return;
+	}
+
+	//탈출지점
+	const FVector Desired = CurrentLadder->GetTopExitNavPoint();
+
+	FVector NavSafeLoc = Desired;
+	if (UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(Character->GetWorld()))
+	{
+		FNavLocation Proj;
+		if (NavSys->ProjectPointToNavigation(Desired, Proj, NavProjectExtent))
+		{
+			NavSafeLoc = Proj.Location;
+		}
+	}
+
+	if (CachedMovement.IsValid())
+	{
+		CachedMovement->SetMovementMode(MOVE_Flying);
+	}
+
+	ExitNavSnapTask = UAbilityTask_ApplyRootMotionMoveToForce::ApplyRootMotionMoveToForce(
+		this,
+		TEXT("LadderExitNavSnap"),
+		NavSafeLoc,
+		ExitNavSnapDuration,
+		false,
+		MOVE_Walking,
+		false,
+		nullptr,
+		ERootMotionFinishVelocityMode::ClampVelocity,
+		FVector::ZeroVector,
+		0.f);
+
+	ExitNavSnapTask->OnTimedOut.AddDynamic(this, &UGA_Climb::OnExitNavSnapFinished);
+	ExitNavSnapTask->OnTimedOutAndDestinationReached.AddDynamic(this, &UGA_Climb::OnExitNavSnapFinished);
+	ExitNavSnapTask->ReadyForActivation();
 }
 
 void UGA_Climb::OnExitMontageInterrupted()
@@ -205,6 +253,11 @@ void UGA_Climb::EndAbility(
 	{
 		EntryMoveTask->EndTask();
 		EntryMoveTask = nullptr;
+	}
+	if (ExitNavSnapTask)
+	{
+		ExitNavSnapTask->EndTask();
+		ExitNavSnapTask = nullptr;
 	}
 	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
