@@ -15,9 +15,10 @@ UE 게임의 데이터 영속(세이브)을 처리하는 백엔드. 로컬에선
 2. **supabase CLI 바이너리 다운로드** (`supabase\.bin\` — Node/scoop/npm 불필요)
 3. 첫 실행이면 `supabase init` (생성된 `config.toml`은 **커밋**하면 팀원은 init 생략)
 4. `supabase start` + `supabase db reset` (마이그레이션 + 시드 적용)
+5. `Config\DefaultGYPersistence.ini` 자동 생성 (로컬 supabase 의 URL/Secret key 주입)
 
-`Config\DefaultGYPersistence.ini` 는 **로컬 값(URL + demo 키)이 커밋돼 있어** 따로 생성 안 함.
-(혹시 `supabase status` 의 service_role 키와 다르면 그 값으로 교체)
+> ini 는 **커밋하지 않는다**(로컬 키 포함, GitHub Secret Scanning 차단 회피). db-setup 이 각자 로컬 값으로 생성한다.
+> 호스티드(실서버) 값은 패키징 시 CI/env 로 주입 (이 ini 에 넣지 말 것).
 
 끝나면:
 - Studio: http://127.0.0.1:54323 / API: http://127.0.0.1:54321

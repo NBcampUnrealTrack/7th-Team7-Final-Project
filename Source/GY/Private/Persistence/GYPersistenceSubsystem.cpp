@@ -66,15 +66,15 @@ void UGYPersistenceSubsystem::LoadConfig()
 {
 	const UGYPersistenceSettings* Settings = GetDefault<UGYPersistenceSettings>();
 	BaseUrl = Settings->ServerBaseUrl;
-	ServiceRoleKey = Settings->ServiceRoleKey;
+	SecretKey = Settings->SecretKey;
 
 	if (BaseUrl.IsEmpty())
 	{
 		GY_WARN(Network, KDY, "ServerBaseUrl not set (GY Persistence settings)");
 	}
-	if (ServiceRoleKey.IsEmpty())
+	if (SecretKey.IsEmpty())
 	{
-		GY_WARN(Network, KDY, "ServiceRoleKey not set (GY Persistence settings)");
+		GY_WARN(Network, KDY, "SecretKey not set (GY Persistence settings)");
 	}
 }
 
@@ -87,8 +87,8 @@ void UGYPersistenceSubsystem::LoadCharacter(int32 CharacterId)
 	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 	Request->SetVerb(TEXT("GET"));
 	Request->SetURL(Url);
-	Request->SetHeader(TEXT("apikey"), ServiceRoleKey);
-	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *ServiceRoleKey));
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
 	Request->OnProcessRequestComplete().BindUObject(this, &UGYPersistenceSubsystem::OnLoadComplete);
 	Request->ProcessRequest();
 
@@ -121,8 +121,8 @@ void UGYPersistenceSubsystem::SaveCharacter(int32 CharacterId, int32 Level, int3
 	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 	Request->SetVerb(TEXT("POST"));
 	Request->SetURL(Url);
-	Request->SetHeader(TEXT("apikey"), ServiceRoleKey);
-	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *ServiceRoleKey));
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	Request->SetContentAsString(BodyString);
 	Request->OnProcessRequestComplete().BindUObject(this, &UGYPersistenceSubsystem::OnSaveComplete);
