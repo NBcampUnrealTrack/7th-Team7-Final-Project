@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "BrainComponent.h"
+#include "NavigationSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Core/GameplayTags/FactionTags.h"
 #include "Enemy/Component/EnemyAggroComponent.h"
@@ -185,7 +186,20 @@ void AGYEnemyAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 	{
 		if (BB->GetValueAsObject(EnemyBBKeys::TargetActor) == nullptr)
 		{
-			BB->SetValueAsVector(EnemyBBKeys::InvestigateLocation, Stimulus.StimulusLocation);
+			FVector ScatteredLocation = Stimulus.StimulusLocation;
+
+			if (UNavigationSystemV1* NavSys =
+				FNavigationSystem::GetCurrent<UNavigationSystemV1>(this))
+			{
+				FNavLocation OutLoc;
+				if (NavSys->GetRandomReachablePointInRadius(
+					Stimulus.StimulusLocation, InvestigateScatterRadius, OutLoc))
+				{
+					ScatteredLocation = OutLoc.Location;
+				}
+			}
+
+			BB->SetValueAsVector(EnemyBBKeys::InvestigateLocation, ScatteredLocation);
 		}
 	}
 }

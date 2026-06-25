@@ -7,6 +7,7 @@
 #include "StateTreeLinker.h"
 
 #include "Enemy/Component/BossPatternSelectorComponent.h"
+#include "Logging/GYLogManager.h"
 
 bool FPlayPattern::Link(FStateTreeLinker& Linker)
 {
@@ -26,6 +27,8 @@ EStateTreeRunStatus FPlayPattern::EnterState(FStateTreeExecutionContext& Context
 	if (!Selector) return EStateTreeRunStatus::Failed;
 
 	TSubclassOf<UGameplayAbility> Ability = Selector->ConsumePendingAbility();
+	GY_LOG(AI, ESK, "PlayPattern: EnterState Ability=%s",
+		Ability ? *Ability->GetName() : TEXT("NULL"));
 	if (!Ability) return EStateTreeRunStatus::Failed;
 
 	AAIController* AI = Cast<AAIController>(Context.GetOwner());
@@ -34,7 +37,34 @@ EStateTreeRunStatus FPlayPattern::EnterState(FStateTreeExecutionContext& Context
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(AI->GetPawn());
 	if (!ASC) return EStateTreeRunStatus::Failed;
 
-	if (!ASC->TryActivateAbilityByClass(Ability)) return EStateTreeRunStatus::Failed;
+	const bool bActivated = ASC->TryActivateAbilityByClass(Ability);
+	GY_LOG(AI, ESK, "PlayPattern: TryActivateAbilityByClass(%s) → %d",
+		*Ability->GetName(), bActivated);
+	if (!bActivated)
+	{
+		const FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromClass(Ability);
+		FGameplayTagContainer OwnedTags;
+		ASC->GetOwnedGameplayTags(OwnedTags);
+
+		FString ActiveAbilities;
+		for (const FGameplayAbilitySpec& ActiveSpec : ASC->GetActivatableAbilities())
+		{
+			if (ActiveSpec.IsActive() && ActiveSpec.Ability)
+			{
+				ActiveAbilities += FString::Printf(TEXT("%s,"),
+					*ActiveSpec.Ability->GetClass()->GetName());
+			}
+		}
+		if (ActiveAbilities.IsEmpty()) ActiveAbilities = TEXT("(없음)");
+
+		GY_WARN(AI, ESK,
+			"PlayPattern: 활성화 실패 — SpecFound=%d, IsActive=%d, ActiveAbilities=[%s], OwnedTags=[%s]",
+			Spec != nullptr,
+			Spec ? Spec->IsActive() : -1,
+			*ActiveAbilities,
+			*OwnedTags.ToStringSimple());
+		return EStateTreeRunStatus::Failed;
+	}
 
 	Data.PlayingAbility = Ability;
 	Data.bActivated = true;

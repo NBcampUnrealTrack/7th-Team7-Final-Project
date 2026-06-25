@@ -11,6 +11,7 @@ UBTTask_TriggerAbilityEvent::UBTTask_TriggerAbilityEvent()
 {
 	NodeName = TEXT("Trigger Ability Event");
 	bNotifyTaskFinished = true;
+	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTTask_TriggerAbilityEvent::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
@@ -62,6 +63,20 @@ void UBTTask_TriggerAbilityEvent::OnTaskFinished(UBehaviorTreeComponent& OwnerCo
 				ActiveAbility->GetAbilitySystemComponentFromActorInfo())
 			{
 				ASC->CancelAbility(ActiveAbility);
+			}
+
+			if (AAIController* AIC = OwnerComp.GetAIOwner())
+			{
+				if (APawn* Pawn = AIC->GetPawn())
+				{
+					if (USkeletalMeshComponent* Mesh = Pawn->FindComponentByClass<USkeletalMeshComponent>())
+					{
+						if (UAnimInstance* AnimInst = Mesh->GetAnimInstance())
+						{
+							AnimInst->StopAllMontages(0.15f);
+						}
+					}
+				}
 			}
 		}
 		ActiveAbility = nullptr;

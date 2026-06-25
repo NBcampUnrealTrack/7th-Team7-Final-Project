@@ -146,6 +146,11 @@ protected:
 		meta = (ToolTip = "페이즈 진입 시 보스가 현재 사용 중인 어빌리티 중 이 태그들을 가진 어빌리티는 즉시 CancelAbilities 로 중단된다."))
 	FGameplayTagContainer CancelAbilitiesWithTags;
 
+	/** 진입 시 강제로 클렌즈할 ActiveGameplayEffect 의 매칭 태그 */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Entry",
+		meta = (ToolTip = "페이즈 진입 시 보스 ASC 에 붙어 있던 ActiveGameplayEffect 중, 이 컨테이너의 태그를 (Asset/Granted Tag 매칭) 가진 효과를 즉시 강제 제거한다. 무적 부여 직전에 남아 있던 Stagger/Stun 같은 CC 잔재 청소용. 일반적으로 Effect.Type.CC 만 넣어두면 된다."))
+	FGameplayTagContainer CleanseTagsOnEntry;
+
 	/** 진입 시 보스에게 적용할 영구 GE (예 : 스탯 강화 ) */
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Entry",
 		meta = (ToolTip = "페이즈 진입 시 보스 ASC 에 적용할 영구 GameplayEffect 들. 예: 페이즈 스탯 강화. 페이즈 어빌리티가 캔슬되면 자동 제거된다."))
