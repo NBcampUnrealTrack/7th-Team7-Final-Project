@@ -5,14 +5,20 @@
 namespace GYGameplayTags
 {
 	// GameplayCue - 일단 임시 구조, 추후 수정 가능
+	// 플레이어 피격
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Damage_Light);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Damage_Heavy);
 
 	/* 피격 리액션 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_HitReaction);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Stagger_Level1);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Down_Level2);
 
-	/* 플레이어 피격 */
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Hit_Light);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Hit_Heavy);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Hit_Critical);
+	/* 플레이어 공격 적중 */
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Hit_Light);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Hit_Heavy);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Hit_Critical);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Hit_ParryCounter);
 	/* 보스 액션 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Boss_Slam);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Boss_Roar);

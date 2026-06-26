@@ -2,14 +2,20 @@
 
 namespace GYGameplayTags
 {
-
+	// 플레이어 피격
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Damage_Light, "GameplayCue.Player.Damage.Light")
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Damage_Heavy, "GameplayCue.Player.Damage.Heavy")
+	
 	/* 피격 리액션 */
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_HitReaction, "GameplayCue.Combat.HitReaction");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Stagger_Level1, "GameplayCue.Player.Stagger.Level1")
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Down_Level2, "GameplayCue.Player.Down.Level2")
 
-	// 플레이어 피격
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Hit_Light, "GameplayCue.Combat.Hit.Light");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Hit_Heavy, "GameplayCue.Combat.Hit.Heavy");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Hit_Critical, "GameplayCue.Combat.Hit.Critical");
+	// 플레이어 공격 적중
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Hit_Light, "GameplayCue.Player.Hit.Light");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Hit_Heavy, "GameplayCue.Player.Hit.Heavy");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Hit_Critical, "GameplayCue.Player.Hit.Critical");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Hit_ParryCounter, "GameplayCue.Player.Hit.ParryCounter");
 
 	// 보스 액션
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Boss_Slam, "GameplayCue.Combat.Boss.Slam");

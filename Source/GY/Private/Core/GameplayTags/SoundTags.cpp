@@ -29,6 +29,19 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Potion, "Sound.Player.Potion")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Healing, "Sound.Player.Healing")
 
+	// 공격 적중
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Hit_Light, "Sound.Player.Hit.Light")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Hit_Heavy, "Sound.Player.Hit.Heavy")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Hit_Critical, "Sound.Player.Hit.Critical")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Hit_ParryCounter, "Sound.Player.Hit.ParryCounter")
+
+	// 플레이어 피격
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Damage_Light, "Sound.Player.Damage.Light")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Damage_Heavy, "Sound.Player.Damage.Heavy")
+
+	// 경직
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Stagger_Level1, "Sound.Player.Stagger.Level1")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Down_Level2, "Sound.Player.Down.Level2")
 
 	/* 적 사운드 */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Goblin_Roar, "Sound.Goblin.Roar")
