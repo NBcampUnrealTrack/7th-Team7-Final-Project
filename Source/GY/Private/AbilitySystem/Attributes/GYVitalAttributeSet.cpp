@@ -6,6 +6,7 @@
 #include "GameplayEffectExtension.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Enemy/GYEnemyCharacterBase.h"
 #include "Logging/GYLogManager.h"
 
 namespace
@@ -189,6 +190,19 @@ void UGYVitalAttributeSet::HandleHitReaction(const FGameplayEffectModCallbackDat
 	Params.Location = TargetActor->GetActorLocation();
 
 	TargetASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Combat_HitReaction, Params);
+	// 플레이어 피격 사운드
+	GY_LOG(Player, CYS, "최종 피해량:%f", DamageDone);
+	if (!Cast<AGYEnemyCharacterBase>(TargetActor))
+	{
+		if (DamageDone > GetCurrentHealth() * 0.1)
+		{
+			TargetASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Player_Damage_Heavy);
+		}
+		else
+		{
+			TargetASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Player_Damage_Light);
+		}
+	}
 }
 
 void UGYVitalAttributeSet::UpdateLowHPState()
