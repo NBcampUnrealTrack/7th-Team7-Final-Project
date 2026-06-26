@@ -36,7 +36,7 @@ void UGYFloatingHPBarWidget::NativeConstruct()
 
 void UGYFloatingHPBarWidget::BindToASC(UAbilitySystemComponent* InASC)
 {
-	if (!InASC || TargetASC.Get() == InASC) return;
+	if (!IsValid(InASC) || TargetASC.Get() == InASC) return;
 	TargetASC = InASC;
 
 	if (UWorld* World = GetWorld())
@@ -45,14 +45,14 @@ void UGYFloatingHPBarWidget::BindToASC(UAbilitySystemComponent* InASC)
 	}
 
 	// 델리게이트에서 값 변경 폭을 체크하여 데미지인지 판별
-	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(),
+	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(), this,
 		[this](const FOnAttributeChangeData& Data)
 		{
 			const bool bDamaged = Data.NewValue < (Data.OldValue - KINDA_SMALL_NUMBER);
 			RefreshHealth(bDamaged);
 		});
 
-	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetMaxHealthAttribute(),
+	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetMaxHealthAttribute(), this,
 		[this](const FOnAttributeChangeData&)
 		{
 			RefreshHealth(false);
@@ -129,6 +129,7 @@ void UGYFloatingHPBarWidget::HandlePlayerNameMessage(
 void UGYFloatingHPBarWidget::TryBindToOwner(AActor* InCharacter)
 {
 	if (TargetASC.IsValid()) return;
+	if (!IsValid(InCharacter)) return;
 
 	IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(InCharacter);
 	if (!ASI || !ASI->GetAbilitySystemComponent()) return;
