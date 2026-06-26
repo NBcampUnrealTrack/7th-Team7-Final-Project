@@ -17,28 +17,9 @@ UBTService_SelectAbility::UBTService_SelectAbility()
 	bCallTickOnSearchStart = true;
 }
 
-void UBTService_SelectAbility::OnEQSFinished(TSharedPtr<FEnvQueryResult> Result)
-{
-	PendingQueryID = INDEX_NONE;
-
-	UBehaviorTreeComponent* Owner = CachedOwnerComp.Get();
-	if (!Owner) return;
-
-	UBlackboardComponent* BB = Owner->GetBlackboardComponent();
-	if (!BB) return;
-
-	if (!Result.IsValid() || !Result->IsSuccessful() || Result->Items.Num() == 0)
-	{
-		BB->ClearValue(EnemyBBKeys::AttackPosition);
-		return;
-	}
-
-	BB->SetValueAsVector(EnemyBBKeys::AttackPosition, Result->GetItemAsLocation(0));
-}
-
 void UBTService_SelectAbility::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	    Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
+	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
     AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetAIOwner());
     if (!AIC) return;
@@ -81,21 +62,16 @@ void UBTService_SelectAbility::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 
     if (!BestAbility || !BestAbility->EQSAsset) return;
 
-	FEnvQueryRequest QueryRequest(BestAbility->EQSAsset, Enemy);
+	BB->SetValueAsObject(EnemyBBKeys::SelectedAbility, BestAbility);
+	BB->SetValueAsObject(EnemyBBKeys::EnvQuery,BestAbility->EQSAsset);
 	if (BestAbility->AttackType == EGYEnemyAttackType::Melee)
 	{
-		QueryRequest.SetFloatParam(TEXT("AttackRange"),    BestAbility->AttackRange * 0.7f);
-		QueryRequest.SetFloatParam(TEXT("AttackRangeMin"), BestAbility->AttackRange * 0.3f);
+		BB->SetValueAsFloat(EnemyBBKeys::AttackRadius,BestAbility->AttackRange * 0.5f);
+		BB->SetValueAsFloat(EnemyBBKeys::AttackRadiusMin,BestAbility->AttackRange * 0.2f);
 	}
 	else
 	{
-		QueryRequest.SetFloatParam(TEXT("AttackRange"),    BestAbility->AttackRange * 0.95f);
-		QueryRequest.SetFloatParam(TEXT("AttackRangeMin"), BestAbility->AttackRange * 0.5f);
+		BB->SetValueAsFloat(EnemyBBKeys::AttackRadius,BestAbility->AttackRange * 0.9f);
+		BB->SetValueAsFloat(EnemyBBKeys::AttackRadiusMin,BestAbility->AttackRange * 0.2f);
 	}
-
-	CachedOwnerComp = &OwnerComp;
-	PendingQueryID = QueryRequest.Execute(
-		EEnvQueryRunMode::SingleResult,
-		this,
-		&UBTService_SelectAbility::OnEQSFinished);
 }
