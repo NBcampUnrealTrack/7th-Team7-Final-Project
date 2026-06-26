@@ -33,9 +33,6 @@ EBTNodeResult::Type UBTTask_ExecuteSelectedAbility::ExecuteTask(UBehaviorTreeCom
 		BB->GetValueAsObject(EnemyBBKeys::SelectedAbility));
 	if (!SelectedAbility) return EBTNodeResult::Failed;
 
-	const float DistToTarget = FVector::Dist(Enemy->GetActorLocation(), Target->GetActorLocation());
-	if (!SelectedAbility->CanBeSelectedByAI(ASC, DistToTarget))
-		return EBTNodeResult::Failed;
 
 	FGameplayAbilitySpecHandle Handle;
 	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
@@ -77,6 +74,8 @@ void UBTTask_ExecuteSelectedAbility::OnTaskFinished(UBehaviorTreeComponent& Owne
 			CachedASC->CancelAllAbilities();
 		CachedASC = nullptr;
 	}
+
+	CachedOwnerComp->GetBlackboardComponent()->SetValueAsObject(EnemyBBKeys::SelectedAbility, NULL);
 	CachedOwnerComp = nullptr;
 }
 
@@ -85,4 +84,5 @@ void UBTTask_ExecuteSelectedAbility::OnASCAbilityEnded(const FAbilityEndedData& 
 	if (EndedData.AbilitySpecHandle != CachedAbilityHandle) return;
 	if (CachedASC) CachedASC->OnAbilityEnded.RemoveAll(this);
 	if (CachedOwnerComp) FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
+
 }
