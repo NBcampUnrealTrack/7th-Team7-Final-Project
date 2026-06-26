@@ -452,6 +452,23 @@ void UGYHeroComponent::OnChargeThreshold()
 	UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
 	if (!ASC) return;
 
+	FGameplayTagContainer OwnedTags;
+	ASC->GetOwnedGameplayTags(OwnedTags);
+	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+	{
+		const UGYPlayerGameplayAbility* PA = Cast<UGYPlayerGameplayAbility>(Spec.Ability);
+		if (!PA || !PA->GetAssetTags().HasAny(ChargeAbilityTags)) continue;
+		for (const UAbilityFragment* Frag : PA->Fragments)
+		{
+			const UGYChargeFragment* CF = Cast<UGYChargeFragment>(Frag);
+			if (!CF) continue;
+			const FGYChargeData* Data = CF->GetBestMatchingData(OwnedTags);
+			if (!Data) continue;
+			if (Data->ChargeCost.Attribute.IsValid() && ASC->GetNumericAttributeBase(Data->ChargeCost.Attribute) <= 0.f)
+				return;
+		}
+	}
+
 	APawn* Pawn = GetPawn<APawn>();
 	for (const FGameplayTag& Tag : ChargeThresholdEventTags)
 	{

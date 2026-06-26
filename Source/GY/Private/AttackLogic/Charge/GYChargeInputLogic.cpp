@@ -2,11 +2,14 @@
 #include "AttackLogic/Charge/GYChargeFragment.h"
 #include "AttackLogic/Charge/GYChargeMontageFragment.h"
 #include "AttackLogic/Shared/GYCollisionFragment.h"
+#include "AttackLogic/Shared/GYAttributeCostHelpers.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/AbilityTags.h"
+
+using GYAttributeCostHelpers::ApplyCost;
 
 void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
@@ -45,13 +48,8 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		Ability->PlayMontageForLogic(CachedMontageSet->ChargeMontage, 1.f);
 	}
 
-	if (ASC && ChargeData && ChargeData->ChargeCost.Attribute.IsValid() && ChargeData->ChargeCost.Amount > 0.f)
-	{
-		const float Current = ASC->GetNumericAttributeBase(ChargeData->ChargeCost.Attribute);
-		ASC->SetNumericAttributeBase(ChargeData->ChargeCost.Attribute, FMath::Max(0.f, Current - ChargeData->ChargeCost.Amount));
-		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
-			GYASC->NotifyAttributeChanged(ChargeData->ChargeCost.Attribute);
-	}
+	if (ChargeData)
+		ApplyCost(ASC, ChargeData->ChargeCost);
 
 	bCharging = true;
 	ChargeStartTime = Ability->GetWorld()->GetTimeSeconds();
@@ -177,14 +175,10 @@ void UGYChargeInputLogic::ExecuteAttack()
 			}
 
 			UAbilitySystemComponent* CostASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
-			if (CostASC)
-			{
-				const float CostAmount = FMath::Lerp(0.f, CostData->AttackCost.Amount, Alpha);
-				const float Current = CostASC->GetNumericAttributeBase(CostData->AttackCost.Attribute);
-				CostASC->SetNumericAttributeBase(CostData->AttackCost.Attribute, FMath::Max(0.f, Current - CostAmount));
-				if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(CostASC))
-					GYASC->NotifyAttributeChanged(CostData->AttackCost.Attribute);
-			}
+			FGYAttributeCost LerpedCost;
+			LerpedCost.Attribute = CostData->AttackCost.Attribute;
+			LerpedCost.Amount = FMath::Lerp(0.f, CostData->AttackCost.Amount, Alpha);
+			ApplyCost(CostASC, LerpedCost);
 		}
 	}
 
