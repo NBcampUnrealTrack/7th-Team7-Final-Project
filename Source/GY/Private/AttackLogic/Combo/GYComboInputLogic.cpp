@@ -2,10 +2,13 @@
 #include "AttackLogic/Combo/GYComboFragment.h"
 #include "AttackLogic/Combo/GYComboMontageFragment.h"
 #include "AttackLogic/Shared/GYCollisionFragment.h"
+#include "AttackLogic/Shared/GYAttributeCostHelpers.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/AbilityTags.h"
+
+using GYAttributeCostHelpers::ApplyCost;
 
 void UGYComboInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
@@ -87,6 +90,25 @@ void UGYComboInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 	if (EventTag == GYGameplayTags::Event_Input_Attack)
 	{
 		if (!bReady || !bWindowOpen || !CachedAbility->IsLocallyControlled()) return;
+
+		if (UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo())
+		{
+			FGameplayTagContainer OwnedTags;
+			ASC->GetOwnedGameplayTags(OwnedTags);
+			if (const UGYComboFragment* Fragment = CachedAbility->GetFragment<UGYComboFragment>())
+			{
+				if (const TArray<FGYComboStepData>* Steps = Fragment->GetBestMatchingSteps(OwnedTags))
+				{
+					if (Steps->IsValidIndex(ComboIndex))
+					{
+						const FGameplayAttribute& Attr = (*Steps)[ComboIndex].StaminaCost.Attribute;
+						if (Attr.IsValid() && ASC->GetNumericAttributeBase(Attr) <= 0.f)
+							return;
+					}
+				}
+			}
+		}
+
 		AdvanceCombo();
 	}
 	else if (EventTag == GYGameplayTags::Event_Combo_Advance)
@@ -146,13 +168,7 @@ void UGYComboInputLogic::PlayCurrentMontage()
 			Impact = Step.Impact;
 
 			UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
-			if (ASC && Step.StaminaCost.Attribute.IsValid() && Step.StaminaCost.Amount > 0.f)
-			{
-				const float Current = ASC->GetNumericAttributeBase(Step.StaminaCost.Attribute);
-				ASC->SetNumericAttributeBase(Step.StaminaCost.Attribute, FMath::Max(0.f, Current - Step.StaminaCost.Amount));
-				if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
-					GYASC->NotifyAttributeChanged(Step.StaminaCost.Attribute);
-			}
+			ApplyCost(ASC, Step.StaminaCost);
 		}
 		CachedAbility->SetCurrentHitImpact(Impact);
 	}
