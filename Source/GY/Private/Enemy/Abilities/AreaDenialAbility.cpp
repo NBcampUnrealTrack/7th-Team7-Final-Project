@@ -106,12 +106,30 @@ void UAreaDenialAbility::ExecuteAreaDenail()
 
 		if (!IsSpacingOK(Candidate, Placed)) continue;
 
+		FVector GroundLoc;
+		{
+			const FVector TraceStart = Candidate + FVector(0.f, 0.f, GroundTraceHeightAbove);
+			const FVector TraceEnd   = Candidate - FVector(0.f, 0.f, GroundTraceHeightBelow);
+
+			FHitResult GroundHit;
+			FCollisionQueryParams TraceParams(SCENE_QUERY_STAT(AreaDenialGround), false);
+			if (BossActor) TraceParams.AddIgnoredActor(BossActor);
+
+			if (!World->LineTraceSingleByChannel(
+					GroundHit, TraceStart, TraceEnd, GroundTraceChannel, TraceParams))
+			{
+				continue;
+			}
+
+			GroundLoc = GroundHit.ImpactPoint;
+		}
+
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride =
 			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		Params.Owner = BossActor;
 
-		const FVector SpawnLoc = Candidate + FVector(0.f, 0.f, HazardZOffset);
+		const FVector SpawnLoc = Candidate + FVector(0.f, 0.f, HazardGroundOffset);
 		if (AActor* HazardActor = World->SpawnActor<AActor>(HazardActorClass, SpawnLoc, FRotator::ZeroRotator, Params))
 		{
 			HazardActor->SetLifeSpan(WarningDuration);
