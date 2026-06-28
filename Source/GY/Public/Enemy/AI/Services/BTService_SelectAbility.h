@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTService.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
 #include "BTService_SelectAbility.generated.h"
 
 UCLASS()

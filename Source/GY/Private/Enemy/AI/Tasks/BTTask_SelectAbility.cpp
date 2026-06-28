@@ -1,4 +1,4 @@
-#include "Enemy/AI/Tasks/BTTask_ExecuteAttack.h"
+#include "Enemy/AI/Tasks/BTTask_SelectAbility.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Enemy/Abilities/GYEnemyAttackAbilityBase.h"
@@ -6,14 +6,14 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
-UBTTask_ExecuteAttack::UBTTask_ExecuteAttack()
+UBTTask_SelectAbility::UBTTask_SelectAbility()
 {
 	NodeName = TEXT("Execute Ability");
 	bNotifyTaskFinished = true;
 	bCreateNodeInstance = true;
 }
 
-EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTTask_SelectAbility::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetAIOwner());
 	if (!AIC) return EBTNodeResult::Failed;
@@ -53,8 +53,6 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 
 		if (Score < 0.f) continue;;
 
-		if (DistToTarget > AttackAbility->AttackRange + 20.f) continue;
-
 		if (Score > BestScore)
 		{
 			BestScore = Score;
@@ -65,31 +63,32 @@ EBTNodeResult::Type UBTTask_ExecuteAttack::ExecuteTask(UBehaviorTreeComponent& O
 
 	if (!BestAbility) return EBTNodeResult::Failed;
 
-	Enemy->FaceToTarget(Target);
-
 	CachedOwnerComp = &OwnerComp;
 	ActiveAbility = BestAbility;
 	CachedAbilityHandle = BestHandle;
 	CachedASC = ASC;
 
-	ASC->OnAbilityEnded.AddUObject(this, &UBTTask_ExecuteAttack::OnASCAbilityEnded);
+	ASC->OnAbilityEnded.AddUObject(this, &UBTTask_SelectAbility::OnASCAbilityEnded);
 
-	if (!ASC->TryActivateAbility(BestHandle))
+	if (BestAbility->AttackType == EGYEnemyAttackType::Melee)
 	{
-		ASC->OnAbilityEnded.RemoveAll(this);
-		ActiveAbility = nullptr;
-		CachedOwnerComp = nullptr;
-		CachedASC = nullptr;
-		return EBTNodeResult::Failed;
+		OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AttackRadius,BestAbility->AttackRange * 0.5f);
+		OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AttackRadiusMin,BestAbility->AttackRange * 0.2f);
 	}
+	else
+	{
+		OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AttackRadius,BestAbility->AttackRange * 0.9f);
+		OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AttackRadiusMin,BestAbility->AttackRange * 0.2f);
+	}
+	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AbilityDistanceScore, BestAbility->DistanceScore);
+	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AbilityAngleScore, BestAbility->AngleScore);
+	OwnerComp.GetBlackboardComponent()->SetValueAsObject(EnemyBBKeys::SelectedAbility, BestAbility);
+	OwnerComp.GetBlackboardComponent()->SetValueAsObject(EnemyBBKeys::LastUsedAbility, BestAbility);
 
-	OwnerComp.GetBlackboardComponent()->SetValueAsObject(
-		EnemyBBKeys::LastUsedAbility, BestAbility);
-
-	return EBTNodeResult::InProgress;
+	return EBTNodeResult::Succeeded;
 }
 
-void UBTTask_ExecuteAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
+void UBTTask_SelectAbility::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
 	EBTNodeResult::Type TaskResult)
 {
 	if (CachedASC)
@@ -99,24 +98,24 @@ void UBTTask_ExecuteAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, ui
 	}
 	ActiveAbility = nullptr;
 
-	if (TaskResult == EBTNodeResult::Aborted)
-	{
-		AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetAIOwner());
-		if (!AIC) return;
-
-		AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(AIC->GetPawn());
-		if (!Enemy) return;
-
-		if (UAbilitySystemComponent* ASC = Enemy->GetAbilitySystemComponent())
-		{
-			ASC->CancelAllAbilities();
-		}
-	}
+	// if (TaskResult == EBTNodeResult::Aborted)
+	// {
+	// 	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetAIOwner());
+	// 	if (!AIC) return;
+	//
+	// 	AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(AIC->GetPawn());
+	// 	if (!Enemy) return;
+	//
+	// 	if (UAbilitySystemComponent* ASC = Enemy->GetAbilitySystemComponent())
+	// 	{
+	// 		ASC->CancelAllAbilities();
+	// 	}
+	// }
 
 	CachedOwnerComp = nullptr;
 }
 
-void UBTTask_ExecuteAttack::OnASCAbilityEnded(const FAbilityEndedData& EndedData)
+void UBTTask_SelectAbility::OnASCAbilityEnded(const FAbilityEndedData& EndedData)
 {
 	if (EndedData.AbilitySpecHandle != CachedAbilityHandle) return;
 

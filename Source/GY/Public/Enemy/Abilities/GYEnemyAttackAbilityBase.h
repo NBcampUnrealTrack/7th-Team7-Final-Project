@@ -5,6 +5,8 @@
 #include "Enemy/DataTables/EnemyAbilityWeightRow.h"
 #include "GYEnemyAttackAbilityBase.generated.h"
 
+class UEnvQuery;
+
 UENUM(BlueprintType)
 enum class EGYEnemyAttackType : uint8
 {
@@ -28,6 +30,8 @@ public:
 
 	static float CalcAbilityScore(UGYEnemyAttackAbilityBase* Ability, const UAbilitySystemComponent* ASC,
 		float DistToTarget, float AngleDeg, const UObject* LastUsed);
+
+	void CanExecuteAbility();
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -82,4 +86,19 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (Categories = "GameplayCue"))
 	FGameplayTag AttackCueTag; // 사운드 비주얼 FX 용
+
+	UPROPERTY(EditAnywhere, Category = "EQS")
+	TObjectPtr<UEnvQuery> EQSAsset;
+
+	UPROPERTY(EditAnywhere, Category = "EQS")
+	TObjectPtr<UEnvQuery> EQSCheckDistance;
+
+	UPROPERTY(EditAnywhere, Category = "EQS")
+	TObjectPtr<UEnvQuery> EQSCheckAngle;
+
+	UPROPERTY(EditAnywhere, Category = "EQS|BB")
+	float DistanceScore = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "EQS|BB")
+	float AngleScore = 0.5f;
 };

@@ -5,6 +5,9 @@
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Enemy/Abilities/GYEnemyAttackAbilityBase.h"
+#include "Enemy/AI/Tasks/BTTask_UpdateAttackPos.h"
+#include "EnvironmentQuery/EnvQuery.h"
+#include "EnvironmentQuery/EnvQueryManager.h"
 
 UBTService_SelectAbility::UBTService_SelectAbility()
 {
@@ -18,41 +21,57 @@ void UBTService_SelectAbility::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetAIOwner());
-	if (!AIC) return;
+    AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetAIOwner());
+    if (!AIC) return;
 
-	AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(AIC->GetPawn());
-	if (!Enemy) return;
+    AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(AIC->GetPawn());
+    if (!Enemy) return;
 
-	UAbilitySystemComponent* ASC = Enemy->GetAbilitySystemComponent();
-	if (!ASC) return;
+    UAbilitySystemComponent* ASC = Enemy->GetAbilitySystemComponent();
+    if (!ASC) return;
 
-	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-	AActor* Target = Cast<AActor>(BB->GetValueAsObject(EnemyBBKeys::TargetActor));
-	if (!Target) return;
+    UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+    if (!BB) return;
 
-	const float DistToTarget = FVector::Dist(Enemy->GetActorLocation(), Target->GetActorLocation());
-	UObject* LastUsed = BB->GetValueAsObject(EnemyBBKeys::LastUsedAbility);
-	FVector ToTarget = (Target->GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
-	float DotResult = FVector::DotProduct(Enemy->GetActorForwardVector(), ToTarget);
-	float AngleDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(DotResult, -1.f, 1.f)));
+    AActor* Target = Cast<AActor>(BB->GetValueAsObject(EnemyBBKeys::TargetActor));
+    if (!Target) return;
 
-	UGYEnemyAttackAbilityBase* BestAbility = nullptr;
-	float BestScore = -1.f;
+    const float DistToTarget = FVector::Dist(Enemy->GetActorLocation(), Target->GetActorLocation());
+    UObject* LastUsed = BB->GetValueAsObject(EnemyBBKeys::LastUsedAbility);
+    FVector ToTarget = (Target->GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
+    float DotResult = FVector::DotProduct(Enemy->GetActorForwardVector(), ToTarget);
+    float AngleDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(DotResult, -1.f, 1.f)));
 
-	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
-	{
-		UGYEnemyAttackAbilityBase* Ability = Cast<UGYEnemyAttackAbilityBase>(Spec.Ability);
-		if (!Ability) continue;
-		float Score = UGYEnemyAttackAbilityBase::CalcAbilityScore(
-			Ability, ASC, DistToTarget, AngleDeg, LastUsed);
+    UGYEnemyAttackAbilityBase* BestAbility = nullptr;
+    float BestScore = -1.f;
 
-		if (Score > BestScore)
-		{
-			BestScore = Score;
-			BestAbility = Ability;
-		}
-	}
+    for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
+    {
+        UGYEnemyAttackAbilityBase* Ability = Cast<UGYEnemyAttackAbilityBase>(Spec.Ability);
+        if (!Ability) continue;
+
+        float Score = UGYEnemyAttackAbilityBase::CalcAbilityScore(
+            Ability, ASC, DistToTarget, AngleDeg, LastUsed);
+
+        if (Score > BestScore)
+        {
+            BestScore = Score;
+            BestAbility = Ability;
+        }
+    }
+
+    if (!BestAbility || !BestAbility->EQSAsset) return;
 
 	BB->SetValueAsObject(EnemyBBKeys::SelectedAbility, BestAbility);
+	BB->SetValueAsObject(EnemyBBKeys::EnvQuery,BestAbility->EQSAsset);
+	if (BestAbility->AttackType == EGYEnemyAttackType::Melee)
+	{
+		BB->SetValueAsFloat(EnemyBBKeys::AttackRadius,BestAbility->AttackRange * 0.5f);
+		BB->SetValueAsFloat(EnemyBBKeys::AttackRadiusMin,BestAbility->AttackRange * 0.2f);
+	}
+	else
+	{
+		BB->SetValueAsFloat(EnemyBBKeys::AttackRadius,BestAbility->AttackRange * 0.9f);
+		BB->SetValueAsFloat(EnemyBBKeys::AttackRadiusMin,BestAbility->AttackRange * 0.2f);
+	}
 }
