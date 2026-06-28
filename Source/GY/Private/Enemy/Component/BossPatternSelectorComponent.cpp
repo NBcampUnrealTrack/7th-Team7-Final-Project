@@ -1,6 +1,7 @@
 #include "Enemy/Component/BossPatternSelectorComponent.h"
 
 #include "AIController.h"
+#include "Logging/GYLogManager.h"
 
 UBossPatternSelectorComponent::UBossPatternSelectorComponent()
 {
@@ -123,10 +124,26 @@ TSubclassOf<UGameplayAbility> UBossPatternSelectorComponent::SelectedByWeightedR
 
 	for (const FBossPatternEntry& Pattern : Patterns)
 	{
-		if (!IsPatternAvailable(Pattern, Distance, false, false)) continue;
+		const bool bAvail = IsPatternAvailable(Pattern, Distance, false, false);
+		const float Weight = bAvail ? ComputedDynamicWeight(Pattern, Distance) : 0.f;
 
-		const float Weight = ComputedDynamicWeight(Pattern, Distance);
-		if (Weight <= 0.f) continue;
+		GY_LOG(AI, ESK,
+			"PatternSelect: '%s' Avail=%d Weight=%.2f Dist=%.0f (Min=%.0f Max=%.0f) "
+			"CDLeft=%.2f LastSel=%s AllowConsec=%d",
+			*Pattern.DebugName.ToString(),
+			bAvail ? 1 : 0,
+			Weight,
+			Distance,
+			Pattern.MinDistance,
+			Pattern.MaxDistance,
+			[&]{
+				const float* LT = LastUsedTime.Find(Pattern.AbilityClass);
+				return LT ? FMath::Max(0.f, (*LT + Pattern.Cooldown) - GetWorld()->GetTimeSeconds()) : 0.f;
+			}(),
+			*GetNameSafe(LastSelectedAbility.Get()),
+			Pattern.bAllowConsecutive ? 1 : 0);
+
+		if (!bAvail || Weight <= 0.f) continue;
 
 		Candidates.Add({&Pattern, Weight});
 		TotalWeight += Weight;
@@ -134,6 +151,7 @@ TSubclassOf<UGameplayAbility> UBossPatternSelectorComponent::SelectedByWeightedR
 
 	if (Candidates.Num() == 0 || TotalWeight <= 0.f)
 	{
+		GY_LOG(AI, ESK, "PatternSelect: 후보 없음 (Cand=%d Total=%.2f)", Candidates.Num(), TotalWeight);
 		return nullptr;
 	}
 
