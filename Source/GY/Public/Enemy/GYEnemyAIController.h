@@ -37,6 +37,8 @@ namespace  EnemyBBKeys
 	static const FName AngleScore			= TEXT("AngleScore");
 	static const FName AbilityDistanceScore	= TEXT("AbilityDistanceScore");
 	static const FName AbilityAngleScore	= TEXT("AbilityAngleScore");
+	static const FName AttackAngle			= TEXT("AttackAngle");
+	static const FName IsAwayFromHome		= TEXT("IsAwayFromHome");
 }
 
 UCLASS(BlueprintType, Blueprintable)

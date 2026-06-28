@@ -82,9 +82,9 @@ EBTNodeResult::Type UBTTask_SelectAbility::ExecuteTask(UBehaviorTreeComponent& O
 	}
 	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AbilityDistanceScore, BestAbility->DistanceScore);
 	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AbilityAngleScore, BestAbility->AngleScore);
+	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AttackAngle, BestAbility->AttackAngle);
 	OwnerComp.GetBlackboardComponent()->SetValueAsObject(EnemyBBKeys::SelectedAbility, BestAbility);
 	OwnerComp.GetBlackboardComponent()->SetValueAsObject(EnemyBBKeys::LastUsedAbility, BestAbility);
-
 	return EBTNodeResult::Succeeded;
 }
 
