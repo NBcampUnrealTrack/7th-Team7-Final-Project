@@ -5,6 +5,7 @@
 #include "AreaDenialAbility.generated.h"
 
 class AAreaImpactProjectile;
+class APoisonZoneActor;
 
 UENUM(BlueprintType)
 enum class EHazardPlacementMode : uint8
@@ -37,6 +38,10 @@ protected:
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Attack|AreaDenial")
 	TSubclassOf<AActor> HazardActorClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Attack|AreaDenial|PoisonZone",
+	meta = (ToolTip = "설정되면 ProjectileClass 대신 데칼 자리에 PoisonZoneActor를 스폰. Notify로 트리거됨."))
+	TSubclassOf<APoisonZoneActor> PoisonZoneClass;
 
 	/** 한 번의 Ability 발동으로 배치할 Hazard 개수. 같은 수만큼 Projectile 이 떨어진다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Attack|AreaDenial")
@@ -129,6 +134,11 @@ private:
 	UFUNCTION()
 	void OnProjectileHit(FGameplayEventData Payload);
 
+	void SpawnPoisonZones();
+
+	UFUNCTION()
+	void OnSpawnZonesEvent(FGameplayEventData Payload);
+private:
 	UPROPERTY()
 	TArray<FVector> CachedImpactLocations;
 };

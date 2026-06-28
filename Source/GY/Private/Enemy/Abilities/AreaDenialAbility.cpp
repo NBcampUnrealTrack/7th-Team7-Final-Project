@@ -11,6 +11,7 @@
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
 #include "TimerManager.h"
+#include "Enemy/Hazard/PoisonZoneActor.h"
 
 UAreaDenialAbility::UAreaDenialAbility()
 {
@@ -29,6 +30,15 @@ void UAreaDenialAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 				this, GYGameplayTags::Event_Enemy_WeaponTrace_Hit, nullptr, false);
 		HitTask->EventReceived.AddDynamic(this, &UAreaDenialAbility::OnProjectileHit);
 		HitTask->ReadyForActivation();
+	}
+	if (PoisonZoneClass)
+	{
+		// Notify가 보내는 zone 스폰 이벤트 대기
+		UAbilityTask_WaitGameplayEvent* ZoneTask =
+			UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+				this, GYGameplayTags::Event_Enemy_SpawnAreaDenialZones, nullptr, false);
+		ZoneTask->EventReceived.AddDynamic(this, &UAreaDenialAbility::OnSpawnZonesEvent);
+		ZoneTask->ReadyForActivation();
 	}
 
 	PlayAttackMontage();
@@ -138,12 +148,16 @@ void UAreaDenialAbility::ExecuteAreaDenail()
 		}
 	}
 
-	if (ProjectileClass && Placed.Num() > 0)
+	if (Placed.Num() > 0)
 	{
 		CachedImpactLocations = Placed;
-		FTimerHandle TimerHandle;
-		World->GetTimerManager().SetTimer(TimerHandle, this,
-			&UAreaDenialAbility::SpawnImpactProjectiles, WarningDuration, false);
+
+		if (ProjectileClass)
+		{
+			FTimerHandle TimerHandle;
+			World->GetTimerManager().SetTimer(TimerHandle, this,
+				&UAreaDenialAbility::SpawnImpactProjectiles, WarningDuration, false);
+		}
 	}
 }
 
@@ -206,5 +220,34 @@ void UAreaDenialAbility::OnProjectileHit(FGameplayEventData Payload)
 	HitContext.StunAmount       = Stun;
 	HitContext.bGivesParriedReaction = false;
 	UGYCombatStatics::ApplyHitImpact(HitContext);
+}
+
+void UAreaDenialAbility::SpawnPoisonZones()
+{
+	UWorld* World = GetWorld();
+	if (!World || !PoisonZoneClass) return;
+
+	AActor* Boss = GetAvatarActorFromActorInfo();
+	if (!Boss) return;
+
+	for (const FVector& Loc : CachedImpactLocations)
+	{
+		FActorSpawnParameters Params;
+		Params.Owner = Boss;
+		Params.Instigator = Cast<APawn>(Boss);
+		Params.SpawnCollisionHandlingOverride =
+			ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		APoisonZoneActor* Zone = World->SpawnActor<APoisonZoneActor>(
+			PoisonZoneClass, Loc, FRotator::ZeroRotator, Params);
+
+		if (Zone) Zone->Initialize(Boss);
+	}
+	CachedImpactLocations.Reset();
+}
+
+void UAreaDenialAbility::OnSpawnZonesEvent(FGameplayEventData Payload)
+{
+	SpawnPoisonZones();
 }
 
