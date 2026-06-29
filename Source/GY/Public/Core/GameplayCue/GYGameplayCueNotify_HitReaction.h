@@ -15,4 +15,7 @@ class GY_API UGYGameplayCueNotify_HitReaction : public UGameplayCueNotify_Static
 	GENERATED_BODY()
 public:
 	virtual bool OnExecute_Implementation(AActor* MyTarget,	const FGameplayCueParameters& Parameters) const override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HitCue|VFX")
+	UMaterialInterface* OverlayMaterial;
 };

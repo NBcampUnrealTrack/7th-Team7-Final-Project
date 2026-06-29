@@ -17,13 +17,16 @@ class GY_API UHitReactionComponent : public UActorComponent
 public:
 	UHitReactionComponent();
 	virtual void BeginPlay() override;
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
 	void ApplyHitReaction(const FVector& HitDirection, float Strength = -1.f, FName HitBone = NAME_None);
 	virtual void ApplyParriedReaction(const FVector& HitDirection, FName HitBone = NAME_None);
 
 	void ApplyPhysicsAnimation(const FVector& HitDirection, float Strength, FName HitBone, float Duration);
 
 	void SetHitReactStartBone(FName BoneName);
+
+	void ApplyMaterialOverlay(UMaterialInterface* OverlayMaterial, float Duration);
 
 protected:
 	TWeakObjectPtr<UPhysicalAnimationComponent> PhysicalAnimation;
@@ -57,4 +60,6 @@ private:
 
 	bool bBlendingOut = false;
 	float CurrentBlendWeight = 0.f;
+
+	FTimerHandle OverlayTimerHandle;
 };
