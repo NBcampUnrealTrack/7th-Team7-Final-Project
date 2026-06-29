@@ -26,4 +26,9 @@ public:
 
 	// JSON 값에서 상태 복원 (서버 권위에서만 호출).
 	virtual void ImportSaveData(const TSharedPtr<FJsonValue>& Data) = 0;
+
+	// 이 섹션 복원 전에 먼저 복원돼야 하는 섹션 키들 (GYSaveSectionKeys).
+	// 예: 장착은 인벤 InstanceId 를 참조 → { GYSaveSectionKeys::Inventory } 반환.
+	// PersistenceSubsystem 이 위상정렬해 복원 순서를 결정한다.
+	virtual TArray<FString> GetRestoreDependencies() const { return {}; }
 };

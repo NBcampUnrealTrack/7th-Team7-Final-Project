@@ -1,7 +1,9 @@
 #include "Persistence/GYPersistenceSubsystem.h"
 #include "Persistence/GYPersistenceSettings.h"
 #include "Persistence/GYSaveable.h"
+#include "Persistence/GYSaveSectionKeys.h"
 #include "Logging/GYLogManager.h"
+#include "Templates/Function.h"
 
 #include "HttpModule.h"
 #include "Interfaces/IHttpResponse.h"
@@ -118,11 +120,53 @@ void UGYPersistenceSubsystem::ApplySaveData(AActor* Owner, const TSharedPtr<FJso
 {
 	if (!IsValid(Owner) || !DataObject.IsValid()) return;
 
+	// 1) IGYSaveable 컴포넌트 수집 (섹션 키 → 컴포넌트)
+	TMap<FString, IGYSaveable*> BySection;
 	for (UActorComponent* Component : Owner->GetComponents())
 	{
 		IGYSaveable* Saveable = Cast<IGYSaveable>(Component);
-		if (Saveable == nullptr) continue;
+		if (Saveable != nullptr)
+		{
+			BySection.Add(Saveable->GetSaveSectionKey(), Saveable);
+		}
+	}
 
+	// 2) 의존성 위상정렬 (의존 섹션이 먼저 오도록). DFS post-order.
+	TArray<IGYSaveable*> Ordered;
+	TSet<FString> Visited;
+	TSet<FString> InProgress; // 순환 감지
+
+	TFunction<void(const FString&)> Visit = [&](const FString& Section)
+	{
+		if (Visited.Contains(Section)) return;
+		IGYSaveable** Found = BySection.Find(Section);
+		if (Found == nullptr) return; // 존재하지 않는 섹션 의존은 무시
+
+		if (InProgress.Contains(Section))
+		{
+			GY_WARN(Network, KDY, "Restore dependency cycle at section '%s'", *Section);
+			return;
+		}
+		InProgress.Add(Section);
+
+		for (const FString& Dep : (*Found)->GetRestoreDependencies())
+		{
+			Visit(Dep);
+		}
+
+		InProgress.Remove(Section);
+		Visited.Add(Section);
+		Ordered.Add(*Found);
+	};
+
+	for (const TPair<FString, IGYSaveable*>& Pair : BySection)
+	{
+		Visit(Pair.Key);
+	}
+
+	// 3) 정렬된 순서로 복원
+	for (IGYSaveable* Saveable : Ordered)
+	{
 		const TSharedPtr<FJsonValue> Section = DataObject->TryGetField(Saveable->GetSaveSectionKey());
 		if (Section.IsValid())
 		{

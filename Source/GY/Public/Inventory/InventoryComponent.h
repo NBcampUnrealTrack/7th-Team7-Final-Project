@@ -8,6 +8,7 @@
 #include "Items/ItemContainer.h"
 #include "Items/Fragments/ItemFragment_Consumable.h"
 #include "Persistence/GYSaveable.h"
+#include "Persistence/GYSaveSectionKeys.h"
 #include "Templates/Function.h"
 #include "InventoryComponent.generated.h"
 
@@ -50,7 +51,7 @@ public:
 	FOnInventoryChanged OnInventoryChanged;
 
 	// IGYSaveable
-	virtual FString GetSaveSectionKey() const override { return TEXT("inventory"); }
+	virtual FString GetSaveSectionKey() const override { return GYSaveSectionKeys::Inventory; }
 	virtual TSharedPtr<FJsonValue> ExportSaveData() const override;
 	virtual void ImportSaveData(const TSharedPtr<FJsonValue>& Data) override;
 

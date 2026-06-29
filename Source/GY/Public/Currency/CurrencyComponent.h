@@ -4,6 +4,7 @@
 #include "Components/ActorComponent.h"
 #include "Currency/CurrencyEntry.h"
 #include "Persistence/GYSaveable.h"
+#include "Persistence/GYSaveSectionKeys.h"
 #include "CurrencyComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCurrencyChanged,
@@ -29,7 +30,7 @@ public:
 	FOnCurrencyChanged OnCurrencyChanged;
 
 	// IGYSaveable
-	virtual FString GetSaveSectionKey() const override { return TEXT("currency"); }
+	virtual FString GetSaveSectionKey() const override { return GYSaveSectionKeys::Currency; }
 	virtual TSharedPtr<FJsonValue> ExportSaveData() const override;
 	virtual void ImportSaveData(const TSharedPtr<FJsonValue>& Data) override;
 
