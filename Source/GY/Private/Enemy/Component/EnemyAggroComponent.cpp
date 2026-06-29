@@ -148,12 +148,12 @@ void UEnemyAggroComponent::UnbindFromPerception()
 
 void UEnemyAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-	UE_LOG(LogTemp, Warning,
-		TEXT("[EnemyAggro] PerceptionUpdated Actor=%s Type=%s Sensed=%d Strength=%.1f"),
-		*GetNameSafe(Actor),
-		*Stimulus.Type.Name.ToString(),
-		Stimulus.WasSuccessfullySensed() ? 1 : 0,
-		Stimulus.Strength);
+	// UE_LOG(LogTemp, Warning,
+	// 	TEXT("[EnemyAggro] PerceptionUpdated Actor=%s Type=%s Sensed=%d Strength=%.1f"),
+	// 	*GetNameSafe(Actor),
+	// 	*Stimulus.Type.Name.ToString(),
+	// 	Stimulus.WasSuccessfullySensed() ? 1 : 0,
+	// 	Stimulus.Strength);
 	if (!Actor || !GetOwner() || !GetOwner()->HasAuthority()) return;
 
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
