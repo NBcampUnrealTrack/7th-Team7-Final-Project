@@ -14,6 +14,25 @@
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Enemy/Projectile/ProjectileBase.h"
 
+bool URangedAttackBase::CanAttackDistance(AActor* Owner, AActor* Target)
+{
+	if (!Owner || !Target) return false;
+	const float Dist = FVector::Dist(Owner->GetActorLocation(), Target->GetActorLocation());
+	if (Dist < MinDistance || Dist > AttackRange) return false;
+
+	const FVector Start = Owner->GetActorLocation()  + FVector(0, 0, 80);
+	const FVector End = Target->GetActorLocation() + FVector(0, 0, 80);
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(RangedLoS), false, Owner);
+	Params.AddIgnoredActor(Target);
+
+	FHitResult Hit;
+	const bool bBlocked = Owner->GetWorld()->LineTraceSingleByChannel(
+		Hit, Start, End, ECC_Visibility, Params);
+
+	return !bBlocked || !Super::CanAttackDistance(Owner, Target);
+}
+
 void URangedAttackBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                         const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
                                         const FGameplayEventData* TriggerEventData)

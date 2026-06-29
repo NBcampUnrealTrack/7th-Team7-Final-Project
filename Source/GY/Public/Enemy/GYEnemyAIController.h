@@ -31,12 +31,10 @@ namespace  EnemyBBKeys
 	static const FName SelectedAbility		= TEXT("SelectedAbility");
 	static const FName PatrolPosition		= TEXT("PatrolPosition");
 	static const FName EnvQuery				= TEXT("EnvQuery");
-	static const FName EQSCheckDistance		= TEXT("EQSCheckDistance");
-	static const FName EQSCheckAngle		= TEXT("EQSCheckAngle");
-	static const FName DistanceScore		= TEXT("DistanceScore");
-	static const FName AngleScore			= TEXT("AngleScore");
-	static const FName AbilityDistanceScore	= TEXT("AbilityDistanceScore");
-	static const FName AbilityAngleScore	= TEXT("AbilityAngleScore");
+	static const FName AttackAngle			= TEXT("AttackAngle");
+	static const FName IsAwayFromHome		= TEXT("IsAwayFromHome");
+	static const FName CanAttackDistance	= TEXT("CanAttackDistance");
+	static const FName CanAttackAngle		= TEXT("CanAttackAngle");
 }
 
 UCLASS(BlueprintType, Blueprintable)

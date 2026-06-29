@@ -31,7 +31,8 @@ public:
 	static float CalcAbilityScore(UGYEnemyAttackAbilityBase* Ability, const UAbilitySystemComponent* ASC,
 		float DistToTarget, float AngleDeg, const UObject* LastUsed);
 
-	void CanExecuteAbility();
+	virtual bool CanAttackDistance(AActor* Owner, AActor* Target);
+	virtual bool CanAttackAngle(AActor* Owner, AActor* Target);
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -90,15 +91,4 @@ public:
 	UPROPERTY(EditAnywhere, Category = "EQS")
 	TObjectPtr<UEnvQuery> EQSAsset;
 
-	UPROPERTY(EditAnywhere, Category = "EQS")
-	TObjectPtr<UEnvQuery> EQSCheckDistance;
-
-	UPROPERTY(EditAnywhere, Category = "EQS")
-	TObjectPtr<UEnvQuery> EQSCheckAngle;
-
-	UPROPERTY(EditAnywhere, Category = "EQS|BB")
-	float DistanceScore = 0.5f;
-
-	UPROPERTY(EditAnywhere, Category = "EQS|BB")
-	float AngleScore = 0.5f;
 };
