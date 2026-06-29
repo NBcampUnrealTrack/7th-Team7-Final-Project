@@ -21,6 +21,7 @@ struct FGYHitContext
 	FName SourceHitBone = NAME_None;
 	//원거리같이 패리당해도 리액션이 없어야 할 수 있음
 	bool bGivesParriedReaction = true;
+	FGameplayTag HitFXCueTag;
 };
 
 UCLASS()
