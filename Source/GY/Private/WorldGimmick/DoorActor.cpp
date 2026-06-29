@@ -8,6 +8,9 @@
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
+#include "UI/GYUIMessages.h"
 
 ADoorActor::ADoorActor()
 {
@@ -36,7 +39,9 @@ void ADoorActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteraction
 {
 	FInteractionOption Option;
 	Option.OptionTag = GYGameplayTags::Interaction_Open_Door;
-	Option.Text = NSLOCTEXT("Door", "Open", "열기");
+
+    Option.Text = bIsOpen ? NSLOCTEXT("Door", "Close", "닫기") : NSLOCTEXT("Door", "Open", "열기");
+    Option.SourceObject = const_cast<ADoorActor*>(this);
 	OutOption.Add(Option);
 }
 
@@ -91,6 +96,15 @@ void ADoorActor::OnRep_Open()
 	for (UDoorMovementComponent* DoorComp : DoorComponents)
 	{
 		DoorComp->SetOpen(bIsOpen);
+	}
+	// 볼륨 안에 그대로 있어도 위젯 텍스트가 바로 갱신
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		FGYInteractionOptionsMessage Msg;
+		GatherInteractionOptions(nullptr, Msg.Options);
+
+		UGameplayMessageSubsystem::Get(this).BroadcastMessage(
+			GYGameplayTags::Message_Interaction_OptionsChanged, Msg);
 	}
 }
 
