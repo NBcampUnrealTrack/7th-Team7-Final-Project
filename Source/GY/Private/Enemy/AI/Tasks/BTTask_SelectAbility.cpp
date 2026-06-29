@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "EnvironmentQuery/EnvQuery.h"
 
 UBTTask_SelectAbility::UBTTask_SelectAbility()
 {
@@ -24,7 +25,8 @@ EBTNodeResult::Type UBTTask_SelectAbility::ExecuteTask(UBehaviorTreeComponent& O
 	UAbilitySystemComponent* ASC = Enemy->GetAbilitySystemComponent();
 	if (!ASC) return EBTNodeResult::Failed;
 
-	AActor* Target = Cast<AActor>(OwnerComp.GetBlackboardComponent()
+	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
+	AActor* Target = Cast<AActor>(BlackboardComponent
 		->GetValueAsObject(EnemyBBKeys::TargetActor));
 	if (!Target) return EBTNodeResult::Failed;
 
@@ -39,7 +41,7 @@ EBTNodeResult::Type UBTTask_SelectAbility::ExecuteTask(UBehaviorTreeComponent& O
 	float DotResult = FVector::DotProduct(Enemy->GetActorForwardVector(), ToTarget);
 	float AngleDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(DotResult, -1.f, 1.f)));
 
-	UObject* LastUsed = OwnerComp.GetBlackboardComponent()
+	UObject* LastUsed = BlackboardComponent
 	->GetValueAsObject(EnemyBBKeys::LastUsedAbility);
 
 	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
@@ -70,21 +72,12 @@ EBTNodeResult::Type UBTTask_SelectAbility::ExecuteTask(UBehaviorTreeComponent& O
 
 	ASC->OnAbilityEnded.AddUObject(this, &UBTTask_SelectAbility::OnASCAbilityEnded);
 
-	if (BestAbility->AttackType == EGYEnemyAttackType::Melee)
-	{
-		OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AttackRadius,BestAbility->AttackRange * 0.5f);
-		OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AttackRadiusMin,BestAbility->AttackRange * 0.2f);
-	}
-	else
-	{
-		OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AttackRadius,BestAbility->AttackRange * 0.9f);
-		OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AttackRadiusMin,BestAbility->AttackRange * 0.2f);
-	}
-	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AbilityDistanceScore, BestAbility->DistanceScore);
-	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AbilityAngleScore, BestAbility->AngleScore);
-	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(EnemyBBKeys::AttackAngle, BestAbility->AttackAngle);
-	OwnerComp.GetBlackboardComponent()->SetValueAsObject(EnemyBBKeys::SelectedAbility, BestAbility);
-	OwnerComp.GetBlackboardComponent()->SetValueAsObject(EnemyBBKeys::LastUsedAbility, BestAbility);
+	BlackboardComponent->SetValueAsFloat(EnemyBBKeys::AttackRadius,BestAbility->AttackRange * 0.75f);
+	BlackboardComponent->SetValueAsFloat(EnemyBBKeys::AttackRadiusMin,BestAbility->MinDistance * 1.25f);
+	BlackboardComponent->SetValueAsObject(EnemyBBKeys::EnvQuery, BestAbility->EQSAsset);
+	BlackboardComponent->SetValueAsFloat(EnemyBBKeys::AttackAngle, BestAbility->AttackAngle);
+	BlackboardComponent->SetValueAsObject(EnemyBBKeys::SelectedAbility, BestAbility);
+	BlackboardComponent->SetValueAsObject(EnemyBBKeys::LastUsedAbility, BestAbility);
 	return EBTNodeResult::Succeeded;
 }
 
@@ -97,20 +90,6 @@ void UBTTask_SelectAbility::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, ui
 		CachedASC = nullptr;
 	}
 	ActiveAbility = nullptr;
-
-	// if (TaskResult == EBTNodeResult::Aborted)
-	// {
-	// 	AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(OwnerComp.GetAIOwner());
-	// 	if (!AIC) return;
-	//
-	// 	AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(AIC->GetPawn());
-	// 	if (!Enemy) return;
-	//
-	// 	if (UAbilitySystemComponent* ASC = Enemy->GetAbilitySystemComponent())
-	// 	{
-	// 		ASC->CancelAllAbilities();
-	// 	}
-	// }
 
 	CachedOwnerComp = nullptr;
 }
