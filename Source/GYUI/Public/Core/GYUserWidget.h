@@ -64,6 +64,7 @@ public:
 	FDelegateHandle ListenForAttributeChange(
 		UAbilitySystemComponent* ASC,
 		FGameplayAttribute Attribute,
+		UObject* ListenerObject,
 		TFunction<void(const FOnAttributeChangeData&)>&& Callback);
 
 	/** GAS Tag */
@@ -71,6 +72,7 @@ public:
 		UAbilitySystemComponent* ASC,
 		FGameplayTag Tag,
 		EGameplayTagEventType::Type EventType,
+		UObject* ListenerObject,
 		TFunction<void(FGameplayTag, int32)>&& Callback);
 
 protected:

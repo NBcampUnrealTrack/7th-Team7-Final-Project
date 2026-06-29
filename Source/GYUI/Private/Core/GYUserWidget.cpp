@@ -54,12 +54,14 @@ void UGYUserWidget::SetWidgetOwnerActor(AActor* InOwner)
 }
 
 FDelegateHandle UGYUserWidget::ListenForAttributeChange(UAbilitySystemComponent* ASC, FGameplayAttribute Attribute,
-                                                        TFunction<void(const FOnAttributeChangeData&)>&& Callback)
+														UObject* ListenerObject,
+														TFunction<void(const FOnAttributeChangeData&)>&& Callback)
 {
 	if (!ASC) return FDelegateHandle();
 
 	// ASC에 이벤트 구독
-	FDelegateHandle Handle = ASC->GetGameplayAttributeValueChangeDelegate(Attribute).AddLambda(
+	FDelegateHandle Handle = ASC->GetGameplayAttributeValueChangeDelegate(Attribute).AddWeakLambda(
+		ListenerObject,
 		[Cb = MoveTemp(Callback)](const FOnAttributeChangeData& Data)
 		{
 			Cb(Data);
@@ -75,13 +77,15 @@ FDelegateHandle UGYUserWidget::ListenForAttributeChange(UAbilitySystemComponent*
 }
 
 FDelegateHandle UGYUserWidget::ListenForTagChange(UAbilitySystemComponent* ASC, FGameplayTag Tag,
-                                                  EGameplayTagEventType::Type EventType,
-                                                  TFunction<void(FGameplayTag, int32)>&& Callback)
+												  EGameplayTagEventType::Type EventType,
+												  UObject* ListenerObject,
+												  TFunction<void(FGameplayTag, int32)>&& Callback)
 {
 	if (!ASC) return FDelegateHandle();
 
 	// 태그 이벤트 구독
-	FDelegateHandle Handle = ASC->RegisterGameplayTagEvent(Tag, EventType).AddLambda(
+	FDelegateHandle Handle = ASC->RegisterGameplayTagEvent(Tag, EventType).AddWeakLambda(
+		ListenerObject,
 		[Cb = MoveTemp(Callback)](const FGameplayTag InTag, int32 NewCount)
 		{
 			Cb(InTag, NewCount);

@@ -62,11 +62,11 @@ void UGYPlayerListEntryWidget::BindToASC(UAbilitySystemComponent* InASC)
 	if (!InASC || BoundASC.Get() == InASC) return;
 	BoundASC = InASC;
 
-	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(),
+	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(), this,
 		[this](const FOnAttributeChangeData&) { RefreshAll(); });
-	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetMaxHealthAttribute(),
+	ListenForAttributeChange(InASC, UGYVitalAttributeSet::GetMaxHealthAttribute(), this,
 		[this](const FOnAttributeChangeData&) { RefreshAll(); });
-	ListenForAttributeChange(InASC, UGYProgressionAttributeSet::GetLevelAttribute(),
+	ListenForAttributeChange(InASC, UGYProgressionAttributeSet::GetLevelAttribute(), this,
 		[this](const FOnAttributeChangeData&) { RefreshAll(); });
 
 	RefreshAll();
