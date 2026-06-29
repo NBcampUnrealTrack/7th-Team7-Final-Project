@@ -152,7 +152,16 @@ AActor* UGYGaugeCircleWidget::GetOwningActor() const
 
 void UGYGaugeCircleWidget::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
-	RefreshHP(!FMath::IsNearlyEqual(Data.NewValue, Data.OldValue));
+	const bool bChanged = !FMath::IsNearlyEqual(Data.NewValue, Data.OldValue);
+	RefreshHP(bChanged);
+
+	// CurrentHealth가 줄어든 경우에만 피격 플래시
+	const bool bIsCurrent = (Data.Attribute == UGYVitalAttributeSet::GetCurrentHealthAttribute());
+	const bool bDamaged = bIsCurrent && (Data.NewValue < Data.OldValue - KINDA_SMALL_NUMBER);
+	if (bDamaged)
+	{
+		TriggerHPDamageFlash();
+	}
 }
 
 void UGYGaugeCircleWidget::OnPoiseChanged(const FOnAttributeChangeData& Data)
@@ -176,8 +185,12 @@ void UGYGaugeCircleWidget::RefreshHP(bool bFromGameplay)
 
 	const float Cur = ASC->GetNumericAttribute(CurAttr);
 	const float Max = ASC->GetNumericAttribute(MaxAttr);
+	const float Pct = FMath::Clamp(Cur / FMath::Max(Max, KINDA_SMALL_NUMBER), 0.f, 1.f);
 
-	SetPercent(Image_HP, FMath::Clamp(Cur / FMath::Max(Max, KINDA_SMALL_NUMBER), 0.f, 1.f), bFromGameplay);
+	HP_CurrentPercent = Pct;
+	UpdateHPColor();
+
+	SetPercent(Image_HP, Pct, bFromGameplay);
 }
 
 void UGYGaugeCircleWidget::RefreshPoise(bool bFromGameplay)
@@ -308,6 +321,20 @@ void UGYGaugeCircleWidget::ProcessVisualInterpolation()
 	const float DeltaTime = World->GetDeltaSeconds();
 	bool bAlphaAnimating = false;
     bool bValueAnimating = false;
+	bool bColorAnimating = false;
+
+	// 피격 플래시 보간
+	if (HP_FlashAlpha > KINDA_SMALL_NUMBER)
+	{
+		HP_FlashAlpha = FMath::FInterpTo(HP_FlashAlpha, 0.f, DeltaTime, HP_FlashFadeSpeed);
+		UpdateHPColor();
+		bColorAnimating = true;
+	}
+	else if (HP_FlashAlpha > 0.f)
+	{
+		HP_FlashAlpha = 0.f;
+		UpdateHPColor();
+	}
 
 	// 투명도 보간 처리
 	if (!FMath::IsNearlyEqual(CurrentAlpha, TargetAlpha, 0.001f))
@@ -362,7 +389,7 @@ void UGYGaugeCircleWidget::ProcessVisualInterpolation()
 	}
 
 	// 목표 달성 시 타이머 종료
-	if (!bAlphaAnimating && !bValueAnimating)
+	if (!bAlphaAnimating && !bValueAnimating && !bColorAnimating)
 	{
 		World->GetTimerManager().ClearTimer(InterpolationTimerHandle);
 	}
@@ -382,4 +409,40 @@ void UGYGaugeCircleWidget::EnsureInterpolationRunning()
 		World->GetTimerManager().SetTimer(
 			InterpolationTimerHandle, this, &UGYGaugeCircleWidget::ProcessVisualInterpolation, 0.016f, true);
 	}
+}
+
+void UGYGaugeCircleWidget::TriggerHPDamageFlash()
+{
+	HP_FlashAlpha = 1.f;
+	UpdateHPColor();
+	NotifyActivity();
+	EnsureInterpolationRunning();
+}
+
+void UGYGaugeCircleWidget::UpdateHPColor()
+{
+	if (!Image_HP) return;
+
+	const FLinearColor Base = GetHPBaseColor(HP_CurrentPercent);
+	const FLinearColor Final = FMath::Lerp(Base, HP_FlashColor, HP_FlashAlpha);
+	Image_HP->SetColorAndOpacity(Final);
+}
+
+FLinearColor UGYGaugeCircleWidget::GetHPBaseColor(float HealthPercent) const
+{
+	if (HealthPercent <= HP_LowThreshold)
+	{
+		return HP_LowColor;
+	}
+
+	if (HealthPercent <= HP_MidThreshold)
+	{
+		const float Denom = FMath::Max(HP_MidThreshold - HP_LowThreshold, KINDA_SMALL_NUMBER);
+		const float T = (HP_MidThreshold - HealthPercent) / Denom;
+		return FMath::Lerp(HP_MidColor, HP_LowColor, T);
+	}
+
+	const float Denom = FMath::Max(1.f - HP_MidThreshold, KINDA_SMALL_NUMBER);
+	const float T = (1.f - HealthPercent) / Denom;
+	return FMath::Lerp(HP_FullColor, HP_MidColor, T);
 }
