@@ -211,7 +211,7 @@ void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 			RealDelta,
 			NewView.RotationInterpSpeed);
 
-	// 이펙트 적용
+	// 이펙트 적용 - duration 누적은 월드 시간 기준 (HitStop의 RealDelta 왜곡 방지)
 	for (int32 i = ActiveEffects.Num() - 1; i >= 0; --i)
 	{
 		UGYCameraEffectBase* Effect = ActiveEffects[i];
@@ -223,7 +223,7 @@ void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		}
 
 		Effect->UpdateEffect(
-			RealDelta,
+			DeltaTime,
 			CurrentView);
 
 		if (Effect->IsFinished())

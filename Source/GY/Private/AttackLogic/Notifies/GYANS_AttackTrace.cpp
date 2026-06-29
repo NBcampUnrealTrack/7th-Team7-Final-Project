@@ -9,6 +9,7 @@
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "DrawDebugHelpers.h"
 
 static const FGYCollisionShapeData* GetCurrentCollisionData(AActor* Owner)
@@ -138,6 +139,17 @@ void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeque
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Owner, GYGameplayTags::Event_Anim_Attack_DoTrace, Payload);
 	}
 
+	// 카메라 이펙트
+	if (bHitAny)
+	{
+		const IAbilitySystemInterface* I = Cast<IAbilitySystemInterface>(Owner);
+		if (UAbilitySystemComponent* ASC = I ? I->GetAbilitySystemComponent() : nullptr)
+		{
+			FGameplayCueParameters CameraParams;
+			CameraParams.Normal = Owner->GetActorForwardVector();
+			ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Camera_Push, CameraParams);
+		}
+	}
 #if ENABLE_DRAW_DEBUG
 	if (CollisionData && CollisionData->bShowDebug)
 	{
