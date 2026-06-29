@@ -15,9 +15,6 @@ public:
 protected:
 	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 private:
-	void OnDistanceEQSFinished(TSharedPtr<FEnvQueryResult> Result);
-	void OnAngleEQSFinished(TSharedPtr<FEnvQueryResult> Result);
-private:
 	UPROPERTY()
 	TObjectPtr<UBlackboardComponent> CachedOwnerComp;
 };
