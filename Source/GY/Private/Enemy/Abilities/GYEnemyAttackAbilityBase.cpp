@@ -1,9 +1,13 @@
 #include "Enemy/Abilities/GYEnemyAttackAbilityBase.h"
 #include "AbilitySystemComponent.h"
+#include "AIController.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Animation/AnimSequence.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
+#include "Enemy/GYEnemyAIController.h"
+#include "Enemy/GYEnemyCharacterBase.h"
 #include "EnvironmentQuery/EnvQuery.h"
 #include "Enemy/AnimNotify/EnemyWeaponTrace.h"
 #include "Engine/SkeletalMeshSocket.h"
@@ -17,17 +21,19 @@ UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 	ActivationBlockedTags.AddTag(GYStateTags::State_Life_Dead);
 	ActivationBlockedTags.AddTag(GYStateTags::State_Hit_Stagger);
 	ActivationBlockedTags.AddTag(GYStateTags::State_Hit_KnockDown);
+	ActivationBlockedTags.AddTag(GYStateTags::State_Climbing);
 
 	FGameplayTagContainer AssetTags = GetAssetTags();
 	AssetTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
 	SetAssetTags(AssetTags);
 
 	ActivationBlockedTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
+	ActivationOwnedTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
 }
 
 bool UGYEnemyAttackAbilityBase::CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const
 {
-	if (DistToTarget < MinDistance) return false;
+	//if (DistToTarget < MinDistance) return false;
 
 	if (AttackType == EGYEnemyAttackType::Ranged)
 	{
@@ -74,7 +80,7 @@ float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Abi
 {
 	if (!Ability || !ASC) return -1.f;
 
-	if (DistToTarget < Ability->MinDistance) return -1.f;
+	//if (DistToTarget < Ability->MinDistance) return -1.f;
 
 	if (Ability->bHasCooldown && Ability->GetRemainingCooldown(ASC) > 0.f) return -1.f;
 
@@ -90,6 +96,31 @@ float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Abi
 	if (Ability == LastUsed) EffectiveScore *= 0.3f;
 
 	return EffectiveScore;
+}
+
+bool UGYEnemyAttackAbilityBase::CanAttackDistance(AActor* Owner, AActor* Target)
+{
+	if (!Owner || !Target) return false;
+
+	float CurrentDist = FVector::DistSquared(Owner->GetActorLocation(), Target->GetActorLocation());
+	UE_LOG(LogTemp,Warning, TEXT("Distance : %f"),CurrentDist);
+	if (CurrentDist < AttackRange * AttackRange && CurrentDist >= MinDistance * MinDistance)
+		return true;
+	return false;
+}
+
+bool UGYEnemyAttackAbilityBase::CanAttackAngle(AActor* Owner, AActor* Target)
+{
+	if (!Owner || !Target) return false;
+
+	FVector ForwardXY = Owner->GetActorForwardVector(); ForwardXY.Z = 0.f; ForwardXY.Normalize();
+	FVector ToTargetXY = Target->GetActorLocation() - Owner->GetActorLocation();
+	ToTargetXY.Z = 0.f;
+	if (!ToTargetXY.Normalize()) return false;
+
+	const float Dot     = FVector::DotProduct(ForwardXY, ToTargetXY);
+	const float CosHalf = FMath::Cos(FMath::DegreesToRadians(AttackAngle * 0.5f));
+	return Dot >= CosHalf;
 }
 
 #if WITH_EDITOR
@@ -204,7 +235,6 @@ void UGYEnemyAttackAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-
 }
 
 void UGYEnemyAttackAbilityBase::PlayAttackMontage()

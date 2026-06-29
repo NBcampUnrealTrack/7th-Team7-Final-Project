@@ -10,7 +10,8 @@ UCLASS()
 class GY_API URangedAttackBase : public UGYEnemyAttackAbilityBase
 {
 	GENERATED_BODY()
-
+public:
+	virtual bool CanAttackDistance(AActor* Owner, AActor* Target) override;
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,
