@@ -14,6 +14,8 @@ class GY_API UGYGameplayCueNotify_FX : public UGameplayCueNotify_Static
 public:
 	virtual bool OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const override;
 
+	virtual bool OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const override;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FXCue|Animation")
 	TObjectPtr<UAnimMontage> Montage;

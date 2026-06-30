@@ -25,6 +25,20 @@ bool UGYGameplayCueNotify_FX::OnExecute_Implementation(AActor* MyTarget, const F
 	return true;
 }
 
+bool UGYGameplayCueNotify_FX::OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
+{
+	if (!MyTarget)
+	{
+		return false;
+	}
+
+	PlayAnimation(Parameters);
+	PlaySound(MyTarget, Parameters);
+	SpawnEffect(MyTarget, Parameters);
+
+	return true;
+}
+
 void UGYGameplayCueNotify_FX::PlayAnimation(const FGameplayCueParameters& Parameters) const
 {
 	if (!Montage)
