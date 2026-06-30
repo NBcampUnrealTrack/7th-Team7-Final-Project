@@ -27,6 +27,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FXCue|SFX")
 	FGameplayTag SoundTag = {};
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FXCue|SFX")
+	bool b2DSound = false;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FXCue|VFX")
 	TObjectPtr<UNiagaraSystem> Effect;
 

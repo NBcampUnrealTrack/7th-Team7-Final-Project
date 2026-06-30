@@ -61,7 +61,6 @@ void UGYGameplayCueNotify_FX::PlayAnimation(const FGameplayCueParameters& Parame
 	{
 		AnimInstance->Montage_JumpToSection(MontageStartSection, Montage);
 	}
-
 }
 
 void UGYGameplayCueNotify_FX::PlaySound(AActor* TargetActor,
@@ -77,8 +76,14 @@ void UGYGameplayCueNotify_FX::PlaySound(AActor* TargetActor,
 	{
 		return;
 	}
-	// 월드 사운드만 재생
-
+	// 2D 사운드
+	if (b2DSound)
+	{
+		GY_LOG(Content, CYS, "GC: 2D SFX");
+		SoundManager->PlaySound2D(SoundTag);
+		return;
+	}
+	// 월드 사운드
 	if (USceneComponent* AttachComponent = GetAttachComponent(TargetActor))
 	{
 		SoundManager->PlaySoundAttached(
