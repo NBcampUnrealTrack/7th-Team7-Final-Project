@@ -145,6 +145,9 @@ void ULockOnComponent::StartLockOn()
 	{
 		BoundASC->AddLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
 		                              EGameplayTagReplicationState::CountToOwner);
+
+		BoundASC->AddLooseGameplayTag(GYStateTags::State_LockOn, 1,
+								 EGameplayTagReplicationState::CountToOwner);
 	}
 
 	BindTargetDeathListener(Target);
@@ -166,6 +169,9 @@ void ULockOnComponent::StopLockOn()
 	{
 		BoundASC->RemoveLooseGameplayTag(GYGameplayTags::Camera_Mode_Combat, 1,
 		                                 EGameplayTagReplicationState::CountToOwner);
+
+		BoundASC->RemoveLooseGameplayTag(GYStateTags::State_LockOn, 1,
+								 EGameplayTagReplicationState::CountToOwner);
 	}
 
 	UnbindTargetDeathListener(CurrentTarget.Get());
