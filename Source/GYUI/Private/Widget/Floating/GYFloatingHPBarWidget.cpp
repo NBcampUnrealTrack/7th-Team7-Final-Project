@@ -66,6 +66,12 @@ void UGYFloatingHPBarWidget::RefreshHealth(bool bShowBar)
 	UAbilitySystemComponent* ASC = TargetASC.Get();
 	if (!ASC) return;
 
+	if (!StoredOwner.IsValid())
+	{
+		TargetASC = nullptr;
+		return;
+	}
+
 	const float Cur = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetCurrentHealthAttribute());
 	const float Max = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetMaxHealthAttribute());
 
@@ -113,6 +119,7 @@ void UGYFloatingHPBarWidget::RefreshHealth(bool bShowBar)
 void UGYFloatingHPBarWidget::NativeDestruct()
 {
 	// 메모리 누수 방지
+	TargetASC = nullptr;
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearAllTimersForObject(this);
