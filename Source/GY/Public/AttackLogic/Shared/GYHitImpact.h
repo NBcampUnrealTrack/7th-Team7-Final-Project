@@ -16,4 +16,7 @@ struct GY_API FGYHitImpact
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0"))
 	float StunAmount = 10.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTag HitFXCueTag;
 };

@@ -16,6 +16,8 @@ class UGYAbilitySystemComponent;
 class UGYCameraModeData;
 class UCameraComponent;
 class USpringArmComponent;
+class UMaterialInterface;
+class UMaterialInstanceDynamic;
 
 USTRUCT()
 struct FGYCameraView
@@ -44,7 +46,7 @@ struct FGYCameraView
 	float FOVInterpSpeed = 5.f;
 
 	UPROPERTY()
-	FRotator TargetArmRotation=FRotator(-45.f,0.f,0.f);
+	FRotator TargetArmRotation = FRotator(-45.f, 0.f, 0.f);
 
 	UPROPERTY()
 	float RotationInterpSpeed = 8.f;
@@ -119,6 +121,7 @@ private:
 
 	UPROPERTY()
 	TWeakObjectPtr<AActor> CameraTargetActor;
+
 protected:
 	//카메라 데이터 캐싱
 	void InitializeCameraModes();
@@ -138,6 +141,7 @@ protected:
 public:
 	/* 카메라 이펙트 */
 	void PushCameraEffect(const FGYCameraEffectContext& Context);
+
 private:
 	// 활성된 카메라 효과
 	UPROPERTY()
@@ -145,4 +149,23 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TMap<EGYCameraEffectType, TSubclassOf<UGYCameraEffectBase>> CameraEffectMap;
+
+	// 포스트 프로세스
+	// 사용할 머티리얼 인스턴스
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> ActiveMID;
+
+	// 현재 적용 중인 원본 머티리얼
+	UPROPERTY()
+	TObjectPtr<UMaterialInterface> CurrentMaterial;
+
+	float CurrentWeight = 0.f;
+	bool bFadeOut = false;
+
+	UPROPERTY(EditDefaultsOnly, Category="PostProcess")
+	float FadeOutSpeed = 8.f;
+
+public:
+	void ApplyPostProcess(UMaterialInterface* Material);
+	void RemovePostProcess();
 };

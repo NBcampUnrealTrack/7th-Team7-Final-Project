@@ -31,6 +31,20 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Potion);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Healing);
 
+	// 공격 적중
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Hit_Light);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Hit_Heavy);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Hit_Critical);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Hit_ParryCounter);
+
+	// 플레이어 피격
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Damage_Light);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Damage_Heavy);
+
+	// 피격 리액션
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Stagger);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Stun);
+
 	/* 적 사운드 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Goblin_Roar)
 

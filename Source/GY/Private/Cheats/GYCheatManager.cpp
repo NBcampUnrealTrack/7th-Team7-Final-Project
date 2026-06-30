@@ -628,7 +628,7 @@ void UGYCheatManager::GY_TestHitCue()
 		Pawn->GetActorLocation();
 
 	ASC->ExecuteGameplayCue(
-		GYGameplayTags::GameplayCue_Combat_Hit_Heavy,
+		GYGameplayTags::GameplayCue_Camera_Push,
 		Params);
 }
 

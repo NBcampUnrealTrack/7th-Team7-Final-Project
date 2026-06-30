@@ -80,6 +80,25 @@ void UHitReactionComponent::SetHitReactStartBone(FName BoneName)
 	HitReactStartBone = BoneName;
 }
 
+void UHitReactionComponent::ApplyMaterialOverlay(UMaterialInterface* OverlayMaterial, float Duration)
+{
+	// 데미지 플레시
+	if (!MeshComp.IsValid() || !OverlayMaterial)
+		return;
+
+	MeshComp->SetOverlayMaterial(OverlayMaterial);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		OverlayTimerHandle,
+		[this]()
+		{
+			if (MeshComp.IsValid())
+				MeshComp->SetOverlayMaterial(nullptr);
+		},
+		Duration, false
+	);
+}
+
 void UHitReactionComponent::ApplyParriedReaction(const FVector& HitDirection, FName HitBone)
 {
 	ApplyPhysicsAnimation(HitDirection, 1000000000, HitBone, ParriedReactDuration);

@@ -18,5 +18,6 @@ bool UGYGameplayCueNotify_HitReaction::OnExecute_Implementation(
 	const float Strength = Parameters.RawMagnitude;
 
 	HitReact->ApplyHitReaction(HitDirection, Strength, NAME_None);
+	HitReact->ApplyMaterialOverlay(OverlayMaterial,0.1f);
 	return true;
 }

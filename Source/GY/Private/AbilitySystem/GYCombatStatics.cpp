@@ -232,6 +232,15 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 
 		TargetASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Player_Block_Success);
 	}
+
+	GY_WARN(Player,CYS,"Hit Impact");
+	if (HitContext.HitFXCueTag.IsValid())
+	{
+		// FGameplayCueParameters CueParams;
+		// HitContext.SourceHitBone
+		// CueParams.Location = TODO 히트 위치;
+		TargetASC->ExecuteGameplayCue(HitContext.HitFXCueTag);
+	}
 }
 
 void UGYCombatStatics::ApplyHeal(UAbilitySystemComponent* ASC, float HealAmount)
