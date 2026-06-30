@@ -8,7 +8,9 @@
 #include "Character/GYInputComponent.h"
 #include "Character/GYPawnData.h"
 #include "Character/GYPawnExtensionComponent.h"
+#include "Character/GYCharacter.h"
 #include "Character/GYPlayerActionConfig.h"
+#include "Character/Revive/GYReviveConfig.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
@@ -261,6 +263,21 @@ void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 
 void UGYHeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
 {
+	if (AGYCharacter* Char = GetPawn<AGYCharacter>())
+	{
+		if (Char->IsDowned())
+		{
+			if (const UGYReviveConfig* Config = Char->GetReviveConfig())
+			{
+				if (Config->GiveUpInputTag.IsValid() && InputTag == Config->GiveUpInputTag)
+				{
+					Char->StartGiveUpTimer();
+					return;
+				}
+			}
+		}
+	}
+
 	if (IsInputBlocked()) return;
 
 	APawn* Pawn = GetPawn<APawn>();
@@ -304,6 +321,21 @@ void UGYHeroComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 	{
 		OnParryReleased();
 		return;
+	}
+
+	if (AGYCharacter* Char = GetPawn<AGYCharacter>())
+	{
+		if (Char->IsDowned())
+		{
+			if (const UGYReviveConfig* Config = Char->GetReviveConfig())
+			{
+				if (Config->GiveUpInputTag.IsValid() && InputTag == Config->GiveUpInputTag)
+				{
+					Char->CancelGiveUpTimer();
+					return;
+				}
+			}
+		}
 	}
 
 	AGYPlayerState* PS = GetPlayerState<AGYPlayerState>();

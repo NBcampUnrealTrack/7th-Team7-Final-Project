@@ -68,6 +68,7 @@ void UGA_TraceInteraction::OnOptionsUpdated(const TScriptInterface<IInteractable
 
 	if (UInteractionComponent* Component = GetInteractionComponent(GetCurrentActorInfo()))
 	{
+		Component->SetCurrentInteractable(Interactable);
 		Component->SetCurrentOptions(Options);
 	}
 

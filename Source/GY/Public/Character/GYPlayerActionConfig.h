@@ -5,6 +5,8 @@
 #include "GameplayTagContainer.h"
 #include "GYPlayerActionConfig.generated.h"
 
+class UGYReviveConfig;
+
 UCLASS(BlueprintType)
 class GY_API UGYPlayerActionConfig : public UPrimaryDataAsset
 {
@@ -19,4 +21,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Respawn", meta=(ClampMin="0.0", Units="s"))
 	float RespawnDelay = 5.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Revive")
+	TObjectPtr<UGYReviveConfig> ReviveConfig;
 };
