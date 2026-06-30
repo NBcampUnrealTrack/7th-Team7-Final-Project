@@ -19,6 +19,8 @@ void UBossPatternSelectorComponent::InitializePatterns(const TArray<FBossPattern
 	LastSelectedAbility = nullptr;
 	PendingAbility = nullptr;
 	bPreviousFinished = false;
+
+	GY_LOG(AI, ESK, "Selector::InitializePatterns Count=%d", Patterns.Num());
 }
 
 bool UBossPatternSelectorComponent::HasReadyPattern(AActor* Target) const
@@ -54,26 +56,43 @@ bool UBossPatternSelectorComponent::HasReadyPattern(AActor* Target) const
 
 TSubclassOf<UGameplayAbility> UBossPatternSelectorComponent::SelectNextPattern(AActor* Target)
 {
-	if (!Target || !GetOwner() || !GetOwner()->HasAuthority()) return nullptr;
-	if (Patterns.Num() == 0) return nullptr;
+	if (!Target || !GetOwner() || !GetOwner()->HasAuthority())
+	{
+		GY_LOG(AI, ESK, "Selector::SelectNextPattern 조기종료 Target=%s Authority=%d",
+			*GetNameSafe(Target), GetOwner() ? GetOwner()->HasAuthority() : -1);
+		return nullptr;
+	}
+	if (Patterns.Num() == 0)
+	{
+		GY_WARN(AI, ESK, "Selector::SelectNextPattern Patterns 비어있음");
+		return nullptr;
+	}
 
 	const float Distance = GetDistanceToTarget(Target);
+	GY_LOG(AI, ESK,
+		"Selector::SelectNextPattern 시작 Dist=%.0f bPrevFinished=%d LastTag=%s",
+		Distance, bPreviousFinished ? 1 : 0, *LastSelectedTag.ToString());
 
 	if (bPreviousFinished && LastSelectedTag.IsValid())
 	{
 		if (TSubclassOf<UGameplayAbility> Chained = TrySelectChain(Distance))
 		{
+			GY_LOG(AI, ESK, "Selector::SelectNextPattern Chain성공=%s", *Chained->GetName());
 			return Chained;
 		}
+		GY_LOG(AI, ESK, "Selector::SelectNextPattern Chain실패 → WeightedRandom");
 	}
 
-	return SelectedByWeightedRandom(Distance);
+	TSubclassOf<UGameplayAbility> Result = SelectedByWeightedRandom(Distance);
+	GY_LOG(AI, ESK, "Selector::SelectNextPattern WeightedRandom결과=%s", *GetNameSafe(Result.Get()));
+	return Result;
 }
 
 TSubclassOf<UGameplayAbility> UBossPatternSelectorComponent::ConsumePendingAbility()
 {
 	TSubclassOf<UGameplayAbility> Result = PendingAbility;
 	PendingAbility = nullptr;
+	GY_LOG(AI, ESK, "Selector::ConsumePendingAbility=%s", *GetNameSafe(Result.Get()));
 	return Result;
 }
 
@@ -86,6 +105,8 @@ void UBossPatternSelectorComponent::NotifyPatternFinished(TSubclassOf<UGameplayA
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
+	GY_LOG(AI, ESK, "Selector::NotifyPatternFinished Ability=%s (bPrevFinished true 세팅)",
+		*GetNameSafe(AbilityClass.Get()));
 	bPreviousFinished = true;
 }
 
@@ -151,7 +172,47 @@ TSubclassOf<UGameplayAbility> UBossPatternSelectorComponent::SelectedByWeightedR
 
 	if (Candidates.Num() == 0 || TotalWeight <= 0.f)
 	{
-		GY_LOG(AI, ESK, "PatternSelect: 후보 없음 (Cand=%d Total=%.2f)", Candidates.Num(), TotalWeight);
+		GY_LOG(AI, ESK, "PatternSelect: 1차 후보 없음 → 거리 무시 fallback (Cand=%d Total=%.2f)",
+			Candidates.Num(), TotalWeight);
+
+		for (const FBossPatternEntry& Pattern : Patterns)
+		{
+			if (!IsPatternAvailable(Pattern, Distance, /*bIgnoreCooldown=*/false, /*bIgnoreDistance=*/true)) continue;
+			const float Weight = FMath::Max(0.01f, Pattern.BaseWeight);
+			Candidates.Add({&Pattern, Weight});
+			TotalWeight += Weight;
+		}
+	}
+
+	if (Candidates.Num() == 0 || TotalWeight <= 0.f)
+	{
+		GY_WARN(AI, ESK, "PatternSelect: 2차 후보 없음 → 거리+쿨다운 무시 fallback");
+
+		for (const FBossPatternEntry& Pattern : Patterns)
+		{
+			if (!IsPatternAvailable(Pattern, Distance, /*bIgnoreCooldown=*/true, /*bIgnoreDistance=*/true)) continue;
+			const float Weight = FMath::Max(0.01f, Pattern.BaseWeight);
+			Candidates.Add({&Pattern, Weight});
+			TotalWeight += Weight;
+		}
+	}
+
+	if (Candidates.Num() == 0 || TotalWeight <= 0.f)
+	{
+		GY_WARN(AI, ESK, "PatternSelect: 3차 후보 없음 → 모든 제약 무시 강제 선택");
+
+		for (const FBossPatternEntry& Pattern : Patterns)
+		{
+			if (!Pattern.AbilityClass) continue;
+			const float Weight = FMath::Max(0.01f, Pattern.BaseWeight);
+			Candidates.Add({&Pattern, Weight});
+			TotalWeight += Weight;
+		}
+	}
+
+	if (Candidates.Num() == 0 || TotalWeight <= 0.f)
+	{
+		GY_WARN(AI, ESK, "PatternSelect: 패턴 자체가 없음 → 진짜 nullptr (Patterns=%d)", Patterns.Num());
 		return nullptr;
 	}
 
@@ -244,6 +305,11 @@ void UBossPatternSelectorComponent::RegisterSelected(const FBossPatternEntry& Se
 	LastSelectedAbility = Selected.AbilityClass;
 	PendingAbility = Selected.AbilityClass;
 	bPreviousFinished = false;
+
+	GY_LOG(AI, ESK, "Selector::RegisterSelected Pattern=%s Tag=%s Ability=%s (PendingAbility 세팅, bPrevFinished=false)",
+		*Selected.DebugName.ToString(),
+		*Selected.PatternTag.ToString(),
+		*GetNameSafe(Selected.AbilityClass.Get()));
 
 	OnPatternChosen.Broadcast(Selected.AbilityClass);
 }

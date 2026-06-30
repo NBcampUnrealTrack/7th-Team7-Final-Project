@@ -7,6 +7,7 @@
 #include "StateTreeLinker.h"
 
 #include "Enemy/Component/BossPhaseComponent.h"
+#include "Logging/GYLogManager.h"
 
 bool FExecutePhaseAbilityTask::Link(FStateTreeLinker& Linker)
 {
@@ -23,9 +24,10 @@ EStateTreeRunStatus FExecutePhaseAbilityTask::EnterState(FStateTreeExecutionCont
 	Data.bActivated = false;
 
 	UBossPhaseComponent* Phase = Context.GetExternalDataPtr(PhaseHandle);
-	if (!Phase) return EStateTreeRunStatus::Failed;
+	if (!Phase) { GY_WARN(AI, ESK, "ExecPhase: Phase 컴포넌트 없음"); return EStateTreeRunStatus::Failed; }
 
 	TSubclassOf<UGameplayAbility> Ability = Phase->PopNextPhaseAbility();
+	GY_LOG(AI, ESK, "ExecPhase: EnterState Ability=%s", *GetNameSafe(Ability.Get()));
 	if (!Ability) return EStateTreeRunStatus::Failed;
 
 	AAIController* AI = Cast<AAIController>(Context.GetOwner());
@@ -34,7 +36,9 @@ EStateTreeRunStatus FExecutePhaseAbilityTask::EnterState(FStateTreeExecutionCont
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(AI->GetPawn());
 	if (!ASC) return EStateTreeRunStatus::Failed;
 
-	if (!ASC->TryActivateAbilityByClass(Ability)) return EStateTreeRunStatus::Failed;
+	const bool bActivated = ASC->TryActivateAbilityByClass(Ability);
+	GY_LOG(AI, ESK, "ExecPhase: TryActivateAbilityByClass(%s) → %d", *Ability->GetName(), bActivated);
+	if (!bActivated) return EStateTreeRunStatus::Failed;
 
 	Data.PlayingAbility = Ability;
 	Data.bActivated = true;
@@ -81,15 +85,20 @@ void FExecutePhaseAbilityTask::ExitState(FStateTreeExecutionContext& Context,
 {
 	FInstanceDataType& Data = Context.GetInstanceData(*this);
 
+	const bool bWasInterrupted =
+		Transition.CurrentRunStatus == EStateTreeRunStatus::Stopped ||
+		Transition.CurrentRunStatus == EStateTreeRunStatus::Failed;
+
+	GY_LOG(AI, ESK, "ExecPhase: ExitState Ability=%s Interrupted=%d Status=%d",
+		*GetNameSafe(Data.PlayingAbility.Get()),
+		bWasInterrupted ? 1 : 0,
+		(int32)Transition.CurrentRunStatus);
+
 	UBossPhaseComponent* Phase = Context.GetExternalDataPtr(PhaseHandle);
 	if (Phase && Data.PlayingAbility)
 	{
 		Phase->NotifyPhaseFinished(Data.PlayingAbility);
 	}
-
-	const bool bWasInterrupted =
-		Transition.CurrentRunStatus == EStateTreeRunStatus::Stopped ||
-		Transition.CurrentRunStatus == EStateTreeRunStatus::Failed;
 
 	if (bWasInterrupted && Data.ActivateHandle.IsValid())
 	{
