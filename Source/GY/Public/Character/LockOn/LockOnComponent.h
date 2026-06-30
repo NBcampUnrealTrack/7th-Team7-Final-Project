@@ -48,6 +48,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="LockOn")
 	float RotationInterpSpeed = 8.f;
 
+	UPROPERTY(EditDefaultsOnly, Category="LockOn")
+	FGameplayTagContainer RotationBlockTags;
+
 	UPROPERTY(ReplicatedUsing=OnRep_CurrentTarget)
 	TWeakObjectPtr<AActor> CurrentTarget;
 

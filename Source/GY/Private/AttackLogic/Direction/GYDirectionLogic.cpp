@@ -51,7 +51,8 @@ TArray<FGameplayTag> UGYDirectionLogic::GetSubscribedEventTags() const
 
 void UGYDirectionLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
 {
-	BeginRotation();
+	// Temporal disable due this will execute direction change between combo (...etc) events like combo step processing.
+	// BeginRotation();
 }
 
 TArray<FGameplayTag> UGYDirectionLogic::GetRequiredFragmentTags() const
@@ -154,7 +155,6 @@ void UGYDirectionLogic::BeginRotation()
 		Character->Server_StartFacingLerp(StartYaw, TargetYaw.GetValue(), CachedLerpTime);
 	}
 
-	// Server cannot resolve mouse direction locally — it lerps via the RPC above.
 	if (!Character->IsLocallyControlled() && CachedDirectionMode == EGYDirectionMode::ByMouseDirection)
 		return;
 
