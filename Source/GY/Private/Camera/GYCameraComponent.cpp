@@ -232,6 +232,30 @@ void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		}
 	}
 	ApplyCameraView(CurrentView);
+
+	// 포스트 프로세스
+	if (bFadeOut && ActiveMID)
+	{
+		CurrentWeight = FMath::FInterpTo(
+			CurrentWeight,
+			0.f,
+			RealDelta,
+			FadeOutSpeed);
+
+		CameraComponent->AddOrUpdateBlendable(
+			ActiveMID,
+			CurrentWeight);
+
+		if (CurrentWeight <= 0.01f)
+		{
+			CurrentWeight = 0.f;
+			bFadeOut = false;
+
+			CameraComponent->AddOrUpdateBlendable(
+				ActiveMID,
+				0.f);
+		}
+	}
 }
 
 void UGYCameraComponent::InitializeCameraModes()
@@ -432,4 +456,34 @@ void UGYCameraComponent::PushCameraEffect(const FGYCameraEffectContext& Context)
 	NewEffect->Initialize(Context);
 
 	ActiveEffects.Add(NewEffect);
+}
+
+void UGYCameraComponent::ApplyPostProcess(UMaterialInterface* Material)
+{
+	if (!CameraComponent || !Material)
+	{
+		return;
+	}
+
+	if (!ActiveMID || CurrentMaterial != Material)
+	{
+		CurrentMaterial = Material;
+
+		ActiveMID = UMaterialInstanceDynamic::Create(Material, this);
+
+		CameraComponent->AddOrUpdateBlendable(ActiveMID, 0.f);
+	}
+
+	// 즉시 적용
+	CurrentWeight = 1.f;
+	bFadeOut = false;
+
+	CameraComponent->AddOrUpdateBlendable(
+		ActiveMID,
+		CurrentWeight);
+}
+
+void UGYCameraComponent::RemovePostProcess()
+{
+	bFadeOut = true;
 }
