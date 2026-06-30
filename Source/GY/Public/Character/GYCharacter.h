@@ -149,6 +149,8 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_CancelGiveUp();
 
+	void CheckAndForceGiveUpIfAllDown();
+
 	FTimerHandle GiveUpTimerHandle;
 
 	FGenericTeamId TeamId;

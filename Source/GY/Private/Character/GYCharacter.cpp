@@ -370,6 +370,38 @@ void AGYCharacter::EnterDownedState(const UGYReviveConfig* Config)
 	{
 		RevivePoolComponent->ActivatePool(const_cast<UGYReviveConfig*>(Config), GetActorLocation());
 	}
+
+	CheckAndForceGiveUpIfAllDown();
+}
+
+void AGYCharacter::CheckAndForceGiveUpIfAllDown()
+{
+	if (!HasAuthority()) return;
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (!PC) continue;
+		AGYCharacter* Char = Cast<AGYCharacter>(PC->GetPawn());
+		if (Char && !Char->bIsDead) return;
+	}
+
+	TArray<AGYCharacter*> DownedChars;
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (!PC) continue;
+		AGYCharacter* Char = Cast<AGYCharacter>(PC->GetPawn());
+		if (Char && Char->IsDowned())
+		{
+			DownedChars.Add(Char);
+		}
+	}
+
+	for (AGYCharacter* Char : DownedChars)
+	{
+		Char->GiveUp();
+	}
 }
 
 void AGYCharacter::Revive(const UGYReviveConfig* Config)
