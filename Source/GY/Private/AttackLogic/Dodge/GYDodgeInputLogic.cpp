@@ -6,6 +6,7 @@
 #include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -82,9 +83,20 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		InputDir.Normalize();
 		CachedDodgeDirection = InputDir;
 
+
+		//클라 측 캐릭터 회전
+
+		if (!Ability->GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(GYStateTags::State_LockOn))
+		{
+			RotateInstanceCharacterMesh(CachedDodgeDirection);
+		}
+
 		FVector Forward = Character->GetActorForwardVector();
 		Forward.Z = 0.f;
 		Forward.Normalize();
+
+
+
 
 		//두 벡터 사이의 각도 구하기 Forward Dot InputDir = Cosθ, Forward X InputDir = Sinθ n (정규화됨)
 		// Sinθ/Cosθ = tanθ, arctan(Sinθ/cosθ) = θ
@@ -98,7 +110,7 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		//--------------------------------------
 		FGYTargetData_DodgeAngle* TargetData = new FGYTargetData_DodgeAngle();
 		TargetData->DodgeAngle = DodgeAngle;
-
+		TargetData->InputVector = CachedDodgeDirection;
 		//핸들에 만든 구조체 삽입
 		FGameplayAbilityTargetDataHandle GYTargetDataHandle;;
 		GYTargetDataHandle.Add(TargetData);
@@ -216,8 +228,14 @@ void UGYDodgeInputLogic::OnTargetDataReceived(const FGameplayAbilityTargetDataHa
 		if (DodgeData)
 		{
 			float ReceivedAngle = DodgeData->DodgeAngle;
-
+			FVector InputVector = DodgeData->InputVector;
 			// 서버 측 몽타주 재생 로직
+
+			//서버측 캐릭터 회전
+			if (!CachedAbility->GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(GYStateTags::State_LockOn))
+			{
+				RotateInstanceCharacterMesh(InputVector);
+			}
 
 			if (const UGYDodgeMontageFragment* MF = CachedAbility->GetFragment<UGYDodgeMontageFragment>())
 			{
@@ -252,4 +270,15 @@ void UGYDodgeInputLogic::RemoveDodgeTag()
 	{
 		ASC->RemoveLooseGameplayTag(CachedDodgeAppliedTag);
 	}
+}
+
+void UGYDodgeInputLogic::RotateInstanceCharacterMesh(const FVector& InputVector)
+{
+	ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+	UCharacterMovementComponent* CMC = Character ? Character->GetCharacterMovement() : nullptr;
+
+	FRotator InputRotator = InputVector.Rotation();
+
+	Character->SetActorRotation(InputRotator);
+
 }
