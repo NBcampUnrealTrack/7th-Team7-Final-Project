@@ -56,6 +56,30 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "GY|UI|Color")
 	FLinearColor EnemyHPColor = FLinearColor::Red;
 
+	/** 중간 HP 구간 색상 */
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI|Color")
+	FLinearColor MidHealthColor = FLinearColor(0.95f, 0.75f, 0.1f);
+
+	/** 저체력 구간 색상 */
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI|Color")
+	FLinearColor LowHealthColor = FLinearColor(0.9f, 0.1f, 0.1f);
+
+	/** 피격 플래시 색상 */
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI|Damage")
+	FLinearColor FlashColor = FLinearColor::White;
+
+	/** 이 비율 이하부터 보간 시작 */
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI|Damage", meta=(ClampMin="0.0", ClampMax="1.0"))
+	float MidHealthThreshold = 0.5f;
+
+	/** 이 비율 이하부터 고정 */
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI|Damage", meta=(ClampMin="0.0", ClampMax="1.0"))
+	float LowHealthThreshold = 0.25f;
+
+	/** 피격 플래시 잔상이 사라지는 속도 */
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI|Damage")
+	float FlashFadeSpeed = 8.0f;
+
 private:
 	enum class EBarMode : uint8
 	{
@@ -80,9 +104,19 @@ private:
 	void ProcessFadeOut();
 	void StartFadeOutTimer();
 
+	/** 피격 플래시, 저체력 색상 처리용 */
+	void TriggerDamageFlash();
+	void ProcessColorInterp();
+	void UpdateBarColor();
+	FLinearColor GetBaseColorForHealth(float HealthPercent) const;
+
 	FTimerHandle BindRetryTimerHandle;
 	FTimerHandle FadeDelayTimerHandle;
 	FTimerHandle FadeOutTimerHandle;
+	FTimerHandle ColorInterpTimerHandle;
+
+	float FlashAlpha = 0.f;
+	float CurrentHealthPercent = 1.f;
 
 	EBarMode Mode = EBarMode::Hidden;
 

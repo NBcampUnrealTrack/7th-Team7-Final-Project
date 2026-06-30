@@ -69,11 +69,12 @@ void UGYFloatingHPBarWidget::RefreshHealth(bool bShowBar)
 	const float Cur = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetCurrentHealthAttribute());
 	const float Max = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetMaxHealthAttribute());
 
+	CurrentHealthPercent = (Max > 0.f) ? FMath::Clamp(Cur / Max, 0.f, 1.f) : 0.f;
 	if (HealthBar && Max > 0.f)
 	{
-		HealthBar->SetPercent(Cur / Max);
+		HealthBar->SetPercent(CurrentHealthPercent);
 	}
-
+	UpdateBarColor();
 	OnHealthUpdated(Cur, Max);
 
 	if (Mode == EBarMode::PlayerAlways)
@@ -102,6 +103,10 @@ void UGYFloatingHPBarWidget::RefreshHealth(bool bShowBar)
 			World->GetTimerManager().SetTimer(
 				FadeDelayTimerHandle, this, &UGYFloatingHPBarWidget::StartFadeOutTimer, HoldDuration, false);
 		}
+	}
+	if (bShowBar)
+	{
+		TriggerDamageFlash();
 	}
 }
 
@@ -164,11 +169,6 @@ void UGYFloatingHPBarWidget::TryBindToOwner(AActor* InCharacter)
 		CurrentAlpha = 1.f;
 		SetRenderOpacity(1.f);
 
- 		if (HealthBar) // 플레이어 전용 색상으로 변경
- 		{
- 			HealthBar->SetFillColorAndOpacity(PlayerHPColor);
- 		}
-
 		if (NameText)
 		{
 			if (UGYUIManagerSubsystem* UI = UGYUIManagerSubsystem::Get(this))
@@ -186,11 +186,6 @@ void UGYFloatingHPBarWidget::TryBindToOwner(AActor* InCharacter)
 		SetVisibility(ESlateVisibility::HitTestInvisible);
 		CurrentAlpha = 0.f;
 		SetRenderOpacity(0.f);
-
-		if (HealthBar) // 적 전용 색상으로 변경
-		{
-			HealthBar->SetFillColorAndOpacity(EnemyHPColor);
-		}
 
 		if (NameText) NameText->SetText(FText::GetEmpty());
 	}
@@ -300,10 +295,73 @@ void UGYFloatingHPBarWidget::ResetWidgetState()
 {
 	CurrentAlpha = 0.f;
 	SetRenderOpacity(0.f);
+	FlashAlpha = 0.f;
+	UpdateBarColor();
 
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(FadeDelayTimerHandle);
 		World->GetTimerManager().ClearTimer(FadeOutTimerHandle);
+		World->GetTimerManager().ClearTimer(ColorInterpTimerHandle);
 	}
+}
+
+void UGYFloatingHPBarWidget::TriggerDamageFlash()
+{
+	FlashAlpha = 1.f;
+	UpdateBarColor();
+
+	UWorld* World = GetWorld();
+	if (World && !World->GetTimerManager().IsTimerActive(ColorInterpTimerHandle))
+	{
+		World->GetTimerManager().SetTimer(
+			ColorInterpTimerHandle, this, &UGYFloatingHPBarWidget::ProcessColorInterp, 0.016f, true);
+	}
+}
+
+void UGYFloatingHPBarWidget::ProcessColorInterp()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	constexpr float Interval = 0.016f;
+	FlashAlpha = FMath::FInterpTo(FlashAlpha, 0.f, Interval, FlashFadeSpeed);
+	UpdateBarColor();
+
+	if (FlashAlpha <= KINDA_SMALL_NUMBER)
+	{
+		FlashAlpha = 0.f;
+		UpdateBarColor();
+		World->GetTimerManager().ClearTimer(ColorInterpTimerHandle);
+	}
+}
+
+void UGYFloatingHPBarWidget::UpdateBarColor()
+{
+	if (!HealthBar) return;
+
+	const FLinearColor BaseColor = GetBaseColorForHealth(CurrentHealthPercent);
+	const FLinearColor FinalColor = FMath::Lerp(BaseColor, FlashColor, FlashAlpha);
+	HealthBar->SetFillColorAndOpacity(FinalColor);
+}
+
+FLinearColor UGYFloatingHPBarWidget::GetBaseColorForHealth(float HealthPercent) const
+{
+	const FLinearColor FullColor = (Mode == EBarMode::PlayerAlways) ? PlayerHPColor : EnemyHPColor;
+
+	if (HealthPercent <= LowHealthThreshold)
+	{
+		return LowHealthColor;
+	}
+
+	if (HealthPercent <= MidHealthThreshold)
+	{
+		const float Denom = FMath::Max(MidHealthThreshold - LowHealthThreshold, KINDA_SMALL_NUMBER);
+		const float T = (MidHealthThreshold - HealthPercent) / Denom;
+		return FMath::Lerp(MidHealthColor, LowHealthColor, T);
+	}
+
+	const float Denom = FMath::Max(1.f - MidHealthThreshold, KINDA_SMALL_NUMBER);
+	const float T = (1.f - HealthPercent) / Denom;
+	return FMath::Lerp(FullColor, MidHealthColor, T);
 }

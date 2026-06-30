@@ -44,6 +44,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="GY|Radial")
 	float InterpSpeed = 5.f;
 
+	UPROPERTY(EditDefaultsOnly, Category="GY|Radial|Damage")
+	FLinearColor HP_FullColor = FLinearColor::White;
+	UPROPERTY(EditDefaultsOnly, Category="GY|Radial|Damage")
+	FLinearColor HP_MidColor = FLinearColor(1.f, 0.85f, 0.4f);
+	UPROPERTY(EditDefaultsOnly, Category="GY|Radial|Damage")
+	FLinearColor HP_LowColor = FLinearColor(1.f, 0.35f, 0.35f);
+
+	UPROPERTY(EditDefaultsOnly, Category="GY|Radial|Damage")
+	FLinearColor HP_FlashColor = FLinearColor(2.0f, 2.0f, 2.0f);
+
+	UPROPERTY(EditDefaultsOnly, Category="GY|Radial|Damage", meta=(ClampMin="0.0", ClampMax="1.0"))
+	float HP_MidThreshold = 0.5f;
+	UPROPERTY(EditDefaultsOnly, Category="GY|Radial|Damage", meta=(ClampMin="0.0", ClampMax="1.0"))
+	float HP_LowThreshold = 0.25f;
+	UPROPERTY(EditDefaultsOnly, Category="GY|Radial|Damage")
+	float HP_FlashFadeSpeed = 8.f;
+
 private:
 	/** GMS 메세지 기반 바인딩 */
 	void TryBindToOwner(AActor* InCharacter);
@@ -100,5 +117,11 @@ private:
 
 	int32 BindRetryCount = 0;
 	const int32 MaxBindRetries = 20;
-};
 
+	float HP_FlashAlpha = 0.f;
+	float HP_CurrentPercent = 1.f;
+
+	void TriggerHPDamageFlash();
+	void UpdateHPColor();
+	FLinearColor GetHPBaseColor(float HealthPercent) const;
+};
