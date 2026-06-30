@@ -16,6 +16,7 @@ class UGYPawnData;
 class UInventoryComponent;
 class UItemTransactionComponent;
 class ULootViewerComponent;
+class UStatPersistenceComponent;
 class UGYPlayerVitalAttributeSet;
 class UGYPlayerDamageAttributeSet;
 class UGYCoreStatAttributeSet;
@@ -99,6 +100,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UItemTransactionComponent> ItemTransactionComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UStatPersistenceComponent> StatPersistenceComponent;
 
 	UPROPERTY(VisibleAnywhere, Category="SkillTree")
 	TObjectPtr<USkillTreeComponent> SkillTreeComponent;
