@@ -42,8 +42,8 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Damage_Heavy);
 
 	// 피격 리액션
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Stagger_Level1);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Down_Level2);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Stagger);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Stun);
 
 	/* 적 사운드 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Goblin_Roar)

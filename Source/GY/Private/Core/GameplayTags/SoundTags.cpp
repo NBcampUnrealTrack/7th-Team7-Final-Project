@@ -40,8 +40,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Damage_Heavy, "Sound.Player.Damage.Heavy")
 
 	// 경직
-	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Stagger_Level1, "Sound.Player.Stagger.Level1")
-	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Down_Level2, "Sound.Player.Down.Level2")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Stagger, "Sound.Player.Stagger")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Stun, "Sound.Player.Stun")
 
 	/* 적 사운드 */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Goblin_Roar, "Sound.Goblin.Roar")
