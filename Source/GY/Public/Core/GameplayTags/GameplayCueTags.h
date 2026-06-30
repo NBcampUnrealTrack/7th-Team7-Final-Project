@@ -11,8 +11,8 @@ namespace GYGameplayTags
 
 	/* 피격 리액션 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_HitReaction);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Stagger_Level1);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Down_Level2);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Stagger);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Stun);
 
 	/* 플레이어 공격 적중 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Hit_Light);
@@ -60,8 +60,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_TimeRift_Rest);
 	/* 상태 이상 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Stun);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Burn);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Frozen);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Stagger);
 	/* 카메라 이펙트 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_Zoom);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_Shake);
