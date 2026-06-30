@@ -1,5 +1,8 @@
 #include "Equipment/EquipmentLoadoutComponent.h"
 
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
+#include "GameplayTagsManager.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Inventory/InventoryComponent.h"
@@ -85,6 +88,54 @@ bool UEquipmentLoadoutComponent::SetSlot(FGameplayTag SlotTag, const FGuid& Inst
 	BroadcastSlotChanged(SlotTag, InstanceId);
 
 	return true;
+}
+
+TSharedPtr<FJsonValue> UEquipmentLoadoutComponent::ExportSaveData() const
+{
+	// { "Equipment.Slot.Weapon": "guid", ... } — 슬롯 태그 → 장착 아이템 InstanceId
+	const TSharedRef<FJsonObject> Object = MakeShared<FJsonObject>();
+	for (const FEquipmentLoadoutEntry& Entry : LoadoutEntries)
+	{
+		if (Entry.SlotTag.IsValid() && Entry.InstanceId.IsValid())
+		{
+			Object->SetStringField(Entry.SlotTag.ToString(), Entry.InstanceId.ToString(EGuidFormats::Digits));
+		}
+	}
+	return MakeShared<FJsonValueObject>(Object);
+}
+
+void UEquipmentLoadoutComponent::ImportSaveData(const TSharedPtr<FJsonValue>& Data)
+{
+	// 인벤 InstanceId 를 참조하므로 인벤 복원 이후에 호출돼야 함 (ApplySaveData 가 순서 보장).
+	if (!GetOwner()->HasAuthority()) return;
+	if (!Data.IsValid()) return;
+
+	const TSharedPtr<FJsonObject>* Object = nullptr;
+	if (!Data->TryGetObject(Object) || Object == nullptr) return;
+
+	// 기존 슬롯 비우기 (각 슬롯 정리 → 외형/어빌리티 해제 트리거)
+	TArray<FGameplayTag> ExistingSlots;
+	for (const FEquipmentLoadoutEntry& Entry : LoadoutEntries)
+	{
+		ExistingSlots.Add(Entry.SlotTag);
+	}
+	for (const FGameplayTag& SlotTag : ExistingSlots)
+	{
+		ClearSlot(SlotTag);
+	}
+
+	// 세이브의 슬롯 → InstanceId 로 장착 복원
+	for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : (*Object)->Values)
+	{
+		const FGameplayTag SlotTag = UGameplayTagsManager::Get().RequestGameplayTag(FName(*Pair.Key), false);
+		if (!SlotTag.IsValid()) continue;
+
+		FGuid InstanceId;
+		if (FGuid::Parse(Pair.Value->AsString(), InstanceId))
+		{
+			SetSlot(SlotTag, InstanceId);
+		}
+	}
 }
 
 bool UEquipmentLoadoutComponent::ClearSlot(FGameplayTag SlotTag)

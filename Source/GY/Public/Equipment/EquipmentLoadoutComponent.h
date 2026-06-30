@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
+#include "Persistence/GYSaveable.h"
+#include "Persistence/GYSaveSectionKeys.h"
 #include "EquipmentLoadoutComponent.generated.h"
 
 USTRUCT(BlueprintType)
@@ -20,12 +22,18 @@ struct GY_API FEquipmentLoadoutEntry
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnLoadoutSlotChanged, FGameplayTag /*SlotTag*/, FGuid /*NewInstanceId*/);
 
 UCLASS(ClassGroup = (Equipment), meta = (BlueprintSpawnableComponent))
-class GY_API UEquipmentLoadoutComponent : public UActorComponent
+class GY_API UEquipmentLoadoutComponent : public UActorComponent, public IGYSaveable
 {
 	GENERATED_BODY()
 
 public:
 	UEquipmentLoadoutComponent();
+
+	// IGYSaveable — 장착은 인벤 InstanceId 를 참조하므로 인벤 복원 이후에 적용돼야 함
+	virtual FString GetSaveSectionKey() const override { return GYSaveSectionKeys::Equipment; }
+	virtual TSharedPtr<FJsonValue> ExportSaveData() const override;
+	virtual void ImportSaveData(const TSharedPtr<FJsonValue>& Data) override;
+	virtual TArray<FString> GetRestoreDependencies() const override { return { GYSaveSectionKeys::Inventory }; }
 
 	UFUNCTION(Server, Reliable)
 	void Server_RequestEquip(const FGuid& InstanceId);

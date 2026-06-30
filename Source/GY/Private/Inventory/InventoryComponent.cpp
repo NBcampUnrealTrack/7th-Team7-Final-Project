@@ -1,5 +1,9 @@
 #include "Inventory/InventoryComponent.h"
 
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
+#include "GameplayTagsManager.h"
+#include "UObject/SoftObjectPath.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/ItemTags.h"
 #include "Currency/CurrencyComponent.h"
@@ -230,6 +234,170 @@ bool UInventoryComponent::InsertEntry(const FInventoryEntry& Entry)
 
 	NotifyContainerChanged(Added.InstanceId, EInventoryEventType::Added);
 	return true;
+}
+
+TSharedPtr<FJsonValue> UInventoryComponent::ExportSaveData() const
+{
+	TArray<TSharedPtr<FJsonValue>> Items;
+
+	for (const FInventoryEntry& Entry : Inventory.Entries)
+	{
+		const TSharedRef<FJsonObject> Object = MakeShared<FJsonObject>();
+		Object->SetStringField(TEXT("instanceId"), Entry.InstanceId.ToString(EGuidFormats::Digits));
+		Object->SetStringField(TEXT("definition"), Entry.Definition.ToSoftObjectPath().ToString());
+		Object->SetNumberField(TEXT("stackCount"), Entry.StackCount);
+		Object->SetNumberField(TEXT("level"), Entry.Level);
+		Object->SetNumberField(TEXT("enhancement"), Entry.EnhancementLevel);
+		Object->SetStringField(TEXT("grade"), Entry.GradeTag.IsValid() ? Entry.GradeTag.ToString() : FString());
+		Object->SetNumberField(TEXT("deviation"), Entry.StatDeviation);
+		Object->SetNumberField(TEXT("seed"), Entry.RandomSeed);
+
+		// 인첸트 롤 (옵션 → 마그니튜드 2단 중첩)
+		TArray<TSharedPtr<FJsonValue>> Options;
+		for (const FRolledEnchantOption& Option : Entry.RolledOptions)
+		{
+			const TSharedRef<FJsonObject> OptionObject = MakeShared<FJsonObject>();
+			OptionObject->SetStringField(TEXT("optionId"), Option.OptionId.ToString());
+
+			TArray<TSharedPtr<FJsonValue>> Magnitudes;
+			for (const FRolledMagnitude& Magnitude : Option.Magnitudes)
+			{
+				const TSharedRef<FJsonObject> MagnitudeObject = MakeShared<FJsonObject>();
+				MagnitudeObject->SetStringField(TEXT("tag"),
+					Magnitude.MagnitudeTag.IsValid() ? Magnitude.MagnitudeTag.ToString() : FString());
+				MagnitudeObject->SetNumberField(TEXT("value"), Magnitude.Value);
+				Magnitudes.Add(MakeShared<FJsonValueObject>(MagnitudeObject));
+			}
+			OptionObject->SetArrayField(TEXT("magnitudes"), Magnitudes);
+			Options.Add(MakeShared<FJsonValueObject>(OptionObject));
+		}
+		Object->SetArrayField(TEXT("rolledOptions"), Options);
+
+		// 소켓 젬 (다른 인벤 아이템의 InstanceId 참조)
+		TArray<TSharedPtr<FJsonValue>> Sockets;
+		for (const FGuid& GemId : Entry.SocketedGemInstanceIds)
+		{
+			Sockets.Add(MakeShared<FJsonValueString>(GemId.ToString(EGuidFormats::Digits)));
+		}
+		Object->SetArrayField(TEXT("sockets"), Sockets);
+
+		Items.Add(MakeShared<FJsonValueObject>(Object));
+	}
+
+	return MakeShared<FJsonValueArray>(Items);
+}
+
+void UInventoryComponent::ImportSaveData(const TSharedPtr<FJsonValue>& Data)
+{
+	if (!GetOwner()->HasAuthority()) return;
+	if (!Data.IsValid()) return;
+
+	const TArray<TSharedPtr<FJsonValue>>* Items = nullptr;
+	if (!Data->TryGetArray(Items) || Items == nullptr) return;
+
+	// 기존 인벤 비우고 세이브 항목으로 재구축
+	Inventory.Entries.Reset();
+	Inventory.MarkArrayDirty();
+	MARK_PROPERTY_DIRTY_FROM_NAME(UInventoryComponent, Inventory, this);
+
+	for (const TSharedPtr<FJsonValue>& ItemValue : *Items)
+	{
+		const TSharedPtr<FJsonObject>* Object = nullptr;
+		if (!ItemValue->TryGetObject(Object) || Object == nullptr) continue;
+
+		FInventoryEntry Entry;
+		FString StringValue;
+		int32 IntValue = 0;
+		double DoubleValue = 0.0;
+
+		if ((*Object)->TryGetStringField(TEXT("instanceId"), StringValue))
+		{
+			FGuid::Parse(StringValue, Entry.InstanceId);
+		}
+		if ((*Object)->TryGetStringField(TEXT("definition"), StringValue))
+		{
+			Entry.Definition = TSoftObjectPtr<UItemDefinition>(FSoftObjectPath(StringValue));
+		}
+		if ((*Object)->TryGetNumberField(TEXT("stackCount"), IntValue))
+		{
+			Entry.StackCount = IntValue;
+		}
+		if ((*Object)->TryGetNumberField(TEXT("level"), IntValue))
+		{
+			Entry.Level = IntValue;
+		}
+		if ((*Object)->TryGetNumberField(TEXT("enhancement"), IntValue))
+		{
+			Entry.EnhancementLevel = IntValue;
+		}
+		if ((*Object)->TryGetStringField(TEXT("grade"), StringValue) && !StringValue.IsEmpty())
+		{
+			Entry.GradeTag = UGameplayTagsManager::Get().RequestGameplayTag(FName(*StringValue), false);
+		}
+		if ((*Object)->TryGetNumberField(TEXT("deviation"), DoubleValue))
+		{
+			Entry.StatDeviation = static_cast<float>(DoubleValue);
+		}
+		if ((*Object)->TryGetNumberField(TEXT("seed"), IntValue))
+		{
+			Entry.RandomSeed = IntValue;
+		}
+
+		// 인첸트 롤 복원
+		const TArray<TSharedPtr<FJsonValue>>* Options = nullptr;
+		if ((*Object)->TryGetArrayField(TEXT("rolledOptions"), Options) && Options != nullptr)
+		{
+			for (const TSharedPtr<FJsonValue>& OptionValue : *Options)
+			{
+				const TSharedPtr<FJsonObject>* OptionObject = nullptr;
+				if (!OptionValue->TryGetObject(OptionObject) || OptionObject == nullptr) continue;
+
+				FRolledEnchantOption Option;
+				if ((*OptionObject)->TryGetStringField(TEXT("optionId"), StringValue))
+				{
+					Option.OptionId = FName(*StringValue);
+				}
+
+				const TArray<TSharedPtr<FJsonValue>>* Magnitudes = nullptr;
+				if ((*OptionObject)->TryGetArrayField(TEXT("magnitudes"), Magnitudes) && Magnitudes != nullptr)
+				{
+					for (const TSharedPtr<FJsonValue>& MagnitudeValue : *Magnitudes)
+					{
+						const TSharedPtr<FJsonObject>* MagnitudeObject = nullptr;
+						if (!MagnitudeValue->TryGetObject(MagnitudeObject) || MagnitudeObject == nullptr) continue;
+
+						FRolledMagnitude Magnitude;
+						if ((*MagnitudeObject)->TryGetStringField(TEXT("tag"), StringValue) && !StringValue.IsEmpty())
+						{
+							Magnitude.MagnitudeTag = UGameplayTagsManager::Get().RequestGameplayTag(FName(*StringValue), false);
+						}
+						if ((*MagnitudeObject)->TryGetNumberField(TEXT("value"), DoubleValue))
+						{
+							Magnitude.Value = static_cast<float>(DoubleValue);
+						}
+						Option.Magnitudes.Add(Magnitude);
+					}
+				}
+				Entry.RolledOptions.Add(Option);
+			}
+		}
+
+		// 소켓 젬 복원
+		const TArray<TSharedPtr<FJsonValue>>* Sockets = nullptr;
+		if ((*Object)->TryGetArrayField(TEXT("sockets"), Sockets) && Sockets != nullptr)
+		{
+			for (const TSharedPtr<FJsonValue>& GemValue : *Sockets)
+			{
+				FGuid GemId;
+				if (FGuid::Parse(GemValue->AsString(), GemId))
+				{
+					Entry.SocketedGemInstanceIds.Add(GemId);
+				}
+			}
+		}
+
+		InsertEntry(Entry);
+	}
 }
 
 bool UInventoryComponent::TakeEntry(const FGuid& InstanceId, FInventoryEntry& OutEntry)

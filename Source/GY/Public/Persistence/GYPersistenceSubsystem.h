@@ -17,8 +17,14 @@ class GY_API UGYPersistenceSubsystem : public UGameInstanceSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	void LoadCharacter(int32 CharacterId);
+	void LoadCharacter(int32 CharacterId, AActor* ApplyTarget = nullptr);
 	void SaveCharacter(int32 CharacterId, int32 Level, int32 Xp, const FString& DataJson, int32 ExpectedVersion);
+
+	// Owner(PlayerState 등)의 IGYSaveable 컴포넌트들을 섹션 키로 묶어 data JSON 문자열로 직렬화
+	FString CollectSaveData(AActor* Owner) const;
+
+	// data JSON 의 각 섹션을 해당 IGYSaveable 컴포넌트로 복원 (서버 권위)
+	void ApplySaveData(AActor* Owner, const TSharedPtr<class FJsonObject>& DataObject);
 
 	int32 GetCachedSaveVersion() const { return CachedSaveVersion; }
 
@@ -31,6 +37,9 @@ private:
 
 	FString BaseUrl;
 	FString SecretKey;
+
+	// Load 응답 도착 시 ApplySaveData 대상 (LoadCharacter 호출 시점에 지정)
+	TWeakObjectPtr<AActor> PendingApplyTarget;
 
 	// 마지막으로 load/save 한 save_version. 콘솔 Save가 expectedVersion으로 사용
 	int32 CachedSaveVersion = 0;

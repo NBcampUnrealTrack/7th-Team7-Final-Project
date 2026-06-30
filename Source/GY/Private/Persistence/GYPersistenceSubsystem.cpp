@@ -1,6 +1,9 @@
 #include "Persistence/GYPersistenceSubsystem.h"
 #include "Persistence/GYPersistenceSettings.h"
+#include "Persistence/GYSaveable.h"
+#include "Persistence/GYSaveSectionKeys.h"
 #include "Logging/GYLogManager.h"
+#include "Templates/Function.h"
 
 #include "HttpModule.h"
 #include "Interfaces/IHttpResponse.h"
@@ -10,6 +13,9 @@
 #include "HAL/IConsoleManager.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 
 namespace
 {
@@ -22,6 +28,14 @@ namespace
 		return IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYPersistenceSubsystem>() : nullptr;
 	}
 
+	// 세이브 컴포넌트들이 붙어 있는 로컬 PlayerState (콘솔 테스트용)
+	AActor* ResolveLocalPlayerStateActor(UWorld* World)
+	{
+		if (!IsValid(World)) return nullptr;
+		APlayerController* PC = World->GetFirstPlayerController();
+		return IsValid(PC) ? PC->PlayerState : nullptr;
+	}
+
 	int32 ParseCharacterId(const TArray<FString>& Args)
 	{
 		return Args.Num() > 0 ? FCString::Atoi(*Args[0]) : DefaultDevCharacterId;
@@ -31,7 +45,7 @@ namespace
 	{
 		UGYPersistenceSubsystem* System = ResolvePersistence(World);
 		if (!IsValid(System)) return;
-		System->LoadCharacter(ParseCharacterId(Args));
+		System->LoadCharacter(ParseCharacterId(Args), ResolveLocalPlayerStateActor(World));
 	}
 
 	void PersistSaveCmd(const TArray<FString>& Args, UWorld* World)
@@ -39,9 +53,11 @@ namespace
 		UGYPersistenceSubsystem* System = ResolvePersistence(World);
 		if (!IsValid(System)) return;
 
-		// 더미 데이터 + 캐시된 버전으로 저장 (Load 후 Save 순서로 테스트)
-		const FString DummyData = TEXT("{\"items\":[1,2,3],\"note\":\"ue dev save\"}");
-		System->SaveCharacter(ParseCharacterId(Args), 7, 300, DummyData, System->GetCachedSaveVersion());
+		// 로컬 PlayerState 의 IGYSaveable 컴포넌트들에서 data 수집 후 저장.
+		// level/xp 는 progression 슬라이스 전까지 임시값.
+		AActor* PlayerState = ResolveLocalPlayerStateActor(World);
+		const FString Data = System->CollectSaveData(PlayerState);
+		System->SaveCharacter(ParseCharacterId(Args), 1, 0, Data, System->GetCachedSaveVersion());
 	}
 
 	FAutoConsoleCommandWithWorldAndArgs GYPersistLoadCommand(
@@ -78,8 +94,91 @@ void UGYPersistenceSubsystem::LoadConfig()
 	}
 }
 
-void UGYPersistenceSubsystem::LoadCharacter(int32 CharacterId)
+FString UGYPersistenceSubsystem::CollectSaveData(AActor* Owner) const
 {
+	const TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
+
+	if (IsValid(Owner))
+	{
+		for (UActorComponent* Component : Owner->GetComponents())
+		{
+			IGYSaveable* Saveable = Cast<IGYSaveable>(Component);
+			if (Saveable != nullptr)
+			{
+				Root->SetField(Saveable->GetSaveSectionKey(), Saveable->ExportSaveData());
+			}
+		}
+	}
+
+	FString Out;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Out);
+	FJsonSerializer::Serialize(Root, Writer);
+	return Out;
+}
+
+void UGYPersistenceSubsystem::ApplySaveData(AActor* Owner, const TSharedPtr<FJsonObject>& DataObject)
+{
+	if (!IsValid(Owner) || !DataObject.IsValid()) return;
+
+	// 1) IGYSaveable 컴포넌트 수집 (섹션 키 → 컴포넌트)
+	TMap<FString, IGYSaveable*> BySection;
+	for (UActorComponent* Component : Owner->GetComponents())
+	{
+		IGYSaveable* Saveable = Cast<IGYSaveable>(Component);
+		if (Saveable != nullptr)
+		{
+			BySection.Add(Saveable->GetSaveSectionKey(), Saveable);
+		}
+	}
+
+	// 2) 의존성 위상정렬 (의존 섹션이 먼저 오도록). DFS post-order.
+	TArray<IGYSaveable*> Ordered;
+	TSet<FString> Visited;
+	TSet<FString> InProgress; // 순환 감지
+
+	TFunction<void(const FString&)> Visit = [&](const FString& Section)
+	{
+		if (Visited.Contains(Section)) return;
+		IGYSaveable** Found = BySection.Find(Section);
+		if (Found == nullptr) return; // 존재하지 않는 섹션 의존은 무시
+
+		if (InProgress.Contains(Section))
+		{
+			GY_WARN(Network, KDY, "Restore dependency cycle at section '%s'", *Section);
+			return;
+		}
+		InProgress.Add(Section);
+
+		for (const FString& Dep : (*Found)->GetRestoreDependencies())
+		{
+			Visit(Dep);
+		}
+
+		InProgress.Remove(Section);
+		Visited.Add(Section);
+		Ordered.Add(*Found);
+	};
+
+	for (const TPair<FString, IGYSaveable*>& Pair : BySection)
+	{
+		Visit(Pair.Key);
+	}
+
+	// 3) 정렬된 순서로 복원
+	for (IGYSaveable* Saveable : Ordered)
+	{
+		const TSharedPtr<FJsonValue> Section = DataObject->TryGetField(Saveable->GetSaveSectionKey());
+		if (Section.IsValid())
+		{
+			Saveable->ImportSaveData(Section);
+		}
+	}
+}
+
+void UGYPersistenceSubsystem::LoadCharacter(int32 CharacterId, AActor* ApplyTarget)
+{
+	PendingApplyTarget = ApplyTarget;
+
 	const FString Url = FString::Printf(
 		TEXT("%s/rest/v1/characters?id=eq.%d&select=level,xp,data,save_version"),
 		*BaseUrl, CharacterId);
@@ -172,6 +271,18 @@ void UGYPersistenceSubsystem::OnLoadComplete(FHttpRequestPtr Request, FHttpRespo
 	double VersionValue = 0.0;
 	Row->TryGetNumberField(TEXT("save_version"), VersionValue);
 	CachedSaveVersion = static_cast<int32>(VersionValue);
+
+	// data 섹션을 IGYSaveable 컴포넌트들로 복원
+	const TSharedPtr<FJsonObject>* DataObject = nullptr;
+	if (Row->TryGetObjectField(TEXT("data"), DataObject) && DataObject != nullptr)
+	{
+		if (AActor* Target = PendingApplyTarget.Get())
+		{
+			ApplySaveData(Target, *DataObject);
+			GY_LOG(Network, KDY, "Load applied to %s", *Target->GetName());
+		}
+	}
+	PendingApplyTarget.Reset();
 
 	GY_LOG(Network, KDY, "Load success saveVersion=%d body=%s", CachedSaveVersion, *Content);
 }

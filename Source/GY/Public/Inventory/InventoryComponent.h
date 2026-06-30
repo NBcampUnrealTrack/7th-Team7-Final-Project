@@ -7,6 +7,8 @@
 #include "Inventory/InventoryEntry.h"
 #include "Items/ItemContainer.h"
 #include "Items/Fragments/ItemFragment_Consumable.h"
+#include "Persistence/GYSaveable.h"
+#include "Persistence/GYSaveSectionKeys.h"
 #include "Templates/Function.h"
 #include "InventoryComponent.generated.h"
 
@@ -17,7 +19,7 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnInventoryChanged,
 	EInventoryEventType /*EventType*/);
 
 UCLASS(ClassGroup = (Inventory), meta = (BlueprintSpawnableComponent))
-class GY_API UInventoryComponent : public UActorComponent, public IItemContainer
+class GY_API UInventoryComponent : public UActorComponent, public IItemContainer, public IGYSaveable
 {
 	GENERATED_BODY()
 
@@ -47,6 +49,11 @@ public:
 	void Server_RequestEnchant(const FGuid& InstanceId);
 
 	FOnInventoryChanged OnInventoryChanged;
+
+	// IGYSaveable
+	virtual FString GetSaveSectionKey() const override { return GYSaveSectionKeys::Inventory; }
+	virtual TSharedPtr<FJsonValue> ExportSaveData() const override;
+	virtual void ImportSaveData(const TSharedPtr<FJsonValue>& Data) override;
 
 	/** 인벤 변동 단일 진입점 — 델리게이트 발화 + 포션 슬롯 GMS publish */
 
