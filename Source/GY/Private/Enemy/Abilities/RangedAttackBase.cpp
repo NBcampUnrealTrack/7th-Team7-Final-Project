@@ -1,5 +1,4 @@
 #include "Enemy/Abilities/RangedAttackBase.h"
-#include "Enemy/Abilities/RangedAttackBase.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
@@ -12,7 +11,41 @@
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/GYEnemyCharacterBase.h"
+#include "Enemy/Component/EnemyAggroComponent.h"
 #include "Enemy/Projectile/ProjectileBase.h"
+#include "Logging/GYLogManager.h"
+
+namespace
+{
+	// BB(BehaviorTree 사용시) → AggroComponent(StateTree 사용시) 순으로 Target 해석.
+	static AActor* ResolveAttackTarget(AAIController* AIC)
+	{
+		if (!AIC) return nullptr;
+
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			if (AActor* T = Cast<AActor>(BB->GetValueAsObject(EnemyBBKeys::TargetActor)))
+			{
+				return T;
+			}
+		}
+
+		if (UEnemyAggroComponent* Aggro = AIC->FindComponentByClass<UEnemyAggroComponent>())
+		{
+			if (AActor* T = Aggro->GetCurrentTarget()) return T;
+		}
+
+		if (APawn* Pawn = AIC->GetPawn())
+		{
+			if (UEnemyAggroComponent* Aggro = Pawn->FindComponentByClass<UEnemyAggroComponent>())
+			{
+				if (AActor* T = Aggro->GetCurrentTarget()) return T;
+			}
+		}
+
+		return nullptr;
+	}
+}
 
 bool URangedAttackBase::CanAttackDistance(AActor* Owner, AActor* Target)
 {
@@ -39,16 +72,28 @@ void URangedAttackBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(ActorInfo->AvatarActor.Get());
-	if (!Enemy) return;
+	if (!Enemy)
+	{
+		GY_WARN(AI, ESK, "RangedAttack: Enemy 캐스트 실패");
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
 
 	AAIController* AIC = Cast<AAIController>(Enemy->GetController());
-	if (!AIC) return;
+	if (!AIC)
+	{
+		GY_WARN(AI, ESK, "RangedAttack: AIController 없음");
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
 
-	UBlackboardComponent* BB = AIC->GetBlackboardComponent();
-	if (!BB) return;
-
-	AActor* Target = Cast<AActor>(BB->GetValueAsObject(EnemyBBKeys::TargetActor));
-	if (!Target) return;
+	AActor* Target = ResolveAttackTarget(AIC);
+	if (!Target)
+	{
+		GY_WARN(AI, ESK, "RangedAttack: Target 없음 (BB/Aggro 둘 다 비어있음)");
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
 
 	Enemy->FaceToTarget(Target);
 	UAbilityTask_WaitGameplayEvent* LaunchTask =
@@ -153,10 +198,7 @@ void URangedAttackBase::SpawnProjectile()
 	AActor* Target = nullptr;
 	if (AAIController* AIC = Cast<AAIController>(Pawn->GetController()))
 	{
-		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
-		{
-			Target = Cast<AActor>(BB->GetValueAsObject(EnemyBBKeys::TargetActor));
-		}
+		Target = ResolveAttackTarget(AIC);
 	}
 
 	const FVector BaseDir = Target
