@@ -8,6 +8,9 @@
 #include "Character/GYPawnExtensionComponent.h"
 #include "Character/GYPlayerActionConfig.h"
 #include "Character/LockOn/LockOnComponent.h"
+#include "Character/Revive/GYReviveConfig.h"
+#include "Character/Revive/RevivePoolComponent.h"
+#include "Character/Revive/ReviveProgressComponent.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "Character/GYCharacterMovementComponent.h"
 #include "Character/HitReactionComponent.h"
@@ -19,9 +22,11 @@
 #include "AbilitySystem/GYOnHitModifierComponent.h"
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTeams/GYTeams.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interaction/InteractionComponent.h"
+#include "Interaction/InteractionOption.h"
 #include "Player/GYPlayerState.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
@@ -42,6 +47,8 @@ AGYCharacter::AGYCharacter(const FObjectInitializer& ObjectInitializer)
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 	PhysicalAnimationComponent = CreateDefaultSubobject<UPhysicalAnimationComponent>(TEXT("PhysicalAnimation"));
 	HitReactionComponent = CreateDefaultSubobject<UHitReactionComponent>(TEXT("HitReaction"));
+	RevivePoolComponent = CreateDefaultSubobject<URevivePoolComponent>(TEXT("RevivePoolComponent"));
+	ReviveProgressComponent = CreateDefaultSubobject<UReviveProgressComponent>(TEXT("ReviveProgressComponent"));
 	GetCharacterMovement()->MaxWalkSpeed = 300.f;
 
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
@@ -290,6 +297,18 @@ void AGYCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 	}
 }
 
+const UGYPlayerActionConfig* AGYCharacter::GetActionConfig() const
+{
+	if (PawnExtComponent)
+	{
+		if (const UGYPawnData* PawnData = PawnExtComponent->GetPawnData())
+		{
+			return PawnData->ActionConfig;
+		}
+	}
+	return nullptr;
+}
+
 void AGYCharacter::HandleDeath()
 {
 	if (!HasAuthority()) return;
@@ -301,34 +320,180 @@ void AGYCharacter::HandleDeath()
 		Move->DisableMovement();
 	}
 
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	const UGYPlayerActionConfig* Config = GetActionConfig();
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
 
-	const UGYPlayerActionConfig* Config = nullptr;
-	if (PawnExtComponent)
+	const UGYReviveConfig* ReviveConfig = Config ? Config->ReviveConfig.Get() : nullptr;
+	const int32 NumPlayers = GetWorld() ? GetWorld()->GetNumPlayerControllers() : 0;
+
+	if (NumPlayers >= 2 && ReviveConfig)
 	{
-		if (const UGYPawnData* PawnData = PawnExtComponent->GetPawnData())
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Interactable, ECR_Block);
+		EnterDownedState(ReviveConfig);
+	}
+	else
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
 		{
-			Config = PawnData->ActionConfig;
+			if (Config)
+			{
+				for (const FGameplayTag& Tag : Config->DeathTags)
+				{
+					ASC->AddLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+				}
+			}
+		}
+
+		if (AGYGameMode* GM = GetWorld()->GetAuthGameMode<AGYGameMode>())
+		{
+			const float Delay = Config ? Config->RespawnDelay : 5.f;
+			GM->RequestRespawn(PC, Delay);
 		}
 	}
+}
+
+void AGYCharacter::EnterDownedState(const UGYReviveConfig* Config)
+{
+	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	{
+		for (const FGameplayTag& Tag : Config->DownedTags)
+		{
+			ASC->AddLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+		}
+	}
+
+	if (RevivePoolComponent)
+	{
+		RevivePoolComponent->ActivatePool(const_cast<UGYReviveConfig*>(Config), GetActorLocation());
+	}
+}
+
+void AGYCharacter::Revive(const UGYReviveConfig* Config)
+{
+	if (!HasAuthority()) return;
+
+	bIsDead = false;
+
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->SetMovementMode(MOVE_Walking);
+	}
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Interactable, ECR_Ignore);
 
 	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
 	{
 		if (Config)
 		{
-			for (const FGameplayTag& Tag : Config->DeathTags)
+			for (const FGameplayTag& Tag : Config->DownedTags)
+			{
+				ASC->RemoveLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+			}
+
+			const float MaxHP = ASC->GetNumericAttribute(UGYPlayerVitalAttributeSet::GetMaxHealthAttribute());
+			ASC->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetCurrentHealthAttribute(),
+				MaxHP * Config->ReviveHealthGrantedPercent);
+		}
+	}
+}
+
+void AGYCharacter::StartGiveUpTimer()
+{
+	Server_StartGiveUp();
+}
+
+void AGYCharacter::CancelGiveUpTimer()
+{
+	Server_CancelGiveUp();
+}
+
+void AGYCharacter::Server_StartGiveUp_Implementation()
+{
+	if (!bIsDead) return;
+
+	const UGYReviveConfig* Config = nullptr;
+	if (const UGYPlayerActionConfig* ActionConfig = GetActionConfig())
+	{
+		Config = ActionConfig->ReviveConfig.Get();
+	}
+
+	const float HoldTime = Config ? Config->GiveUpHoldTime : 3.f;
+	GetWorldTimerManager().SetTimer(GiveUpTimerHandle, this, &AGYCharacter::GiveUp, HoldTime, false);
+}
+
+void AGYCharacter::Server_CancelGiveUp_Implementation()
+{
+	GetWorldTimerManager().ClearTimer(GiveUpTimerHandle);
+}
+
+void AGYCharacter::GiveUp()
+{
+	if (!HasAuthority()) return;
+
+	if (RevivePoolComponent)
+	{
+		RevivePoolComponent->DeactivatePool();
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	const UGYPlayerActionConfig* ActionConfig = GetActionConfig();
+	const UGYReviveConfig* ReviveConfig = ActionConfig ? ActionConfig->ReviveConfig.Get() : nullptr;
+
+	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	{
+		if (ReviveConfig)
+		{
+			for (const FGameplayTag& Tag : ReviveConfig->DownedTags)
+			{
+				ASC->RemoveLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+			}
+		}
+
+		if (ActionConfig)
+		{
+			for (const FGameplayTag& Tag : ActionConfig->DeathTags)
 			{
 				ASC->AddLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
 			}
 		}
 	}
 
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (!PC) return;
-
 	if (AGYGameMode* GM = GetWorld()->GetAuthGameMode<AGYGameMode>())
 	{
-		const float Delay = Config ? Config->RespawnDelay : 5.f;
+		const float Delay = ReviveConfig ? ReviveConfig->RespawnDelayAfterGiveUp : 3.f;
 		GM->RequestRespawn(PC, Delay);
+	}
+}
+
+bool AGYCharacter::IsDowned() const
+{
+	return RevivePoolComponent && RevivePoolComponent->IsPoolActive();
+}
+
+const UGYReviveConfig* AGYCharacter::GetReviveConfig() const
+{
+	const UGYPlayerActionConfig* Config = GetActionConfig();
+	return Config ? Config->ReviveConfig.Get() : nullptr;
+}
+
+void AGYCharacter::GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const
+{
+	if (RevivePoolComponent)
+	{
+		RevivePoolComponent->AppendInteractionOptions(Interactor, OutOptions);
+	}
+}
+
+void AGYCharacter::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
+{
+	if (RevivePoolComponent)
+	{
+		RevivePoolComponent->HandleInteract(OptionTag, Interactor);
 	}
 }

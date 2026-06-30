@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "GenericTeamAgentInterface.h"
 #include "GameFramework/Character.h"
+#include "Interaction/Interactable.h"
 #include "GYCharacter.generated.h"
 
 class UClimbingComponent;
@@ -17,9 +18,13 @@ class UActiveEquipmentComponent;
 class UInteractionComponent;
 class UAIPerceptionStimuliSourceComponent;
 class UGYOnHitModifierComponent;
+class URevivePoolComponent;
+class UReviveProgressComponent;
+class UGYReviveConfig;
+class UGYPlayerActionConfig;
 
 UCLASS()
-class GY_API AGYCharacter : public ACharacter, public IAbilitySystemInterface, public IGenericTeamAgentInterface
+class GY_API AGYCharacter : public ACharacter, public IAbilitySystemInterface, public IGenericTeamAgentInterface, public IInteractable
 {
 	GENERATED_BODY()
 
@@ -62,10 +67,31 @@ public:
 	bool IsDead() const { return bIsDead; }
 
 	virtual FGenericTeamId GetGenericTeamId() const override { return TeamId; }
+
+	virtual void GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const override;
+	virtual void OnInteract(FGameplayTag OptionTag, APawn* Interactor) override;
+
+	void Revive(const UGYReviveConfig* Config);
+
+	UFUNCTION(BlueprintCallable)
+	void StartGiveUpTimer();
+
+	UFUNCTION(BlueprintCallable)
+	void CancelGiveUpTimer();
+
+	UReviveProgressComponent* GetReviveProgressComponent() const { return ReviveProgressComponent; }
+
+	UFUNCTION(BlueprintPure)
+	bool IsDowned() const;
+
+	const UGYReviveConfig* GetReviveConfig() const;
+
 protected:
 	void HandleDeath();
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
 	void SubscribeHealthDelegate();
+	void EnterDownedState(const UGYReviveConfig* Config);
+	void GiveUp();
 
 	bool bIsDead = false;
 	bool bHealthDelegateBound = false;
@@ -111,7 +137,23 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HB|Character", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UGYPawnExtensionComponent> PawnExtComponent;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<URevivePoolComponent> RevivePoolComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UReviveProgressComponent> ReviveProgressComponent;
+
+	UFUNCTION(Server, Reliable)
+	void Server_StartGiveUp();
+
+	UFUNCTION(Server, Reliable)
+	void Server_CancelGiveUp();
+
+	FTimerHandle GiveUpTimerHandle;
+
 	FGenericTeamId TeamId;
+
+	const UGYPlayerActionConfig* GetActionConfig() const;
 
 	void TickFacingLerp();
 
