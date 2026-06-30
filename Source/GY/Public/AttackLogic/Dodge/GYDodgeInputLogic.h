@@ -16,12 +16,13 @@ struct FGYTargetData_DodgeAngle : public FGameplayAbilityTargetData
 public:
 	UPROPERTY()
 	float DodgeAngle = 0.f;
-
+	FVector InputVector = FVector::ZeroVector;
 	//필수 오버라이드
 	virtual UScriptStruct* GetScriptStruct() const override {return FGYTargetData_DodgeAngle::StaticStruct();}
 	bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
 	{
 		Ar << DodgeAngle; // 비트연산자 아님, FArchive의 스트림 입출력 연산자 cout << 같은거임
+		Ar << InputVector;
 		bOutSuccess = true;
 		return true;
 	}
@@ -61,6 +62,10 @@ private:
 	void OnDodgeEndFinished();
 
 	void RemoveDodgeTag();
+
+
+	UFUNCTION()
+	void RotateInstanceCharacterMesh(const FVector& InputVector);
 
 	FVector CachedDodgeDirection;
 
