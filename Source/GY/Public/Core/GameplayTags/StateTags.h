@@ -37,5 +37,6 @@ namespace GYStateTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift_Enchant)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift_SkillTree)
 
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Debuff_Poison)
 
 }

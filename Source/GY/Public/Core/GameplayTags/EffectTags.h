@@ -9,5 +9,7 @@ namespace GYEffectTags
 	// Granted Application Immunity Tags 매칭으로 일괄 차단 가능.
 
 	// 군중 제어(Crowd Control) 계열 효과. Stagger/Stun/KnockDown 등.
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Effect_Type_CC)
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Effect_Type_CC)
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Damage_Type_Poison)
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Damage_Poison_SetByCaller_PerTick)
 }

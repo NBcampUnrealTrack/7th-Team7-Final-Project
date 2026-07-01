@@ -76,7 +76,10 @@ void UBTTask_ExecuteSelectedAbility::OnTaskFinished(UBehaviorTreeComponent& Owne
 	}
 	if (CachedOwnerComp.IsValid())
 	{
-		CachedOwnerComp->GetBlackboardComponent()->SetValueAsObject(EnemyBBKeys::SelectedAbility, NULL);
+		if (UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent())
+		{
+			BB->SetValueAsObject(EnemyBBKeys::SelectedAbility, nullptr);
+		}
 		CachedOwnerComp = nullptr;
 	}
 }

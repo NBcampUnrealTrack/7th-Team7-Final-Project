@@ -8,11 +8,67 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "UI/GYUIMessages.h"
+#include "Logging/GYLogManager.h"
 
 UBossPhaseComponent::UBossPhaseComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(true);
+}
+
+void UBossPhaseComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	if (!bInitialized) return;
+
+	EvaluatePhaseTriggers();
+}
+
+void UBossPhaseComponent::EvaluatePhaseTriggers()
+{
+	if (PhaseTriggers.Num() == 0) return;
+
+	UAbilitySystemComponent* ASC = CachedASC.IsValid()
+		? CachedASC.Get()
+		: UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	if (!ASC) return;
+
+	const float Cur = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute());
+	const float Max = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetMaxHealthAttribute());
+	if (Max <= KINDA_SMALL_NUMBER) return;
+
+	const float CurrentRatio = FMath::Clamp(Cur / Max, 0.f, 1.f);
+
+	bool bAnyQueued = false;
+	for (int32 i = 0; i < PhaseTriggers.Num(); ++i)
+	{
+		if (TriggeredFlags.IsValidIndex(i) && TriggeredFlags[i]) continue;
+
+		const FBossPhaseTrigger& T = PhaseTriggers[i];
+		if (CurrentRatio > T.HealthRatio) continue;
+
+		if (T.PhaseAbilityClass)
+		{
+			PendingQueue.Add(T.PhaseAbilityClass.Get());
+		}
+		TriggeredFlags[i] = true;
+		bAnyQueued = true;
+
+		GY_LOG(AI, ESK,
+			"PhaseComp::Trigger 발동(Tick) Idx=%d Ratio=%.3f (HP %.2f) Ability=%s 큐=%d",
+			i, CurrentRatio, T.HealthRatio,
+			*GetNameSafe(T.PhaseAbilityClass.Get()),
+			PendingQueue.Num());
+
+		OnPhaseQueued.Broadcast(T);
+	}
+
+	if (bAnyQueued)
+	{
+		MARK_PROPERTY_DIRTY_FROM_NAME(UBossPhaseComponent, TriggeredFlags, this);
+	}
 }
 
 void UBossPhaseComponent::BeginPlay()
@@ -28,6 +84,12 @@ void UBossPhaseComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UBossPhaseComponent::InitializeForEncounter(const TArray<FBossPhaseTrigger>& InTriggers)
 {
+	GY_LOG(AI, ESK, "PhaseComp::InitializeForEncounter 진입 bInitialized=%d Owner=%s Authority=%d InCount=%d",
+		bInitialized ? 1 : 0,
+		*GetNameSafe(GetOwner()),
+		GetOwner() ? GetOwner()->HasAuthority() : -1,
+		InTriggers.Num());
+
 	if (bInitialized) return;
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
@@ -38,6 +100,13 @@ void UBossPhaseComponent::InitializeForEncounter(const TArray<FBossPhaseTrigger>
 		return A.HealthRatio > B.HealthRatio;
 	});
 	TriggeredFlags.Init(false, PhaseTriggers.Num());
+
+	for (int32 i = 0; i < PhaseTriggers.Num(); ++i)
+	{
+		GY_LOG(AI, ESK, "PhaseComp::Trigger[%d] HP=%.2f Ability=%s",
+			i, PhaseTriggers[i].HealthRatio,
+			*GetNameSafe(PhaseTriggers[i].PhaseAbilityClass.Get()));
+	}
 
 	BindToHealthAttribute();
 	bInitialized = true;
@@ -53,6 +122,8 @@ TSubclassOf<UGameplayAbility> UBossPhaseComponent::PopNextPhaseAbility()
 	if (PendingQueue.Num() == 0) return nullptr;
 	TSubclassOf<UGameplayAbility> Next = PendingQueue[0];
 	PendingQueue.RemoveAt(0);
+	GY_LOG(AI, ESK, "PhaseComp::PopNextPhaseAbility=%s 남은Queue=%d",
+		*GetNameSafe(Next.Get()), PendingQueue.Num());
 	return Next;
 }
 
@@ -60,22 +131,27 @@ void UBossPhaseComponent::EnqueuePhaseAbilities(const TArray<TSubclassOf<UGamepl
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
+	int32 Added = 0;
 	for (const TSubclassOf<UGameplayAbility>& Ability : Abilities)
 	{
 		if (Ability)
 		{
 			PendingQueue.Add(Ability);
+			++Added;
 		}
 	}
+	GY_LOG(AI, ESK, "PhaseComp::EnqueuePhaseAbilities 추가=%d 전체Queue=%d", Added, PendingQueue.Num());
 }
 
 void UBossPhaseComponent::NotifyPhaseStarted(TSubclassOf<UGameplayAbility> AbilityClass)
 {
+	GY_LOG(AI, ESK, "PhaseComp::NotifyPhaseStarted=%s", *GetNameSafe(AbilityClass.Get()));
 	OnPhaseStarted.Broadcast(AbilityClass);
 }
 
 void UBossPhaseComponent::NotifyPhaseFinished(TSubclassOf<UGameplayAbility> AbilityClass)
 {
+	GY_LOG(AI, ESK, "PhaseComp::NotifyPhaseFinished=%s", *GetNameSafe(AbilityClass.Get()));
 	OnPhaseFinished.Broadcast(AbilityClass);
 }
 
@@ -105,7 +181,11 @@ void UBossPhaseComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePrope
 void UBossPhaseComponent::BindToHealthAttribute()
 {
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
-	if (!ASC) return;
+	if (!ASC)
+	{
+		GY_WARN(AI, ESK, "PhaseComp::BindToHealthAttribute ASC 없음 Owner=%s", *GetNameSafe(GetOwner()));
+		return;
+	}
 
 	CachedASC = ASC;
 
@@ -115,6 +195,9 @@ void UBossPhaseComponent::BindToHealthAttribute()
 	const float Cur = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetCurrentHealthAttribute());
 	const float Max = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetMaxHealthAttribute());
 	LastObservedRatio = (Max > KINDA_SMALL_NUMBER) ? (Cur / Max) : 1.f;
+
+	GY_LOG(AI, ESK, "PhaseComp::BindToHealthAttribute Cur=%.1f Max=%.1f InitRatio=%.2f HandleValid=%d",
+		Cur, Max, LastObservedRatio, HealthChangeHandle.IsValid() ? 1 : 0);
 }
 
 void UBossPhaseComponent::UnbindFromHealthAttribute()
@@ -130,8 +213,16 @@ void UBossPhaseComponent::UnbindFromHealthAttribute()
 
 void UBossPhaseComponent::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
-	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-	if (!CachedASC.IsValid()) return;
+	if (!GetOwner() || !GetOwner()->HasAuthority())
+	{
+		GY_LOG(AI, ESK, "PhaseComp::OnHealthChanged 권한 없음 (Owner=%s)", *GetNameSafe(GetOwner()));
+		return;
+	}
+	if (!CachedASC.IsValid())
+	{
+		GY_WARN(AI, ESK, "PhaseComp::OnHealthChanged CachedASC 무효");
+		return;
+	}
 
 	const float Max = CachedASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetMaxHealthAttribute());
 	if (Max <= KINDA_SMALL_NUMBER) return;
@@ -139,6 +230,9 @@ void UBossPhaseComponent::OnHealthChanged(const FOnAttributeChangeData& Data)
 	const float NewRatio = FMath::Clamp(Data.NewValue / Max, 0.f, 1.f);
 	const float OldRatio = LastObservedRatio;
 	LastObservedRatio = NewRatio;
+
+	GY_LOG(AI, ESK, "PhaseComp::OnHealthChanged HP=%.1f/%.1f Ratio[%.3f→%.3f] TriggerCount=%d",
+		Data.NewValue, Max, OldRatio, NewRatio, PhaseTriggers.Num());
 
 	if (NewRatio >= OldRatio) return;
 
@@ -157,6 +251,12 @@ void UBossPhaseComponent::OnHealthChanged(const FOnAttributeChangeData& Data)
 		}
 		TriggeredFlags[i] = true;
 		bAnyQueued = true;
+
+		GY_LOG(AI, ESK,
+			"PhaseComp::Trigger 발동 Idx=%d Ratio=%.2f→%.2f (HP %.2f) Ability=%s 큐=%d",
+			i, OldRatio, NewRatio, T.HealthRatio,
+			*GetNameSafe(T.PhaseAbilityClass.Get()),
+			PendingQueue.Num());
 
 		OnPhaseQueued.Broadcast(T);
 	}

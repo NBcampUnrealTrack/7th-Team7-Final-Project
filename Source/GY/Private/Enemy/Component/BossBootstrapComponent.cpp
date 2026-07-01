@@ -8,6 +8,7 @@
 #include "Enemy/GYBossCharacterBase.h"
 #include "Enemy/GYBossAIController.h"
 #include "Enemy/Component/BossPatternSelectorComponent.h"
+#include "Enemy/Component/BossPhaseComponent.h"
 #include "Enemy/Abilities/GYBossPhaseAbility.h"
 
 #include "Logging/GYLogManager.h"
@@ -51,6 +52,16 @@ void UBossBootstrapComponent::ApplyAllConfigs()
 			{
 				Selector->InitializePatterns(BossData->NormalPatterns);
 				GY_LOG(AI, ESK, "BossBootstrap: PatternSelector 초기화 (%d 패턴)", BossData->NormalPatterns.Num());
+			}
+		}
+
+		if (AGYBossCharacterBase* BossOwner = Cast<AGYBossCharacterBase>(Owner))
+		{
+			if (UBossPhaseComponent* PhaseComp = BossOwner->GetPhaseComponent())
+			{
+				PhaseComp->InitializeForEncounter(BossData->PhaseTriggers);
+				GY_LOG(AI, ESK, "BossBootstrap: PhaseComponent 초기화 (%d Triggers)",
+					BossData->PhaseTriggers.Num());
 			}
 		}
 	}

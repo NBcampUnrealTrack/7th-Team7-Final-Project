@@ -2,6 +2,7 @@
 
 #include "StateTreeLinker.h"
 #include "Enemy/Component/BossPatternSelectorComponent.h"
+#include "Logging/GYLogManager.h"
 
 bool FSelectPattern::Link(FStateTreeLinker& Linker)
 {
@@ -15,11 +16,23 @@ EStateTreeRunStatus FSelectPattern::EnterState(FStateTreeExecutionContext& Conte
 	FInstanceDataType& Data = Context.GetInstanceData(*this);
 
 	UBossPatternSelectorComponent* Selector = Context.GetExternalDataPtr(SelectorHandle);
-	if (!Selector) { return EStateTreeRunStatus::Failed; }
-	if (!Data.Target){ return EStateTreeRunStatus::Failed; }
+	if (!Selector)
+	{
+		GY_WARN(AI, ESK, "SelectPattern: Selector 없음 → Failed");
+		return EStateTreeRunStatus::Failed;
+	}
+	if (!Data.Target)
+	{
+		GY_WARN(AI, ESK, "SelectPattern: Target 없음 → Failed");
+		return EStateTreeRunStatus::Failed;
+	}
 
 	TSubclassOf<UGameplayAbility> Selected = Selector->SelectNextPattern(Data.Target);
+	GY_LOG(AI, ESK, "SelectPattern: 결과 Selected=%s Target=%s",
+		Selected ? *Selected->GetName() : TEXT("NULL"),
+		*GetNameSafe(Data.Target));
+
 	if (!Selected) { return EStateTreeRunStatus::Failed; }
 
-	return EStateTreeRunStatus::Succeeded;
+	return EStateTreeRunStatus::Running;
 }
