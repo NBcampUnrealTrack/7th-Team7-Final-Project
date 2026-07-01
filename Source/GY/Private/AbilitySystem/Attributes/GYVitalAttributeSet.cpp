@@ -184,7 +184,7 @@ void UGYVitalAttributeSet::HandleHitReaction(const FGameplayEffectModCallbackDat
 
 	FGameplayCueParameters Params;
 	Params.Normal = HitDir;
-	Params.RawMagnitude = DamageDone * 100.f;
+	Params.RawMagnitude = DamageDone;
 	Params.Instigator = SourceActor;
 	Params.EffectCauser = TargetActor;
 	Params.Location = TargetActor->GetActorLocation();
