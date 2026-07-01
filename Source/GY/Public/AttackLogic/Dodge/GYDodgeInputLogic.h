@@ -49,9 +49,9 @@ public:
 	virtual void OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload) override;
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 
-	virtual TArray<FGameplayTag> GetSubscribedEventTags() const override;
 
-	virtual void OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload) override;
+
+
 
 
 	//서버측 콜백 함수

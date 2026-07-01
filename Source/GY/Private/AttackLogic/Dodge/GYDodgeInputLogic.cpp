@@ -188,7 +188,7 @@ void UGYDodgeInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bW
 
 TArray<FGameplayTag> UGYDodgeInputLogic::GetSubscribedEventTags() const
 {
-	return { GYGameplayTags::Event_Anim_TagApplyStart };
+	return { GYGameplayTags::Event_Anim_TagApplyStart, GYGameplayTags::Event_Ability_Dodge_Execute };
 }
 
 void UGYDodgeInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
@@ -226,10 +226,6 @@ TArray<FGameplayTag> UGYDodgeInputLogic::GetRequiredFragmentTags() const
 	};
 }
 
-TArray<FGameplayTag> UGYDodgeInputLogic::GetSubscribedEventTags() const
-{
-	return {GYGameplayTags::Event_Ability_Dodge_Execute};
-}
 
 
 
@@ -308,12 +304,3 @@ void UGYDodgeInputLogic::RotateInstanceCharacterMesh(const FVector& InputVector)
 
 }
 
-
-void UGYDodgeInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
-{
-	Super::OnGameplayEvent(EventTag, Payload);
-	if (EventTag == GYGameplayTags::Event_Ability_Dodge_Execute)
-	{
-
-	}
-}
