@@ -30,12 +30,11 @@ void UHitReactionComponent::BeginPlay()
 		{
 			PhysicalAnimation->SetSkeletalMeshComponent(MeshComp.Get());
 		}
-
 	}
 }
 
 void UHitReactionComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction)
+                                          FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
@@ -58,16 +57,13 @@ void UHitReactionComponent::TickComponent(float DeltaTime, enum ELevelTick TickT
 		MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, false, true);
 		MeshComp->bBlendPhysics = false;
 	}
-
 }
 
 void UHitReactionComponent::ApplyHitReaction(const FVector& HitDirection, float Strength, FName HitBone)
 {
-//	if (bIsDead) return;
+	//	if (bIsDead) return;
 
-	ApplyPhysicsAnimation(HitDirection, Strength, HitBone, HitReactDuration);
-
-
+	ApplyPhysicsAnimation(HitDirection, Strength * HitImpulseScale, HitBone, HitReactDuration);
 }
 
 void UHitReactionComponent::SetHitReactStartBone(FName BoneName)
@@ -94,12 +90,21 @@ void UHitReactionComponent::ApplyMaterialOverlay(UMaterialInterface* OverlayMate
 	);
 }
 
-void UHitReactionComponent::ApplyParriedReaction(const FVector& HitDirection, FName HitBone)
+void UHitReactionComponent::ApplyKnockBack(const FVector& HitDirection, float Strength)
 {
-	ApplyPhysicsAnimation(HitDirection, 1000000000, HitBone, ParriedReactDuration);
+	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+	const FVector Launch = HitDirection * Strength*KnockbackScale + FVector(0.f, 0.f, 100.f);
+	OwnerCharacter->LaunchCharacter(Launch, true, false);
 }
 
-void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, float Strength, FName HitBone, float Duration)
+void UHitReactionComponent::ApplyParriedReaction(const FVector& HitDirection, FName HitBone)
+{
+	ApplyPhysicsAnimation(HitDirection, DefaultParriedImpulse, HitBone, ParriedReactDuration);
+}
+
+void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, float Strength, FName HitBone,
+                                                  float Duration)
 {
 	if (!PhysicalAnimation.IsValid()) return;
 
@@ -108,7 +113,7 @@ void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, f
 	if (!World) return;
 
 
-	const float Impulse = (Strength > 0.f) ? Strength * 100.0f : DefaultHitImpulse;
+	const float Impulse = (Strength > 0.f) ? Strength : DefaultHitImpulse;
 	MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, true, true);
 
 	MeshComp->bBlendPhysics = true;
@@ -133,8 +138,8 @@ void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, f
 
 	World->GetTimerManager().ClearTimer(HitReactTimerHandle);
 	World->GetTimerManager().SetTimer(HitReactTimerHandle,
-		this, &UHitReactionComponent::EndHitReaction,
-		Duration, false);
+	                                  this, &UHitReactionComponent::EndHitReaction,
+	                                  Duration, false);
 }
 
 void UHitReactionComponent::EndHitReaction()
@@ -147,7 +152,4 @@ void UHitReactionComponent::EndHitReaction()
 	PhysicalAnimation->ApplyPhysicalAnimationProfileBelow(HitReactStartBone, NAME_None);
 	bBlendingOut = true;
 	SetComponentTickEnabled(true);
-
 }
-
-

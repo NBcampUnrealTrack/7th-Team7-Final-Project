@@ -8,6 +8,7 @@ namespace GYGameplayTags
 
 	/* 피격 리액션 */
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_HitReaction, "GameplayCue.Combat.HitReaction");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Knockback, "GameplayCue.Combat.Knockback");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Stagger, "GameplayCue.Player.Stagger")
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Stun, "GameplayCue.Player.Stun")
 
