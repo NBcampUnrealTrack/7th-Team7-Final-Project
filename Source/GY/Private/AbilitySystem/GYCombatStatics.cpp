@@ -219,6 +219,25 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::HitImpact_SetByCaller_TakenMultiplier, TakenMultiplier);
 	SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), TargetASC);
 
+	//넉백
+	if (HitContext.KnockbackStrength > 0.f)
+	{
+		AActor* TargetActor = TargetASC->GetAvatarActor();
+		AActor* SourceActor = SourceASC->GetAvatarActor();
+		if (TargetActor && SourceActor)
+		{
+			FGameplayCueParameters CueParams;
+			CueParams.Normal = (TargetActor->GetActorLocation() - SourceActor->GetActorLocation()).GetSafeNormal();
+			CueParams.RawMagnitude = HitContext.KnockbackStrength;
+			CueParams.Instigator = SourceActor;
+			CueParams.EffectCauser = TargetActor;
+			CueParams.Location = TargetActor->GetActorLocation();
+
+			TargetASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Combat_Knockback, CueParams);
+		}
+	}
+
+
 	if (ActiveBlock)
 	{
 		// 블록 성공 시 GYBlockInputLogic·GYBlockAttackLogic에 피격 사실 전달
