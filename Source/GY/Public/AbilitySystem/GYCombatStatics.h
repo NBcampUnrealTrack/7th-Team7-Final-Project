@@ -22,7 +22,7 @@ struct FGYHitContext
 	//원거리같이 패리당해도 리액션이 없어야 할 수 있음
 	bool bGivesParriedReaction = true;
 	//TODO 여기 채워야 적절한 넉백수치 들어감
-	float KnockbackStrength = 100.f;
+	float KnockbackStrength = 300.f;
 	FGameplayTag HitFXCueTag;
 };
 

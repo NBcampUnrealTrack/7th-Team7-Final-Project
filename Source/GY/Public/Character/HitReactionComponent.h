@@ -60,7 +60,7 @@ protected:
 	float DefaultParriedImpulse = 10000.f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|Knockback")
-	float KnockbackScale = 15.0f;
+	float KnockbackScale = 1.0f;
 
 	void EndHitReaction();
 
