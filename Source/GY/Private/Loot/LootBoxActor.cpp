@@ -321,11 +321,4 @@ void ALootBoxActor::PlayFirstEffect(APawn* Opener)
 	Parameters.Location = GetActorLocation();
 	Parameters.Normal=GetActorForwardVector();
 	ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Interaction_LootBox, Parameters);
-	if (AGYPlayerState* PS = Opener->GetPlayerState<AGYPlayerState>())
-	{
-		if (ULootViewerComponent* LootViewer = PS->GetLootViewerComponent())
-		{
-			LootViewer->Client_PlayLootBoxSound(GYGameplayTags::Sound_Interaction_LootBox_First);
-		}
-	}
 }
