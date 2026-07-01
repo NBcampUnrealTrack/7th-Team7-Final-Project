@@ -41,7 +41,7 @@ EBTNodeResult::Type UBTTask_TriggerAbilityEvent::ExecuteTask(UBehaviorTreeCompon
 
 	ASC->AbilityActivatedCallbacks.Remove(ActivatedHandle);
 
-	if (Triggered == 0 || !ActiveAbility) return EBTNodeResult::Failed;
+	if (Triggered == 0 || !ActiveAbility.IsValid()) return EBTNodeResult::Failed;
 
 	CachedOwnerComp = &OwnerComp;
 	ActiveAbility->OnGameplayAbilityEnded.AddUObject(
@@ -53,7 +53,7 @@ EBTNodeResult::Type UBTTask_TriggerAbilityEvent::ExecuteTask(UBehaviorTreeCompon
 void UBTTask_TriggerAbilityEvent::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
 	EBTNodeResult::Type TaskResult)
 {
-	if (ActiveAbility)
+	if (ActiveAbility.IsValid())
 	{
 		ActiveAbility->OnGameplayAbilityEnded.RemoveAll(this);
 
@@ -62,7 +62,7 @@ void UBTTask_TriggerAbilityEvent::OnTaskFinished(UBehaviorTreeComponent& OwnerCo
 			if (UAbilitySystemComponent* ASC =
 				ActiveAbility->GetAbilitySystemComponentFromActorInfo())
 			{
-				ASC->CancelAbility(ActiveAbility);
+				ASC->CancelAbility(ActiveAbility.Get());
 			}
 
 			if (AAIController* AIC = OwnerComp.GetAIOwner())
@@ -112,12 +112,12 @@ void UBTTask_TriggerAbilityEvent::OnTaskFinished(UBehaviorTreeComponent& OwnerCo
 
 void UBTTask_TriggerAbilityEvent::OnAbilityEnded(UGameplayAbility* Ability)
 {
-	if (!CachedOwnerComp) return;
+	if (!CachedOwnerComp.IsValid()) return;
 	FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
 }
 
 void UBTTask_TriggerAbilityEvent::OnAbilityActivated(UGameplayAbility* Ability)
 {
-	if (ActiveAbility) return;
+	if (ActiveAbility.IsValid()) return;
 	ActiveAbility = Ability;
 }

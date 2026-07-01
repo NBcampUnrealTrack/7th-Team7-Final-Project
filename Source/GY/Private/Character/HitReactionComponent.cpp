@@ -3,13 +3,8 @@
 
 #include "Character/HitReactionComponent.h"
 
-#include "GameplayEffectComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
-#include "PhysicsEngine/PhysicsAsset.h"
-
 
 UHitReactionComponent::UHitReactionComponent()
 {
@@ -113,8 +108,7 @@ void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, f
 	if (!World) return;
 
 
-	const float Impulse = (Strength > 0.f) ? Strength : DefaultHitImpulse;
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	const float Impulse = (Strength > 0.f) ? Strength * 100.0f : DefaultHitImpulse;
 	MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, true, true);
 
 	MeshComp->bBlendPhysics = true;

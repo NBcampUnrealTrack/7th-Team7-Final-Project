@@ -14,7 +14,7 @@ bool UGYGameplayCueNotify_HitReaction::OnExecute_Implementation(
 	UHitReactionComponent* HitReact = MyTarget->FindComponentByClass<UHitReactionComponent>();
 	if (!HitReact) return false;
 
-	const FVector HitDirection = Parameters.Normal;
+	const FVector HitDirection = Parameters.Normal.GetSafeNormal();
 	const float Strength = Parameters.RawMagnitude;
 
 	HitReact->ApplyHitReaction(HitDirection, Strength, NAME_None);

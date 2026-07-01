@@ -84,7 +84,7 @@ EBTNodeResult::Type UBTTask_SelectAbility::ExecuteTask(UBehaviorTreeComponent& O
 void UBTTask_SelectAbility::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
 	EBTNodeResult::Type TaskResult)
 {
-	if (CachedASC)
+	if (CachedASC.IsValid())
 	{
 		CachedASC->OnAbilityEnded.RemoveAll(this);
 		CachedASC = nullptr;
@@ -98,12 +98,12 @@ void UBTTask_SelectAbility::OnASCAbilityEnded(const FAbilityEndedData& EndedData
 {
 	if (EndedData.AbilitySpecHandle != CachedAbilityHandle) return;
 
-	if (CachedASC)
+	if (CachedASC.IsValid())
 	{
 		CachedASC->OnAbilityEnded.RemoveAll(this);
 	}
 
-	if (!CachedOwnerComp)
+	if (!CachedOwnerComp.IsValid())
 	{
 		return;
 	}

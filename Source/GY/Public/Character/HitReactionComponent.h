@@ -50,7 +50,7 @@ protected:
 	float HitReactBlendInWeight = 0.5f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
-	float DefaultHitImpulse = 1000.f;
+	float DefaultHitImpulse = 10000000.f;
 
 	void EndHitReaction();
 
