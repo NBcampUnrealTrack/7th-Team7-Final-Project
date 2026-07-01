@@ -107,7 +107,7 @@ void URevivePoolComponent::StartReviving(AGYCharacter* Reviver)
 	{
 		if (UAbilitySystemComponent* ASC = ReviverPS->GetAbilitySystemComponent())
 		{
-			ASC->AddLooseGameplayTag(GYStateTags::Action_Reviving, 1, EGameplayTagReplicationState::TagOnly);
+			ASC->AddLooseGameplayTag(GYStateTags::State_Action_Reviving, 1, EGameplayTagReplicationState::TagOnly);
 		}
 	}
 
@@ -132,7 +132,7 @@ void URevivePoolComponent::StopReviving()
 	{
 		if (UAbilitySystemComponent* ASC = ReviverPS->GetAbilitySystemComponent())
 		{
-			ASC->RemoveLooseGameplayTag(GYStateTags::Action_Reviving, 1, EGameplayTagReplicationState::TagOnly);
+			ASC->RemoveLooseGameplayTag(GYStateTags::State_Action_Reviving, 1, EGameplayTagReplicationState::TagOnly);
 		}
 	}
 

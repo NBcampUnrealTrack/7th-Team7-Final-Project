@@ -345,7 +345,7 @@ void ULockOnComponent::UpdateRotationToTarget(float DeltaTime)
 
 	UAbilitySystemComponent* ASC = OwnerPawn->GetPlayerState<AGYPlayerState>()->GetAbilitySystemComponent();
 	if (!ASC) return;
-	if (ASC->HasMatchingGameplayTag(GYGameplayTags::Ability_State_Dodging)) return;
+	if (!RotationBlockTags.IsEmpty() && ASC->HasAnyMatchingGameplayTags(RotationBlockTags)) return;
 
 
 	Controller->SetControlRotation(NewRot);

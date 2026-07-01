@@ -28,7 +28,9 @@ namespace GYStateTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Regen_Delay_Stagger)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Regen_Delay_Stun)
 
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_Reviving)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Action_Reviving)
+
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Special_LockOn_IgnoreRotation)
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Interaction_TimeRift_Altar)

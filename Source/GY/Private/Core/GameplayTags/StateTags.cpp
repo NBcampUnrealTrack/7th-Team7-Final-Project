@@ -26,7 +26,9 @@ namespace GYStateTags
 	UE_DEFINE_GAMEPLAY_TAG(State_Regen_Delay_Stagger, "State.Regen.Delay.Stagger");
 	UE_DEFINE_GAMEPLAY_TAG(State_Regen_Delay_Stun, "State.Regen.Delay.Stun");
 
-	UE_DEFINE_GAMEPLAY_TAG(Action_Reviving, "Action.Reviving");
+	UE_DEFINE_GAMEPLAY_TAG(State_Action_Reviving, "State.Action.Reviving");
+
+	UE_DEFINE_GAMEPLAY_TAG(State_Special_LockOn_IgnoreRotation, "State.Special.LockOn.IgnoreRotation");
 
 	UE_DEFINE_GAMEPLAY_TAG(State_Interaction_TimeRift, "State.Interaction.TimeRift");
 	UE_DEFINE_GAMEPLAY_TAG(State_Interaction_TimeRift_Altar, "State.Interaction.TimeRift.Altar");
