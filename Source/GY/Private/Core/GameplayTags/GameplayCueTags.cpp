@@ -16,6 +16,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Hit_Heavy, "GameplayCue.Player.Hit.Heavy");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Hit_Critical, "GameplayCue.Player.Hit.Critical");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Hit_ParryCounter, "GameplayCue.Player.Hit.ParryCounter");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Player_Hit_ShockWave, "GameplayCue.Player.Hit.ShockWave");
 
 	// 보스 액션
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Combat_Boss_Slam, "GameplayCue.Combat.Boss.Slam");

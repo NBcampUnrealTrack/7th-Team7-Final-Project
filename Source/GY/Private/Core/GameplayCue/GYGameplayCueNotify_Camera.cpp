@@ -4,9 +4,10 @@
 #include "Logging/GYLogManager.h"
 
 /* 필요한 큐 파라미터 */
-/* 대상: Parameters.Instigator
+/* 대상: Parameters.Instigator(Instigator모드때만)
  * 위치: Parameters.Location
  * 방향: Parameters.Normal
+ * 강도: Parameters.NormalizedMagnitude(0.0 ~ 1.0)
  */
 
 bool UGYGameplayCueNotify_Camera::OnExecute_Implementation(AActor* MyTarget,
@@ -38,10 +39,11 @@ bool UGYGameplayCueNotify_Camera::OnExecute_Implementation(AActor* MyTarget,
 	FGYCameraEffectContext Context;
 
 	Context.Type = EffectType;
-	Context.Intensity = Intensity;
 	Context.Duration = Duration;
 	Context.ZoomAmount = ZoomAmount;
 	Context.Frequency = Frequency;
+	Context.WorldLocation = Parameters.Location;
+
 	// 방향 계산
 	switch (DirectionSource)
 	{
@@ -64,8 +66,11 @@ bool UGYGameplayCueNotify_Camera::OnExecute_Implementation(AActor* MyTarget,
 		break;
 	}
 
-	Context.WorldLocation = Parameters.Location;
+	// 강도 계산
+	const float Multiplier = FMath::Lerp(0.5f, 1.5f, Parameters.NormalizedMagnitude);
+	Context.Intensity = Intensity * Multiplier;
 
+	// 이펙트 전달
 	CameraComp->PushCameraEffect(Context);
 
 	return true;

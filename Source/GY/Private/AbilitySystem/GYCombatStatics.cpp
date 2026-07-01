@@ -240,6 +240,10 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 		// HitContext.SourceHitBone
 		// CueParams.Location = TODO 히트 위치;
 		TargetASC->ExecuteGameplayCue(HitContext.HitFXCueTag);
+		if (HitContext.HitFXCueTag==GYGameplayTags::GameplayCue_Player_Hit_Heavy)
+		{
+			SourceASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Player_Hit_ShockWave);
+		}
 	}
 }
 
