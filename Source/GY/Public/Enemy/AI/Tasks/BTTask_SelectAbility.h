@@ -26,10 +26,10 @@ private:
 	void OnASCAbilityEnded(const FAbilityEndedData& EndedData);
 
 	UPROPERTY()
-	TObjectPtr<UBehaviorTreeComponent> CachedOwnerComp;
+	TWeakObjectPtr<UBehaviorTreeComponent> CachedOwnerComp;
 
 	UPROPERTY()
-	TObjectPtr<UAbilitySystemComponent> CachedASC;
+	TWeakObjectPtr<UAbilitySystemComponent> CachedASC;
 
 	FGameplayAbilitySpecHandle CachedAbilityHandle;
 

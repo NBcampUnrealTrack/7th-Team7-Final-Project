@@ -67,22 +67,29 @@ EBTNodeResult::Type UBTTask_ExecuteSelectedAbility::ExecuteTask(UBehaviorTreeCom
 void UBTTask_ExecuteSelectedAbility::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
 	EBTNodeResult::Type TaskResult)
 {
-	if (CachedASC)
+	if (CachedASC.IsValid())
 	{
 		CachedASC->OnAbilityEnded.RemoveAll(this);
 		if (TaskResult == EBTNodeResult::Aborted)
 			CachedASC->CancelAllAbilities();
 		CachedASC = nullptr;
 	}
-
-	CachedOwnerComp->GetBlackboardComponent()->SetValueAsObject(EnemyBBKeys::SelectedAbility, NULL);
-	CachedOwnerComp = nullptr;
+	if (CachedOwnerComp.IsValid())
+	{
+		CachedOwnerComp->GetBlackboardComponent()->SetValueAsObject(EnemyBBKeys::SelectedAbility, NULL);
+		CachedOwnerComp = nullptr;
+	}
 }
 
 void UBTTask_ExecuteSelectedAbility::OnASCAbilityEnded(const FAbilityEndedData& EndedData)
 {
 	if (EndedData.AbilitySpecHandle != CachedAbilityHandle) return;
-	if (CachedASC) CachedASC->OnAbilityEnded.RemoveAll(this);
-	if (CachedOwnerComp) FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
-
+	if (CachedASC.IsValid())
+	{
+		CachedASC->OnAbilityEnded.RemoveAll(this);
+	}
+	if (CachedOwnerComp.IsValid())
+	{
+		FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
+	}
 }

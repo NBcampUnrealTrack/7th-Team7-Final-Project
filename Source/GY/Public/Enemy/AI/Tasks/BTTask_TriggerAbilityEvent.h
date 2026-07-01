@@ -33,8 +33,8 @@ private:
 	void OnAbilityActivated(UGameplayAbility* Ability);
 
 	UPROPERTY()
-	TObjectPtr<UBehaviorTreeComponent> CachedOwnerComp;
+	TWeakObjectPtr<UBehaviorTreeComponent> CachedOwnerComp;
 
 	UPROPERTY()
-	TObjectPtr<UGameplayAbility> ActiveAbility;
+	TWeakObjectPtr<UGameplayAbility> ActiveAbility;
 };
