@@ -48,16 +48,6 @@ void UGYParryInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	{
 		Ability->PlayMontageForLogic(CachedMontageSet->ParryMontage, 1.f);
 	}
-
-	if (ASC)
-	{
-		for (const FGameplayTag& Tag : CachedParryData->ParryAppliedTags)
-			ASC->AddLooseGameplayTag(Tag);
-	}
-
-	ParryWindowTask = UAbilityTask_WaitDelay::WaitDelay(Ability, FMath::Max(CachedParryData->ParryTime, KINDA_SMALL_NUMBER));
-	ParryWindowTask->OnFinish.AddDynamic(this, &UGYParryInputLogic::OnParryWindowExpired);
-	ParryWindowTask->ReadyForActivation();
 }
 
 void UGYParryInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
@@ -79,11 +69,28 @@ void UGYParryInputLogic::CancelPendingTasks()
 
 TArray<FGameplayTag> UGYParryInputLogic::GetSubscribedEventTags() const
 {
-	return { GYGameplayTags::Event_Parry_Hit };
+	return { GYGameplayTags::Event_Parry_Hit, GYGameplayTags::Event_Anim_TagApplyStart };
 }
 
 void UGYParryInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
 {
+	if (EventTag == GYGameplayTags::Event_Anim_TagApplyStart)
+	{
+		if (!CachedAbility.IsValid() || !CachedParryData) return;
+
+		UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+		if (ASC)
+		{
+			for (const FGameplayTag& Tag : CachedParryData->ParryAppliedTags)
+				ASC->AddLooseGameplayTag(Tag);
+		}
+
+		ParryWindowTask = UAbilityTask_WaitDelay::WaitDelay(CachedAbility.Get(), FMath::Max(CachedParryData->ParryTime, KINDA_SMALL_NUMBER));
+		ParryWindowTask->OnFinish.AddDynamic(this, &UGYParryInputLogic::OnParryWindowExpired);
+		ParryWindowTask->ReadyForActivation();
+		return;
+	}
+
 	// 패리 성공
 	if (EventTag != GYGameplayTags::Event_Parry_Hit || !CachedAbility.IsValid()) return;
 

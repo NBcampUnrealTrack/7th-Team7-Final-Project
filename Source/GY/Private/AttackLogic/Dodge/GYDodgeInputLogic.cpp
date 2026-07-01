@@ -1,5 +1,6 @@
 #include "AttackLogic/Dodge/GYDodgeInputLogic.h"
 #include "AttackLogic/Dodge/GYDodgeFragment.h"
+#include "Core/GameplayTags/EventTags.h"
 #include "AttackLogic/Dodge/GYDodgeMontageFragment.h"
 #include "AttackLogic/Shared/GYAttributeCostHelpers.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
@@ -144,22 +145,6 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		MontageDuration = Ability->PlayMontageForLogic(SelectedMontage, 1.f);
 	}
 
-	float InvincibilityDuration = DodgeData->InvincibilityDuration;
-	if (const UGYCoreStatAttributeSet* CoreStats = ASC ? ASC->GetSet<UGYCoreStatAttributeSet>() : nullptr)
-	{
-		InvincibilityDuration += CoreStats->GetEvasionInvincibilityTime();
-	}
-
-	if (ASC && CachedDodgeAppliedTag.IsValid() && InvincibilityDuration > 0.f)
-	{
-		ASC->AddLooseGameplayTag(CachedDodgeAppliedTag);
-
-		IFrameTask = UAbilityTask_WaitDelay::WaitDelay(
-			Ability, FMath::Max(DodgeData->InvincibilityDuration, KINDA_SMALL_NUMBER));
-		IFrameTask->OnFinish.AddDynamic(this, &UGYDodgeInputLogic::OnIFrameFinished);
-		IFrameTask->ReadyForActivation();
-	}
-
 	//로컬에서만 실행
 	if (bIsLocallyControlled)
 	{
@@ -198,6 +183,38 @@ void UGYDodgeInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bW
 	}
 	RemoveDodgeTag();
 	CachedAbility.Reset();
+}
+
+TArray<FGameplayTag> UGYDodgeInputLogic::GetSubscribedEventTags() const
+{
+	return { GYGameplayTags::Event_Anim_TagApplyStart };
+}
+
+void UGYDodgeInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
+{
+	if (EventTag != GYGameplayTags::Event_Anim_TagApplyStart || !CachedAbility.IsValid()) return;
+
+	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
+	if (!ASC || !CachedDodgeAppliedTag.IsValid()) return;
+
+	FGameplayTagContainer OwnedTags;
+	ASC->GetOwnedGameplayTags(OwnedTags);
+
+	const UGYDodgeFragment* DF = CachedAbility->GetFragment<UGYDodgeFragment>();
+	const FGYDodgeData* DodgeData = DF ? DF->GetBestMatchingData(OwnedTags) : nullptr;
+	if (!DodgeData) return;
+
+	float InvincibilityDuration = DodgeData->InvincibilityDuration;
+	if (const UGYCoreStatAttributeSet* CoreStats = ASC->GetSet<UGYCoreStatAttributeSet>())
+		InvincibilityDuration += CoreStats->GetEvasionInvincibilityTime();
+
+	if (InvincibilityDuration <= 0.f) return;
+
+	ASC->AddLooseGameplayTag(CachedDodgeAppliedTag);
+
+	IFrameTask = UAbilityTask_WaitDelay::WaitDelay(CachedAbility.Get(), FMath::Max(DodgeData->InvincibilityDuration, KINDA_SMALL_NUMBER));
+	IFrameTask->OnFinish.AddDynamic(this, &UGYDodgeInputLogic::OnIFrameFinished);
+	IFrameTask->ReadyForActivation();
 }
 
 TArray<FGameplayTag> UGYDodgeInputLogic::GetRequiredFragmentTags() const

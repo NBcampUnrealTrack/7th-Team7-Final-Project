@@ -45,6 +45,8 @@ class GY_API UGYDodgeInputLogic : public UAbilityLogicBase
 public:
 	virtual void OnExecute(UGYPlayerGameplayAbility* Ability) override;
 	virtual void OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled) override;
+	virtual TArray<FGameplayTag> GetSubscribedEventTags() const override;
+	virtual void OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload) override;
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 
 
