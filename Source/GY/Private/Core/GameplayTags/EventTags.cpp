@@ -24,6 +24,10 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Combo_Advance, "Event.Combo.Advance");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Input_ParryRelease, "Event.Input.ParryRelease");
 
+	UE_DEFINE_GAMEPLAY_TAG(Event_Ability_Parkour_Execute, "Event.Ability.Parkour.Execute");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Ability_Dodge_Execute, "Event.Ability.Dodge.Execute");
+
+
 	UE_DEFINE_GAMEPLAY_TAG(Event_Parry_Hit, "Event.Parry.Hit");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Parried, "Event.Parried");
 
