@@ -35,7 +35,7 @@ void ULockOnComponent::BeginPlay()
 		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
 		{
 			bSavedOrientToMovement = Movement->bOrientRotationToMovement;
-			bSavedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
+			//bSavedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
 		}
 	}
 }
@@ -213,12 +213,12 @@ void ULockOnComponent::OnRep_CurrentTarget()
 			if (bCurrentActive)
 			{
 				Movement->bOrientRotationToMovement = false;
-				Character->bUseControllerRotationYaw = true;
+				//Character->bUseControllerRotationYaw = true;
 			}
 			else
 			{
 				Movement->bOrientRotationToMovement = bSavedOrientToMovement;
-				Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
+				//Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
 			}
 		}
 	}
@@ -333,22 +333,19 @@ void ULockOnComponent::UpdateRotationToTarget(float DeltaTime)
 	if (!OwnerPawn || !OwnerPawn->IsLocallyControlled()) return;
 	if (!CurrentTarget.IsValid()) return;
 
-	AController* Controller = OwnerPawn->GetController();
-	if (!Controller) return;
+	UAbilitySystemComponent* ASC = OwnerPawn->GetPlayerState<AGYPlayerState>()->GetAbilitySystemComponent();
+	if (ASC && !RotationBlockTags.IsEmpty() && ASC->HasAnyMatchingGameplayTags(RotationBlockTags)) return;
 
 	const FVector Direction = CurrentTarget->GetActorLocation() - OwnerPawn->GetActorLocation();
 	if (Direction.IsNearlyZero()) return;
 
 	const FRotator TargetRot = Direction.Rotation();
-	const FRotator CurrentRot = Controller->GetControlRotation();
-	const FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, RotationInterpSpeed);
+	const FRotator CurrentRot = OwnerPawn->GetActorRotation();
 
-	UAbilitySystemComponent* ASC = OwnerPawn->GetPlayerState<AGYPlayerState>()->GetAbilitySystemComponent();
-	if (!ASC) return;
-	if (!RotationBlockTags.IsEmpty() && ASC->HasAnyMatchingGameplayTags(RotationBlockTags)) return;
+	FRotator NewRot = CurrentRot;
+	NewRot.Yaw = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, RotationInterpSpeed).Yaw;
 
-
-	Controller->SetControlRotation(NewRot);
+	OwnerPawn->SetActorRotation(NewRot);
 }
 
 void ULockOnComponent::BroadcastLockOnMessage()
