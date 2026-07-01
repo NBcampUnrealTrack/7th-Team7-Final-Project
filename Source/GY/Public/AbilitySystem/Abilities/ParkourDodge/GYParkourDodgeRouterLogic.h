@@ -21,9 +21,13 @@ class GY_API UGYParkourDodgeRouterLogic : public UAbilityLogicBase
 
 	void DetermineActionAndRoute();
 	bool CheckParkourEnvironment();
+	bool DoForwardTrace(FHitResult& OutHit);
+	bool DoTopTrace(FVector& WallLoc, FHitResult& OutHit);
+	float GetMantleHeight(FVector& TopHitLoc);
 
-	UPROPERTY()
-	UGYPlayerGameplayAbility* CachedAbility;
+
+	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
+
 	UPROPERTY()
 	const UGYParkourFragment* CachedParkourFragment = nullptr;
 };
