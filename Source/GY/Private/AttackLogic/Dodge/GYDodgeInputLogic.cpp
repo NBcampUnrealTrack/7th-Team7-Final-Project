@@ -7,6 +7,7 @@
 #include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
+#include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -225,6 +226,13 @@ TArray<FGameplayTag> UGYDodgeInputLogic::GetRequiredFragmentTags() const
 	};
 }
 
+TArray<FGameplayTag> UGYDodgeInputLogic::GetSubscribedEventTags() const
+{
+	return {GYGameplayTags::Event_Ability_Dodge_Execute};
+}
+
+
+
 void UGYDodgeInputLogic::OnTargetDataReceived(const FGameplayAbilityTargetDataHandle& Data, FGameplayTag ActivationTag)
 {
 	if (!CachedAbility.IsValid()) return;
@@ -298,4 +306,14 @@ void UGYDodgeInputLogic::RotateInstanceCharacterMesh(const FVector& InputVector)
 
 	Character->SetActorRotation(InputRotator);
 
+}
+
+
+void UGYDodgeInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
+{
+	Super::OnGameplayEvent(EventTag, Payload);
+	if (EventTag == GYGameplayTags::Event_Ability_Dodge_Execute)
+	{
+
+	}
 }
