@@ -29,6 +29,11 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Combo_Advance)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Input_ParryRelease)
 
+	//Parkour Dodge Events
+
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Ability_Parkour_Execute)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Ability_Dodge_Execute)
+
 	// Parry events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Parry_Hit)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Parried)

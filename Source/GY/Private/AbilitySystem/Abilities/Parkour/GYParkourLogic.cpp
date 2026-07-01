@@ -15,6 +15,7 @@
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Components/CapsuleComponent.h"
 #include "Core/GYCollisionChannels.h"
+#include "Core/GameplayTags/EventTags.h"
 #include "Logging/GYLogManager.h"
 
 void UGYParkourLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
@@ -49,6 +50,7 @@ void UGYParkourLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 			Ability->GetCurrentAbilitySpecHandle(),
 			Ability->GetCurrentActivationInfo().GetActivationPredictionKey());
 	}
+
 	if (bIsLocallyControlled)
 	{
 		TryParkour();
@@ -83,10 +85,14 @@ TArray<FGameplayTag> UGYParkourLogic::GetRequiredFragmentTags() const
 	return {GYGameplayTags::Ability_Fragment_Parkour};
 }
 
+TArray<FGameplayTag> UGYParkourLogic::GetSubscribedEventTags() const
+{
+	return {GYGameplayTags::Event_Ability_Parkour_Execute};
+}
+
 void UGYParkourLogic::TryParkour()
 {
 	FHitResult WallHit; // 벽의 옆면 충돌정보
-	//ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
 
 	const bool bIsLocallyControlled = CachedAbility->GetActorInfo().IsLocallyControlled();
 
@@ -477,5 +483,15 @@ void UGYParkourLogic::OnParkourDataRecive(const FGameplayAbilityTargetDataHandle
 		float Height = ParkourData->ObstacleHeight;
 
 		ExecuteParkour(TopLoc, MontageType, Height);
+	}
+}
+
+void UGYParkourLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
+{
+	// 라우터가 보낸 파쿠르 실행 이벤트인지 확인
+	if (EventTag == GYGameplayTags::Event_Ability_Parkour_Execute)
+	{
+
+
 	}
 }

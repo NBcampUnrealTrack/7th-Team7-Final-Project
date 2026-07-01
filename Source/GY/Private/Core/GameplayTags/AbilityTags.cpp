@@ -8,6 +8,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Guard, "Ability.Guard");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Parry, "Ability.Parry");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Dodge, "Ability.Dodge");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_ParkourDodge, "Ability.ParkourDodge");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Sprint, "Ability.Sprint");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Parkour, "Ability.Parkour");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Block, "Ability.Block");

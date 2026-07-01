@@ -68,15 +68,18 @@ public:
 	virtual void OnInputReleased() override;
 
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
-
+	virtual TArray<FGameplayTag> GetSubscribedEventTags() const override;
 
 	void TryParkour();
 	void ExecuteParkour(FVector& TopHitLoc, EParkourMontageType MontageType, float Height);
 	EParkourMontageType SelectParkourMontage(bool bLeftFoot);
 
+
 	bool DoForwardTrace(FHitResult& OutHit);
 	bool DoTopTrace(FVector& WallLoc, FHitResult& OutHit);
 	float GetMantleHeight(FVector& TopHitLoc); //장애물 높이
+
+
 	UAnimMontage* SelectMontage(bool bLeftFoot);
 	bool IsLeftFootForward(); // 어느발이 앞에있는지 판별
 	void PlayMontage(UAnimMontage* Montage);
@@ -86,7 +89,7 @@ public:
 
 	UFUNCTION()
 	void OnParkourDataRecive(const FGameplayAbilityTargetDataHandle& Data, FGameplayTag tag);
-
+	virtual void OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload) override;
 
 private:
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
