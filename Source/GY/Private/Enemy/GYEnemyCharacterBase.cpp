@@ -347,7 +347,6 @@ void AGYEnemyCharacterBase::EnableRagdoll()
 	{
 		SkeletalMesh->SetCollisionProfileName(TEXT("Ragdoll"));
 		SkeletalMesh->SetConstraintProfile(TEXT("pelvis"), TEXT("Ragdoll"));
-		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		SkeletalMesh->SetSimulatePhysics(true);
 	}
 }
@@ -432,7 +431,6 @@ void AGYEnemyCharacterBase::DisableRagdoll()
 	SkeletalMesh->SetCollisionProfileName(TEXT("None"));
 	SkeletalMesh->SetConstraintProfile(TEXT("pelvis"), TEXT("None"));
 
-	SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
 	SkeletalMesh->AttachToComponent(
 		GetCapsuleComponent(),
