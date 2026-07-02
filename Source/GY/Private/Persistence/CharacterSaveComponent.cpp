@@ -5,6 +5,7 @@
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Inventory/InventoryComponent.h"
 #include "Logging/GYLogManager.h"
+#include "SkillTree/SkillTreeComponent.h"
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
@@ -44,6 +45,10 @@ void UCharacterSaveComponent::BeginPlay()
 	if (UEquipmentLoadoutComponent* Loadout = GetOwner()->FindComponentByClass<UEquipmentLoadoutComponent>())
 	{
 		Loadout->OnLoadoutSlotChanged.AddWeakLambda(this, [this](FGameplayTag, FGuid) { RequestSave(); });
+	}
+	if (USkillTreeComponent* SkillTree = GetOwner()->FindComponentByClass<USkillTreeComponent>())
+	{
+		SkillTree->OnSkillTreeChanged.AddWeakLambda(this, [this]() { RequestSave(); });
 	}
 
 	// 레벨업 체크포인트. XP 는 구독하지 않음(전투 중 과도 발화)

@@ -98,7 +98,7 @@ void UStatPersistenceComponent::ImportSaveData(const TSharedPtr<FJsonValue>& Dat
 		ASC->SetNumericAttributeBase(UGYVitalAttributeSet::GetMaxHealthAttribute(), CleanMaxHealth + HealthBonus);
 		ASC->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetMaxStaminaAttribute(), CleanMaxStamina + StaminaBonus);
 
-		// SkillPoint 는 레벨로 전부 파생 (현재 노드 효과 없어 사용분 차감 불필요).
+		// SkillPoint 는 레벨 총량으로 세팅. 사용분 차감은 skilltree 섹션이 이 뒤에(복원 의존성) 수행.
 		ASC->SetNumericAttributeBase(UGYProgressionAttributeSet::GetSkillPointAttribute(), SkillPointTotal);
 	}
 
