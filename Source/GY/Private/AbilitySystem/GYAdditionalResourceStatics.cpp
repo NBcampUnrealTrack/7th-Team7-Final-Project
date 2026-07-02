@@ -47,6 +47,21 @@ void UGYAdditionalResourceStatics::IncreaseStun(UAbilitySystemComponent* ASC, fl
 	ApplyStunUse(ASC, Amount);
 }
 
+void UGYAdditionalResourceStatics::ApplyDamageUse(UAbilitySystemComponent* ASC, float Amount)
+{
+	AdditionalResource_ApplyInstantGE(ASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(), -Amount);
+
+}
+
+void UGYAdditionalResourceStatics::ApplyDamage(UAbilitySystemComponent* ASC, float Amount)
+{
+	if (!ASC) return;
+	const UGYVitalAttributeSet* VitalAttr = ASC->GetSet<UGYVitalAttributeSet>();
+	if (!VitalAttr || VitalAttr->GetCurrentHealth() < 0.f) return;
+
+	ApplyDamageUse(ASC, Amount);
+}
+
 void UGYAdditionalResourceStatics::ApplyAttributeDelta(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Amount)
 {
 	if (!ASC || !Attribute.IsValid() || Amount == 0.f) return;

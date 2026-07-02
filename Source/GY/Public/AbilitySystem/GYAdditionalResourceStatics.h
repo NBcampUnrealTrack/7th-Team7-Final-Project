@@ -26,6 +26,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GY|AdditionalResource")
 	static void IncreaseStun(UAbilitySystemComponent* ASC, float Amount);
 
+	UFUNCTION(BlueprintCallable, Category="GY|PlayerResource")
+	static void ApplyDamageUse(UAbilitySystemComponent* ASC, float BaseAmount);
+
+	UFUNCTION(BlueprintCallable, Category="GY|AdditionalResource")
+	static void ApplyDamage(UAbilitySystemComponent* ASC, float Amount);
+
+
 	UFUNCTION(BlueprintCallable, Category="GY|AdditionalResource")
 	static void ApplyAttributeDelta(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Amount);
 

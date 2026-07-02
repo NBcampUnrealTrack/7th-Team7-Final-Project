@@ -1,5 +1,6 @@
 ﻿#include "Cheats/GYServerCheatProxy.h"
 
+#include "AbilitySystem/GYAdditionalResourceStatics.h"
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "Core/GameplayTags/CurrencyTags.h"
@@ -42,7 +43,8 @@ void AGYServerCheatProxy::Server_Suicide_Implementation()
 	if (!PS) return;
 	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
 	if (!ASC) return;
-	UGYCombatStatics::ApplyTrueDamage(ASC,987564321.f, nullptr);
+
+	UGYAdditionalResourceStatics::ApplyDamage(ASC, 987654321.f);
 }
 
 void AGYServerCheatProxy::Server_AddXP_Implementation(float Amount)
