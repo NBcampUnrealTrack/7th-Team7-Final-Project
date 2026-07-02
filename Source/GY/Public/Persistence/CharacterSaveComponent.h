@@ -37,6 +37,7 @@ private:
 	void OnSaveDone(const FGYSaveResult& Result);
 	void OnLoadDone(const FGYLoadResult& Result);
 	void OnLevelChanged(const FOnAttributeChangeData& Data);
+	void OnPeriodicTimer();
 	void ScheduleRetry();
 	void OnRetryTimer();
 
@@ -56,4 +57,5 @@ private:
 	bool bApplying = false;
 
 	FTimerHandle RetryTimerHandle;
+	FTimerHandle PeriodicTimerHandle;
 };

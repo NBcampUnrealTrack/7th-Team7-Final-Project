@@ -15,6 +15,9 @@
 namespace
 {
 	constexpr float RetryDelaySeconds = 5.f;
+
+	// 델리게이트 없이 변하는 값(XP 등)을 쓸어담는 안전망. 유실 허용 창의 상한
+	constexpr float PeriodicSaveSeconds = 180.f;
 }
 
 UCharacterSaveComponent::UCharacterSaveComponent()
@@ -51,6 +54,24 @@ void UCharacterSaveComponent::BeginPlay()
 		ASC->GetGameplayAttributeValueChangeDelegate(UGYProgressionAttributeSet::GetLevelAttribute())
 			.AddUObject(this, &UCharacterSaveComponent::OnLevelChanged);
 	}
+
+	// 주기 안전망 — XP 처럼 트리거 없는 변화 커버. dirty 조건 없이 무조건 저장(안 그러면 XP 에 대해 그물이 아님)
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			PeriodicTimerHandle,
+			this,
+			&UCharacterSaveComponent::OnPeriodicTimer,
+			PeriodicSaveSeconds,
+			true
+		);
+	}
+}
+
+void UCharacterSaveComponent::OnPeriodicTimer()
+{
+	if (!bLoaded) return;
+	RequestSave();
 }
 
 void UCharacterSaveComponent::OnLevelChanged(const FOnAttributeChangeData& Data)
@@ -89,6 +110,7 @@ void UCharacterSaveComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(RetryTimerHandle);
+		World->GetTimerManager().ClearTimer(PeriodicTimerHandle);
 	}
 	Super::EndPlay(EndPlayReason);
 }
