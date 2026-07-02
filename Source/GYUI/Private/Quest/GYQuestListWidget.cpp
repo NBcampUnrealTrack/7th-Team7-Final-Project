@@ -93,11 +93,15 @@ void UGYQuestListWidget::RefreshList()
 		{
 			++CompletedCount;
 		}
+		const bool bActive = QS->GetActiveQuests().Contains(Pair.Key);
+		const EQuestEntryState State = bCompleted ? EQuestEntryState::Completed
+			: bActive ? EQuestEntryState::Active
+			: EQuestEntryState::Inactive;
 
 		UGYQuestEntryWidget* Entry = CreateWidget<UGYQuestEntryWidget>(this, QuestEntryWidgetClass);
 		if (Entry)
 		{
-			Entry->SetQuestData(Pair.Key, Row->QuestName, bCompleted);
+			Entry->SetQuestData(Pair.Key, Row->QuestName, State);
 			Entry->OnEntrySelected.AddUObject(this, &ThisClass::HandleEntrySelected);
 			ScrollBox_QuestList->AddChild(Entry);
 			GY_LOG(Content, CYS, "RefreshList - 항목 추가: %s (완료=%s)", *Row->QuestName.ToString(), bCompleted ? TEXT("Y") : TEXT("N"));
