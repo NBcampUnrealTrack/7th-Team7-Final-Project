@@ -46,6 +46,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Quest_Started);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Quest_Progressed);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Quest_Completed);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Quest_Event);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Region_Entered);
 
 	// 멀티 관련 - 친구, 채팅

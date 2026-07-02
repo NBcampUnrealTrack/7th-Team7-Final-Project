@@ -36,6 +36,7 @@ namespace GYGameplayTags
     UE_DEFINE_GAMEPLAY_TAG(Message_Quest_Started, "GY.Message.Quest.Started");
     UE_DEFINE_GAMEPLAY_TAG(Message_Quest_Progressed, "GY.Message.Quest.Progressed");
     UE_DEFINE_GAMEPLAY_TAG(Message_Quest_Completed, "GY.Message.Quest.Completed");
+    UE_DEFINE_GAMEPLAY_TAG(Message_Quest_Event, "GY.Message.Quest.Event");
     UE_DEFINE_GAMEPLAY_TAG(Message_Region_Entered, "GY.Message.Region.Entered");
 
     UE_DEFINE_GAMEPLAY_TAG(Message_Party_MemberJoined, "GY.Message.Party.MemberJoined");
