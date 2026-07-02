@@ -127,6 +127,9 @@ private:
 
 	void EndAOEWindow();
 
+	void AddCameraTagsToParticipants();
+	void RemoveCameraTagsFromParticipants();
+
 	FTimerHandle MinionGateTimeoutTimer;
 	FActiveGameplayEffectHandle StunEffectHandle;
 	FDelegateHandle StunTagDelegateHandle;
@@ -140,6 +143,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Entry",
 		meta = (ToolTip = "페이즈 진입 시 보스 ASC 에 loose tag 로 추가되는 태그들. 일반적으로 무적/슈퍼아머 등 짧은 무적 표현용. 페이즈 종료 또는 어빌리티 캔슬 시 자동 제거된다."))
 	FGameplayTagContainer InvulnerabilityTags;
+
+	/** 페이즈 진입 시 각 참가자(플레이어) ASC에 부착할 카메라 연출용 태그. 페이즈 종료 시 자동 제거된다. (복제됨) */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Entry",
+		meta = (ToolTip = "페이즈 진입 시 각 참가자(플레이어) ASC 에 replicated loose tag 로 부착. 클라이언트 카메라 위치 변경 트리거용. 페이즈 종료/캔슬 시 자동 제거."))
+	FGameplayTagContainer ParticipantCameraTags;
 
 	/** 진입 시 캔슬할 진행 중 어빌리티 태그 */
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|Entry",

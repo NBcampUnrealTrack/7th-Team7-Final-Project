@@ -99,6 +99,8 @@ void UGYBossPhaseAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
 
 	EndAOEWindow();
 
+	RemoveCameraTagsFromParticipants();
+
 	if (AGYBossCharacterBase* Boss = Cast<AGYBossCharacterBase>(GetAvatarActorFromActorInfo()))
 	{
 		Boss->OnMinionCountChanged.RemoveDynamic(this, &UGYBossPhaseAbility::OnBossMinionCountChanged);
@@ -233,6 +235,8 @@ void UGYBossPhaseAbility::ApplyPhaseEntry()
 	{
 		ExecuteCueOnAllParticipants(EntryParticipantCueTag);
 	}
+
+	AddCameraTagsToParticipants();
 }
 
 void UGYBossPhaseAbility::ApplyPhaseExit()
@@ -621,5 +625,46 @@ void UGYBossPhaseAbility::EndAOEWindow()
 	if (UBossPhaseComponent* PC = GetPhaseComp())
 	{
 		PC->ServerSetAOEWindow(false, 0.f);
+	}
+}
+
+void UGYBossPhaseAbility::AddCameraTagsToParticipants()
+{
+	if (ParticipantCameraTags.IsEmpty()) return;
+
+	for (const TObjectPtr<APlayerState>& PS : CachedParticipants)
+	{
+		if (!PS) continue;
+		APawn* Pawn = PS->GetPawn();
+		if (!Pawn) continue;
+
+		if (UAbilitySystemComponent* PlayerASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
+		{
+			for (const FGameplayTag& Tag : ParticipantCameraTags)
+			{
+				PlayerASC->AddLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+			}
+		}
+	}
+}
+
+void UGYBossPhaseAbility::RemoveCameraTagsFromParticipants()
+{
+	if (ParticipantCameraTags.IsEmpty()) return;
+
+	for (const TObjectPtr<APlayerState>& PS : CachedParticipants)
+	{
+		if (!PS) continue;
+		APawn* Pawn = PS->GetPawn();
+		if (!Pawn) continue;
+
+		if (UAbilitySystemComponent* PlayerASC =
+			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
+		{
+			for (const FGameplayTag& Tag : ParticipantCameraTags)
+			{
+				PlayerASC->RemoveLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+			}
+		}
 	}
 }
