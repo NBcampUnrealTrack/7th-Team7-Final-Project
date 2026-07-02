@@ -1,13 +1,11 @@
 #include "Persistence/GYPersistenceSubsystem.h"
+#include "Persistence/CharacterSaveComponent.h"
 #include "Persistence/GYPersistenceSettings.h"
 #include "Persistence/GYSaveable.h"
 #include "Persistence/GYSaveSectionKeys.h"
-#include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Logging/GYLogManager.h"
 #include "Templates/Function.h"
 
-#include "AbilitySystemComponent.h"
-#include "AbilitySystemInterface.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
@@ -23,30 +21,18 @@
 
 namespace
 {
-	constexpr int32 DefaultDevCharacterId = 1;
 	constexpr float RequestTimeoutSeconds = 10.f;
 
-	// 콘솔 수동 테스트 전용 버전 캐시. 실제 버전 상태는 SaveManagerComponent가 소유.
-	int32 GConsoleSaveVersion = 0;
-
-	UGYPersistenceSubsystem* ResolvePersistence(UWorld* World)
+	// 로컬 PlayerState 의 저장 컴포넌트 (콘솔 테스트용)
+	UCharacterSaveComponent* ResolveLocalSaveComponent(UWorld* World)
 	{
-		if (!IsValid(World)) return nullptr;
-		UGameInstance* GameInstance = World->GetGameInstance();
-		return IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYPersistenceSubsystem>() : nullptr;
-	}
-
-	// 세이브 컴포넌트들이 붙어 있는 로컬 PlayerState (콘솔 테스트용)
-	AActor* ResolveLocalPlayerStateActor(UWorld* World)
-	{
-		if (!IsValid(World)) return nullptr;
+		if (!IsValid(World))
+		{
+			return nullptr;
+		}
 		APlayerController* PC = World->GetFirstPlayerController();
-		return IsValid(PC) ? PC->PlayerState : nullptr;
-	}
-
-	int32 ParseCharacterId(const TArray<FString>& Args)
-	{
-		return Args.Num() > 0 ? FCString::Atoi(*Args[0]) : DefaultDevCharacterId;
+		APlayerState* PlayerState = IsValid(PC) ? PC->PlayerState : nullptr;
+		return IsValid(PlayerState) ? PlayerState->FindComponentByClass<UCharacterSaveComponent>() : nullptr;
 	}
 
 	FGYLoadResult ParseLoadResponse(FHttpResponsePtr Response, bool bSuccess)
@@ -142,73 +128,34 @@ namespace
 
 	void PersistLoadCmd(const TArray<FString>& Args, UWorld* World)
 	{
-		UGYPersistenceSubsystem* System = ResolvePersistence(World);
-		if (!IsValid(System)) return;
-
-		TWeakObjectPtr<UGYPersistenceSubsystem> WeakSystem = System;
-		TWeakObjectPtr<AActor> WeakTarget = ResolveLocalPlayerStateActor(World);
-
-		System->LoadCharacter(ParseCharacterId(Args), FGYOnLoadComplete::CreateLambda(
-			[WeakSystem, WeakTarget](const FGYLoadResult& Result)
-			{
-				if (Result.Result != EGYPersistResult::Success) return;
-				GConsoleSaveVersion = Result.SaveVersion;
-
-				UGYPersistenceSubsystem* System = WeakSystem.Get();
-				AActor* Target = WeakTarget.Get();
-				if (IsValid(System) && IsValid(Target) && Result.Data.IsValid())
-				{
-					System->ApplySaveData(Target, Result.Data);
-					GY_LOG(Network, KDY, "Load applied to %s", *Target->GetName());
-				}
-			}));
-	}
-
-	// characters 테이블의 level/xp 컬럼용 (data JSON 과 별도로 denormalize)
-	void ReadLevelAndXp(AActor* PlayerState, int32& OutLevel, int32& OutXp)
-	{
-		OutLevel = 1;
-		OutXp = 0;
-
-		IAbilitySystemInterface* Interface = Cast<IAbilitySystemInterface>(PlayerState);
-		UAbilitySystemComponent* ASC = Interface != nullptr ? Interface->GetAbilitySystemComponent() : nullptr;
-		if (ASC == nullptr) return;
-
-		OutLevel = static_cast<int32>(ASC->GetNumericAttributeBase(UGYProgressionAttributeSet::GetLevelAttribute()));
-		OutXp = static_cast<int32>(ASC->GetNumericAttributeBase(UGYProgressionAttributeSet::GetXPAttribute()));
+		UCharacterSaveComponent* SaveComponent = ResolveLocalSaveComponent(World);
+		if (!IsValid(SaveComponent))
+		{
+			GY_WARN(Network, KDY, "gy.Persist.Load: local CharacterSaveComponent not found");
+			return;
+		}
+		SaveComponent->LoadAndApply();
 	}
 
 	void PersistSaveCmd(const TArray<FString>& Args, UWorld* World)
 	{
-		UGYPersistenceSubsystem* System = ResolvePersistence(World);
-		if (!IsValid(System)) return;
-
-		// 로컬 PlayerState 의 IGYSaveable 컴포넌트들에서 data 수집 후 저장
-		AActor* PlayerState = ResolveLocalPlayerStateActor(World);
-		const FString Data = System->CollectSaveData(PlayerState);
-
-		int32 Level = 1;
-		int32 Xp = 0;
-		ReadLevelAndXp(PlayerState, Level, Xp);
-
-		System->SaveCharacter(ParseCharacterId(Args), Level, Xp, Data, GConsoleSaveVersion, FGYOnSaveComplete::CreateLambda(
-			[](const FGYSaveResult& Result)
-			{
-				if (Result.Result == EGYPersistResult::Success)
-				{
-					GConsoleSaveVersion = Result.NewVersion;
-				}
-			}));
+		UCharacterSaveComponent* SaveComponent = ResolveLocalSaveComponent(World);
+		if (!IsValid(SaveComponent))
+		{
+			GY_WARN(Network, KDY, "gy.Persist.Save: local CharacterSaveComponent not found");
+			return;
+		}
+		SaveComponent->RequestSave();
 	}
 
 	FAutoConsoleCommandWithWorldAndArgs GYPersistLoadCommand(
 		TEXT("gy.Persist.Load"),
-		TEXT("Load character save from Supabase. Usage: gy.Persist.Load [characterId]"),
+		TEXT("Load character save from Supabase via local CharacterSaveComponent"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&PersistLoadCmd));
 
 	FAutoConsoleCommandWithWorldAndArgs GYPersistSaveCommand(
 		TEXT("gy.Persist.Save"),
-		TEXT("Save collected data to Supabase. Usage: gy.Persist.Save [characterId]"),
+		TEXT("Mark dirty and save via local CharacterSaveComponent"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&PersistSaveCmd));
 }
 
