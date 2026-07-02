@@ -4,6 +4,8 @@
 #include "Persistence/GYPersistenceSubsystem.h"
 #include "CharacterSaveComponent.generated.h"
 
+struct FOnAttributeChangeData;
+
 // [SERVER] 캐릭터별 저장 상태(version/dirty)와 저장 흐름 소유. PlayerState에 부착.
 // 변경 → RequestSave()로 dirty 표시, in-flight 락으로 한 번에 하나만 전송 (전송 중 변경은 완료 후 한 번으로 뭉침).
 // 저장은 캐릭터 통짜 blob — 부분 저장 없음. LoadAndApply 완료 전 저장은 게이팅 (version 미동기 상태 충돌 방지).
@@ -34,6 +36,7 @@ private:
 	void TrySave();
 	void OnSaveDone(const FGYSaveResult& Result);
 	void OnLoadDone(const FGYLoadResult& Result);
+	void OnLevelChanged(const FOnAttributeChangeData& Data);
 	void ScheduleRetry();
 	void OnRetryTimer();
 

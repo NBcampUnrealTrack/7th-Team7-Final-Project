@@ -42,10 +42,35 @@ void UCharacterSaveComponent::BeginPlay()
 	{
 		Loadout->OnLoadoutSlotChanged.AddWeakLambda(this, [this](FGameplayTag, FGuid) { RequestSave(); });
 	}
+
+	// 레벨업 체크포인트. XP 는 구독하지 않음(전투 중 과도 발화)
+	IAbilitySystemInterface* Interface = Cast<IAbilitySystemInterface>(GetOwner());
+	UAbilitySystemComponent* ASC = Interface != nullptr ? Interface->GetAbilitySystemComponent() : nullptr;
+	if (ASC != nullptr)
+	{
+		ASC->GetGameplayAttributeValueChangeDelegate(UGYProgressionAttributeSet::GetLevelAttribute())
+			.AddUObject(this, &UCharacterSaveComponent::OnLevelChanged);
+	}
+}
+
+void UCharacterSaveComponent::OnLevelChanged(const FOnAttributeChangeData& Data)
+{
+	RequestSave();
 }
 
 void UCharacterSaveComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	// 종료 flush (best-effort): dirty 여부와 무관하게 최종 상태 저장 —
+	// XP 처럼 델리게이트 없이 변하는 값은 dirty 를 안 켜므로 무조건 전송이 맞다.
+	// 엔진 종료 시엔 HttpManager 의 shutdown Flush 가 전송 완료를 시도한다.
+	// TODO: in-flight 중이면 락에 막혀 스킵 — 감수.
+	if (bLoaded && GetOwner()->HasAuthority())
+	{
+		GY_LOG(Network, KDY, "EndPlay flush (saving=%d)", bSaving);
+		bDirty = true;
+		TrySave();
+	}
+
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(RetryTimerHandle);
