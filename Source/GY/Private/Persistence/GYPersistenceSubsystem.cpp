@@ -236,13 +236,58 @@ void UGYPersistenceSubsystem::SaveCharacter(int32 CharacterId, int32 Level, int3
 	Request->SetContentAsString(BodyString);
 	Request->SetTimeout(RequestTimeoutSeconds);
 	Request->OnProcessRequestComplete().BindLambda(
-		[OnComplete = MoveTemp(OnComplete)](FHttpRequestPtr, FHttpResponsePtr Response, bool bSuccess)
+		[WeakThis = TWeakObjectPtr<UGYPersistenceSubsystem>(this), CharacterId, OnComplete = MoveTemp(OnComplete)](FHttpRequestPtr, FHttpResponsePtr Response, bool bSuccess)
 		{
-			OnComplete.ExecuteIfBound(ParseSaveResponse(Response, bSuccess));
+			const FGYSaveResult Result = ParseSaveResponse(Response, bSuccess);
+			OnComplete.ExecuteIfBound(Result);
+
+			// 요청자(컴포넌트)가 이미 죽었어도 로그아웃 인계분은 이어서 처리돼야 한다
+			if (UGYPersistenceSubsystem* This = WeakThis.Get())
+			{
+				This->OnSaveCompletedInternal(CharacterId, Result);
+			}
 		});
 	Request->ProcessRequest();
 
 	GY_LOG(Network, KDY, "SaveCharacter(%d) lvl=%d xp=%d expectedVersion=%d requested", CharacterId, Level, Xp, ExpectedVersion);
+}
+
+void UGYPersistenceSubsystem::HandoffLogoutSave(int32 CharacterId, int32 Level, int32 Xp, const FString& DataJson, int32 FallbackExpectedVersion)
+{
+	FPendingLogoutSave& Pending = PendingLogoutSaves.FindOrAdd(CharacterId);
+	Pending.Level = Level;
+	Pending.Xp = Xp;
+	Pending.DataJson = DataJson;
+	Pending.FallbackExpectedVersion = FallbackExpectedVersion;
+
+	GY_LOG(Network, KDY, "Logout save handed off for character %d (in-flight pending)", CharacterId);
+}
+
+void UGYPersistenceSubsystem::OnSaveCompletedInternal(int32 CharacterId, const FGYSaveResult& Result)
+{
+	FPendingLogoutSave Pending;
+	if (!PendingLogoutSaves.RemoveAndCopyValue(CharacterId, Pending)) return;
+
+	int32 ExpectedVersion = 0;
+	switch (Result.Result)
+	{
+	case EGYPersistResult::Success:
+		ExpectedVersion = Result.NewVersion;
+		break;
+
+	case EGYPersistResult::Failure:
+		// in-flight 커밋 여부 불확실(타임아웃 등) — 인계 시점 버전으로 1회 시도. 커밋됐었다면 충돌로 드랍
+		ExpectedVersion = Pending.FallbackExpectedVersion;
+		break;
+
+	default:
+		// 로그아웃 시점 충돌 = 다른 writer 존재(비정상). 덮어쓰기보다 드랍이 안전
+		GY_WARN(Network, KDY, "Logout save dropped for character %d (in-flight conflicted)", CharacterId);
+		return;
+	}
+
+	GY_LOG(Network, KDY, "Flushing handed-off logout save for character %d", CharacterId);
+	SaveCharacter(CharacterId, Pending.Level, Pending.Xp, Pending.DataJson, ExpectedVersion, FGYOnSaveComplete());
 }
 
 FString UGYPersistenceSubsystem::CollectSaveData(AActor* Owner) const

@@ -63,12 +63,27 @@ void UCharacterSaveComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	// 종료 flush (best-effort): dirty 여부와 무관하게 최종 상태 저장 —
 	// XP 처럼 델리게이트 없이 변하는 값은 dirty 를 안 켜므로 무조건 전송이 맞다.
 	// 엔진 종료 시엔 HttpManager 의 shutdown Flush 가 전송 완료를 시도한다.
-	// TODO: in-flight 중이면 락에 막혀 스킵 — 감수.
 	if (bLoaded && GetOwner()->HasAuthority())
 	{
 		GY_LOG(Network, KDY, "EndPlay flush (saving=%d)", bSaving);
-		bDirty = true;
-		TrySave();
+		if (bSaving)
+		{
+			// in-flight 에 락이 잡혀 지금 못 보냄 + 컴포넌트는 곧 죽어 재시도 불가
+			// → 수명이 긴 Subsystem 에 최종 스냅샷 인계, in-flight 완료 후 이어서 전송
+			UGYPersistenceSubsystem* Persistence = ResolvePersistence();
+			if (IsValid(Persistence))
+			{
+				int32 Level = 1;
+				int32 Xp = 0;
+				ReadLevelAndXp(Level, Xp);
+				Persistence->HandoffLogoutSave(CharacterId, Level, Xp, Persistence->CollectSaveData(GetOwner()), CachedSaveVersion);
+			}
+		}
+		else
+		{
+			bDirty = true;
+			TrySave();
+		}
 	}
 
 	if (UWorld* World = GetWorld())
