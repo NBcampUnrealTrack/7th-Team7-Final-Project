@@ -393,7 +393,7 @@ void ULockOnComponent::SwitchToBestTarget()
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
 	AActor* PrevTarget = CurrentTarget.Get();
-	UnbindTargetDeathListener(PrevTarget);
+	StopLockOn();
 
 	AActor* NewTarget = FindBestTarget();
 	if (!NewTarget)
