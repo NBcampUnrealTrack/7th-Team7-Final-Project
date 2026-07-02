@@ -333,9 +333,11 @@ void ULockOnComponent::UpdateRotationToTarget(float DeltaTime)
 	if (!OwnerPawn || !OwnerPawn->IsLocallyControlled()) return;
 	if (!CurrentTarget.IsValid()) return;
 
-	UAbilitySystemComponent* ASC = OwnerPawn->GetPlayerState<AGYPlayerState>()->GetAbilitySystemComponent();
-	if (ASC && !RotationBlockTags.IsEmpty() && ASC->HasAnyMatchingGameplayTags(RotationBlockTags)) return;
-
+	if (const AGYPlayerState* PS = OwnerPawn->GetPlayerState<AGYPlayerState>())
+	{
+		UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+		if (ASC && !RotationBlockTags.IsEmpty() && ASC->HasAnyMatchingGameplayTags(RotationBlockTags)) return;
+	}
 	const FVector Direction = CurrentTarget->GetActorLocation() - OwnerPawn->GetActorLocation();
 	if (Direction.IsNearlyZero()) return;
 
