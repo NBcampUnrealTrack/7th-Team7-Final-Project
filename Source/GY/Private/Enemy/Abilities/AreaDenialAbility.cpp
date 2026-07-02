@@ -112,6 +112,11 @@ void UAreaDenialAbility::ExecuteAreaDenail()
 				Candidate = PLoc + FVector(FMath::Cos(Angle) * Dist, FMath::Sin(Angle) * Dist, 0.f);
 			}
 			break;
+		case EHazardPlacementMode::AtBoss:
+			{
+				Candidate = Origin;
+			}
+			break;
 		}
 
 		if (!IsSpacingOK(Candidate, Placed)) continue;

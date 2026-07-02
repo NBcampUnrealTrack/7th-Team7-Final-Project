@@ -13,6 +13,7 @@ enum class EHazardPlacementMode : uint8
 	RandomInArea	UMETA(DisplayName = "Random In Area"),
 	AroundPlayers	UMETA(DisplayName = "Around Players"),
 	AroundBoss		UMETA(DisplayName = "Around Boss"),
+	AtBoss			UMETA(DisplayName = "At Boss"),
 };
 
 UCLASS()
