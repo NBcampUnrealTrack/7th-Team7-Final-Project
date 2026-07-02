@@ -27,6 +27,7 @@ public:
 	bool IsLoaded() const { return bLoaded; }
 
 protected:
+	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
@@ -49,6 +50,7 @@ private:
 	bool bLoading = false;
 	bool bSaving = false;
 	bool bDirty = false;
+	bool bApplying = false;
 
 	FTimerHandle RetryTimerHandle;
 };

@@ -1,6 +1,9 @@
 #include "Persistence/CharacterSaveComponent.h"
 
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
+#include "Currency/CurrencyComponent.h"
+#include "Equipment/EquipmentLoadoutComponent.h"
+#include "Inventory/InventoryComponent.h"
 #include "Logging/GYLogManager.h"
 
 #include "AbilitySystemComponent.h"
@@ -20,6 +23,27 @@ UCharacterSaveComponent::UCharacterSaveComponent()
 	SetIsReplicatedByDefault(false);
 }
 
+void UCharacterSaveComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!GetOwner()->HasAuthority()) return;
+
+	// 도메인 변경 감지 — 도메인 쪽은 저장을 모르게 유지 (구독은 여기서만)
+	if (UCurrencyComponent* Currency = GetOwner()->FindComponentByClass<UCurrencyComponent>())
+	{
+		Currency->OnCurrencyChanged.AddWeakLambda(this, [this](FGameplayTag, int32) { RequestSave(); });
+	}
+	if (UInventoryComponent* Inventory = GetOwner()->FindComponentByClass<UInventoryComponent>())
+	{
+		Inventory->OnInventoryChanged.AddWeakLambda(this, [this](const FGuid&, EInventoryEventType) { RequestSave(); });
+	}
+	if (UEquipmentLoadoutComponent* Loadout = GetOwner()->FindComponentByClass<UEquipmentLoadoutComponent>())
+	{
+		Loadout->OnLoadoutSlotChanged.AddWeakLambda(this, [this](FGameplayTag, FGuid) { RequestSave(); });
+	}
+}
+
 void UCharacterSaveComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (UWorld* World = GetWorld())
@@ -32,6 +56,9 @@ void UCharacterSaveComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void UCharacterSaveComponent::RequestSave()
 {
 	if (!GetOwner()->HasAuthority()) return;
+
+	// 세이브 적용 중 Import가 발화시키는 도메인 델리게이트 무시 — 반쯤 적용된 스냅샷이 저장되는 것 방지
+	if (bApplying) return;
 
 	bDirty = true;
 	TrySave();
@@ -126,7 +153,9 @@ void UCharacterSaveComponent::OnLoadDone(const FGYLoadResult& Result)
 			UGYPersistenceSubsystem* Persistence = ResolvePersistence();
 			if (IsValid(Persistence) && Result.Data.IsValid())
 			{
+				bApplying = true;
 				Persistence->ApplySaveData(GetOwner(), Result.Data);
+				bApplying = false;
 			}
 
 			// 적용 직후 로컬 == DB. 적용 과정에서 도메인 델리게이트가 dirty 를 켜도 저장할 차이가 없다
