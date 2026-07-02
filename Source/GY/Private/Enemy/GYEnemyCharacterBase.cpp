@@ -27,9 +27,13 @@
 #include "Character/GYCharacterMovementComponent.h"
 #include "Character/HitReactionComponent.h"
 #include "Character/LockOn/LockOnComponent.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/QuestTags.h"
 #include "Core/GameplayTeams/GYTeams.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
+#include "UI/GYUIMessages.h"
 
 AGYEnemyCharacterBase::AGYEnemyCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UGYCharacterMovementComponent>(
@@ -487,6 +491,16 @@ void AGYEnemyCharacterBase::Die()
 	}
 
 	OnEnemyDead.Broadcast(this);
+	// 적 처치 퀘스트 - 003 목표
+	UWorld* World = GetWorld();
+	if (IsValid(World))
+	{
+		FQuestEventMessage QuestMsg;
+		QuestMsg.EventTag = GYGameplayTags::Quest_Objective_Kill;
+		QuestMsg.TargetId = "Enemy";
+		QuestMsg.Count = 1;
+		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Quest_Event, QuestMsg);
+	}
 }
 
 #if WITH_EDITOR

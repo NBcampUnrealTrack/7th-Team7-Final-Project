@@ -13,6 +13,7 @@
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "Components/BoxComponent.h"
 #include "Core/GYCollisionChannels.h"
+#include "Core/GameplayTags/QuestTags.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/GYUIMessages.h"
@@ -111,6 +112,17 @@ void AGYEndingInteractActor::OnInteract(FGameplayTag OptionTag, APawn* Interacto
 	{
 		InteractedPlayers.Add(WeakPS);
 		bAdded = true;
+	}
+
+	// 시계탑 찾아가기 퀘스트 - 004 목표
+	UWorld* World = GetWorld();
+	if (IsValid(World))
+	{
+		FQuestEventMessage QuestMsg;
+		QuestMsg.EventTag = GYGameplayTags::Quest_Objective_Interact;
+		QuestMsg.TargetId = "Intro";
+		QuestMsg.Count = 1;
+		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Quest_Event, QuestMsg);
 	}
 
 	const int32 Current = InteractedPlayers.Num();
