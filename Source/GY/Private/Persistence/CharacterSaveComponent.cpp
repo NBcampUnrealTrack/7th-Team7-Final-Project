@@ -61,7 +61,12 @@ void UCharacterSaveComponent::RequestSave()
 	if (bApplying) return;
 
 	bDirty = true;
-	TrySave();
+
+	// 즉시 전송하지 않고 다음 틱으로 — 같은 프레임의 연쇄 변경(획득 Added→Mutated 등)이
+	// 끝난 완성 상태를 한 번에 스냅샷 (연산 중간 상태 저장 방지 + 프레임 내 뭉침)
+	UWorld* World = GetWorld();
+	if (!IsValid(World)) return;
+	World->GetTimerManager().SetTimerForNextTick(this, &UCharacterSaveComponent::TrySave);
 }
 
 void UCharacterSaveComponent::TrySave()

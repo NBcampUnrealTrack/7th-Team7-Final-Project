@@ -47,6 +47,11 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 int32 UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId)
 {
+	return TryAddItem(Def, Count, OutInstanceId, [](FInventoryEntry&) {});
+}
+
+int32 UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId, TFunctionRef<void(FInventoryEntry&)> InitNewEntry)
+{
 	if (!GetOwner()->HasAuthority()) return 0;
 	if (Count <= 0) return 0;
 	if (Def.IsNull()) return 0;
@@ -96,6 +101,7 @@ int32 UInventoryComponent::TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32
 		NewEntry.InstanceId = FGuid::NewGuid();
 		NewEntry.Definition = Def;
 		NewEntry.StackCount = ToAdd;
+		InitNewEntry(NewEntry);
 
 		FInventoryEntry& AddedEntry = Inventory.Entries.Add_GetRef(NewEntry);
 		Inventory.MarkItemDirty(AddedEntry);
