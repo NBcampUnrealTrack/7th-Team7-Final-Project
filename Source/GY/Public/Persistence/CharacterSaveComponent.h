@@ -21,6 +21,9 @@ public:
 	// DB에서 로드 → IGYSaveable 컴포넌트들에 적용 + save_version 동기화
 	void LoadAndApply();
 
+	// 입장 시 1회 로드 보장. 이미 로드됐으면 스킵 — 재소환으로 init 체인이 다시 돌아도 세션 상태를 DB로 덮지 않는다
+	void EnsureLoaded();
+
 	bool IsLoaded() const { return bLoaded; }
 
 protected:

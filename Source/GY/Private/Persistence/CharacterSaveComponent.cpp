@@ -92,6 +92,12 @@ void UCharacterSaveComponent::OnSaveDone(const FGYSaveResult& Result)
 	}
 }
 
+void UCharacterSaveComponent::EnsureLoaded()
+{
+	if (bLoaded || bLoading) return;
+	LoadAndApply();
+}
+
 void UCharacterSaveComponent::LoadAndApply()
 {
 	if (!GetOwner()->HasAuthority()) return;

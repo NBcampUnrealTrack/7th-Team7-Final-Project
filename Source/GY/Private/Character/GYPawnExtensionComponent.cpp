@@ -13,6 +13,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/Pawn.h"
 #include "Logging/GYLogManager.h"
+#include "Persistence/CharacterSaveComponent.h"
 #include "Player/GYPlayerState.h"
 #include "TimerManager.h"
 
@@ -106,7 +107,7 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 		UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
 		if (!ASC) return;
 
-		// ① ASC↔폰 바인딩(서버/클라 공통). 같은 아바타로 이미 묶였으면 스킵.
+		// ASC↔폰 바인딩(서버/클라 공통). 같은 아바타로 이미 묶였으면 스킵.
 		const bool bAlreadyBound = ASC->AbilityActorInfo.IsValid()
 			&& ASC->AbilityActorInfo->AvatarActor.Get() == Pawn;
 		if (!bAlreadyBound)
@@ -118,16 +119,16 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 
 		const UGYPawnData* PawnData = PS->GetPawnData();
 
-		// ② 진영 태그 부여(서버). 데이터(PawnData)에서 읽음.
+		// 진영 태그 부여(서버). 데이터(PawnData)에서 읽음.
 		if (PawnData && PawnData->Faction.IsValid())
 		{
 			ASC->AddLooseGameplayTag(PawnData->Faction, 1, EGameplayTagReplicationState::TagOnly);
 		}
 
-		// ③ base 어트리뷰트 값 초기화(서버). 값 정책은 PlayerState 소관.
+		// base 어트리뷰트 값 초기화(서버). 값 정책은 PlayerState 소관.
 		PS->InitializeBaseAttributes();
 
-		// ④ AbilitySet 부여(서버). ASC 초기화는 PawnExtension이 전담한다.
+		// AbilitySet 부여(서버). ASC 초기화는 PawnExtension이 전담한다.
 		if (PawnData)
 		{
 			CachedASC = ASC;
@@ -138,6 +139,21 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 					AbilitySet->GiveToAbilitySystem(ASC, &GrantedHandles);
 				}
 			}
+		}
+	}
+
+	if (DesiredState == GYGameplayTags::InitState_GameplayReady)
+	{
+		APawn* Pawn = GetPawn<APawn>();
+		if (!Pawn || !Pawn->HasAuthority()) return;
+
+		AGYPlayerState* PS = Pawn->GetPlayerState<AGYPlayerState>();
+		if (!PS) return;
+
+		// DB 세이브 로드(서버). base 어트리뷰트 초기화 이후여야 복원값이 리셋에 덮이지 않는다.
+		if (UCharacterSaveComponent* SaveComponent = PS->GetCharacterSaveComponent())
+		{
+			SaveComponent->EnsureLoaded();
 		}
 	}
 }
