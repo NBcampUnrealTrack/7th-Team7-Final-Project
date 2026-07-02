@@ -32,8 +32,6 @@ class GY_API UGYCombatStatics : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category="GY|Combat")
-	static void ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC = nullptr);
 
 	// 컨텍스트 기반 타격 적용. HP 데미지 + 공격별 poise(경직/무력)를 분리 적용. (플레이어 멜리 경로)
 	static void ApplyHitImpact(const FGYHitContext& HitContext);

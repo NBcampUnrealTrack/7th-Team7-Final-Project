@@ -50,20 +50,6 @@ static void ApplyInstantGEToAttribute(UAbilitySystemComponent* ASC, const FGamep
 	ASC->ApplyGameplayEffectSpecToSelf(Spec);
 }
 
-void UGYCombatStatics::ApplyTrueDamage(UAbilitySystemComponent* TargetASC, float RawDamage, UAbilitySystemComponent* SourceASC)
-{
-	if (!TargetASC || RawDamage <= 0.f) return;
-
-	if (SourceASC && IsSameFaction(SourceASC, TargetASC)) return;
-
-	ApplyInstantGEToAttribute(TargetASC, UGYVitalAttributeSet::GetCurrentHealthAttribute(), -RawDamage);
-
-	if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
-	{
-		UGYAdditionalResourceStatics::IncreaseStagger(GYASC, RawDamage);
-		UGYAdditionalResourceStatics::IncreaseStun(GYASC, RawDamage);
-	}
-}
 
 static bool IsWithinAngle(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC, float AngleDegrees)
 {
