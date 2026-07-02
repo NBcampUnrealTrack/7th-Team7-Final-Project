@@ -4,13 +4,17 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Core/GameplayTags/CameraTags.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/QuestTags.h"
 #include "Core/GameplayTags/SoundTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Player/GYPlayerState.h"
 #include "WorldGimmick/TimeRift/TimeRift.h"
 #include "WorldGimmick/TimeRift/TimeRiftSubsystem.h"
 #include "Core/Sound/GYSoundManager.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 #include "Logging/GYLogManager.h"
+#include "UI/GYUIMessages.h"
 
 UGA_TimeRiftMenu::UGA_TimeRiftMenu(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -67,6 +71,16 @@ void UGA_TimeRiftMenu::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	{
 		// 사운드
 		SoundManager->PlaySound2D(GYGameplayTags::Sound_Interaction_TimeRift);
+	}
+	// 시간의 틈 사용 퀘스트 - 002 목표
+	UWorld* World = GetWorld();
+	if (IsValid(World))
+	{
+		FQuestEventMessage QuestMsg;
+		QuestMsg.EventTag = GYGameplayTags::Quest_Objective_Interact;
+		QuestMsg.TargetId = "TimeRift";
+		QuestMsg.Count = 1;
+		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Quest_Event, QuestMsg);
 	}
 }
 

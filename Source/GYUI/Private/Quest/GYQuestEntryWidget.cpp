@@ -24,24 +24,33 @@ void UGYQuestEntryWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UGYQuestEntryWidget::SetQuestData(FGameplayTag InQuestTag, const FText& InQuestName, bool bCompleted)
+void UGYQuestEntryWidget::SetQuestData(FGameplayTag InQuestTag, const FText& InQuestName, EQuestEntryState InState)
 {
 	QuestTag = InQuestTag;
 	if (Text_QuestName)
 	{
-		if (bCompleted)
-		{ // 완료된 퀘스트
-			Text_QuestName->SetText(
-			FText::Format(LOCTEXT("QuestCompletedPrefix", "[완료] {0}"), InQuestName)
-			);
+		switch (InState)
+		{
+		case EQuestEntryState::Completed:
+			Text_QuestName->SetText(FText::Format(LOCTEXT("QuestCompletedPrefix", "[완료] {0}"), InQuestName));
 			Text_QuestName->SetColorAndOpacity(CompletedTextColor);
-		}
-		else
-		{ // 진행중 퀘스트
+			break;
+		case EQuestEntryState::Active:
+			Text_QuestName->SetText(FText::Format(LOCTEXT("QuestActivePrefix", "[활성] {0}"), InQuestName));
+			Text_QuestName->SetColorAndOpacity(DefaultTextColor);
+			break;
+		case EQuestEntryState::Inactive:
+		default:
 			Text_QuestName->SetText(InQuestName);
 			Text_QuestName->SetColorAndOpacity(DefaultTextColor);
+			break;
 		}
-		// TODO::비활성 퀘스트 아직 못열게 처리
+	}
+
+	if (Button_Quest)
+	{
+		// 비활성(미시작) 퀘스트는 클릭해서 열 수 없도록 막음
+		Button_Quest->SetIsEnabled(InState != EQuestEntryState::Inactive);
 	}
 }
 

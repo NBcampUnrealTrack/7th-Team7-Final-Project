@@ -6,7 +6,7 @@
 #include "Quest/QuestTypes.h"
 #include "QuestSubsystem.generated.h"
 
-struct FGYLootBoxStateMessage;
+struct FQuestEventMessage;
 struct FGYQuestProgressMessage;
 
 class AGYGameState;
@@ -70,13 +70,17 @@ private:
 	TObjectPtr<UDataTable> CachedDialogueTable;
 
 	void BuildCache(const UDataTable* DataTable);
-	void OnLootBoxOpened(FGameplayTag Channel, const FGYLootBoxStateMessage& Message);
+	void OnQuestEvent(FGameplayTag Channel, const FQuestEventMessage& Message);
 	void OnQuestStartedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message);
 	void OnQuestCompletedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message);
 
-	FGameplayMessageListenerHandle LootBoxOpenedListenerHandle;
+	// ActiveQuests 갱신 + UI 델리게이트 브로드캐스트 (StartQuest/CompleteQuest, OnQuest***FromServer 공용)
+	void MarkQuestStarted(FGameplayTag QuestTag);
+	void MarkQuestCompleted(FGameplayTag QuestTag);
+
 	FGameplayMessageListenerHandle QuestStartedListenerHandle;
 	FGameplayMessageListenerHandle QuestCompletedListenerHandle;
+	FGameplayMessageListenerHandle QuestEventListenerHandle;
 
 public:
 	bool StartQuest(FGameplayTag QuestTag);

@@ -9,6 +9,7 @@
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/InteractionTags.h"
+#include "Core/GameplayTags/QuestTags.h"
 #include "Core/GameplayTags/SoundTags.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
@@ -23,6 +24,8 @@
 #include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
 #include "World/VolumeActor/GYRegionVolume.h"
+#include "Items/Fragments/ItemFragment_Weapon.h"
+#include "Items/ItemDefinition.h"
 
 ALootBoxActor::ALootBoxActor()
 {
@@ -205,6 +208,21 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 	const int32 Added = Inv->TryAddItem(Drop.Definition, Drop.Count, OutId);
 	if (Added <= 0) return; // 가방이 꽉 차 못 넣음 — 상자에 그대로 유지
 
+	const UItemDefinition* ItemDef = Drop.Definition.LoadSynchronous();
+	if (ItemDef && ItemDef->FindFragment<UItemFragment_Weapon>())
+	{
+		// 무기 획득 퀘스트 - 003 활성
+		UWorld* World = GetWorld();
+		if (IsValid(World))
+		{
+			FQuestEventMessage QuestMsg;
+			QuestMsg.EventTag = GYGameplayTags::Quest_Activate_ItemObtain;
+			QuestMsg.TargetId = "Weapon";
+			QuestMsg.Count = 1;
+			UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Quest_Event, QuestMsg);
+		}
+	}
+
 	Inv->MutateEntry(OutId, [&Drop](FInventoryEntry& Entry)
 	{
 		Entry.GradeTag = Drop.GradeTag;
@@ -226,7 +244,7 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 	}
 
 	// 빈 상자라도 파괴하지 않음 — 직접 닫기 전까지 유지, 다른 플레이어가 빈 것을 확인 가능
-	// authority(리슨서버/호스트)는 OnRep이 안 뜨므로 직접 통지. dedicated server는 self-guard로 no-op
+	// authority(리슨서버/호스트/데디 서버 모두)는 OnRep이 안 뜨므로 직접 통지
 	BroadcastStateChanged();
 }
 
@@ -261,7 +279,15 @@ void ALootBoxActor::OnRep_Opened()
 void ALootBoxActor::BroadcastStateChanged()
 {
 	UWorld* World = GetWorld();
-	if (World == nullptr || World->IsNetMode(NM_DedicatedServer)) return;
+	if (World == nullptr) return;
+
+	// 루트 박스 열기 퀘스트 - 001 목표 / 002 활성
+	FQuestEventMessage QuestMsg;
+	QuestMsg.EventTag = GYGameplayTags::Quest_Objective_OpenLootBox;
+	QuestMsg.Count = 1;
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Quest_Event, QuestMsg);
+
+	if (World->IsNetMode(NM_DedicatedServer)) return;
 
 	FGYLootBoxStateMessage Msg;
 	Msg.Box = this;

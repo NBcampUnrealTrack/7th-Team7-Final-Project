@@ -11,6 +11,7 @@
 #include "Enemy/Component/BossPatternSelectorComponent.h"
 #include "Components/StateTreeAIComponent.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/QuestTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
@@ -226,6 +227,16 @@ void AGYBossCharacterBase::Die()
 		}
 	}
 
+	// 보스 처치 퀘스트 - 005 목표
+	UWorld* World = GetWorld();
+	if (IsValid(World))
+	{
+		FQuestEventMessage QuestMsg;
+		QuestMsg.EventTag = GYGameplayTags::Quest_Objective_Kill;
+		QuestMsg.TargetId = "Boss";
+		QuestMsg.Count = 1;
+		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Quest_Event, QuestMsg);
+	}
 	// 보스 시퀀서 재생
 	Multicast_PlayCinematic(Cinematic.ToSoftObjectPath());
 	//보스 죽는 동작 후 사라지게 해도 될 것 같아요.

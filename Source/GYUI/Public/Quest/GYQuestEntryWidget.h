@@ -10,13 +10,22 @@ class UCommonTextBlock;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnQuestEntrySelected, FGameplayTag /*QuestTag*/);
 
+// 퀘스트 목록 항목의 표시 상태
+UENUM(BlueprintType)
+enum class EQuestEntryState : uint8
+{
+	Inactive,	// 비활성 (미시작, 클릭 불가)
+	Active,		// 활성 (진행중)
+	Completed	// 완료
+};
+
 UCLASS()
 class GYUI_API UGYQuestEntryWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
 public:
-	void SetQuestData(FGameplayTag InQuestTag, const FText& InQuestName, bool bCompleted);
+	void SetQuestData(FGameplayTag InQuestTag, const FText& InQuestName, EQuestEntryState InState);
 
 	FOnQuestEntrySelected OnEntrySelected;
 

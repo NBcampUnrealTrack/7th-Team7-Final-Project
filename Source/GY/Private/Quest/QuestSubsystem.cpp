@@ -37,10 +37,6 @@ void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	UGameplayMessageSubsystem* MsgSubsystem = GetGameInstance()->GetSubsystem<UGameplayMessageSubsystem>();
 	if (MsgSubsystem)
 	{
-		LootBoxOpenedListenerHandle = MsgSubsystem->RegisterListener<FGYLootBoxStateMessage>(
-			GYGameplayTags::Message_Loot_BoxOpened,
-			this, &UQuestSubsystem::OnLootBoxOpened);
-
 		QuestStartedListenerHandle = MsgSubsystem->RegisterListener<FGYQuestProgressMessage>(
 			GYGameplayTags::Message_Quest_Started,
 			this, &UQuestSubsystem::OnQuestStartedFromServer);
@@ -48,14 +44,18 @@ void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		QuestCompletedListenerHandle = MsgSubsystem->RegisterListener<FGYQuestProgressMessage>(
 			GYGameplayTags::Message_Quest_Completed,
 			this, &UQuestSubsystem::OnQuestCompletedFromServer);
+
+		QuestEventListenerHandle = MsgSubsystem->RegisterListener<FQuestEventMessage>(
+			GYGameplayTags::Message_Quest_Event,
+			this, &UQuestSubsystem::OnQuestEvent);
 	}
 }
 
 void UQuestSubsystem::Deinitialize()
 {
-	LootBoxOpenedListenerHandle.Unregister();
 	QuestStartedListenerHandle.Unregister();
 	QuestCompletedListenerHandle.Unregister();
+	QuestEventListenerHandle.Unregister();
 	Super::Deinitialize();
 }
 
@@ -135,7 +135,13 @@ bool UQuestSubsystem::StartQuest(FGameplayTag QuestTag)
 	}
 
 	AGYGameState* GameState = GetGYGameState();
-	if (GameState && GameState->IsQuestComplete(QuestTag))
+	if (!GameState)
+	{
+		GY_WARN(Content, CYS, "StartQuest 실패 - GameState 없음: %s", *QuestTag.ToString());
+		return false;
+	}
+
+	if (GameState->IsQuestComplete(QuestTag))
 	{
 		GY_LOG(Content, CYS, "StartQuest 실패 - 이미 완료됨: %s", *QuestTag.ToString());
 		return false;
@@ -154,17 +160,11 @@ bool UQuestSubsystem::StartQuest(FGameplayTag QuestTag)
 		return false;
 	}
 
-	FQuestRuntimeData& RuntimeData = ActiveQuests.Add(QuestTag);
-	RuntimeData.QuestTag = QuestTag;
-	RuntimeData.State = EQuestState::InProgress;
-	RuntimeData.ObjectiveProgress = 0;
-
 	GY_LOG(Content, CYS, "퀘스트 시작: %s", *Row->QuestName.ToString());
 
 	GameState->AddActiveQuest(QuestTag);
 
-
-	OnQuestStarted.Broadcast(QuestTag);
+	MarkQuestStarted(QuestTag);
 
 	return true;
 }
@@ -245,9 +245,7 @@ void UQuestSubsystem::CompleteQuest(FGameplayTag QuestTag)
 	const FQuestTableRow* Row = FindQuestRow(QuestTag);
 	GY_LOG(Content, CYS, "퀘스트 완료: %s", Row ? *Row->QuestName.ToString() : *QuestTag.ToString());
 
-	OnQuestCompleted.Broadcast(QuestTag);
-
-	ActiveQuests.Remove(QuestTag);
+	MarkQuestCompleted(QuestTag);
 }
 
 const FQuestRuntimeData* UQuestSubsystem::GetQuestRuntimeData(FGameplayTag QuestTag) const
@@ -296,28 +294,40 @@ void UQuestSubsystem::OnQuestStartedFromServer(FGameplayTag Channel, const FGYQu
 	const FQuestTableRow* Row = FindQuestRow(Message.QuestId);
 	if (!Row) return;
 
-	FQuestRuntimeData& RuntimeData = ActiveQuests.Add(Message.QuestId);
-	RuntimeData.QuestTag = Message.QuestId;
-	RuntimeData.State = EQuestState::InProgress;
-	RuntimeData.ObjectiveProgress = 0;
-
-	OnQuestStarted.Broadcast(Message.QuestId);
+	MarkQuestStarted(Message.QuestId);
 }
 
 void UQuestSubsystem::OnQuestCompletedFromServer(FGameplayTag Channel, const FGYQuestProgressMessage& Message)
 {
 	// 클라이언트 전용: ActiveQuests 정리 + UI 델리게이트 브로드캐스트
-	ActiveQuests.Remove(Message.QuestId);
-	OnQuestCompleted.Broadcast(Message.QuestId);
+	MarkQuestCompleted(Message.QuestId);
+	GY_LOG(Content, CYS, "OnQuestCompletedFromServer - QuestId=%s", *Message.QuestId.ToString());
 }
 
-void UQuestSubsystem::OnLootBoxOpened(FGameplayTag Channel, const FGYLootBoxStateMessage& Message)
+void UQuestSubsystem::MarkQuestStarted(FGameplayTag QuestTag)
 {
-	GY_LOG(Content, CYS, "OnLootBoxOpened - ActiveQuests=%d", ActiveQuests.Num());
-	FQuestEventData EventData;
-	EventData.EventTag = GYGameplayTags::Quest_Objective_OpenLootBox;
-	EventData.Count = 1;
-	ProcessObjectiveProgress(EventData);
+	FQuestRuntimeData& RuntimeData = ActiveQuests.Add(QuestTag);
+	RuntimeData.QuestTag = QuestTag;
+	RuntimeData.State = EQuestState::InProgress;
+	RuntimeData.ObjectiveProgress = 0;
+
+	OnQuestStarted.Broadcast(QuestTag);
+}
+
+void UQuestSubsystem::MarkQuestCompleted(FGameplayTag QuestTag)
+{
+	ActiveQuests.Remove(QuestTag);
+	OnQuestCompleted.Broadcast(QuestTag);
+}
+
+void UQuestSubsystem::OnQuestEvent(FGameplayTag Channel, const FQuestEventMessage& Message)
+{
+	FQuestEventData Data;
+	Data.EventTag = Message.EventTag;
+	Data.TargetId = Message.TargetId;
+	Data.Count = Message.Count;
+
+	HandleQuestEvent(Data);
 }
 
 AGYGameState* UQuestSubsystem::GetGYGameState() const

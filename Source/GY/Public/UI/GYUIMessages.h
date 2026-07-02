@@ -278,6 +278,16 @@ struct GY_API FGYLootBoxStateMessage
 	UPROPERTY(BlueprintReadWrite) int32 RemainingDrops = 0;
 };
 
+/** 퀘스트 이벤트 메시지 */
+USTRUCT(BlueprintType)
+struct GY_API FQuestEventMessage
+{
+	GENERATED_BODY()
+
+	FGameplayTag EventTag;
+	FName TargetId;
+	int32 Count;
+};
 
 /** 락온 메시지 */
 USTRUCT(BlueprintType)
