@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: true
+          lfs: false
           token: ${{ steps.pat.outputs.token || github.token }}
 
       - name: Resolve PR SHAs
