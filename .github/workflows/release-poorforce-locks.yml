@@ -253,12 +253,35 @@ jobs:
         if: ${{ !cancelled() && (steps.redis_remaining.outputs.count != '0' || steps.lfs_remaining.outputs.count != '0') }}
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_ID_DOOYEONK: ${{ secrets.DISCORD_ID_DOOYEONK }}
+          DISCORD_ID_EUNSEOGITHUB: ${{ secrets.DISCORD_ID_EUNSEOGITHUB }}
+          DISCORD_ID_OOD11611DOO: ${{ secrets.DISCORD_ID_OOD11611DOO }}
+          DISCORD_ID_YOONSEO4343: ${{ secrets.DISCORD_ID_YOONSEO4343 }}
+          DISCORD_ID_JCMEVE: ${{ secrets.DISCORD_ID_JCMEVE }}
+          DISCORD_ID_HYUN0619: ${{ secrets.DISCORD_ID_HYUN0619 }}
+          DISCORD_ID_SALTLAKE00: ${{ secrets.DISCORD_ID_SALTLAKE00 }}
+          DISCORD_ID_KBROTHER102: ${{ secrets.DISCORD_ID_KBROTHER102 }}
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             PR_REF="#${{ inputs.pr_number }} (수동 재실행)"
           else
             PR_REF="#${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}"
           fi
+
+          # 수정자(PR 작성자) login → Discord 유저 ID. 매핑/시크릿 없으면 멘션 생략.
+          case "${{ steps.who.outputs.login }}" in
+            dooyeonk)     DISCORD_ID="$DISCORD_ID_DOOYEONK" ;;
+            eunseoGithub) DISCORD_ID="$DISCORD_ID_EUNSEOGITHUB" ;;
+            ood11611doo)  DISCORD_ID="$DISCORD_ID_OOD11611DOO" ;;
+            yoonseo4343)  DISCORD_ID="$DISCORD_ID_YOONSEO4343" ;;
+            jcmeve)       DISCORD_ID="$DISCORD_ID_JCMEVE" ;;
+            hyun0619)     DISCORD_ID="$DISCORD_ID_HYUN0619" ;;
+            saltlake00)   DISCORD_ID="$DISCORD_ID_SALTLAKE00" ;;
+            kbrother102)  DISCORD_ID="$DISCORD_ID_KBROTHER102" ;;
+            *)            DISCORD_ID="" ;;
+          esac
+          MENTION=""
+          if [[ -n "$DISCORD_ID" ]]; then MENTION="<@${DISCORD_ID}> "; fi
 
           REDIS_COUNT=$(wc -l < redis_remaining.txt)
           LFS_COUNT=$(wc -l < lfs_remaining.txt)
@@ -280,7 +303,7 @@ jobs:
           … 외 $((LFS_COUNT - 25))개"
           fi
 
-          CONTENT="🔒 **머지 후 잔여 락 알림** — ${PR_REF}
+          CONTENT="${MENTION}🔒 **머지 후 잔여 락 알림** — ${PR_REF}
           수정자: **${{ steps.who.outputs.login }}**
           아직 편집 중이 아니면 정리해 주세요.
 
@@ -293,7 +316,13 @@ jobs:
           ${LFS_LIST}${LFS_MORE}
           \`\`\`"
 
-          PAYLOAD=$(jq -n --arg c "$CONTENT" '{content: $c}')
+          # allowed_mentions 로 실제 핑 허용 (해당 유저만, 없으면 아무도 핑 안 함)
+          if [[ -n "$DISCORD_ID" ]]; then
+            PAYLOAD=$(jq -n --arg c "$CONTENT" --arg uid "$DISCORD_ID" \
+              '{content: $c, allowed_mentions: {users: [$uid]}}')
+          else
+            PAYLOAD=$(jq -n --arg c "$CONTENT" '{content: $c, allowed_mentions: {parse: []}}')
+          fi
           curl -fsS -X POST -H "Content-Type: application/json" \
             -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
 
