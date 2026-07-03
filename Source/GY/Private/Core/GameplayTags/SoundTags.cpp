@@ -44,8 +44,14 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Stun, "Sound.Player.Stun")
 
 	/* 적 사운드 */
-	UE_DEFINE_GAMEPLAY_TAG(Sound_Goblin_Roar, "Sound.Goblin.Roar")
 
+	//펭마오
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Attack_1, "Sound.Feng.Attack.1") //휘두르기
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Attack_2, "Sound.Feng.Attack.2") //찍기
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Attack_3, "Sound.Feng.Attack.3") //두번휘두르기
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Attack_4, "Sound.Feng.Attack.4") //목소리
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Jump_Up, "Sound.Feng.Jump.Up") //목소리
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Death, "Sound.Feng.Death") //목소리
 
 	/* 상호 작용 */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_LootBox_Open, "Sound.Interaction.LootBox.Open")
