@@ -206,11 +206,14 @@ void UGYPlayerGameplayAbility::ScanAndApplyGEModifiers()
 			{
 				FGameplayTagContainer CombinedTags = GetAssetTags();
 
-				// 장착 무기의 WeaponTags 추가
+				// 장착 무기의 WeaponTags 추가.
+				// ItemDefinition 은 EquipmentInstance 보다 늦게 복제될 수 있어 null 허용 (클라 입력 레이스)
 				if (const UEquipmentInstance* Weapon = GetCurrentWeapon())
 				{
-					const UItemFragment* ItemFragment =
-						Weapon->GetItemDefinition()->FindFragmentByClass(UItemFragment_Weapon::StaticClass());
+					const UItemDefinition* WeaponDefinition = Weapon->GetItemDefinition();
+					const UItemFragment* ItemFragment = IsValid(WeaponDefinition)
+						? WeaponDefinition->FindFragmentByClass(UItemFragment_Weapon::StaticClass())
+						: nullptr;
 					if (ItemFragment)
 					{
 						CombinedTags.AddTag(static_cast<const UItemFragment_Weapon*>(ItemFragment)->WeaponTypeTag);

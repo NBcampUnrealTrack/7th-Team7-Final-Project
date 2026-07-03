@@ -205,7 +205,15 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 	const FLootDrop& Drop = PendingDrops[DropIndex];
 
 	FGuid OutId;
-	const int32 Added = Inv->TryAddItem(Drop.Definition, Drop.Count, OutId);
+	const int32 Added = Inv->TryAddItem(Drop.Definition, Drop.Count, OutId, [&Drop](FInventoryEntry& Entry)
+	{
+		Entry.GradeTag = Drop.GradeTag;
+		Entry.Level = Drop.Level;
+		Entry.StatDeviation = Drop.StatDeviation;
+		Entry.RolledOptions = Drop.RolledOptions;
+		Entry.EnhancementLevel = Drop.EnhancementLevel;
+		Entry.RandomSeed = Drop.UsedSeed;
+	});
 	if (Added <= 0) return; // 가방이 꽉 차 못 넣음 — 상자에 그대로 유지
 
 	const UItemDefinition* ItemDef = Drop.Definition.LoadSynchronous();
@@ -222,16 +230,6 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 			UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Quest_Event, QuestMsg);
 		}
 	}
-
-	Inv->MutateEntry(OutId, [&Drop](FInventoryEntry& Entry)
-	{
-		Entry.GradeTag = Drop.GradeTag;
-		Entry.Level = Drop.Level;
-		Entry.StatDeviation = Drop.StatDeviation;
-		Entry.RolledOptions = Drop.RolledOptions;
-		Entry.EnhancementLevel = Drop.EnhancementLevel;
-		Entry.RandomSeed = Drop.UsedSeed;
-	});
 
 	if (Added >= Drop.Count)
 	{

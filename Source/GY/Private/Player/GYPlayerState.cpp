@@ -17,6 +17,7 @@
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/ItemTransactionComponent.h"
 #include "Loot/LootViewerComponent.h"
+#include "Persistence/CharacterSaveComponent.h"
 #include "Persistence/StatPersistenceComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerBaseStatsRow.h"
@@ -48,6 +49,7 @@ AGYPlayerState::AGYPlayerState()
 	LootViewerComponent = CreateDefaultSubobject<ULootViewerComponent>(TEXT("LootViewerComponent"));
 	ItemTransactionComponent = CreateDefaultSubobject<UItemTransactionComponent>(TEXT("ItemTransactionComponent"));
 	StatPersistenceComponent = CreateDefaultSubobject<UStatPersistenceComponent>(TEXT("StatPersistenceComponent"));
+	CharacterSaveComponent = CreateDefaultSubobject<UCharacterSaveComponent>(TEXT("CharacterSaveComponent"));
 }
 
 UAbilitySystemComponent* AGYPlayerState::GetAbilitySystemComponent() const

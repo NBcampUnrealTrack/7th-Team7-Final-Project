@@ -102,16 +102,7 @@ void UGA_SkillUnlock::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		}
 	}
 
-	if (Node->SkillEffect)
-	{
-		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
-		FGameplayEffectSpecHandle SkillSpec = ASC->MakeOutgoingSpec(Node->SkillEffect, GetAbilityLevel(), Context);
-		if (SkillSpec.IsValid())
-		{
-			ASC->ApplyGameplayEffectSpecToSelf(*SkillSpec.Data);
-		}
-	}
-
+	// SkillEffect 적용은 UnlockNode 내부에서 (언락/세이브 복원이 같은 경로를 타도록)
 	SkillTreeComponent->UnlockNode(Node);
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

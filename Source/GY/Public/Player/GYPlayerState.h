@@ -17,6 +17,7 @@ class UInventoryComponent;
 class UItemTransactionComponent;
 class ULootViewerComponent;
 class UStatPersistenceComponent;
+class UCharacterSaveComponent;
 class UGYPlayerVitalAttributeSet;
 class UGYPlayerDamageAttributeSet;
 class UGYCoreStatAttributeSet;
@@ -61,6 +62,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	UItemTransactionComponent* GetItemTransactionComponent() const { return ItemTransactionComponent; }
 
+	UFUNCTION(BlueprintPure)
+	UCharacterSaveComponent* GetCharacterSaveComponent() const { return CharacterSaveComponent; }
+
 	// [SERVER] base 어트리뷰트 값 + 파생 스탯 초기화. 값 출처(테이블/행)는 PawnData에서 읽는다.
 	// ASC ActorInfo 바인딩/faction 태그는 PawnExtension 담당.
 	void InitializeBaseAttributes();
@@ -103,6 +107,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStatPersistenceComponent> StatPersistenceComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UCharacterSaveComponent> CharacterSaveComponent;
 
 	UPROPERTY(VisibleAnywhere, Category="SkillTree")
 	TObjectPtr<USkillTreeComponent> SkillTreeComponent;

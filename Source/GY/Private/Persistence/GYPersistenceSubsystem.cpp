@@ -1,4 +1,5 @@
 #include "Persistence/GYPersistenceSubsystem.h"
+#include "Persistence/CharacterSaveComponent.h"
 #include "Persistence/GYPersistenceSettings.h"
 #include "Persistence/GYSaveable.h"
 #include "Persistence/GYSaveSectionKeys.h"
@@ -6,6 +7,7 @@
 #include "Templates/Function.h"
 
 #include "HttpModule.h"
+#include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
@@ -19,55 +21,141 @@
 
 namespace
 {
-	constexpr int32 DefaultDevCharacterId = 1;
+	constexpr float RequestTimeoutSeconds = 10.f;
 
-	UGYPersistenceSubsystem* ResolvePersistence(UWorld* World)
+	// 로컬 PlayerState 의 저장 컴포넌트 (콘솔 테스트용)
+	UCharacterSaveComponent* ResolveLocalSaveComponent(UWorld* World)
 	{
-		if (!IsValid(World)) return nullptr;
-		UGameInstance* GameInstance = World->GetGameInstance();
-		return IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYPersistenceSubsystem>() : nullptr;
-	}
-
-	// 세이브 컴포넌트들이 붙어 있는 로컬 PlayerState (콘솔 테스트용)
-	AActor* ResolveLocalPlayerStateActor(UWorld* World)
-	{
-		if (!IsValid(World)) return nullptr;
+		if (!IsValid(World))
+		{
+			return nullptr;
+		}
 		APlayerController* PC = World->GetFirstPlayerController();
-		return IsValid(PC) ? PC->PlayerState : nullptr;
+		APlayerState* PlayerState = IsValid(PC) ? PC->PlayerState : nullptr;
+		return IsValid(PlayerState) ? PlayerState->FindComponentByClass<UCharacterSaveComponent>() : nullptr;
 	}
 
-	int32 ParseCharacterId(const TArray<FString>& Args)
+	FGYLoadResult ParseLoadResponse(FHttpResponsePtr Response, bool bSuccess)
 	{
-		return Args.Num() > 0 ? FCString::Atoi(*Args[0]) : DefaultDevCharacterId;
+		FGYLoadResult Result;
+
+		if (!bSuccess || !Response.IsValid())
+		{
+			GY_WARN(Network, KDY, "Load failed (connection error or timeout)");
+			return Result;
+		}
+
+		const int32 ResponseCode = Response->GetResponseCode();
+		const FString Content = Response->GetContentAsString();
+
+		if (ResponseCode != 200)
+		{
+			GY_WARN(Network, KDY, "Load failed code=%d body=%s", ResponseCode, *Content);
+			return Result;
+		}
+
+		// PostgREST는 행 배열로 반환 → 첫 행 사용 (빈 배열 = 없음)
+		TArray<TSharedPtr<FJsonValue>> Rows;
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
+		if (!FJsonSerializer::Deserialize(Reader, Rows))
+		{
+			GY_WARN(Network, KDY, "Load JSON parse failed body=%s", *Content);
+			return Result;
+		}
+		if (Rows.Num() == 0)
+		{
+			GY_WARN(Network, KDY, "Load: character not found");
+			Result.Result = EGYPersistResult::NotFound;
+			return Result;
+		}
+
+		const TSharedPtr<FJsonObject> Row = Rows[0]->AsObject();
+		if (!Row.IsValid())
+		{
+			GY_WARN(Network, KDY, "Load: row not an object");
+			return Result;
+		}
+
+		double VersionValue = 0.0;
+		Row->TryGetNumberField(TEXT("save_version"), VersionValue);
+
+		Result.Result = EGYPersistResult::Success;
+		Result.SaveVersion = static_cast<int32>(VersionValue);
+
+		const TSharedPtr<FJsonObject>* DataObject = nullptr;
+		if (Row->TryGetObjectField(TEXT("data"), DataObject) && DataObject != nullptr)
+		{
+			Result.Data = *DataObject;
+		}
+
+		GY_LOG(Network, KDY, "Load success saveVersion=%d", Result.SaveVersion);
+		return Result;
+	}
+
+	FGYSaveResult ParseSaveResponse(FHttpResponsePtr Response, bool bSuccess)
+	{
+		FGYSaveResult Result;
+
+		if (!bSuccess || !Response.IsValid())
+		{
+			GY_WARN(Network, KDY, "Save failed (connection error or timeout)");
+			return Result;
+		}
+
+		const int32 ResponseCode = Response->GetResponseCode();
+		FString Content = Response->GetContentAsString();
+		Content.TrimStartAndEndInline();
+
+		if (ResponseCode != 200)
+		{
+			GY_WARN(Network, KDY, "Save failed code=%d body=%s", ResponseCode, *Content);
+			return Result;
+		}
+
+		// save_character RPC는 스칼라 반환: 새 save_version 숫자, null이면 충돌(버전 불일치) 또는 없음
+		if (Content.IsEmpty() || Content == TEXT("null"))
+		{
+			GY_WARN(Network, KDY, "Save conflict (version mismatch or missing row)");
+			Result.Result = EGYPersistResult::Conflict;
+			return Result;
+		}
+
+		Result.Result = EGYPersistResult::Success;
+		Result.NewVersion = FCString::Atoi(*Content);
+		GY_LOG(Network, KDY, "Save success saveVersion=%d", Result.NewVersion);
+		return Result;
 	}
 
 	void PersistLoadCmd(const TArray<FString>& Args, UWorld* World)
 	{
-		UGYPersistenceSubsystem* System = ResolvePersistence(World);
-		if (!IsValid(System)) return;
-		System->LoadCharacter(ParseCharacterId(Args), ResolveLocalPlayerStateActor(World));
+		UCharacterSaveComponent* SaveComponent = ResolveLocalSaveComponent(World);
+		if (!IsValid(SaveComponent))
+		{
+			GY_WARN(Network, KDY, "gy.Persist.Load: local CharacterSaveComponent not found");
+			return;
+		}
+		SaveComponent->LoadAndApply();
 	}
 
 	void PersistSaveCmd(const TArray<FString>& Args, UWorld* World)
 	{
-		UGYPersistenceSubsystem* System = ResolvePersistence(World);
-		if (!IsValid(System)) return;
-
-		// 로컬 PlayerState 의 IGYSaveable 컴포넌트들에서 data 수집 후 저장.
-		// level/xp 는 progression 슬라이스 전까지 임시값.
-		AActor* PlayerState = ResolveLocalPlayerStateActor(World);
-		const FString Data = System->CollectSaveData(PlayerState);
-		System->SaveCharacter(ParseCharacterId(Args), 1, 0, Data, System->GetCachedSaveVersion());
+		UCharacterSaveComponent* SaveComponent = ResolveLocalSaveComponent(World);
+		if (!IsValid(SaveComponent))
+		{
+			GY_WARN(Network, KDY, "gy.Persist.Save: local CharacterSaveComponent not found");
+			return;
+		}
+		SaveComponent->RequestSave();
 	}
 
 	FAutoConsoleCommandWithWorldAndArgs GYPersistLoadCommand(
 		TEXT("gy.Persist.Load"),
-		TEXT("Load character save from Supabase. Usage: gy.Persist.Load [characterId]"),
+		TEXT("Load character save from Supabase via local CharacterSaveComponent"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&PersistLoadCmd));
 
 	FAutoConsoleCommandWithWorldAndArgs GYPersistSaveCommand(
 		TEXT("gy.Persist.Save"),
-		TEXT("Save dummy data to Supabase. Usage: gy.Persist.Save [characterId]"),
+		TEXT("Mark dirty and save via local CharacterSaveComponent"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&PersistSaveCmd));
 }
 
@@ -92,6 +180,114 @@ void UGYPersistenceSubsystem::LoadConfig()
 	{
 		GY_WARN(Network, KDY, "SecretKey not set (GY Persistence settings)");
 	}
+}
+
+void UGYPersistenceSubsystem::LoadCharacter(int32 CharacterId, FGYOnLoadComplete OnComplete)
+{
+	const FString Url = FString::Printf(
+		TEXT("%s/rest/v1/characters?id=eq.%d&select=level,xp,data,save_version"),
+		*BaseUrl, CharacterId);
+
+	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	Request->SetVerb(TEXT("GET"));
+	Request->SetURL(Url);
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
+	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->OnProcessRequestComplete().BindLambda(
+		[OnComplete = MoveTemp(OnComplete)](FHttpRequestPtr, FHttpResponsePtr Response, bool bSuccess)
+		{
+			OnComplete.ExecuteIfBound(ParseLoadResponse(Response, bSuccess));
+		});
+	Request->ProcessRequest();
+
+	GY_LOG(Network, KDY, "LoadCharacter(%d) requested", CharacterId);
+}
+
+void UGYPersistenceSubsystem::SaveCharacter(int32 CharacterId, int32 Level, int32 Xp, const FString& DataJson, int32 ExpectedVersion, FGYOnSaveComplete OnComplete)
+{
+	// RPC save_character 본문: 함수 인자 이름 그대로
+	const TSharedRef<FJsonObject> Body = MakeShared<FJsonObject>();
+	Body->SetNumberField(TEXT("p_id"), CharacterId);
+	Body->SetNumberField(TEXT("p_level"), Level);
+	Body->SetNumberField(TEXT("p_xp"), Xp);
+	Body->SetNumberField(TEXT("p_expected_version"), ExpectedVersion);
+
+	TSharedPtr<FJsonObject> DataObject;
+	const TSharedRef<TJsonReader<>> DataReader = TJsonReaderFactory<>::Create(DataJson);
+	if (!FJsonSerializer::Deserialize(DataReader, DataObject) || !DataObject.IsValid())
+	{
+		DataObject = MakeShared<FJsonObject>();
+	}
+	Body->SetObjectField(TEXT("p_data"), DataObject);
+
+	FString BodyString;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&BodyString);
+	FJsonSerializer::Serialize(Body, Writer);
+
+	const FString Url = FString::Printf(TEXT("%s/rest/v1/rpc/save_character"), *BaseUrl);
+
+	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	Request->SetVerb(TEXT("POST"));
+	Request->SetURL(Url);
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->SetContentAsString(BodyString);
+	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->OnProcessRequestComplete().BindLambda(
+		[WeakThis = TWeakObjectPtr<UGYPersistenceSubsystem>(this), CharacterId, OnComplete = MoveTemp(OnComplete)](FHttpRequestPtr, FHttpResponsePtr Response, bool bSuccess)
+		{
+			const FGYSaveResult Result = ParseSaveResponse(Response, bSuccess);
+			OnComplete.ExecuteIfBound(Result);
+
+			// 요청자(컴포넌트)가 이미 죽었어도 로그아웃 인계분은 이어서 처리돼야 한다
+			if (UGYPersistenceSubsystem* This = WeakThis.Get())
+			{
+				This->OnSaveCompletedInternal(CharacterId, Result);
+			}
+		});
+	Request->ProcessRequest();
+
+	GY_LOG(Network, KDY, "SaveCharacter(%d) lvl=%d xp=%d expectedVersion=%d requested", CharacterId, Level, Xp, ExpectedVersion);
+}
+
+void UGYPersistenceSubsystem::HandoffLogoutSave(int32 CharacterId, int32 Level, int32 Xp, const FString& DataJson, int32 FallbackExpectedVersion)
+{
+	FPendingLogoutSave& Pending = PendingLogoutSaves.FindOrAdd(CharacterId);
+	Pending.Level = Level;
+	Pending.Xp = Xp;
+	Pending.DataJson = DataJson;
+	Pending.FallbackExpectedVersion = FallbackExpectedVersion;
+
+	GY_LOG(Network, KDY, "Logout save handed off for character %d (in-flight pending)", CharacterId);
+}
+
+void UGYPersistenceSubsystem::OnSaveCompletedInternal(int32 CharacterId, const FGYSaveResult& Result)
+{
+	FPendingLogoutSave Pending;
+	if (!PendingLogoutSaves.RemoveAndCopyValue(CharacterId, Pending)) return;
+
+	int32 ExpectedVersion = 0;
+	switch (Result.Result)
+	{
+	case EGYPersistResult::Success:
+		ExpectedVersion = Result.NewVersion;
+		break;
+
+	case EGYPersistResult::Failure:
+		// in-flight 커밋 여부 불확실(타임아웃 등) — 인계 시점 버전으로 1회 시도. 커밋됐었다면 충돌로 드랍
+		ExpectedVersion = Pending.FallbackExpectedVersion;
+		break;
+
+	default:
+		// 로그아웃 시점 충돌 = 다른 writer 존재(비정상). 덮어쓰기보다 드랍이 안전
+		GY_WARN(Network, KDY, "Logout save dropped for character %d (in-flight conflicted)", CharacterId);
+		return;
+	}
+
+	GY_LOG(Network, KDY, "Flushing handed-off logout save for character %d", CharacterId);
+	SaveCharacter(CharacterId, Pending.Level, Pending.Xp, Pending.DataJson, ExpectedVersion, FGYOnSaveComplete());
 }
 
 FString UGYPersistenceSubsystem::CollectSaveData(AActor* Owner) const
@@ -173,145 +369,4 @@ void UGYPersistenceSubsystem::ApplySaveData(AActor* Owner, const TSharedPtr<FJso
 			Saveable->ImportSaveData(Section);
 		}
 	}
-}
-
-void UGYPersistenceSubsystem::LoadCharacter(int32 CharacterId, AActor* ApplyTarget)
-{
-	PendingApplyTarget = ApplyTarget;
-
-	const FString Url = FString::Printf(
-		TEXT("%s/rest/v1/characters?id=eq.%d&select=level,xp,data,save_version"),
-		*BaseUrl, CharacterId);
-
-	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
-	Request->SetVerb(TEXT("GET"));
-	Request->SetURL(Url);
-	Request->SetHeader(TEXT("apikey"), SecretKey);
-	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
-	Request->OnProcessRequestComplete().BindUObject(this, &UGYPersistenceSubsystem::OnLoadComplete);
-	Request->ProcessRequest();
-
-	GY_LOG(Network, KDY, "LoadCharacter(%d) requested", CharacterId);
-}
-
-void UGYPersistenceSubsystem::SaveCharacter(int32 CharacterId, int32 Level, int32 Xp, const FString& DataJson, int32 ExpectedVersion)
-{
-	// RPC save_character 본문: 함수 인자 이름 그대로
-	const TSharedRef<FJsonObject> Body = MakeShared<FJsonObject>();
-	Body->SetNumberField(TEXT("p_id"), CharacterId);
-	Body->SetNumberField(TEXT("p_level"), Level);
-	Body->SetNumberField(TEXT("p_xp"), Xp);
-	Body->SetNumberField(TEXT("p_expected_version"), ExpectedVersion);
-
-	TSharedPtr<FJsonObject> DataObject;
-	const TSharedRef<TJsonReader<>> DataReader = TJsonReaderFactory<>::Create(DataJson);
-	if (!FJsonSerializer::Deserialize(DataReader, DataObject) || !DataObject.IsValid())
-	{
-		DataObject = MakeShared<FJsonObject>();
-	}
-	Body->SetObjectField(TEXT("p_data"), DataObject);
-
-	FString BodyString;
-	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&BodyString);
-	FJsonSerializer::Serialize(Body, Writer);
-
-	const FString Url = FString::Printf(TEXT("%s/rest/v1/rpc/save_character"), *BaseUrl);
-
-	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
-	Request->SetVerb(TEXT("POST"));
-	Request->SetURL(Url);
-	Request->SetHeader(TEXT("apikey"), SecretKey);
-	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
-	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	Request->SetContentAsString(BodyString);
-	Request->OnProcessRequestComplete().BindUObject(this, &UGYPersistenceSubsystem::OnSaveComplete);
-	Request->ProcessRequest();
-
-	GY_LOG(Network, KDY, "SaveCharacter(%d) lvl=%d xp=%d expectedVersion=%d requested", CharacterId, Level, Xp, ExpectedVersion);
-}
-
-void UGYPersistenceSubsystem::OnLoadComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bSuccess)
-{
-	if (!bSuccess || !Response.IsValid())
-	{
-		GY_WARN(Network, KDY, "Load failed (connection error)");
-		return;
-	}
-
-	const int32 ResponseCode = Response->GetResponseCode();
-	const FString Content = Response->GetContentAsString();
-
-	if (ResponseCode != 200)
-	{
-		GY_WARN(Network, KDY, "Load failed code=%d body=%s", ResponseCode, *Content);
-		return;
-	}
-
-	// PostgREST는 행 배열로 반환 → 첫 행 사용 (빈 배열 = 없음)
-	TArray<TSharedPtr<FJsonValue>> Rows;
-	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
-	if (!FJsonSerializer::Deserialize(Reader, Rows))
-	{
-		GY_WARN(Network, KDY, "Load JSON parse failed body=%s", *Content);
-		return;
-	}
-	if (Rows.Num() == 0)
-	{
-		GY_WARN(Network, KDY, "Load: character not found");
-		return;
-	}
-
-	const TSharedPtr<FJsonObject> Row = Rows[0]->AsObject();
-	if (!Row.IsValid())
-	{
-		GY_WARN(Network, KDY, "Load: row not an object");
-		return;
-	}
-
-	double VersionValue = 0.0;
-	Row->TryGetNumberField(TEXT("save_version"), VersionValue);
-	CachedSaveVersion = static_cast<int32>(VersionValue);
-
-	// data 섹션을 IGYSaveable 컴포넌트들로 복원
-	const TSharedPtr<FJsonObject>* DataObject = nullptr;
-	if (Row->TryGetObjectField(TEXT("data"), DataObject) && DataObject != nullptr)
-	{
-		if (AActor* Target = PendingApplyTarget.Get())
-		{
-			ApplySaveData(Target, *DataObject);
-			GY_LOG(Network, KDY, "Load applied to %s", *Target->GetName());
-		}
-	}
-	PendingApplyTarget.Reset();
-
-	GY_LOG(Network, KDY, "Load success saveVersion=%d body=%s", CachedSaveVersion, *Content);
-}
-
-void UGYPersistenceSubsystem::OnSaveComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bSuccess)
-{
-	if (!bSuccess || !Response.IsValid())
-	{
-		GY_WARN(Network, KDY, "Save failed (connection error)");
-		return;
-	}
-
-	const int32 ResponseCode = Response->GetResponseCode();
-	FString Content = Response->GetContentAsString();
-	Content.TrimStartAndEndInline();
-
-	if (ResponseCode != 200)
-	{
-		GY_WARN(Network, KDY, "Save failed code=%d body=%s", ResponseCode, *Content);
-		return;
-	}
-
-	// save_character RPC는 스칼라 반환: 새 save_version 숫자, null이면 충돌(버전 불일치) 또는 없음
-	if (Content.IsEmpty() || Content == TEXT("null"))
-	{
-		GY_WARN(Network, KDY, "Save conflict/notfound (null) - version mismatch or missing, Load first");
-		return;
-	}
-
-	CachedSaveVersion = FCString::Atoi(*Content);
-	GY_LOG(Network, KDY, "Save success saveVersion=%d", CachedSaveVersion);
 }

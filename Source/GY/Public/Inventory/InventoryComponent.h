@@ -30,6 +30,10 @@ public:
 	virtual int32 GetCapacity() const override;
 	virtual int32 TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId) override;
 
+	// 새 엔트리를 Added 알림 전에 완성시키는 획득 경로 — 구독자가 미완성 아이템을 보지 않는다.
+	// InitNewEntry 는 새로 생성되는 엔트리에만 적용 (기존 스택 병합분은 제외)
+	int32 TryAddItem(TSoftObjectPtr<UItemDefinition> Def, int32 Count, FGuid& OutInstanceId, TFunctionRef<void(FInventoryEntry&)> InitNewEntry);
+
 	// 현재 가방이 차지한 슬롯 수 (장착 중인 아이템은 제외 — 로드아웃이 참조만 하므로 용량에서 빠짐)
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	int32 GetOccupiedSlotCount() const;
