@@ -4,6 +4,7 @@
 #include "AbilitySystemComponent.h"
 #include "Enemy/GYBossCharacterBase.h"
 #include "Enemy/Component/BossPhaseComponent.h"
+#include "Enemy/Actor/AreaWarningActor.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerState.h"
 #include "TimerManager.h"
@@ -82,6 +83,29 @@ void UGYBossPhaseAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 			{
 				PC->ServerSetAOEWindow(true, MinionGateTimeoutDuration);
 			}
+
+			if (TimeoutWarningClass)
+			{
+				UWorld* World = GetWorld();
+				AActor* Avatar = GetAvatarActorFromActorInfo();
+				if (World && Avatar)
+				{
+					const FVector Center = AAreaWarningActor::ResolveArenaCenter(
+						World, ArenaCenterTag, Avatar->GetActorLocation());
+
+					FActorSpawnParameters SP;
+					SP.Owner = Avatar;
+					SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+					if (AAreaWarningActor* W = World->SpawnActor<AAreaWarningActor>(
+							TimeoutWarningClass, Center + FVector(0.f, 0.f, TimeoutWarningZOffset),
+							FRotator::ZeroRotator, SP))
+					{
+						W->Initialize(MinionGateTimeoutDuration, TimeoutWarningRadius);
+						ActiveTimeoutWarning = W;
+					}
+				}
+			}
 		}
 	}
 }
@@ -95,9 +119,12 @@ void UGYBossPhaseAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	{
 		World->GetTimerManager().ClearTimer(SequenceDelayTimer);
 		World->GetTimerManager().ClearTimer(MinionGateTimeoutTimer);
+		World->GetTimerManager().ClearTimer(PunishResolveTimer);
 	}
 
 	EndAOEWindow();
+
+	RemoveCameraTagsFromParticipants();
 
 	if (AGYBossCharacterBase* Boss = Cast<AGYBossCharacterBase>(GetAvatarActorFromActorInfo()))
 	{
@@ -117,6 +144,12 @@ void UGYBossPhaseAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
 
 	if (bWasCancelled && !bPhaseFinished)
 	{
+		if (ActiveTimeoutWarning.IsValid())
+		{
+			ActiveTimeoutWarning->Cancel();
+			ActiveTimeoutWarning.Reset();
+		}
+
 		if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
 		{
 			for (const FGameplayTag& Tag : InvulnerabilityTags)
@@ -181,8 +214,6 @@ void UGYBossPhaseAbility::ApplyPhaseEntry()
 	UAbilitySystemComponent* BossASC = GetAbilitySystemComponentFromActorInfo();
 	if (!BossASC) return;
 
-	// 무적이 부여되기 직전 남아 있던 CC 등 ActiveGameplayEffect 잔재를 강제로 청소.
-	// (Immunity 는 application 시점에만 작동하므로, 이미 붙어 있던 효과는 별도 제거가 필요.)
 	if (!CleanseTagsOnEntry.IsEmpty())
 	{
 		const FGameplayEffectQuery Query =
@@ -233,6 +264,8 @@ void UGYBossPhaseAbility::ApplyPhaseEntry()
 	{
 		ExecuteCueOnAllParticipants(EntryParticipantCueTag);
 	}
+
+	AddCameraTagsToParticipants();
 }
 
 void UGYBossPhaseAbility::ApplyPhaseExit()
@@ -511,6 +544,13 @@ void UGYBossPhaseAbility::OnBossMinionCountChanged(int32 NewCount)
 	}
 	EndAOEWindow();
 
+	// 성공(잡몹 전멸): 예고 경고를 폭발 없이 제거
+	if (ActiveTimeoutWarning.IsValid())
+	{
+		ActiveTimeoutWarning->Cancel();
+		ActiveTimeoutWarning.Reset();
+	}
+
 	EnterMinionGateStun();
 }
 
@@ -563,13 +603,25 @@ void UGYBossPhaseAbility::OnMinionGateTimeout()
 
 	EndAOEWindow();
 
+	RemoveInvulnerabilityTagsNow();
+
 	if (MinionTimeoutPunishAbility)
 	{
 		ActivateSubAbility(MinionTimeoutPunishAbility);
 	}
 
-	RemoveInvulnerabilityTagsNow();
-	FinishPhase();
+	UWorld* World = GetWorld();
+	if (World && PunishResolveDelay > 0.f)
+	{
+		World->GetTimerManager().SetTimer(
+			PunishResolveTimer,
+			FTimerDelegate::CreateUObject(this, &UGYBossPhaseAbility::FinishPhase),
+			PunishResolveDelay, false);
+	}
+	else
+	{
+		FinishPhase();
+	}
 }
 
 void UGYBossPhaseAbility::RemoveInvulnerabilityTagsNow()
@@ -621,5 +673,46 @@ void UGYBossPhaseAbility::EndAOEWindow()
 	if (UBossPhaseComponent* PC = GetPhaseComp())
 	{
 		PC->ServerSetAOEWindow(false, 0.f);
+	}
+}
+
+void UGYBossPhaseAbility::AddCameraTagsToParticipants()
+{
+	if (ParticipantCameraTags.IsEmpty()) return;
+
+	for (const TObjectPtr<APlayerState>& PS : CachedParticipants)
+	{
+		if (!PS) continue;
+		APawn* Pawn = PS->GetPawn();
+		if (!Pawn) continue;
+
+		if (UAbilitySystemComponent* PlayerASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
+		{
+			for (const FGameplayTag& Tag : ParticipantCameraTags)
+			{
+				PlayerASC->AddLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+			}
+		}
+	}
+}
+
+void UGYBossPhaseAbility::RemoveCameraTagsFromParticipants()
+{
+	if (ParticipantCameraTags.IsEmpty()) return;
+
+	for (const TObjectPtr<APlayerState>& PS : CachedParticipants)
+	{
+		if (!PS) continue;
+		APawn* Pawn = PS->GetPawn();
+		if (!Pawn) continue;
+
+		if (UAbilitySystemComponent* PlayerASC =
+			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
+		{
+			for (const FGameplayTag& Tag : ParticipantCameraTags)
+			{
+				PlayerASC->RemoveLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+			}
+		}
 	}
 }

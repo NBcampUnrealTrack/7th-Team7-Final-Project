@@ -24,6 +24,15 @@ void APoisonZoneActor::Initialize(AActor* InInstigator)
 {
 	InstigatorActor = InInstigator;
 	SetLifeSpan(Duration);
+
+	if (!HasAuthority()) return;
+
+	TArray<AActor*> AlreadyInside;
+	ZoneCollision->GetOverlappingActors(AlreadyInside, APawn::StaticClass());
+	for (AActor* Inside : AlreadyInside)
+	{
+		OnZoneBeginOverlap(ZoneCollision, Inside, nullptr, 0, false, FHitResult());
+	}
 }
 
 void APoisonZoneActor::OnZoneBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -85,25 +94,6 @@ void APoisonZoneActor::BeginPlay()
 
 	ZoneCollision->OnComponentBeginOverlap.AddDynamic(this, &APoisonZoneActor::OnZoneBeginOverlap);
 	ZoneCollision->OnComponentEndOverlap.AddDynamic(this,   &APoisonZoneActor::OnZoneEndOverlap);
-
-	if (ZoneCueTag.IsValid() && InstigatorActor.IsValid())
-	{
-		if (UAbilitySystemComponent* SrcASC =
-			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InstigatorActor.Get()))
-		{
-			FGameplayCueParameters P;
-			P.Location = GetActorLocation();
-			P.Normal   = FVector::UpVector;
-			SrcASC->ExecuteGameplayCue(ZoneCueTag, P);
-		}
-	}
-
-	TArray<AActor*> AlreadyInside;
-	ZoneCollision->GetOverlappingActors(AlreadyInside, APawn::StaticClass());
-	for (AActor* Inside : AlreadyInside)
-	{
-		OnZoneBeginOverlap(ZoneCollision, Inside, nullptr, 0, false, FHitResult());
-	}
 
 }
 

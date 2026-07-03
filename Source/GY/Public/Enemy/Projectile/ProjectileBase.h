@@ -44,10 +44,15 @@ protected:
 	float SweepRadius = 15.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-	float MaxLifeTime = 5.f;
+	float MaxLifeTime = 3.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Cue", meta = (Categories = "GameplayCue"))
+	/** Projectile 적중시 Tag */
+	UPROPERTY(EditDefaultsOnly, Category = "Cue")
 	FGameplayTag HitCueTag;
+
+	/** Projectile 효과음 */
+	UPROPERTY(EditDefaultsOnly, Category = "Cue")
+	FGameplayTag SoundCueTag;
 
 	UPROPERTY()
 	TWeakObjectPtr<AActor> InstigatorActor;
