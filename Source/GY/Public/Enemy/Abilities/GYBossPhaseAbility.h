@@ -6,6 +6,7 @@
 
 class AGYBossCharacterBase;
 class UBossPhaseComponent;
+class AAreaWarningActor;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSubAbilityFinished, TSubclassOf<UGameplayAbility>, AbilityClass);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPhaseSequenceFinished);
@@ -131,12 +132,16 @@ private:
 	void RemoveCameraTagsFromParticipants();
 
 	FTimerHandle MinionGateTimeoutTimer;
+	FTimerHandle PunishResolveTimer;
 	FActiveGameplayEffectHandle StunEffectHandle;
 	FDelegateHandle StunTagDelegateHandle;
 	bool bMinionGateTriggered = false;
 
 	TWeakObjectPtr<AGYBossCharacterBase> CachedBoss;
 	TWeakObjectPtr<UBossPhaseComponent>  CachedPhaseComp;
+
+	/** 게이트 시작 시 스폰한 경고 액터 (성공 시 Cancel, 실패 시 그 위치에 타격) */
+	TWeakObjectPtr<AAreaWarningActor> ActiveTimeoutWarning;
 
 protected:
 	/** 진입 시 부여할 무적/슈퍼아머 태그 */
@@ -237,6 +242,36 @@ protected:
 		meta = (EditCondition = "bUseMinionTimeoutPunish",
 			ToolTip = "타임아웃 시 발동할 페널티 어빌리티 (광역 데미지 등)"))
 	TSubclassOf<UGameplayAbility> MinionTimeoutPunishAbility;
+
+	/** 게이트 시작 시 아레나 중앙에 미리 스폰되어 타임아웃까지 커지는 경고 액터. 성공 시 취소, 실패 시 그 자리에 타격. */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
+		meta = (EditCondition = "bUseMinionTimeoutPunish",
+			ToolTip = "MinionGate 시작 시 아레나 중앙에 스폰되어 MinionGateTimeoutDuration 동안 커지는 경고 액터. 잡몹 전멸(성공) 시 폭발 없이 제거, 타임아웃(실패) 시 PunishAbility 타격이 그 위치에 발생."))
+	TSubclassOf<AAreaWarningActor> TimeoutWarningClass;
+
+	/** 경고 액터의 최종 반경(cm). PunishAbility 투사체 ImpactRadius 와 같게 맞추는 것을 권장. */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
+		meta = (EditCondition = "bUseMinionTimeoutPunish", ClampMin = "0.0",
+			ToolTip = "경고 원이 다 자랐을 때의 반경(cm). 벌칙 투사체의 ImpactRadius 와 동일하게 맞추면 시각/타격 크기가 일치한다."))
+	float TimeoutWarningRadius = 800.f;
+
+	/** 아레나 중앙 지점으로 사용할 레벨 액터 태그. PunishAbility 의 ArenaCenterTag 와 동일해야 위치가 맞는다. */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
+		meta = (EditCondition = "bUseMinionTimeoutPunish",
+			ToolTip = "경고/타격 중심으로 쓸 레벨 액터의 Actor Tag. 해당 태그를 가진 액터가 없으면 보스 위치로 폴백."))
+	FName ArenaCenterTag = TEXT("ArenaCenter");
+
+	/** 경고 액터 스폰 Z 오프셋(cm). 보스 위치 폴백 시 캡슐 중심 높이만큼 음수로 내려 지면에 붙인다. */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
+		meta = (EditCondition = "bUseMinionTimeoutPunish",
+			ToolTip = "경고 액터를 스폰할 때 중심 위치에 더할 Z 오프셋(cm). 보스 위치로 폴백하면 캡슐 중심 높이(보통 +90 근처)라 공중에 뜬다. 음수(예: -90)로 지면까지 내리고, 지면 근처에서 z-fighting 나면 +2~5 로 미세 조정."))
+	float TimeoutWarningZOffset = 5.f;
+
+	/** 타임아웃 벌칙 발동 후 페이즈 종료까지의 지연(초). 투사체가 착지·데미지 적용할 시간 확보용. */
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
+		meta = (EditCondition = "bUseMinionTimeoutPunish", ClampMin = "0.0",
+			ToolTip = "타임아웃에 PunishAbility 를 켠 뒤 이 시간(초)이 지나서야 FinishPhase 를 호출한다. 즉시 종료하면 방금 켠 벌칙 어빌리티가 ClearAbility 로 취소되어 투사체 히트 이벤트를 못 받아 데미지가 안 들어간다. 투사체 낙하 시간(SpawnHeight/DropSpeed)보다 넉넉히 크게."))
+	float PunishResolveDelay = 2.f;
 protected:
 	/** ActivateAbility 시점의 참가자 스냅샷 */
 	UPROPERTY(Transient)

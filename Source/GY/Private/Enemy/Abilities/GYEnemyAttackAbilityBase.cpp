@@ -103,7 +103,6 @@ bool UGYEnemyAttackAbilityBase::CanAttackDistance(AActor* Owner, AActor* Target)
 	if (!Owner || !Target) return false;
 
 	float CurrentDist = FVector::DistSquared(Owner->GetActorLocation(), Target->GetActorLocation());
-	UE_LOG(LogTemp,Warning, TEXT("Distance : %f"),CurrentDist);
 	if (CurrentDist < AttackRange * AttackRange && CurrentDist >= MinDistance * MinDistance)
 		return true;
 	return false;
