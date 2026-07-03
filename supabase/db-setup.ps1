@@ -48,7 +48,7 @@ if (-not (Test-Path $Sb)) {
 if (-not (Test-Path (Join-Path $RepoRoot "supabase\config.toml"))) {
     Write-Host "[setup] config.toml missing - running supabase init (fallback)..." -ForegroundColor Yellow
     & $Sb init --force --with-vscode-settings=false --with-intellij-settings=false 2>$null
-    if ($LASTEXITCODE -ne 0) { & $Sb init }  # 플래그 미지원 CLI 버전 대비
+    if ($LASTEXITCODE -ne 0) { & $Sb init }  # fallback for older CLI that lacks those flags
 }
 
 # 4) start local stack + apply migrations/seed
