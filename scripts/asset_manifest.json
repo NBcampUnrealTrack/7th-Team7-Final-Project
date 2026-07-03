@@ -8559,6 +8559,11 @@
                                                                                                                      "by":  "rhkrd",
                                                                                                                      "at":  "2026-07-01 20:11:46",
                                                                                                                      "note":  ""
+                                                                                                                 },
+                                                                                                                 {
+                                                                                                                     "by":  "rhkrd",
+                                                                                                                     "at":  "2026-07-03 15:37:47",
+                                                                                                                     "note":  ""
                                                                                                                  }
                                                                                                              ]
                                                                                              },
@@ -8571,6 +8576,15 @@
                                                                                                       }
                                                                                                   ]
                                                                                   },
+                   "CarnivorousPlant/Animatios/MainPlant/AM_GY_Boss_BloomSeed.uasset":  {
+                                                                                            "history":  [
+                                                                                                            {
+                                                                                                                "by":  "rhkrd",
+                                                                                                                "at":  "2026-07-03 15:37:47",
+                                                                                                                "note":  ""
+                                                                                                            }
+                                                                                                        ]
+                                                                                        },
                    "CarnivorousPlant/Animatios/MainPlant/AM_GY_BossFlower_Asleep.uasset":  {
                                                                                                "history":  [
                                                                                                                {
@@ -8581,6 +8595,11 @@
                                                                                                                {
                                                                                                                    "by":  "rhkrd",
                                                                                                                    "at":  "2026-07-01 20:11:46",
+                                                                                                                   "note":  ""
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "by":  "rhkrd",
+                                                                                                                   "at":  "2026-07-03 15:37:47",
                                                                                                                    "note":  ""
                                                                                                                }
                                                                                                            ]
@@ -8605,6 +8624,11 @@
                                                                                                                          "by":  "rhkrd",
                                                                                                                          "at":  "2026-07-01 20:11:46",
                                                                                                                          "note":  ""
+                                                                                                                     },
+                                                                                                                     {
+                                                                                                                         "by":  "rhkrd",
+                                                                                                                         "at":  "2026-07-03 15:37:47",
+                                                                                                                         "note":  ""
                                                                                                                      }
                                                                                                                  ]
                                                                                                  },
@@ -8619,9 +8643,23 @@
                                                                                                                      "by":  "rhkrd",
                                                                                                                      "at":  "2026-07-01 20:11:46",
                                                                                                                      "note":  ""
+                                                                                                                 },
+                                                                                                                 {
+                                                                                                                     "by":  "rhkrd",
+                                                                                                                     "at":  "2026-07-03 15:37:47",
+                                                                                                                     "note":  ""
                                                                                                                  }
                                                                                                              ]
                                                                                              },
+                   "CarnivorousPlant/Animatios/MainPlant/AM_GY_BossFlower_WarningImpact.uasset":  {
+                                                                                                      "history":  [
+                                                                                                                      {
+                                                                                                                          "by":  "rhkrd",
+                                                                                                                          "at":  "2026-07-03 15:37:47",
+                                                                                                                          "note":  ""
+                                                                                                                      }
+                                                                                                                  ]
+                                                                                                  },
                    "CarnivorousPlant/Animatios/PlantRoot/AM_GY_BossFlower_Tentacle.uasset":  {
                                                                                                  "history":  [
                                                                                                                  {
@@ -8632,6 +8670,11 @@
                                                                                                                  {
                                                                                                                      "by":  "rhkrd",
                                                                                                                      "at":  "2026-07-01 20:11:46",
+                                                                                                                     "note":  ""
+                                                                                                                 },
+                                                                                                                 {
+                                                                                                                     "by":  "rhkrd",
+                                                                                                                     "at":  "2026-07-03 15:37:47",
                                                                                                                      "note":  ""
                                                                                                                  }
                                                                                                              ]
