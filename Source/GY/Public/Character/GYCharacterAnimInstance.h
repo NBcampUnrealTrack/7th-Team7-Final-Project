@@ -79,4 +79,20 @@ protected:
 	float RunningSpeed = 600.f;
 
 
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UBlendSpace* MoveBlendSpace;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UAnimSequence* IdleSequence;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Climb", meta=(BlueprintThreadSafe))
+	UAnimSequence* ClimbCycleSequence;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UBlendSpace* WalkStartBlendSpace;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UBlendSpace* RunStartBlendSpace;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UBlendSpace* WalkStopBlendSpace;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
+	UBlendSpace* RunStopBlendSpace;
 };
