@@ -58,7 +58,13 @@ bool UAreaDenialAbility::IsSpacingOK(const FVector& Candidate, const TArray<FVec
 void UAreaDenialAbility::ExecuteAreaDenail()
 {
 	UWorld* World = GetWorld();
-	if (!World || !HazardActorClass) return;
+	if (!World) return;
+
+	// WarningDuration <= 0 : 경고 표시 없이 즉발 낙하
+	const bool bImmediate = (WarningDuration <= 0.f);
+
+	// 경고 모드(>0)인데 경고 액터가 없으면 기존처럼 종료
+	if (!bImmediate && !HazardActorClass) return;
 
 	AActor* BossActor = GetAvatarActorFromActorInfo();
 	const FVector Origin = BossActor ? BossActor->GetActorLocation() : FVector::ZeroVector;
@@ -121,7 +127,7 @@ void UAreaDenialAbility::ExecuteAreaDenail()
 
 		if (!IsSpacingOK(Candidate, Placed)) continue;
 
-		FVector GroundLoc;
+		// 지면 확인 (경고를 안 뿌려도 낙하 지점 유효성은 검사)
 		{
 			const FVector TraceStart = Candidate + FVector(0.f, 0.f, GroundTraceHeightAbove);
 			const FVector TraceEnd   = Candidate - FVector(0.f, 0.f, GroundTraceHeightBelow);
@@ -135,29 +141,39 @@ void UAreaDenialAbility::ExecuteAreaDenail()
 			{
 				continue;
 			}
-
-			GroundLoc = GroundHit.ImpactPoint;
 		}
 
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride =
-			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		Params.Owner = BossActor;
-
-		const FVector SpawnLoc = Candidate + FVector(0.f, 0.f, HazardGroundOffset);
-		if (AActor* HazardActor = World->SpawnActor<AActor>(HazardActorClass, SpawnLoc, FRotator::ZeroRotator, Params))
+		// 경고 액터는 WarningDuration > 0 이고 클래스가 있을 때만 스폰
+		if (!bImmediate && HazardActorClass)
 		{
-			HazardActor->SetLifeSpan(WarningDuration);
-			Placed.Add(Candidate);
-			++Spawned;
+			FActorSpawnParameters Params;
+			Params.SpawnCollisionHandlingOverride =
+				ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+			Params.Owner = BossActor;
+
+			const FVector SpawnLoc = Candidate + FVector(0.f, 0.f, HazardGroundOffset);
+			if (AActor* HazardActor = World->SpawnActor<AActor>(HazardActorClass, SpawnLoc, FRotator::ZeroRotator, Params))
+			{
+				HazardActor->SetLifeSpan(WarningDuration);
+			}
 		}
+
+		Placed.Add(Candidate);
+		++Spawned;
 	}
 
-	if (Placed.Num() > 0)
-	{
-		CachedImpactLocations = Placed;
+	if (Placed.Num() == 0) return;
 
-		if (ProjectileClass)
+	CachedImpactLocations = Placed;
+
+	if (ProjectileClass)
+	{
+		if (bImmediate)
+		{
+			// 즉발: 타이머 없이 바로 낙하 (SetTimer rate=0 무효화 함정 회피)
+			SpawnImpactProjectiles();
+		}
+		else
 		{
 			FTimerHandle TimerHandle;
 			World->GetTimerManager().SetTimer(TimerHandle, this,
