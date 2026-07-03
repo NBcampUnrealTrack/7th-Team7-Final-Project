@@ -17,3 +17,6 @@
 *.json   text eol=crlf
 *.md     text eol=crlf
 
+# Shell scripts — always LF (CI 러너에서 shebang 깨짐 방지)
+*.sh     text eol=lf
+
