@@ -42,8 +42,15 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
 
-	UFUNCTION() void HandleThrow();
-	UFUNCTION() void HandleMoveEnded();
+	UFUNCTION()
+	void HandleMoveEnded();
+
+	void PlayNextThrow();
+
+	UFUNCTION() void HandleMontageEnded();
+	UFUNCTION() void HandleMontageInterrupted();
+
+	UPROPERTY() TObjectPtr<class UAbilityTask_PlayMontageAndWait> CurrentMontageTask;
 
 	void CalcArcPath(const FVector& SelfLoc, const FVector& TargetLoc, FVector& OutDestination, FVector& OutControl) const;
 

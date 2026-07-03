@@ -112,47 +112,48 @@ void UOrbitalAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	AimTask = UAbilityTask_AimAtTarget::Create(this, EnemyBBKeys::TargetActor);
 	AimTask->ReadyForActivation();
 
-	// Throw 스케줄 — 등간격 WaitDelay N개
-	ThrowsFired = 0;
-	if (ThrowCount > 0 && Variants.Num() > 0)
-	{
-		for (int32 i = 0; i < ThrowCount; ++i)
-		{
-			const float Time = Duration * static_cast<float>(i + 1) / static_cast<float>(ThrowCount + 1);
-			UAbilityTask_WaitDelay* Delay = UAbilityTask_WaitDelay::WaitDelay(
-				this, FMath::Max(Time, KINDA_SMALL_NUMBER));
-			Delay->OnFinish.AddDynamic(this, &UOrbitalAttack::HandleThrow);
-			Delay->ReadyForActivation();
-		}
-	}
+	PlayNextThrow();
 }
 
-void UOrbitalAttack::HandleThrow()
+void UOrbitalAttack::PlayNextThrow()
 {
 	if (Variants.Num() == 0) return;
+
+	ACharacter* Char = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+	if (!Char) return;
+
+	if (CurrentMontageTask)
+	{
+		CurrentMontageTask->EndTask();
+		CurrentMontageTask = nullptr;
+	}
 
 	const int32 Idx = FMath::RandRange(0, Variants.Num() - 1);
 	const FOrbitalThrowVariant& V = Variants[Idx];
 
+	if (!V.Montage) return;
+
 	ProjectileClass = V.ProjectileClass;
 	TargetLocationSpread = V.TargetLocationSpread;
 
-	if (V.Montage)
-	{
-		if (ACharacter* Char = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
-		{
-			if (UAnimInstance* Anim = Char->GetMesh() ? Char->GetMesh()->GetAnimInstance() : nullptr)
-			{
-				UAbilityTask_PlayMontageAndWait* Task =
-					UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-						this, NAME_None, V.Montage, PlayRate, NAME_None, true);
+	// CurrentMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+	// 	this, NAME_None, V.Montage, PlayRate, NAME_None, true);
+	// CurrentMontageTask->OnCompleted.AddDynamic(this, &UOrbitalAttack::HandleMontageEnded);
+	// CurrentMontageTask->OnBlendOut.AddDynamic(this, &UOrbitalAttack::HandleMontageEnded);
+	// CurrentMontageTask->OnInterrupted.AddDynamic(this, &UOrbitalAttack::HandleMontageInterrupted);
+	// CurrentMontageTask->OnCancelled.AddDynamic(this, &UOrbitalAttack::HandleMontageInterrupted);
+	// CurrentMontageTask->ReadyForActivation();
+}
 
-				Task->ReadyForActivation();
-			}
-		}
-	}
+void UOrbitalAttack::HandleMontageEnded()
+{
+	CurrentMontageTask = nullptr;
+	PlayNextThrow();
+}
 
-	ThrowsFired++;
+void UOrbitalAttack::HandleMontageInterrupted()
+{
+	CurrentMontageTask = nullptr;
 }
 
 void UOrbitalAttack::HandleMoveEnded()
