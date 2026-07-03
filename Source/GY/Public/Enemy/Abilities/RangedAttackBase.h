@@ -18,12 +18,12 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
 
-private:
+protected:
 	UFUNCTION()
-	void OnLaunchEvent(FGameplayEventData Payload);
+	virtual void OnLaunchEvent(FGameplayEventData Payload);
 
 	UFUNCTION()
-	void OnProjectileHit(FGameplayEventData Payload);
+	virtual void OnProjectileHit(FGameplayEventData Payload);
 
 	void SpawnProjectile();
 
@@ -42,6 +42,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Projectile|Spread", meta = (ClampMin = "0.0", ClampMax = "180.0"))
 	float SpreadAngle = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat|Projectile|Spread", meta=(ClampMin="0"))
+	float TargetLocationSpread = 0.f;
 
 	// true면 각 탄 데미지를 1/ProjectileCount로 분산
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Projectile|Damage")
