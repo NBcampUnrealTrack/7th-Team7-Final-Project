@@ -280,27 +280,29 @@ jobs:
             kbrother102)  DISCORD_ID="$DISCORD_ID_KBROTHER102" ;;
             *)            DISCORD_ID="" ;;
           esac
+          # 시크릿에 공백/개행이 섞이면 allowed_mentions 가 400 → 숫자만 남긴다
+          DISCORD_ID="${DISCORD_ID//[^0-9]/}"
           MENTION=""
           if [[ -n "$DISCORD_ID" ]]; then MENTION="<@${DISCORD_ID}> "; fi
 
           REDIS_COUNT=$(wc -l < redis_remaining.txt)
           LFS_COUNT=$(wc -l < lfs_remaining.txt)
 
-          # Redis 키에서 네임스페이스(gy:asset:) 떼고 경로만 노출
-          REDIS_LIST=$(sed -E 's#^[^:]*:asset:##' redis_remaining.txt | head -n 25)
-          LFS_LIST=$(head -n 25 lfs_remaining.txt)
+          # Discord 2000자 제한 회피: 각 섹션 최대 12줄 + 바이트 상한(경로가 긴 LFS 대비)
+          REDIS_LIST=$(sed -E 's#^[^:]*:asset:##' redis_remaining.txt | head -n 12 | head -c 800)
+          LFS_LIST=$(head -n 12 lfs_remaining.txt | head -c 800)
           [[ -z "$REDIS_LIST" ]] && REDIS_LIST="(없음)"
           [[ -z "$LFS_LIST" ]] && LFS_LIST="(없음)"
 
           REDIS_MORE=""
-          if [[ "$REDIS_COUNT" -gt 25 ]]; then
+          if [[ "$REDIS_COUNT" -gt 12 ]]; then
             REDIS_MORE="
-          … 외 $((REDIS_COUNT - 25))개"
+          … 외 $((REDIS_COUNT - 12))개"
           fi
           LFS_MORE=""
-          if [[ "$LFS_COUNT" -gt 25 ]]; then
+          if [[ "$LFS_COUNT" -gt 12 ]]; then
             LFS_MORE="
-          … 외 $((LFS_COUNT - 25))개"
+          … 외 $((LFS_COUNT - 12))개"
           fi
 
           CONTENT="${MENTION}🔒 **머지 후 잔여 락 알림** — ${PR_REF}
@@ -316,6 +318,12 @@ jobs:
           ${LFS_LIST}${LFS_MORE}
           \`\`\`"
 
+          # 최후 안전장치: 그래도 길면 하드 컷 (Discord 2000자 초과 = 400 방지)
+          if [[ ${#CONTENT} -gt 1900 ]]; then
+            CONTENT="${CONTENT:0:1900}
+          … (메시지가 길어 생략됨)"
+          fi
+
           # allowed_mentions 로 실제 핑 허용 (해당 유저만, 없으면 아무도 핑 안 함)
           if [[ -n "$DISCORD_ID" ]]; then
             PAYLOAD=$(jq -n --arg c "$CONTENT" --arg uid "$DISCORD_ID" \
@@ -323,8 +331,13 @@ jobs:
           else
             PAYLOAD=$(jq -n --arg c "$CONTENT" '{content: $c, allowed_mentions: {parse: []}}')
           fi
-          curl -fsS -X POST -H "Content-Type: application/json" \
-            -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
+          HTTP_CODE=$(curl -sS -o /tmp/discord_resp.json -w '%{http_code}' -X POST \
+            -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL")
+          if [[ "$HTTP_CODE" -ge 300 ]]; then
+            echo "::error::Discord webhook 실패 ($HTTP_CODE): $(cat /tmp/discord_resp.json)"
+            exit 1
+          fi
+          echo "Discord 알림 전송됨 (HTTP $HTTP_CODE)"
 
       - name: Notify Discord on Redis failure
         if: failure()
