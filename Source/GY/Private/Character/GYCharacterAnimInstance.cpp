@@ -10,6 +10,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Character/GYCharacterMovementComponent.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Logging/GYLogManager.h"
 
 
 void UGYCharacterAnimInstance::NativeInitializeAnimation()
@@ -41,6 +42,9 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 		bShouldMove = (GroundSpeed > MinSpeedThreshold) && bHasAcceleration;
 
+		BrakingDeceleration = MovementComponent->BrakingDecelerationWalking;
+		BrakingFriction = MovementComponent->BrakingFriction;
+
 		if (GroundSpeed > MinSpeedThreshold)
 		{
 			Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, OwnerCharacter->GetActorRotation());
@@ -54,6 +58,7 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsFalling = MovementComponent->IsFalling();
 	}
 
+	//스턴, 스태거 로직
 	if (AbilitySystemComponent == nullptr && OwnerCharacter != nullptr)
 	{
 		AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwnerCharacter);
@@ -65,6 +70,8 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsStaggered = AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Hit_Stagger);
 	}
 
+
+	//사다리 로직
 	UGYCharacterMovementComponent* GyMovement = Cast<UGYCharacterMovementComponent>(MovementComponent);
 	const bool bIsClimbingMode = GyMovement && GyMovement->IsClimbing();
 
@@ -93,4 +100,26 @@ void UGYCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecond
 {
 	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
 
+	CalculateDistanceToMatch(DeltaSeconds);
+}
+
+void UGYCharacterAnimInstance::CalculateDistanceToMatch(float DeltaSeconds)
+{
+
+	if (!bHasAcceleration && GroundSpeed > 0.f)
+	{
+		//가속도 (-방향) : 브레이크가속도 + 마찰력(v*friction)
+		const float EffectiveBraking = BrakingDeceleration + (BrakingFriction * GroundSpeed);
+		if (EffectiveBraking > 0.f)
+		{
+			// 등가속도시 이동거리  = v^2/2a
+			//커브 규격에 맞추기 위해 -(음수) 붙이기(계산결과도 원래 음수 나옴)
+
+			DistanceToMatch = - (GroundSpeed * GroundSpeed) / (2.f * EffectiveBraking);
+
+
+			return;
+		}
+	}
+	DistanceToMatch = 0.f;
 }
