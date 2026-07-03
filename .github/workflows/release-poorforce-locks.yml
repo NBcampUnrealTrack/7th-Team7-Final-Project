@@ -158,6 +158,145 @@ jobs:
           curl -fsS -X POST -H "Content-Type: application/json" \
             -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
 
+      # ── 릴리스 이후: 수정자 본인이 아직 들고 있는 잔여 락 알림 ──────────────
+      # 수정자 = 이 PR 을 만든 사람(작성자). Redis 소유자 이메일 == PR 커밋 author 이메일
+      # (둘 다 같은 git config user.email 에서 나옴 → 하드코딩 매핑 불필요).
+      # LFS 소유자 == PR 작성자 GitHub login.
+      - name: Resolve modifier identity
+        id: who
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            LOGIN=$(gh api "repos/${{ github.repository }}/pulls/${{ inputs.pr_number }}" --jq .user.login)
+          else
+            LOGIN="${{ github.event.pull_request.user.login }}"
+          fi
+          # PR 커밋들의 author 이메일 (보통 1명). Redis 락 소유자 매칭에 사용.
+          git log "${{ steps.shas.outputs.base }}..${{ steps.shas.outputs.head }}" \
+            --format='%ae' | sort -u | grep -v '^$' > modifier_emails.txt || true
+          echo "login=$LOGIN" >> "$GITHUB_OUTPUT"
+          echo "Modifier login=$LOGIN, emails=$(tr '\n' ' ' < modifier_emails.txt)"
+
+      # SCAN gy:asset:* → MGET → 값의 소유자(email)가 수정자면 남긴다.
+      # 락 값 포맷은 "<owner-email>|<unix-ts>" (LockServerClient::MakeLockValue).
+      - name: List remaining Redis locks (modifier)
+        id: redis_remaining
+        if: ${{ !cancelled() }}
+        env:
+          UPSTASH_URL: ${{ secrets.UPSTASH_URL }}
+          UPSTASH_TOKEN: ${{ secrets.UPSTASH_TOKEN }}
+          MATCH_PATTERN: 'gy:asset:*'
+        run: |
+          : > redis_remaining.txt
+          if [[ ! -s modifier_emails.txt ]]; then
+            echo "count=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          redis() {
+            curl -sS -X POST "$UPSTASH_URL/" \
+              -H "Authorization: Bearer $UPSTASH_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$1"
+          }
+
+          # 1) SCAN 커서 루프로 매칭 키 전체 수집 (SCAN 은 중복 반환 가능 → 뒤에서 unique)
+          cursor="0"
+          all_keys="[]"
+          while : ; do
+            resp=$(redis "$(jq -nc --arg c "$cursor" --arg m "$MATCH_PATTERN" '["SCAN",$c,"MATCH",$m,"COUNT","1000"]')")
+            if echo "$resp" | jq -e 'has("error")' >/dev/null 2>&1; then
+              echo "::warning::Redis SCAN failed — $resp"
+              echo "count=0" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            cursor=$(echo "$resp" | jq -r '.result[0]')
+            all_keys=$(jq -nc --argjson a "$all_keys" --argjson b "$(echo "$resp" | jq -c '.result[1]')" '$a + $b')
+            if [[ "$cursor" == "0" ]]; then break; fi
+          done
+          all_keys=$(echo "$all_keys" | jq -c 'unique')
+
+          if [[ "$(echo "$all_keys" | jq 'length')" -eq 0 ]]; then
+            echo "count=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # 2) MGET 으로 값(소유자) 조회 — 키/값 순서 1:1 대응
+          vals=$(redis "$(echo "$all_keys" | jq -c '["MGET"] + .')" | jq -c '.result')
+
+          # 3) 소유자가 수정자 이메일(대소문자 무시)인 키만 남김
+          owners=$(jq -R 'ascii_downcase' modifier_emails.txt | jq -sc .)
+          jq -rn --argjson keys "$all_keys" --argjson vals "$vals" --argjson owners "$owners" '
+            range(0; ($keys | length)) as $i
+            | { key: $keys[$i], owner: (($vals[$i] // "") | split("|")[0] | ascii_downcase) }
+            | select(.owner as $o | $owners | index($o) != null)
+            | .key' > redis_remaining.txt
+
+          echo "count=$(wc -l < redis_remaining.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: List remaining LFS locks (modifier)
+        id: lfs_remaining
+        if: ${{ !cancelled() }}
+        run: |
+          LOGIN="${{ steps.who.outputs.login }}"
+          git lfs locks --json > all_locks.json 2>/dev/null || echo '[]' > all_locks.json
+          # git lfs locks --json 은 배열 또는 {"locks":[...]} 형태일 수 있어 둘 다 처리
+          jq -r --arg u "$LOGIN" '
+            (if type == "array" then . else (.locks // []) end)
+            | [ .[] | select(((.owner.name) // "") | ascii_downcase == ($u | ascii_downcase)) | .path ]
+            | .[]' all_locks.json > lfs_remaining.txt || true
+          echo "count=$(wc -l < lfs_remaining.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Notify Discord — remaining locks
+        if: ${{ !cancelled() && (steps.redis_remaining.outputs.count != '0' || steps.lfs_remaining.outputs.count != '0') }}
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            PR_REF="#${{ inputs.pr_number }} (수동 재실행)"
+          else
+            PR_REF="#${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}"
+          fi
+
+          REDIS_COUNT=$(wc -l < redis_remaining.txt)
+          LFS_COUNT=$(wc -l < lfs_remaining.txt)
+
+          # Redis 키에서 네임스페이스(gy:asset:) 떼고 경로만 노출
+          REDIS_LIST=$(sed -E 's#^[^:]*:asset:##' redis_remaining.txt | head -n 25)
+          LFS_LIST=$(head -n 25 lfs_remaining.txt)
+          [[ -z "$REDIS_LIST" ]] && REDIS_LIST="(없음)"
+          [[ -z "$LFS_LIST" ]] && LFS_LIST="(없음)"
+
+          REDIS_MORE=""
+          if [[ "$REDIS_COUNT" -gt 25 ]]; then
+            REDIS_MORE="
+          … 외 $((REDIS_COUNT - 25))개"
+          fi
+          LFS_MORE=""
+          if [[ "$LFS_COUNT" -gt 25 ]]; then
+            LFS_MORE="
+          … 외 $((LFS_COUNT - 25))개"
+          fi
+
+          CONTENT="🔒 **머지 후 잔여 락 알림** — ${PR_REF}
+          수정자: **${{ steps.who.outputs.login }}**
+          아직 편집 중이 아니면 정리해 주세요.
+
+          **Poorforce(Redis) 잔여 락 (${REDIS_COUNT}개)**
+          \`\`\`
+          ${REDIS_LIST}${REDIS_MORE}
+          \`\`\`
+          **LFS 잔여 락 (${LFS_COUNT}개)**
+          \`\`\`
+          ${LFS_LIST}${LFS_MORE}
+          \`\`\`"
+
+          PAYLOAD=$(jq -n --arg c "$CONTENT" '{content: $c}')
+          curl -fsS -X POST -H "Content-Type: application/json" \
+            -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
+
       - name: Notify Discord on Redis failure
         if: failure()
         env:
