@@ -255,3 +255,138 @@ void FLockServerClient::Release(const FString& Key, FSimpleCallback OnComplete)
 			OnComplete(bDeleted);
 		});
 }
+
+void FLockServerClient::ScanKeys(
+	const FString& MatchPattern,
+	const FString& Cursor,
+	TSharedPtr<TArray<FString>> Accum,
+	TFunction<void(bool bSuccess)> OnScanDone)
+{
+	TArray<FString> Args;
+	Args.Add(TEXT("SCAN"));
+	Args.Add(Cursor);
+	Args.Add(TEXT("MATCH"));
+	Args.Add(MatchPattern);
+	Args.Add(TEXT("COUNT"));
+	Args.Add(TEXT("500"));
+
+	TWeakPtr<FLockServerClient> WeakSelf = AsShared();
+
+	SendCommand(Args,
+		[WeakSelf, MatchPattern, Accum, OnScanDone = MoveTemp(OnScanDone)]
+		(bool bSuccess, const TSharedPtr<FJsonValue>& Result) mutable
+		{
+			TSharedPtr<FLockServerClient> Self = WeakSelf.Pin();
+			if (!bSuccess || !Self.IsValid())
+			{
+				OnScanDone(false);
+				return;
+			}
+
+			// SCAN 결과는 [nextCursor, [key, ...]] 형태의 배열
+			const TArray<TSharedPtr<FJsonValue>>* Outer = nullptr;
+			if (!Result.IsValid() || !Result->TryGetArray(Outer) || Outer->Num() < 2)
+			{
+				OnScanDone(false);
+				return;
+			}
+
+			FString NextCursor;
+			if (!(*Outer)[0]->TryGetString(NextCursor))
+			{
+				double CursorNumber = 0.0;
+				if ((*Outer)[0]->TryGetNumber(CursorNumber))
+				{
+					NextCursor = FString::Printf(TEXT("%lld"), static_cast<int64>(CursorNumber));
+				}
+			}
+
+			const TArray<TSharedPtr<FJsonValue>>* KeyArray = nullptr;
+			if ((*Outer)[1]->TryGetArray(KeyArray))
+			{
+				for (const TSharedPtr<FJsonValue>& KeyValue : *KeyArray)
+				{
+					FString Key;
+					if (KeyValue->TryGetString(Key))
+					{
+						Accum->Add(Key);
+					}
+				}
+			}
+
+			if (NextCursor.IsEmpty() || NextCursor == TEXT("0"))
+			{
+				OnScanDone(true);
+				return;
+			}
+
+			Self->ScanKeys(MatchPattern, NextCursor, Accum, MoveTemp(OnScanDone));
+		});
+}
+
+void FLockServerClient::ListOwnedKeys(const FString& MatchPattern, const FString& OwnerId, FListOwnedCallback OnComplete)
+{
+	TSharedPtr<TArray<FString>> Accum = MakeShared<TArray<FString>>();
+	TWeakPtr<FLockServerClient> WeakSelf = AsShared();
+
+	ScanKeys(MatchPattern, TEXT("0"), Accum,
+		[WeakSelf, Accum, OwnerId, OnComplete = MoveTemp(OnComplete)](bool bScanSuccess) mutable
+		{
+			TSharedPtr<FLockServerClient> Self = WeakSelf.Pin();
+			if (!bScanSuccess || !Self.IsValid())
+			{
+				OnComplete(false, TArray<FString>{});
+				return;
+			}
+
+			if (Accum->Num() == 0)
+			{
+				OnComplete(true, TArray<FString>{});
+				return;
+			}
+
+			TArray<FString> MgetArgs;
+			MgetArgs.Reserve(Accum->Num() + 1);
+			MgetArgs.Add(TEXT("MGET"));
+			MgetArgs.Append(*Accum);
+
+			Self->SendCommand(MgetArgs,
+				[Accum, OwnerId, OnComplete = MoveTemp(OnComplete)]
+				(bool bSuccess, const TSharedPtr<FJsonValue>& Result) mutable
+				{
+					if (!bSuccess)
+					{
+						OnComplete(false, TArray<FString>{});
+						return;
+					}
+
+					// MGET 결과는 키 순서와 1:1 대응하는 값 배열 (없는 키는 null)
+					const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+					if (!Result.IsValid() || !Result->TryGetArray(Values))
+					{
+						OnComplete(false, TArray<FString>{});
+						return;
+					}
+
+					TArray<FString> Owned;
+					const int32 Count = FMath::Min(Accum->Num(), Values->Num());
+					for (int32 Index = 0; Index < Count; ++Index)
+					{
+						FString RawValue;
+						if (!(*Values)[Index]->TryGetString(RawValue))
+						{
+							continue;   // null → 만료됐거나 값 없음
+						}
+
+						const PoorforceLock::FLockEntry Entry = PoorforceLock::ParseLockValue(RawValue);
+						if (Entry.OwnerId.Equals(OwnerId, ESearchCase::CaseSensitive))
+						{
+							Owned.Add((*Accum)[Index]);
+						}
+					}
+
+					Owned.Sort();
+					OnComplete(true, Owned);
+				});
+		});
+}

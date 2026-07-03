@@ -54,28 +54,45 @@ void FPoorforceModule::StartupModule()
 
 	RegisteredConsoleCommands.Add(IConsoleManager::Get().RegisterConsoleCommand(
 		TEXT("Poorforce.ListLocks"),
-		TEXT("List locks currently owned by this editor session."),
+		TEXT("List locks you currently hold, read live from Redis (not just this editor session)."),
 		FConsoleCommandDelegate::CreateLambda(
 			[this]()
 			{
-				if (!Workflow.IsValid())
+				if (!LockClient.IsValid())
 				{
 					UE_LOG(LogPoorforce, Display, TEXT("Poorforce not initialised"));
 					return;
 				}
 
-				const TArray<FString> Keys = Workflow->GetOwnedLockKeys();
-				if (Keys.Num() == 0)
-				{
-					UE_LOG(LogPoorforce, Display, TEXT("No owned locks"));
-					return;
-				}
+				// 세션 메모리가 아닌 Redis 에서 직접 읽음 → 에디터 재시작 후에도 정확.
+				const FString MatchPattern = Config.LockKeyNamespace.IsEmpty()
+					? TEXT("asset:*")
+					: FString::Printf(TEXT("%s:asset:*"), *Config.LockKeyNamespace);
+				const FString Owner = PoorforceUserId::Get();
 
-				UE_LOG(LogPoorforce, Display, TEXT("Owned locks (%d):"), Keys.Num());
-				for (const FString& Key : Keys)
-				{
-					UE_LOG(LogPoorforce, Display, TEXT("  %s"), *Key);
-				}
+				UE_LOG(LogPoorforce, Display, TEXT("Querying Redis for locks owned by '%s'..."), *Owner);
+
+				LockClient->ListOwnedKeys(MatchPattern, Owner,
+					[Owner](bool bSuccess, const TArray<FString>& Keys)
+					{
+						if (!bSuccess)
+						{
+							UE_LOG(LogPoorforce, Warning, TEXT("ListLocks: lock server query failed"));
+							return;
+						}
+
+						if (Keys.Num() == 0)
+						{
+							UE_LOG(LogPoorforce, Display, TEXT("No owned locks (owner=%s)"), *Owner);
+							return;
+						}
+
+						UE_LOG(LogPoorforce, Display, TEXT("Owned locks (%d):"), Keys.Num());
+						for (const FString& Key : Keys)
+						{
+							UE_LOG(LogPoorforce, Display, TEXT("  %s"), *Key);
+						}
+					});
 			}),
 		ECVF_Default));
 

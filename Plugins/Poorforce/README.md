@@ -319,7 +319,7 @@ LockAndSync 에셋을 열려고 했는데 로컬 디스크와 드라이브가 �
 2. notification "Sync 완료" 뜨면
 3. 그 에셋 더블클릭 → 최신 버전으로 열림
 
-## 알려진 한계
+## 참고사항
 
 - **Windows 전용** (PowerShell 의존)
 - **Upstash 토큰이 디스크에 평문 저장** (PoorforceConfig.json + 임시 워처 스크립트). git 에 안 올라가도록 `.gitignore` 필수
@@ -327,7 +327,7 @@ LockAndSync 에셋을 열려고 했는데 로컬 디스크와 드라이브가 �
 - **워처가 죽으면 락 영구 유지** → TTL 이 최후 안전망
 - **에셋 삭제 처리 없음** — Pre/PostDelete 훅 미구현. LockAndSync 삭제 시 업로드 실패 다이얼로그 뜨고 리모트 파일 안 지워짐. 일단 삭제 피하기
 - **LockAndSync 자동 메모리 갱신 없음** — 더블클릭 시 자동 다운로드 안 함. 다른 사람이 업로드한 거 받으려면 명시적으로 우클릭 → Poorforce → Sync 필요
-- **맵(.umap) 락 처리 한계** — World 에셋은 main viewport에 직접 로드되므로:
+- **맵(.umap) 락 처리 미지원** — World 에셋은 main viewport에 직접 로드되므로:
   - **Content Browser 더블클릭** 만 락 hook 발화. Redis 락 + LFS 락 정상 동작
   - **default map 자동 로드 / File > Open Level / LoadMap 호출** 은 hook 없음 → 락 안 잡힘
   - 락 충돌 다이얼로그가 떠도 맵 자체는 이미 로드돼서 차단 못 함
