@@ -29,7 +29,7 @@ public:
 	float GetTotalDamageScore() const;
 
 	static float CalcAbilityScore(UGYEnemyAttackAbilityBase* Ability, const UAbilitySystemComponent* ASC,
-		float DistToTarget, float AngleDeg, const UObject* LastUsed);
+		 AActor* Owner, AActor* Target, const UObject* LastUsed);
 
 	virtual bool CanAttackDistance(AActor* Owner, AActor* Target);
 	virtual bool CanAttackAngle(AActor* Owner, AActor* Target);

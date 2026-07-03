@@ -19,6 +19,7 @@
 
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/Enemy/GYEnemyDamageAttributeSet.h"
+#include "EnvironmentQuery/EnvQuery.h"
 
 #include "Logging/GYLogManager.h"
 
@@ -223,12 +224,17 @@ void UEnemyBootstrapComponent::ApplyAIConfig(const FEnemyAIConfig& Config)
 	UBehaviorTree* BT = Config.BehaviorTree.LoadSynchronous();
 	if (!BT) return;
 
+	UEnvQuery* MovementEQS = Config.MovementEQS.LoadSynchronous();
+	if (!MovementEQS) return;
+
 	if (Config.bHasPatrol && Config.PatrolOffsets.Num() > 0)
 	{
 		AIC->SetPatrolPoints(Config.PatrolOffsets, Owner->GetActorLocation());
 	}
 	AIC->StartBehaviorTree(BT);
 	AIC->ApplyAIRangeConfig(Config.DetectRadius, Config.bHasPatrol);
+
+	AIC->ApplyAIAbilityConfig(MovementEQS, Config.AbilitySelectionInterval);
 }
 
 FEnemyComputedStats UEnemyBootstrapComponent::ComputeInitialStats(float MapLevel) const

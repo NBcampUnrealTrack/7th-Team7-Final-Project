@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
-#include "AnimNotify_EnemyComboCancle.generated.h"
+#include "AnimNotify_EnemyComboCancel.generated.h"
 
 UCLASS()
-class GY_API UAnimNotify_EnemyComboCancle : public UAnimNotify
+class GY_API UAnimNotify_EnemyComboCancel : public UAnimNotify
 {
 	GENERATED_BODY()
 public:

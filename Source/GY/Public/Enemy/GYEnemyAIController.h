@@ -5,6 +5,7 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "GYEnemyAIController.generated.h"
 
+class UEnvQuery;
 class UClimbInputComponent;
 class UAIPerceptionComponent;
 class UAISenseConfig_Sight;
@@ -22,19 +23,15 @@ namespace  EnemyBBKeys
 	static const FName IsStunned			= TEXT("IsStunned");
 	static const FName IsStaggered			= TEXT("IsStaggered");
 	static const FName IsDead				= TEXT("IsDead");
-	static const FName AttackRadius			= TEXT("AttackRadius");
-	static const FName AttackRadiusMin		= TEXT("AttackRadiusMin");
 	static const FName InvestigateLocation	= TEXT("InvestigateLocation");
 	static const FName HasPatrol			= TEXT("HasPatrol");
 	static const FName LastUsedAbility		= TEXT("LastUsedAbility");
 	static const FName AttackPosition		= TEXT("AttackPosition");
 	static const FName SelectedAbility		= TEXT("SelectedAbility");
 	static const FName PatrolPosition		= TEXT("PatrolPosition");
-	static const FName EnvQuery				= TEXT("EnvQuery");
-	static const FName AttackAngle			= TEXT("AttackAngle");
-	static const FName IsAwayFromHome		= TEXT("IsAwayFromHome");
-	static const FName CanAttackDistance	= TEXT("CanAttackDistance");
-	static const FName CanAttackAngle		= TEXT("CanAttackAngle");
+	static const FName MovementEQS			= TEXT("MovementEQS");
+	static const FName AbilitySelectionInterval		= TEXT("AbilitySelectionInterval");
+
 }
 
 UCLASS(BlueprintType, Blueprintable)
@@ -52,6 +49,7 @@ public:
 	void StopBehaviorTree();
 
 	void ApplyAIRangeConfig(float DetectRadius, bool bInHasPatrol);
+	void ApplyAIAbilityConfig(UEnvQuery* MovementEQS, float AbilitySelectionInterval);
 
 	UFUNCTION(BlueprintCallable, Category = "AI|Blackboard")
 	void SetTargetLocation(const FVector& Location);

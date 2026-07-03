@@ -5,6 +5,7 @@
 #include "GameplayTagContainer.h"
 #include "EnemyDataAsset.generated.h"
 
+class UEnvQuery;
 class UGameplayEffect;
 class UGameplayAbility;
 class UBehaviorTree;
@@ -21,6 +22,7 @@ enum class EEnemyType : uint8
 	BossFlower		UMETA(DisplayName = "BossFlower"),
 	NormalFlower	UMETA(DisplayName = "NormalFlower"),
 	PlantRoot		UMETA(DisplayName = "PlantRoot"),
+	BossBTTest		UMETA(DisplayName = "BossBTTest"),
 };
 
 USTRUCT(BlueprintType)
@@ -70,6 +72,12 @@ struct FEnemyAIConfig
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	TSoftObjectPtr<UBehaviorTree> BehaviorTree;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
+	TSoftObjectPtr<UEnvQuery> MovementEQS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
+	float AbilitySelectionInterval = 3.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	float DetectRadius = 800.f;
