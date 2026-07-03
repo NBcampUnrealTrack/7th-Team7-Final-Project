@@ -7,6 +7,7 @@
 #include "LockWorkflow.h"
 #include "AssetEditorInterceptor.h"
 #include "PoorforceContentBrowserExtension.h"
+#include "PoorforceToolbar.h"
 #include "UserIdProvider.h"
 #include "UI/PoorforceDialogs.h"
 
@@ -118,6 +119,8 @@ void FPoorforceModule::StartupModule()
 			}),
 		ECVF_Default));
 
+	FPoorforceToolbar::Register();
+
 	bEnabled = true;
 
 	UE_LOG(LogPoorforce, Log, TEXT("Poorforce ready. UserId='%s', ManagedPaths=%d, Rclone='%s'"),
@@ -126,6 +129,8 @@ void FPoorforceModule::StartupModule()
 
 void FPoorforceModule::ShutdownModule()
 {
+	FPoorforceToolbar::Unregister();
+
 	for (IConsoleObject* Cmd : RegisteredConsoleCommands)
 	{
 		if (Cmd != nullptr)

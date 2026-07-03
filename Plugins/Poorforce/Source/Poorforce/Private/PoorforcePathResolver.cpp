@@ -51,6 +51,72 @@ namespace PoorforcePathResolver
 		return FString::Printf(TEXT("%s:asset:%s"), *Namespace, *RelativePath);
 	}
 
+	FString ExtractRelativePathFromKey(const FString& LockKey)
+	{
+		const FString Marker = TEXT(":asset:");
+		const int32 Idx = LockKey.Find(Marker, ESearchCase::CaseSensitive);
+		if (Idx != INDEX_NONE)
+		{
+			return LockKey.RightChop(Idx + Marker.Len());
+		}
+
+		const FString BareMarker = TEXT("asset:");
+		if (LockKey.StartsWith(BareMarker, ESearchCase::CaseSensitive))
+		{
+			return LockKey.RightChop(BareMarker.Len());
+		}
+
+		return LockKey;
+	}
+
+	bool ReconstructLockOnlyGitPath(
+		const FString& RelativePath,
+		const TArray<FPoorforceManagedPath>& Paths,
+		FString& OutGitPath)
+	{
+		if (RelativePath.IsEmpty()) return false;
+
+		const FString Extensions[] =
+		{
+			FPackageName::GetAssetPackageExtension(),   // .uasset
+			FPackageName::GetMapPackageExtension()       // .umap
+		};
+
+		const FString ProjectDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
+
+		for (const FPoorforceManagedPath& Managed : Paths)
+		{
+			if (Managed.Mode != EPoorforcePathMode::LockOnly) continue;
+			if (Managed.ContentPath.IsEmpty()) continue;
+
+			const FString PackageName = Managed.ContentPath + RelativePath;
+
+			for (const FString& Extension : Extensions)
+			{
+				FString LocalFile;
+				if (!FPackageName::TryConvertLongPackageNameToFilename(PackageName, LocalFile, Extension))
+				{
+					continue;
+				}
+
+				if (!FPaths::FileExists(LocalFile)) continue;
+
+				FString GitPath = FPaths::ConvertRelativePathToFull(LocalFile);
+				if (GitPath.StartsWith(ProjectDir, ESearchCase::IgnoreCase))
+				{
+					GitPath = GitPath.RightChop(ProjectDir.Len());
+				}
+				GitPath.ReplaceInline(TEXT("\\"), TEXT("/"));
+				while (GitPath.StartsWith(TEXT("/"))) GitPath.RightChopInline(1);
+
+				OutGitPath = GitPath;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	FString GetPackageExtensionFor(const UObject* Asset)
 	{
 		if (IsValid(Asset) && Asset->IsA<UWorld>())

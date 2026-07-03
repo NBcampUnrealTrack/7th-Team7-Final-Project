@@ -18,6 +18,7 @@ public class Poorforce : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
+				"InputCore",
 				"Slate",
 				"SlateCore",
 				"HTTP",
@@ -26,6 +27,8 @@ public class Poorforce : ModuleRules
 				"UnrealEd",
 				"AssetRegistry",
 				"ContentBrowser",
+				"ToolMenus",
+				"ToolWidgets",
 			}
 		);
 	}
