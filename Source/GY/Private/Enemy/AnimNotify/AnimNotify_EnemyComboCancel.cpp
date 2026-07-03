@@ -1,4 +1,4 @@
-#include "Enemy/AnimNotify/AnimNotify_EnemyComboCancle.h"
+#include "Enemy/AnimNotify/AnimNotify_EnemyComboCancel.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
@@ -10,7 +10,7 @@
 #include "Enemy/Abilities/GYEnemyAttackAbilityBase.h"
 
 
-void UAnimNotify_EnemyComboCancle::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+void UAnimNotify_EnemyComboCancel::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 	const FAnimNotifyEventReference& EventReference)
 {
 	Super::Notify(MeshComp, Animation, EventReference);
@@ -36,12 +36,12 @@ void UAnimNotify_EnemyComboCancle::Notify(USkeletalMeshComponent* MeshComp, UAni
 	}
 }
 
-FString UAnimNotify_EnemyComboCancle::GetNotifyName_Implementation() const
+FString UAnimNotify_EnemyComboCancel::GetNotifyName_Implementation() const
 {
 	return TEXT("Enemy Combo Cancle");
 }
 
-bool UAnimNotify_EnemyComboCancle::CancelExecution(USkeletalMeshComponent* MeshComp)
+bool UAnimNotify_EnemyComboCancel::CancelExecution(USkeletalMeshComponent* MeshComp)
 {
 	AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(MeshComp->GetOwner());
 	if (!Enemy) return false;
@@ -69,5 +69,5 @@ bool UAnimNotify_EnemyComboCancle::CancelExecution(USkeletalMeshComponent* MeshC
 	const float Dot = FVector::DotProduct(ForwardXY, ToTargetXY);
 	const float AngleDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(Dot, -1.f, 1.f)));
 
-	return AngleDeg <= (BB->GetValueAsFloat(EnemyBBKeys::AttackAngle));
+	return AngleDeg <= MaxHomingAngle;
 }

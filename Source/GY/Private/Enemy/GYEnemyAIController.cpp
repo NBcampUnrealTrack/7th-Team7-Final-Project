@@ -9,6 +9,7 @@
 #include "Enemy/Component/EnemyAggroComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Enemy/Component/ClimbInputComponent.h"
+#include "EnvironmentQuery/EnvQuery.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Damage.h"
 #include "Perception/AISenseConfig_Sight.h"
@@ -87,6 +88,15 @@ void AGYEnemyAIController::ApplyAIRangeConfig(float DetectRadius, bool bInHasPat
 	if (UBlackboardComponent* BB = GetBlackboardComponent())
 	{
 		BB->SetValueAsBool(EnemyBBKeys::HasPatrol, bInHasPatrol);
+	}
+}
+
+void AGYEnemyAIController::ApplyAIAbilityConfig(UEnvQuery* MovementEQS, float AbilitySelectionInterval)
+{
+	if (UBlackboardComponent* BB = GetBlackboardComponent())
+	{
+		BB->SetValueAsObject(EnemyBBKeys::MovementEQS, MovementEQS);
+		BB->SetValueAsFloat(EnemyBBKeys::AbilitySelectionInterval, AbilitySelectionInterval);
 	}
 }
 

@@ -76,9 +76,21 @@ float UGYEnemyAttackAbilityBase::GetTotalDamageScore() const
 }
 
 float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Ability,
-	const UAbilitySystemComponent* ASC, float DistToTarget, float AngleDeg, const UObject* LastUsed)
+	const UAbilitySystemComponent* ASC, AActor* Owner, AActor* Target, const UObject* LastUsed)
 {
 	if (!Ability || !ASC) return -1.f;
+
+	const float DistToTarget = FVector::Dist(
+		Owner->GetActorLocation(), Target->GetActorLocation());
+
+	FVector ToTarget = (Target->GetActorLocation() - Owner->GetActorLocation()).GetSafeNormal();
+	float DotResult = FVector::DotProduct(Owner->GetActorForwardVector(), ToTarget);
+	float AngleDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(DotResult, -1.f, 1.f)));
+
+	if (!Ability->CanAttackDistance(Owner,Target))
+	{
+		return -1.f;
+	}
 
 	//if (DistToTarget < Ability->MinDistance) return -1.f;
 
