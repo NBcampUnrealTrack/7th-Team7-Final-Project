@@ -27,6 +27,8 @@ public:
 	virtual void OnEquipped(APawn* OwningPawn);
 	virtual void OnUnequipped(APawn* OwningPawn);
 
+	void ReapplyAnimLayer();
+
 	UFUNCTION(BlueprintPure)
 	APawn* GetPawn() const { return OwnerPawn.Get(); }
 

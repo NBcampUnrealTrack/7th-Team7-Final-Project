@@ -231,6 +231,17 @@ void UActiveEquipmentComponent::MulticastRemoveAllVisuals_Implementation()
 	RemoveAllVisuals();
 }
 
+void UActiveEquipmentComponent::ReapplyAnimLayers()
+{
+	for (const FEquipmentEntry& Entry : EquippedItems.Entries)
+	{
+		if (IsValid(Entry.Instance))
+		{
+			Entry.Instance->ReapplyAnimLayer();
+		}
+	}
+}
+
 void UActiveEquipmentComponent::RefreshEquipment(const FInventoryEntry& Entry)
 {
 	if (!GetOwner()->HasAuthority()) return;

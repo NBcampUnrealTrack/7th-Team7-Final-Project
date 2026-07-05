@@ -34,6 +34,8 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRemoveAllVisuals();
 
+	void ReapplyAnimLayers();
+
 	void RefreshEquipment(const struct FInventoryEntry& Entry);
 
 	void OnLoadoutSlotChanged(FGameplayTag SlotTag, FGuid NewInstanceId);

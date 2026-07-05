@@ -56,10 +56,16 @@ void URevivePoolComponent::ActivatePool(UGYReviveConfig* Config, const FVector& 
 
 	if (Config && Config->DecorationActorClass && GetWorld())
 	{
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		AGYDownedDecorationActor* Decor = GetWorld()->SpawnActor<AGYDownedDecorationActor>(
-			Config->DecorationActorClass, DeathLocation, FRotator::ZeroRotator, Params);
+		const FTransform SpawnTransform(FRotator::ZeroRotator, DeathLocation);
+
+		AGYDownedDecorationActor* Decor = GetWorld()->SpawnActorDeferred<AGYDownedDecorationActor>(
+			Config->DecorationActorClass, SpawnTransform, nullptr, nullptr,
+			ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+		if (Decor)
+		{
+			Decor->OwningCharacter = Cast<AGYCharacter>(GetOwner());
+			Decor->FinishSpawning(SpawnTransform);
+		}
 		DecorationActor = Decor;
 	}
 }

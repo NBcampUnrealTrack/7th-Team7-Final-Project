@@ -33,6 +33,8 @@
 #include "Perception/AISense_Hearing.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "UI/GYUIMessages.h"
+#include "Net/UnrealNetwork.h"
+#include "Animation/AnimInstance.h"
 
 AGYCharacter::AGYCharacter(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer.SetDefaultSubobjectClass<UGYCharacterMovementComponent>(
@@ -135,6 +137,12 @@ UAbilitySystemComponent* AGYCharacter::GetAbilitySystemComponent() const
 		return PS->GetAbilitySystemComponent();
 	}
 	return nullptr;
+}
+
+void AGYCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGYCharacter, bIsDead);
 }
 
 void AGYCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -314,6 +322,16 @@ void AGYCharacter::HandleDeath()
 	if (!HasAuthority()) return;
 	bIsDead = true;
 
+	if (LockOnComponent)
+	{
+		LockOnComponent->StopLockOn();
+	}
+
+	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	{
+		ASC->CancelAllAbilities();
+	}
+
 	if (UCharacterMovementComponent* Move = GetCharacterMovement())
 	{
 		Move->StopMovementImmediately();
@@ -353,6 +371,87 @@ void AGYCharacter::HandleDeath()
 			const float Delay = Config ? Config->RespawnDelay : 5.f;
 			GM->RequestRespawn(PC, Delay);
 		}
+	}
+}
+
+void AGYCharacter::OnRep_bIsDead()
+{
+	if (bIsDead)
+	{
+		EnableRagdoll();
+	}
+	else
+	{
+		DisableRagdoll();
+		ReactivateGameplayAbilities();
+	}
+}
+
+void AGYCharacter::ReactivateGameplayAbilities()
+{
+	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	{
+		if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
+		{
+			ASC->InitAbilityActorInfo(PS, this);
+		}
+	}
+}
+
+void AGYCharacter::EnableRagdoll()
+{
+	USkeletalMeshComponent* SkeletalMesh = GetMesh();
+	if (!SkeletalMesh) return;
+
+	if (HitReactionComponent)
+	{
+		HitReactionComponent->StopHitReaction();
+	}
+
+	SkeletalMesh->SetCollisionProfileName(TEXT("Ragdoll"));
+	SkeletalMesh->SetConstraintProfile(TEXT("pelvis"), TEXT("Ragdoll"));
+	SkeletalMesh->SetSimulatePhysics(true);
+}
+
+void AGYCharacter::DisableRagdoll()
+{
+	USkeletalMeshComponent* SkeletalMesh = GetMesh();
+	if (!SkeletalMesh) return;
+
+	SkeletalMesh->SetAllBodiesSimulatePhysics(false);
+	SkeletalMesh->SetSimulatePhysics(false);
+	SkeletalMesh->PutAllRigidBodiesToSleep();
+	SkeletalMesh->SetAllBodiesPhysicsBlendWeight(0.f);
+	SkeletalMesh->bBlendPhysics = false;
+
+	SkeletalMesh->SetCollisionProfileName(TEXT("None"));
+	SkeletalMesh->SetConstraintProfile(TEXT("pelvis"), TEXT("None"));
+
+	SkeletalMesh->AttachToComponent(
+		GetCapsuleComponent(),
+		FAttachmentTransformRules::SnapToTargetIncludingScale);
+
+	if (const AGYCharacter* CDO = GetClass()->GetDefaultObject<AGYCharacter>())
+	{
+		if (const USkeletalMeshComponent* CDOMesh = CDO->GetMesh())
+		{
+			SkeletalMesh->SetRelativeLocationAndRotation(
+				CDOMesh->GetRelativeLocation(),
+				CDOMesh->GetRelativeRotation());
+		}
+	}
+
+	SkeletalMesh->RecreatePhysicsState();
+
+	if (UAnimInstance* AnimInstance = SkeletalMesh->GetAnimInstance())
+	{
+		AnimInstance->StopAllMontages(0.f);
+	}
+	SkeletalMesh->InitAnim(true);
+
+	if (ActiveEquipmentComponent)
+	{
+		ActiveEquipmentComponent->ReapplyAnimLayers();
 	}
 }
 
@@ -431,6 +530,8 @@ void AGYCharacter::Revive(const UGYReviveConfig* Config)
 				MaxHP * Config->ReviveHealthGrantedPercent);
 		}
 	}
+
+	ReactivateGameplayAbilities();
 }
 
 void AGYCharacter::StartGiveUpTimer()

@@ -102,6 +102,17 @@ void UEquipmentInstance::ApplyVisuals()
 	}
 }
 
+void UEquipmentInstance::ReapplyAnimLayer()
+{
+	if (LinkedAnimLayerClass == nullptr) return;
+
+	ACharacter* Character = Cast<ACharacter>(OwnerPawn.Get());
+	USkeletalMeshComponent* MeshComp = IsValid(Character) ? Character->GetMesh() : nullptr;
+	if (!IsValid(MeshComp)) return;
+
+	MeshComp->LinkAnimClassLayers(LinkedAnimLayerClass);
+}
+
 void UEquipmentInstance::RemoveVisuals()
 {
 	for (AActor* SpawnedActor : SpawnedActors)

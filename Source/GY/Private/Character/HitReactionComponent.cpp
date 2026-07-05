@@ -113,7 +113,7 @@ void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, f
 	if (!World) return;
 
 
-	const float Impulse = (Strength > 0.f) ? Strength : DefaultHitImpulse;
+	const float Impulse = FMath::Min((Strength > 0.f) ? Strength : DefaultHitImpulse, MaxHitImpulse);
 	MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, true, true);
 
 	MeshComp->bBlendPhysics = true;
@@ -152,4 +152,27 @@ void UHitReactionComponent::EndHitReaction()
 	PhysicalAnimation->ApplyPhysicalAnimationProfileBelow(HitReactStartBone, NAME_None);
 	bBlendingOut = true;
 	SetComponentTickEnabled(true);
+}
+
+void UHitReactionComponent::StopHitReaction()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(HitReactTimerHandle);
+	}
+
+	bBlendingOut = false;
+	CurrentBlendWeight = 0.f;
+	SetComponentTickEnabled(false);
+
+	if (PhysicalAnimation.IsValid())
+	{
+		PhysicalAnimation->ApplyPhysicalAnimationProfileBelow(HitReactStartBone, NAME_None);
+	}
+
+	if (MeshComp.IsValid())
+	{
+		MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, false, true);
+		MeshComp->bBlendPhysics = false;
+	}
 }
