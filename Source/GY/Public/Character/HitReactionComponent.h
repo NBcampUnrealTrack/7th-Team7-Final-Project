@@ -29,6 +29,8 @@ public:
 	void ApplyMaterialOverlay(UMaterialInterface* OverlayMaterial, float Duration);
 
 	void ApplyKnockBack(const FVector& HitDirection, float Strength = -1.f);
+
+	void StopHitReaction();
 protected:
 	TWeakObjectPtr<UPhysicalAnimationComponent> PhysicalAnimation;
 
@@ -55,6 +57,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
 	float HitImpulseScale = 100.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|HitReaction")
+	float MaxHitImpulse = 20000.f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|ParriedReaction")
 	float DefaultParriedImpulse = 10000.f;

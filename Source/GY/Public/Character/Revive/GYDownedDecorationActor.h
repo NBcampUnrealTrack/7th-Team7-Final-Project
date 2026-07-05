@@ -4,6 +4,9 @@
 #include "GameFramework/Actor.h"
 #include "GYDownedDecorationActor.generated.h"
 
+class AGYCharacter;
+class UPoseableMeshComponent;
+
 UCLASS(Blueprintable)
 class GY_API AGYDownedDecorationActor : public AActor
 {
@@ -11,6 +14,11 @@ class GY_API AGYDownedDecorationActor : public AActor
 
 public:
 	AGYDownedDecorationActor();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UPROPERTY(Replicated)
+	TObjectPtr<AGYCharacter> OwningCharacter;
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Revive")
 	void OnRevivePoolPercentChanged(float NewPercent);
@@ -20,4 +28,13 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Revive")
 	void OnReviveAbandoned();
+
+protected:
+	virtual void BeginPlay() override;
+
+private:
+	void FreezePoseFromOwner();
+
+	UPROPERTY(VisibleAnywhere, Category="Revive")
+	TObjectPtr<UPoseableMeshComponent> FrozenPoseMesh;
 };

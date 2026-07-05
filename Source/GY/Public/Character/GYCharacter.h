@@ -40,6 +40,8 @@ public:
 
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	UFUNCTION(BlueprintPure)
 	UActiveEquipmentComponent* GetActiveEquipmentComponent() const { return ActiveEquipmentComponent; }
 
@@ -93,6 +95,14 @@ protected:
 	void EnterDownedState(const UGYReviveConfig* Config);
 	void GiveUp();
 
+	UFUNCTION()
+	void OnRep_bIsDead();
+
+	void EnableRagdoll();
+	void DisableRagdoll();
+	void ReactivateGameplayAbilities();
+
+	UPROPERTY(ReplicatedUsing=OnRep_bIsDead)
 	bool bIsDead = false;
 	bool bHealthDelegateBound = false;
 
