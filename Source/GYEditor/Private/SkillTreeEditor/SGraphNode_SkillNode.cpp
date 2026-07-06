@@ -44,17 +44,17 @@ void SGraphNode_SkillNode::UpdateGraphNode()
 				+ SOverlay::Slot()
 				.HAlign(HAlign_Center)
 				.VAlign(VAlign_Center)
-				.Padding(0.f, -12.f, 0.f, 0.f)
+				.Padding(0.f, 0.f, 0.f, 0.f)
 				[
 					SAssignNew(IconWidget, SImage)
 					.Image(this, &SGraphNode_SkillNode::GetSkillIcon)
-					.DesiredSizeOverride(FVector2D(28.f, 28.f))
+					.DesiredSizeOverride(FVector2D(NodeDiameter * 0.85f, NodeDiameter * 0.85f))
 				]
 
 				+ SOverlay::Slot()
 				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				.Padding(0.f, 24.f, 0.f, 0.f)
+				.VAlign(VAlign_Bottom)
+				.Padding(0.f, 0.f, 0.f, -18.f)
 				[
 					SAssignNew(TitleWidget, STextBlock)
 					.Text(this, &SGraphNode_SkillNode::GetSkillTitle)
@@ -244,5 +244,22 @@ FText SGraphNode_SkillNode::GetSkillTitle() const
 
 const FSlateBrush* SGraphNode_SkillNode::GetSkillIcon() const
 {
-	return FAppStyle::GetBrush("ClassIcon.DataAsset");
+	const UEdGraphNode_SkillNode* N = Cast<UEdGraphNode_SkillNode>(GraphNode);
+	if (!N || !N->SkillAsset)
+	{
+		return FAppStyle::GetBrush("ClassIcon.DataAsset");
+	}
+
+	UTexture2D* IconTex = N->SkillAsset->Icon.LoadSynchronous();
+	if (!IconTex)
+	{
+		return FAppStyle::GetBrush("ClassIcon.DataAsset");
+	}
+
+	constexpr float IconSize = NodeDiameter * 0.85f;
+
+	CachedIconBrush.SetResourceObject(IconTex);
+	CachedIconBrush.ImageSize = FVector2D(IconSize, IconSize);
+	CachedIconBrush.DrawAs = ESlateBrushDrawType::Image;
+	return &CachedIconBrush;
 }
