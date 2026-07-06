@@ -90,6 +90,8 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UGYPrimaryGameLayout> PrimaryGameLayout;
 
+	TWeakObjectPtr<UCommonActivatableWidget> HUDWidget;
+
 	/** 플레이어 명단 동기화 주기 */
 	UPROPERTY(EditDefaultsOnly, Category = "GY|UI", meta = (ClampMin = "0.1"))
 	float RosterSyncInterval = 0.5f;
