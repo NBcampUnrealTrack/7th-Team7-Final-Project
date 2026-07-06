@@ -59,6 +59,7 @@ private:
     TSharedPtr<SVerticalBox> OutputPinBox;
     TSharedPtr<SImage>       IconWidget;
     TSharedPtr<STextBlock>   TitleWidget;
+	mutable FSlateBrush CachedIconBrush;
 
     static constexpr float NodeRadius   = 52.f;
     static constexpr float PinRadius    = 7.f;
