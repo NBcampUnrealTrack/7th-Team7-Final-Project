@@ -17,4 +17,6 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_Greatsword)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_Unarmed)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Type_SwordAndShield)
+
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weapon_Part_Body);
 }

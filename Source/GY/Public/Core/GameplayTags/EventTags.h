@@ -48,6 +48,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Slam_Land)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Teleport_Trigger)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_SpawnAreaDenialZones)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Combo_Branch)
 
 	//TimeRift
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_TimeRift_Rest)

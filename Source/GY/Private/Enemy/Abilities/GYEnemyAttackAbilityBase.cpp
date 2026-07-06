@@ -9,8 +9,13 @@
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "EnvironmentQuery/EnvQuery.h"
-#include "Enemy/AnimNotify/EnemyWeaponTrace.h"
+#include "Enemy/AnimNotify/EnemyAttackState.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "AbilitySystem/GYCombatStatics.h"
+#include "AbilitySystem/Abilities/Parried/ParriedEventContext.h"
+#include "Core/GameplayTags/EventTags.h"
 
 UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 {
@@ -175,7 +180,7 @@ void UGYEnemyAttackAbilityBase::RecalculateAttackDataFromMontage()
 
 	for (const FAnimNotifyEvent& NotifyEvent : AttackMontage->Notifies)
 	{
-		UEnemyWeaponTrace* WeaponTrace = Cast<UEnemyWeaponTrace>(NotifyEvent.NotifyStateClass);
+		UEnemyAttackState* WeaponTrace = Cast<UEnemyAttackState>(NotifyEvent.NotifyStateClass);
 		if (!WeaponTrace) continue;
 
 		UAnimSequence* Seq = nullptr;
@@ -269,4 +274,83 @@ void UGYEnemyAttackAbilityBase::OnMontageFinished()
 void UGYEnemyAttackAbilityBase::OnMontageInterrupted()
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+}
+
+void UGYEnemyAttackAbilityBase::StartWeaponHitListener()
+{
+	HitCount = 0;
+
+	UAbilityTask_WaitGameplayEvent* HitTask =
+		UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+			this,
+			GYGameplayTags::Event_Enemy_WeaponTrace_Hit,
+			nullptr,
+			false);
+	HitTask->EventReceived.AddDynamic(this, &UGYEnemyAttackAbilityBase::OnWeaponHit);
+	HitTask->ReadyForActivation();
+}
+
+const FHitDamageWeight* UGYEnemyAttackAbilityBase::GetCurrentHitWeight() const
+{
+	return HitDamageWeights.IsValidIndex(HitCount) ? &HitDamageWeights[HitCount] : nullptr;
+}
+
+void UGYEnemyAttackAbilityBase::OnWeaponHit(FGameplayEventData Payload)
+{
+	AActor* HitActor = const_cast<AActor*>(Payload.Target.Get());
+	AActor* Instigator = const_cast<AActor*>(Payload.Instigator.Get());
+	if (!HitActor || !Instigator) return;
+
+	UAbilitySystemComponent* TargetASC =
+		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
+	if (!TargetASC) return;
+
+	FHitResult HitResult;
+	if (Payload.TargetData.IsValid(0))
+	{
+		const FGameplayAbilityTargetData* Data = Payload.TargetData.Get(0);
+		if (const FHitResult* Found = Data->GetHitResult())
+		{
+			HitResult = *Found;
+		}
+	}
+
+	UAbilitySystemComponent* OwnerASC = GetAbilitySystemComponentFromActorInfo();
+	if (!OwnerASC) return;
+
+	FGYHitContext HitContext;
+	HitContext.SourceASC = OwnerASC;
+	HitContext.TargetASC = TargetASC;
+	HitContext.bGivesParriedReaction = true;
+
+	if (Payload.ContextHandle.IsValid())
+	{
+		const FParriedEventContext* CustomContext = StaticCast<const FParriedEventContext*>(Payload.ContextHandle.Get());
+		if (CustomContext)
+		{
+			HitContext.SourceHitBone = CustomContext->SourceHitBone;
+		}
+	}
+
+	if (const FHitDamageWeight* W = GetCurrentHitWeight())
+	{
+		HitContext.MotionMultiplier = W->Multiplicative;
+		HitContext.Additive = W->Additive;
+		HitContext.StaggerAmount = W->Stagger;
+		HitContext.StunAmount = W->Stun;
+	}
+
+	UGYCombatStatics::ApplyHitImpact(HitContext);
+
+	if (HitCueTag.IsValid())
+	{
+		FGameplayCueParameters CueParams;
+		CueParams.Normal = HitResult.ImpactNormal;
+		CueParams.Location = HitResult.ImpactPoint;
+		CueParams.SourceObject = Instigator;
+
+		TargetASC->ExecuteGameplayCue(HitCueTag, CueParams);
+	}
+
+	++HitCount;
 }

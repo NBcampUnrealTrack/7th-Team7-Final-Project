@@ -50,6 +50,15 @@ protected:
 	void OnMontageFinished();
 	UFUNCTION()
 	void OnMontageInterrupted();
+
+	void StartWeaponHitListener();
+
+	UFUNCTION()
+	void OnWeaponHit(FGameplayEventData Payload);
+
+	virtual const FHitDamageWeight* GetCurrentHitWeight() const;
+
+	int32 HitCount = 0;
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
 	float AttackRange = 200.f;

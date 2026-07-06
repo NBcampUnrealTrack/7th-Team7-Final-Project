@@ -5,7 +5,7 @@
 #include "EdGraphUtilities.h"
 #include "SkillTreeEditor/SkillTreeNodeFactory.h"
 #include "SkillTreeEditor/AssetTypeActions_SkillTree.h"
-#include "Enemy/AnimNotify/EnemyWeaponTrace.h"
+#include "Enemy/AnimNotify/EnemyAttackState.h"
 #include "Enemy/AnimNotify/LaunchProjectile.h"
 
 #define LOCTEXT_NAMESPACE "FGYEditorModule"
@@ -83,7 +83,7 @@ void FGYEditorModule::SyncAbilityWeightRow(class UBlueprint* BP)
 		for (const FAnimNotifyEvent& NotifyEvent : CDO->AttackMontage->Notifies)
 		{
 			if (NotifyEvent.NotifyStateClass &&
-				NotifyEvent.NotifyStateClass->IsA<UEnemyWeaponTrace>())
+				NotifyEvent.NotifyStateClass->IsA<UEnemyAttackState>())
 			{
 				TraceCount++;
 				continue;
