@@ -24,10 +24,21 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UImage> IndicatorIcon;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="LockOn|Effect")
+	float PulseSpeed = 3.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="LockOn|Effect", meta=(ClampMin="0.0", ClampMax="1.0"))
+	float PulseMinBrightness = 0.3f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="LockOn|Effect")
+	float RotationSpeed = 180.0f;
+
 private:
 	void HandleLockOnChanged(FGameplayTag Tag, const FGYLockOnMessage& Msg);
 	bool IsMine(const FGYLockOnMessage& Msg) const;
 
 	FGameplayMessageListenerHandle ChangedHandle;
 	TWeakObjectPtr<AActor> Target;
+
+	float ElapsedTime = 0.0f;
 };
