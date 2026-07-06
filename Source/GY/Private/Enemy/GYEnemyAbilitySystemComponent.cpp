@@ -62,6 +62,12 @@ void UGYEnemyAbilitySystemComponent::ApplyRegenEffects()
 	ApplyEffect(StunRegenEffect, StunRegenGEHandle);
 }
 
+void UGYEnemyAbilitySystemComponent::ApplyActivityPointsUsedEffect()
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	ApplyEffect(ActivityPointsUsedEffect, ActivityPointsUsedEffectHandle);
+}
+
 void UGYEnemyAbilitySystemComponent::ApplyCombatTag()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;

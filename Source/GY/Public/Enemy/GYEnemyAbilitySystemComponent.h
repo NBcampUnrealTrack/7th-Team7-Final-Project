@@ -15,6 +15,7 @@ public:
 	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
 	void HandleVitalAccumulation(const FGameplayAttribute& ChangedAttribute, float CurrentValue);
 	void ApplyRegenEffects();
+	void ApplyActivityPointsUsedEffect();
 
 	void ApplyCombatTag();
 	void RemoveCombatTag();
@@ -34,8 +35,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<UGameplayEffect> CombatStateEffect;
 
+	UPROPERTY(EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<UGYPeriodicAttributeEffect> ActivityPointsUsedEffect;
+
 private:
 	FActiveGameplayEffectHandle StaggerRegenGEHandle;
 	FActiveGameplayEffectHandle StunRegenGEHandle;
 	FActiveGameplayEffectHandle CombatStateEffectHandle;
+	FActiveGameplayEffectHandle ActivityPointsUsedEffectHandle;
 };

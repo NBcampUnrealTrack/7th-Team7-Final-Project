@@ -3,6 +3,26 @@
 #include "GameplayEffectExtension.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
+#include "Net/UnrealNetwork.h"
+
+void UGYEnemyVitalAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UGYEnemyVitalAttributeSet, ActivityPoints);
+	DOREPLIFETIME(UGYEnemyVitalAttributeSet, MaxActivityPoints);
+
+}
+
+void UGYEnemyVitalAttributeSet::OnRep_ActivityPoints(const FGameplayAttributeData& OldActivityPoints)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYEnemyVitalAttributeSet, ActivityPoints, OldActivityPoints);
+
+}
+
+void UGYEnemyVitalAttributeSet::OnRep_MaxActivityPoints(const FGameplayAttributeData& OldMaxActivityPoints)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYEnemyVitalAttributeSet, MaxActivityPoints, OldMaxActivityPoints);
+}
 
 void UGYEnemyVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
@@ -12,11 +32,24 @@ void UGYEnemyVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Att
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHealth());
 	}
+	if (Attribute == GetActivityPointsAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxActivityPoints());
+	}
 }
 
 void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
+
+
+	UGYEnemyAbilitySystemComponent* EnemyASC = Cast<UGYEnemyAbilitySystemComponent>(GetOwningAbilitySystemComponent());
+	if (!EnemyASC) return;
+
+	if (Data.EvaluatedData.Attribute == GetActivityPointsAttribute() && Data.EvaluatedData.Magnitude<0.f)
+	{
+		EnemyASC->ApplyActivityPointsUsedEffect();
+	}
 
 	float CurrentValue = 0.f;
 	if (Data.EvaluatedData.Attribute == GetCurrentStaggerAttribute())
@@ -26,11 +59,7 @@ void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 	else
 		return;
 
-	if (UGYEnemyAbilitySystemComponent* EnemyASC = Cast<UGYEnemyAbilitySystemComponent>(
-		GetOwningAbilitySystemComponent()))
-	{
-		EnemyASC->HandleVitalAccumulation(Data.EvaluatedData.Attribute, CurrentValue);
-	}
+	EnemyASC->HandleVitalAccumulation(Data.EvaluatedData.Attribute, CurrentValue);
 }
 
 void UGYEnemyVitalAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData& Data, float DamageAmount)
