@@ -1,4 +1,4 @@
-#include "Enemy/AnimNotify/EnemyWeaponTrace.h"
+#include "Enemy/AnimNotify/EnemyAttackState.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/GameplayAbilityTypes.h"
@@ -6,6 +6,8 @@
 #include "Core/GameplayTags/EventTags.h"
 #include "Enemy/Actor/TentacleActor.h"
 #include "Enemy/GYEnemyCharacterBase.h"
+#include "Enemy/Actor/GYWeaponActor.h"
+#include "Enemy/Actor/GYWeaponHitBox.h"
 
 namespace
 {
@@ -27,7 +29,7 @@ namespace
 	}
 }
 
-void UEnemyWeaponTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration,
+void UEnemyAttackState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration,
                                     const FAnimNotifyEventReference& EventReference)
 {
 	if (!MeshComp) return;
@@ -35,26 +37,35 @@ void UEnemyWeaponTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
 	AActor* OwnerActor = MeshComp->GetOwner();
 	if (!OwnerActor) return;
 
-	const TArray<FName>* SocketsPtr = nullptr;
-	float TraceRadius = 0.f;
-	if (!ResolveWeaponTraceConfig(OwnerActor, SocketsPtr, TraceRadius)) return;
-	if (!SocketsPtr || SocketsPtr->Num() < 2) return;
-
-	HitActors.Empty();
-	PreCenters.Reset();
-
-	const TArray<FName>& Sockets = *SocketsPtr;
-	for (int32 i = 0; i < Sockets.Num() - 1; i++)
+	if (Mode == EAttackMode::SocketSweep)
 	{
-		FVector SocA = MeshComp->GetSocketLocation(Sockets[i]);
-		FVector SocB = MeshComp->GetSocketLocation(Sockets[i + 1]);
-		PreCenters.Add((SocA + SocB) * 0.5f);
+		const TArray<FName>* SocketsPtr = nullptr;
+		float TraceRadius = 0.f;
+		if (!ResolveWeaponTraceConfig(OwnerActor, SocketsPtr, TraceRadius)) return;
+		if (!SocketsPtr || SocketsPtr->Num() < 2) return;
+
+		HitActors.Empty();
+		PreCenters.Reset();
+
+		const TArray<FName>& Sockets = *SocketsPtr;
+		for (int32 i = 0; i < Sockets.Num() - 1; i++)
+		{
+			FVector SocA = MeshComp->GetSocketLocation(Sockets[i]);
+			FVector SocB = MeshComp->GetSocketLocation(Sockets[i + 1]);
+			PreCenters.Add((SocA + SocB) * 0.5f);
+		}
+		return;
 	}
+
+	if (UGYWeaponHitBox* Box = ResolveHitBox(OwnerActor))
+		Box->BeginHitDetection(OwnerActor);
 }
 
-void UEnemyWeaponTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime,
+void UEnemyAttackState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime,
 	const FAnimNotifyEventReference& EventReference)
 {
+	if (Mode != EAttackMode::SocketSweep) return;
+
 	if (!MeshComp) return;
 
 	AActor* OwnerActor = MeshComp->GetOwner();
@@ -139,14 +150,41 @@ void UEnemyWeaponTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
 	}
 }
 
-void UEnemyWeaponTrace::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+void UEnemyAttackState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 	const FAnimNotifyEventReference& EventReference)
 {
-	HitActors.Empty();
-	PreCenters.Reset();
+	if (Mode == EAttackMode::SocketSweep)
+	{
+		HitActors.Empty();
+		PreCenters.Reset();
+		return;
+	}
+
+	if (MeshComp)
+		if (UGYWeaponHitBox* Box = ResolveHitBox(MeshComp->GetOwner()))
+			Box->EndHitDetection();
+
 }
 
-FString UEnemyWeaponTrace::GetNotifyName_Implementation() const
+FString UEnemyAttackState::GetNotifyName_Implementation() const
 {
 	return TEXT("EnemyWeaponTrace");
+}
+
+UGYWeaponHitBox* UEnemyAttackState::ResolveHitBox(AActor* Owner) const
+{
+	AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Owner);
+	if (!Enemy) return nullptr;
+
+	if (Mode == EAttackMode::WeaponActor)
+	{
+		if (AGYWeaponActor* Weapon = Enemy->GetWeaponBySlot(HitBoxTag))
+			return Weapon->GetHitBox();
+		return nullptr;
+	}
+	if (Mode == EAttackMode::BodyPart)
+	{
+		return Enemy->GetBodyHitBox(HitBoxTag);
+	}
+	return nullptr;
 }

@@ -14,12 +14,4 @@ protected:
 		const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
-private:
-	UFUNCTION()
-	void OnWeaponHit(FGameplayEventData Payload);
-public:
-
-private:
-	int32 HitCount = 0;
-
 };
