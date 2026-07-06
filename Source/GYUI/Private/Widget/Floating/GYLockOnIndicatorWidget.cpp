@@ -60,6 +60,15 @@ void UGYLockOnIndicatorWidget::NativeTick(const FGeometry& MyGeometry, float Del
 	const FVector2D IconSize = IndicatorIcon->GetDesiredSize();
 	IndicatorIcon->SetRenderTranslation(Screen - IconSize * 0.5f);
 	IndicatorIcon->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+	ElapsedTime += DeltaTime;
+
+	const float PulseAlpha = 0.5f * (FMath::Sin(ElapsedTime * PulseSpeed) + 1.0f); // 0~1
+	const float Brightness = FMath::Lerp(PulseMinBrightness, 1.0f, PulseAlpha);
+	IndicatorIcon->SetColorAndOpacity(FLinearColor(Brightness, Brightness, Brightness, 1.0f));
+
+	const float Angle = FMath::Fmod(ElapsedTime * RotationSpeed, 360.0f);
+	IndicatorIcon->SetRenderTransformAngle(Angle);
 }
 
 void UGYLockOnIndicatorWidget::HandleLockOnChanged(FGameplayTag Tag, const FGYLockOnMessage& Msg)
