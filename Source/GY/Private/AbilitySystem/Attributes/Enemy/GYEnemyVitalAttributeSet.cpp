@@ -12,7 +12,6 @@ void UGYEnemyVitalAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UGYEnemyVitalAttributeSet, ActivityPoints);
 	DOREPLIFETIME(UGYEnemyVitalAttributeSet, MaxActivityPoints);
-	DOREPLIFETIME(UGYEnemyVitalAttributeSet, MovementSpeed);
 
 }
 
@@ -27,10 +26,6 @@ void UGYEnemyVitalAttributeSet::OnRep_MaxActivityPoints(const FGameplayAttribute
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYEnemyVitalAttributeSet, MaxActivityPoints, OldMaxActivityPoints);
 }
 
-void UGYEnemyVitalAttributeSet::OnRep_MovementSpeed(const FGameplayAttributeData& OldMovementSpeed)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYEnemyVitalAttributeSet, MovementSpeed, OldMovementSpeed);
-}
 
 void UGYEnemyVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
@@ -44,10 +39,7 @@ void UGYEnemyVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Att
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxActivityPoints());
 	}
-	if (Attribute == GetMovementSpeedAttribute())
-	{
-		NewValue = FMath::Clamp(NewValue, 0.f, FLT_MAX);
-	}
+
 }
 
 void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
@@ -63,18 +55,6 @@ void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 		EnemyASC->ApplyActivityPointsUsedEffect();
 	}
 
-	if (Data.EvaluatedData.Attribute == GetMovementSpeedAttribute())
-	{
-		for (;;){
-			AActor* OwningActor = GetOwningActor();
-			if (!OwningActor) break;
-			ACharacter* OwningChar = Cast<ACharacter>(OwningActor);
-			if (!OwningChar) break;
-			UGYCharacterMovementComponent* Move = Cast<UGYCharacterMovementComponent>(OwningChar->GetMovementComponent());
-			if (!Move) break;
-			Move->MaxWalkSpeed = GetMovementSpeed();
-		}
-	}
 
 
 	float CurrentValue = 0.f;

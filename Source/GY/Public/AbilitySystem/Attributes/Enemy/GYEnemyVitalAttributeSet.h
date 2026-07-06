@@ -26,12 +26,6 @@ public:
 	UFUNCTION()
 	virtual void OnRep_MaxActivityPoints(const FGameplayAttributeData& OldMaxActivityPoints);
 
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_MovementSpeed)
-	FGameplayAttributeData MovementSpeed;
-	GY_ATTRIBUTE_ACCESSORS(UGYEnemyVitalAttributeSet, MovementSpeed)
-
-	UFUNCTION()
-	virtual void OnRep_MovementSpeed(const FGameplayAttributeData& OldMovementSpeed);
 
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
