@@ -73,7 +73,11 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		}
 		if (UClass* HUDClass = Settings->HUDWidgetClass.LoadSynchronous())
 		{
-			PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDClass);
+			// 레이아웃이 생성되면 새로 push, 같은 레이아웃에 이미 떠 있으면 건너뜀
+			if (!HUDWidget.IsValid())
+			{
+				HUDWidget = PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDClass);
+			}
 		}
 	}
 
@@ -380,14 +384,19 @@ void UGYUIManagerSubsystem::OnTagChanged(const FGameplayTag Tag, int32 NewCount)
 
 void UGYUIManagerSubsystem::CreatePrimaryGameLayout(TSubclassOf<UGYPrimaryGameLayout> LayoutClass)
 {
-	if (PrimaryGameLayout) return; // 중복 생성 방지
 	if (!LayoutClass) return;
 
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP) return;
-
 	APlayerController* PC = LP->GetPlayerController(LP->GetWorld());
 	if (!PC) return;
+
+	// 현재 PlayerController 소유의 레이아웃이 이미 살아 있으면 재생성x
+	if (PrimaryGameLayout && PrimaryGameLayout->GetOwningPlayer() == PC)
+	{
+		return;
+	}
+	RemovePrimaryGameLayout();
 
 	PrimaryGameLayout = CreateWidget<UGYPrimaryGameLayout>(PC, LayoutClass);
 	if (PrimaryGameLayout)
@@ -403,6 +412,7 @@ void UGYUIManagerSubsystem::RemovePrimaryGameLayout()
 		PrimaryGameLayout->RemoveFromParent(); // 뷰포트 제거
 		PrimaryGameLayout = nullptr;
 	}
+	HUDWidget = nullptr; // 레이아웃과 함께 사라지는 HUD 참조도 초기화
 }
 
 UCommonActivatableWidget* UGYUIManagerSubsystem::PushWidgetToLayer(FGameplayTag LayerTag,
@@ -588,8 +598,9 @@ UCommonActivatableWidget* UGYUIManagerSubsystem::ToggleWidgetInLayer(
 
 void UGYUIManagerSubsystem::HandleRegionEntered(FGameplayTag, const FGYRegionEnteredMessage& Msg)
 {
-    APawn* LocalPawn = GetLocalPlayer() ? GetLocalPlayer()->GetPlayerController(GetWorld())->GetPawn() : nullptr;
-    if (!LocalPawn || Msg.Pawn.Get() != LocalPawn) return;
+	ULocalPlayer* LP = GetLocalPlayer();
+	APlayerController* LocalPC = LP ? LP->GetPlayerController(GetWorld()) : nullptr;
+	APawn* LocalPawn = LocalPC ? LocalPC->GetPawn() : nullptr;if (!LocalPawn || Msg.Pawn.Get() != LocalPawn) return;
 
 	ActiveRegionId = Msg.RegionId;
 	if (IsValid(Msg.BossActor))
@@ -608,7 +619,9 @@ void UGYUIManagerSubsystem::HandleRegionEntered(FGameplayTag, const FGYRegionEnt
 
 void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegionExitedMessage& Msg)
 {
-    APawn* LocalPawn = GetLocalPlayer() ? GetLocalPlayer()->GetPlayerController(GetWorld())->GetPawn() : nullptr;
+	ULocalPlayer* LP = GetLocalPlayer();
+	APlayerController* LocalPC = LP ? LP->GetPlayerController(GetWorld()) : nullptr;
+	APawn* LocalPawn = LocalPC ? LocalPC->GetPawn() : nullptr;
     if (Msg.Pawn.Get() != LocalPawn) return;
 
 	if (Msg.RegionId == ActiveRegionId)
