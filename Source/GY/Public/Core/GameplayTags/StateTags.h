@@ -39,4 +39,7 @@ namespace GYStateTags
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Debuff_Poison)
 
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_ActivityPoints_Used)
+
+
 }

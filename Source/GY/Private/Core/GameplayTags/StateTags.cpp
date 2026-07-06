@@ -36,4 +36,7 @@ namespace GYStateTags
 	UE_DEFINE_GAMEPLAY_TAG(State_Interaction_TimeRift_SkillTree, "State.Interaction.TimeRift.SkillTree");
 
 	UE_DEFINE_GAMEPLAY_TAG(State_Debuff_Poison, "State.Debuff.Poison")
+
+	UE_DEFINE_GAMEPLAY_TAG(State_ActivityPoints_Used, "State.ActivityPoints.Used")
+
 }
