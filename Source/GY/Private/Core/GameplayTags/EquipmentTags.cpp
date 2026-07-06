@@ -13,4 +13,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_Greatsword, "Weapon.Type.Greatsword");
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_Unarmed, "Weapon.Type.Unarmed");
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_SwordAndShield, "Weapon.Type.SwordAndShield");
+
+	UE_DEFINE_GAMEPLAY_TAG(Weapon_Part_Body, "Weapon.Part.Body");
 }

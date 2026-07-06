@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectSaveContext.h"
 #include "Enemy/DataTables/EnemyAbilityWeightRow.h"
-#include "Enemy/AnimNotify/EnemyWeaponTrace.h"
+#include "Enemy/AnimNotify/EnemyAttackState.h"
 #include "Engine/DataTable.h"
 #include "Engine/Blueprint.h"
 #include "Modules/ModuleManager.h"

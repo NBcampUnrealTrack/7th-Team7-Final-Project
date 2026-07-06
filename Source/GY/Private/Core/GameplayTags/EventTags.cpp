@@ -39,6 +39,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_Slam_Land, "Event.Enemy.Slam.Land");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_Teleport_Trigger, "Event.Enemy.Teleport.Trigger");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_SpawnAreaDenialZones, "Event.Enemy.SpawnAreaDenialZones")
+	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_Combo_Branch, "Event.Enemy.Combo.Branch")
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Exit, "Event.TimeRift.Exit");
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Rest, "Event.TimeRift.Rest");

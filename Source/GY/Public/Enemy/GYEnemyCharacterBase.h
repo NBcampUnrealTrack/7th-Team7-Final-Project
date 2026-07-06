@@ -21,6 +21,25 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDead, AGYEnemyCharacterBase*
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AGYEnemyCharacterBase*, Enemy, float, DamageAmount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyReady, AGYEnemyCharacterBase*, Enemy);
 
+class AGYWeaponActor;
+class UGYWeaponHitBox;
+
+USTRUCT(BlueprintType)
+struct FEnemyWeaponSpawn
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AGYWeaponActor> WeaponClass;
+
+	UPROPERTY(EditAnywhere)
+	FName AttachSocket = TEXT("Weapon_R");
+
+	UPROPERTY(EditAnywhere)
+	FTransform RelativeTransform;
+};
+
+
 UCLASS(Abstract, BlueprintType, Blueprintable)
 class GY_API AGYEnemyCharacterBase : public ACharacter, public IAbilitySystemInterface, public IWorldPartitionLevelPlacedActor, public IGenericTeamAgentInterface
 {
@@ -131,6 +150,8 @@ protected:
 
 	void CachedWeaponTraceSockets();
 
+	void SpawnWeapons();
+
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyDead OnEnemyDead;
@@ -147,6 +168,14 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	float WeaponTraceRadius = 10.f;
+
+	UPROPERTY(EditAnywhere, Category = "Combat|Weapon")
+	TArray<FEnemyWeaponSpawn> WeaponsToSpawn;
+
+	UFUNCTION(BlueprintPure, Category = "Combat|Weapon")
+	AGYWeaponActor* GetWeaponBySlot(FGameplayTag SlotTag) const;
+
+	UGYWeaponHitBox* GetBodyHitBox(FGameplayTag PartTag) const;
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category="Enemy|Bootstrap")
@@ -166,6 +195,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
 	TObjectPtr<UGYEnemyDamageAttributeSet> DamageAttribute;
+
+	UPROPERTY(Transient)
+	TMap<FGameplayTag, TObjectPtr<AGYWeaponActor>> EquippedWeapons;
 
 	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
 	bool bIsDead = false;
