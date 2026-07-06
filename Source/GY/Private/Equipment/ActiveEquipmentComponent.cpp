@@ -17,6 +17,8 @@
 #include "GameplayEffect.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
+#include "Items/ArmorBaseStatsRow.h"
+#include "Items/Fragments/ItemFragment_Armor.h"
 #include "Items/Fragments/ItemFragment_Equippable.h"
 #include "Items/Fragments/ItemFragment_GrantedAbilitySet.h"
 #include "Items/Fragments/ItemFragment_Weapon.h"
@@ -273,6 +275,7 @@ void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* In
 	}
 
 	ApplyWeaponBaseStats(Instance, Def, ASC);
+	ApplyArmorBaseStats(Instance, Def, ASC);
 	ApplyEnchantOptions(Instance, Entry, ASC);
 
 	// TODO: SetByCaller(Stat.Modifier.Deviation = 1 + Entry.StatDeviation) 주입 — Template GE 인프라 후
@@ -339,7 +342,6 @@ void UActiveEquipmentComponent::ApplyWeaponBaseStats(UEquipmentInstance* Instanc
 	if (WeaponFragment == nullptr) return;
 
 	const UGYEquipmentSettings* Settings = GetDefault<UGYEquipmentSettings>();
-	if (!IsValid(Settings->BaseATKEffectClass)) return;
 	if (Settings->WeaponBaseStatsTable.IsNull()) return;
 
 	UDataTable* Table = Settings->WeaponBaseStatsTable.LoadSynchronous();
@@ -348,11 +350,39 @@ void UActiveEquipmentComponent::ApplyWeaponBaseStats(UEquipmentInstance* Instanc
 	const FWeaponBaseStatsRow* Row = Table->FindRow<FWeaponBaseStatsRow>(Def->ItemId, TEXT("ApplyWeaponBaseStats"));
 	if (Row == nullptr) return;
 
+	ApplyFlatStatEffect(Instance, ASC, Settings->BaseATKEffectClass, Row->BaseATK);
+}
+
+void UActiveEquipmentComponent::ApplyArmorBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC)
+{
+	const UItemFragment_Armor* ArmorFragment = Def->FindFragment<UItemFragment_Armor>();
+	if (ArmorFragment == nullptr) return;
+
+	const UGYEquipmentSettings* Settings = GetDefault<UGYEquipmentSettings>();
+	if (Settings->ArmorBaseStatsTable.IsNull()) return;
+
+	UDataTable* Table = Settings->ArmorBaseStatsTable.LoadSynchronous();
+	if (!IsValid(Table)) return;
+
+	const FArmorBaseStatsRow* Row = Table->FindRow<FArmorBaseStatsRow>(Def->ItemId, TEXT("ApplyArmorBaseStats"));
+	if (Row == nullptr) return;
+
+	ApplyFlatStatEffect(Instance, ASC, Settings->BaseDEFEffectClass, Row->BaseDEF);
+	ApplyFlatStatEffect(Instance, ASC, Settings->BaseMaxHPEffectClass, Row->BaseHP);
+}
+
+void UActiveEquipmentComponent::ApplyFlatStatEffect(UEquipmentInstance* Instance, UAbilitySystemComponent* ASC, TSubclassOf<UGameplayEffect> EffectClass, float Value)
+{
+	if (!IsValid(EffectClass)) return;
+	if (Value == 0.f) return;
+
 	FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
-	FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(Settings->BaseATKEffectClass, 1.f, Context);
+	Context.AddSourceObject(Instance);
+
+	FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(EffectClass, 1.f, Context);
 	if (!Spec.IsValid()) return;
 
-	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude1, Row->BaseATK);
+	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude1, Value);
 
 	const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
 	Instance->GetMutableGrantedHandles().GameplayEffectHandles.Add(Handle);

@@ -4,11 +4,13 @@
 #include "Components/ActorComponent.h"
 #include "Equipment/EquipmentEntry.h"
 #include "GameplayTagContainer.h"
+#include "Templates/SubclassOf.h"
 #include "ActiveEquipmentComponent.generated.h"
 
 class UAbilitySystemComponent;
 class UEquipmentInstance;
 class UEquipmentLoadoutComponent;
+class UGameplayEffect;
 class UItemDefinition;
 
 UCLASS(ClassGroup = (Equipment), meta = (BlueprintSpawnableComponent))
@@ -50,7 +52,10 @@ protected:
 	void RevokeAbilitySets(UEquipmentInstance* Instance);
 
 	void ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC);
+	void ApplyArmorBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC);
 	void ApplyEnchantOptions(UEquipmentInstance* Instance, const struct FInventoryEntry& Entry, UAbilitySystemComponent* ASC);
+
+	void ApplyFlatStatEffect(UEquipmentInstance* Instance, UAbilitySystemComponent* ASC, TSubclassOf<UGameplayEffect> EffectClass, float Value);
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Equipment")
 	FEquipmentList EquippedItems;
