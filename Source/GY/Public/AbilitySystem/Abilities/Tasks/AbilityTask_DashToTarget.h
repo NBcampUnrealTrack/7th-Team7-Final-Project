@@ -36,7 +36,7 @@ public:
 
 protected:
 	TWeakObjectPtr<AActor> TargetActor;
-
+	TWeakObjectPtr<UGameplayAbility> OwningAbilityRef;
 	float DashSpeed = 800.f;
 	float StopDistanceSq = 0.f;
 	float CosFrontHalfAngle = 0.f;

@@ -1,5 +1,8 @@
 #include "AbilitySystem/Abilities/Tasks/AbilityTask_DashToTarget.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Core/GameplayTags/EventTags.h"
+#include "Enemy/Abilities/GYEnemyComboAttack.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -8,6 +11,7 @@ UAbilityTask_DashToTarget* UAbilityTask_DashToTarget::CreateDashToTarget(
     float InDashSpeed, float InStopDistance, float InFrontHalfAngleDeg)
 {
     UAbilityTask_DashToTarget* Task = NewAbilityTask<UAbilityTask_DashToTarget>(OwningAbility);
+	Task->OwningAbilityRef = OwningAbility;
     Task->TargetActor = Target;
     Task->DashSpeed = FMath::Max(InDashSpeed, 1.f);
     Task->StopDistanceSq = FMath::Square(FMath::Max(InStopDistance, 0.f));
@@ -80,6 +84,15 @@ void UAbilityTask_DashToTarget::OnDestroy(bool bInOwnerFinished)
 		{
 			CMC->Velocity = FVector::ZeroVector;
 		}
+	}
+
+	AActor* Owner = GetOwnerActor();
+	if (!bInOwnerFinished && Owner)
+	{
+		FGameplayEventData Payload;
+		Payload.Instigator = Owner;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+			Owner, GYGameplayTags::Event_Enemy_Combo_Branch, Payload);
 	}
 	Super::OnDestroy(bInOwnerFinished);
 }
