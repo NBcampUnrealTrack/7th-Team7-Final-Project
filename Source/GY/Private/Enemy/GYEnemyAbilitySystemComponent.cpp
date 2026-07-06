@@ -3,7 +3,9 @@
 #include "AbilitySystem/GYPeriodicAttributeEffect.h"
 #include "AbilitySystem/GYRegenDelayEffect.h"
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
+#include "Character/GYCharacterMovementComponent.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "GameFramework/Character.h"
 
 
 void UGYEnemyAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
@@ -60,11 +62,13 @@ void UGYEnemyAbilitySystemComponent::ApplyRegenEffects()
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	ApplyEffect(StaggerRegenEffect, StaggerRegenGEHandle);
 	ApplyEffect(StunRegenEffect, StunRegenGEHandle);
+	ApplyEffect(ActivityPointsRegenEffect, StunRegenGEHandle);
 }
 
 void UGYEnemyAbilitySystemComponent::ApplyActivityPointsUsedEffect()
 {
-	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	AActor* Owner = GetOwner();
+	if (!Owner || !Owner->HasAuthority()) return;
 	ApplyEffect(ActivityPointsUsedEffect, ActivityPointsUsedEffectHandle);
 }
 

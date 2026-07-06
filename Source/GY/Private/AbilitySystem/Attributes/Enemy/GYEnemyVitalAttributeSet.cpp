@@ -2,7 +2,9 @@
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
 #include "AbilitySystem/GYCombatStatics.h"
+#include "Character/GYCharacterMovementComponent.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
+#include "GameFramework/Character.h"
 #include "Net/UnrealNetwork.h"
 
 void UGYEnemyVitalAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -24,6 +26,7 @@ void UGYEnemyVitalAttributeSet::OnRep_MaxActivityPoints(const FGameplayAttribute
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYEnemyVitalAttributeSet, MaxActivityPoints, OldMaxActivityPoints);
 }
 
+
 void UGYEnemyVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
@@ -36,6 +39,7 @@ void UGYEnemyVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Att
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxActivityPoints());
 	}
+
 }
 
 void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
@@ -50,6 +54,8 @@ void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 	{
 		EnemyASC->ApplyActivityPointsUsedEffect();
 	}
+
+
 
 	float CurrentValue = 0.f;
 	if (Data.EvaluatedData.Attribute == GetCurrentStaggerAttribute())

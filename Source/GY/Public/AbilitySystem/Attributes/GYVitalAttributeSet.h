@@ -74,6 +74,15 @@ public:
 	UFUNCTION()
 	virtual void OnRep_StunRecoveryPerTick(const FGameplayAttributeData& OldStunRecoveryPerTick);
 
+
+	UPROPERTY(BlueprintReadOnly, Category="Attributes", ReplicatedUsing=OnRep_MovementSpeed)
+	FGameplayAttributeData MovementSpeed;
+	GY_ATTRIBUTE_ACCESSORS(UGYVitalAttributeSet, MovementSpeed)
+
+	UFUNCTION()
+	virtual void OnRep_MovementSpeed(const FGameplayAttributeData& OldMovementSpeed);
+
+
 	// 메타어트리뷰트 — Execution이 여기에 데미지를 출력하면 PostGameplayEffectExecute가 CurrentHealth로 변환한다. 복제하지 않는다.
 	UPROPERTY(BlueprintReadOnly, Category="Attributes")
 	FGameplayAttributeData Damage;

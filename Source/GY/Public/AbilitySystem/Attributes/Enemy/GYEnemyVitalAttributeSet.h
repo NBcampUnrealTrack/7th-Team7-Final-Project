@@ -27,6 +27,7 @@ public:
 	virtual void OnRep_MaxActivityPoints(const FGameplayAttributeData& OldMaxActivityPoints);
 
 
+
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 

@@ -19,6 +19,7 @@
 
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/Enemy/GYEnemyDamageAttributeSet.h"
+#include "Character/GYCharacterMovementComponent.h"
 #include "EnvironmentQuery/EnvQuery.h"
 
 #include "Logging/GYLogManager.h"
@@ -291,6 +292,9 @@ void UEnemyBootstrapComponent::ApplyInitialStats(const FEnemyComputedStats& Stat
 		Vital->SetCurrentStagger(0.f);
 		Vital->SetMaxStun(Stats.MaxStun);
 		Vital->SetCurrentStun(0.f);
+		Vital->SetActivityPoints(0.f);
+		Vital->SetMaxActivityPoints(100.f);
+		Vital->SetMovementSpeed(Stats.MoveSpeed);
 	}
 
 	if (UGYEnemyDamageAttributeSet* Damage = Owner->GetDamageAttribute())
@@ -299,11 +303,6 @@ void UEnemyBootstrapComponent::ApplyInitialStats(const FEnemyComputedStats& Stat
 		Damage->SetDefense(Stats.Defense);
 		Damage->SetCriticalRate(Stats.CriticalRate);
 		Damage->SetCriticalMultiplier(Stats.CriticalMultiplier);
-	}
-
-	if (UCharacterMovementComponent* Move = Owner->GetCharacterMovement())
-	{
-		Move->MaxWalkSpeed = Stats.MoveSpeed;
 	}
 
 	if (UGYEnemyAbilitySystemComponent* EnemyASC =

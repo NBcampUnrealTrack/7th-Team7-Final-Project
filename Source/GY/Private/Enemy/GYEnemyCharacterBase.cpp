@@ -61,7 +61,7 @@ AGYEnemyCharacterBase::AGYEnemyCharacterBase(const FObjectInitializer& ObjectIni
 
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 480.f, 0.f);
 
 	AIControllerClass = AGYEnemyAIController::StaticClass();
@@ -767,7 +767,7 @@ void AGYEnemyCharacterBase::FaceToTarget(AActor* Target)
 void AGYEnemyCharacterBase::SetOrientToMovement(bool bEnable)
 {
 	GetCharacterMovement()->bOrientRotationToMovement = bEnable;
-	GetCharacterMovement()->bUseControllerDesiredRotation = !bEnable;
+//	GetCharacterMovement()->bUseControllerDesiredRotation = !bEnable;
 }
 
 void AGYEnemyCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)

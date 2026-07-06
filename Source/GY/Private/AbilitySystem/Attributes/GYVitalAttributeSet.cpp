@@ -4,6 +4,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
+#include "Character/GYCharacterMovementComponent.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/GYEnemyCharacterBase.h"
@@ -37,6 +38,7 @@ void UGYVitalAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	DOREPLIFETIME(UGYVitalAttributeSet, MaxStun);
 	DOREPLIFETIME(UGYVitalAttributeSet, StaggerRecoveryPerTick);
 	DOREPLIFETIME(UGYVitalAttributeSet, StunRecoveryPerTick);
+	DOREPLIFETIME(UGYVitalAttributeSet, MovementSpeed);
 }
 
 void UGYVitalAttributeSet::OnRep_CurrentHealth(const FGameplayAttributeData& OldCurrentHealth)
@@ -83,6 +85,12 @@ void UGYVitalAttributeSet::OnRep_StunRecoveryPerTick(const FGameplayAttributeDat
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYVitalAttributeSet, StunRecoveryPerTick, OldStunRecoveryPerTick);
 }
 
+void UGYVitalAttributeSet::OnRep_MovementSpeed(const FGameplayAttributeData& OldMovementSpeed)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYVitalAttributeSet, MovementSpeed, OldMovementSpeed);
+}
+
+
 void UGYVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
@@ -103,11 +111,26 @@ void UGYVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribut
 			SetCurrentHealth(NewValue);
 		}
 	}
+	else if (Attribute == GetMovementSpeedAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.f, FLT_MAX);
+	}
 }
 
 void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
+
+	if (Data.EvaluatedData.Attribute == GetMovementSpeedAttribute())
+	{
+		AActor* OwningActor = GetOwningActor();
+		if (!OwningActor) return;
+		ACharacter* OwningChar = Cast<ACharacter>(OwningActor);
+		if (!OwningChar) return;
+		UGYCharacterMovementComponent* Move = Cast<UGYCharacterMovementComponent>(OwningChar->GetMovementComponent());
+		if (!Move) return;
+		Move->MaxWalkSpeed = GetMovementSpeed();
+	}
 
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
