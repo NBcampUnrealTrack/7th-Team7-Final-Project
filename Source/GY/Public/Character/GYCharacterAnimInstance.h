@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Character/GYAnimTypes.h"
 #include "GYCharacterAnimInstance.generated.h"
 
 class UCharacterMovementComponent;
@@ -12,62 +13,23 @@ class UAbilitySystemComponent;
 /**
  *
  */
-USTRUCT(BlueprintType)
-struct FGYDirectionalStopAnims
-{
-	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	UAnimSequence* Forward = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	UAnimSequence* ForwardLeft = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	UAnimSequence* ForwardRight = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	UAnimSequence* Left = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	UAnimSequence* Right = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	UAnimSequence* BackwardLeft = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	UAnimSequence* BackwardRight = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	UAnimSequence* Backward = nullptr;
-
-	// 방향에 맞는 시퀀스 포인터 반환
-	UAnimSequence* GetSequenceByDirection(float InDirection) const
-	{
-		if (InDirection >= -22.5f && InDirection < 22.5f) return Forward;
-		if (InDirection >= 22.5f && InDirection < 67.5f) return ForwardRight;
-		if (InDirection >= 67.5f && InDirection < 112.5f) return Right;
-		if (InDirection >= 112.5f && InDirection < 157.5f) return BackwardRight;
-		if (InDirection >= -67.5f && InDirection < -22.5f) return ForwardLeft;
-		if (InDirection >= -112.5f && InDirection < -67.5f) return Left;
-		if (InDirection >= -157.5f && InDirection < -112.5f) return BackwardLeft;
-		return Backward;
-	}
-};
 
 UCLASS()
 class GY_API UGYCharacterAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 
-
 public:
-
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
+	float GetDirection() const { return Direction; };
+	bool GetIsRunning() const { return bIsRunning; };
+
 protected:
+	UFUNCTION(meta=(BlueprintThreadSafe))
 	void CalculateDistanceToMatch(float DeltaSeconds);
 
 
@@ -128,23 +90,18 @@ protected:
 	float RunningSpeed = 600.f;
 
 	float BrakingDeceleration = 0.f;
-	float BrakingFriction =0.f;
+	float BrakingFriction = 0.f;
 
-/*
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
-	UAnimSequence* WalkStopSequence;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
-	UAnimSequence* RunStopSequence;
-*/
-
-	UPROPERTY(EditDefaultsOnly, Category = "DistanceMatching")
+	// 알맞은 스탑 모션 재생
+	UPROPERTY(EditDefaultsOnly, Category = "DistanceMatching", meta=(BlueprintThreadSafe))
 	FGYDirectionalStopAnims WalkStopAnimSet;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DistanceMatching")
+	UPROPERTY(EditDefaultsOnly, Category = "DistanceMatching", meta=(BlueprintThreadSafe))
 	FGYDirectionalStopAnims RunStopAnimSet;
 
-	UPROPERTY(BlueprintReadOnly, Transient, Category = "DistanceMatching|Output")
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "DistanceMatching|Output", meta=(BlueprintThreadSafe))
 	UAnimSequence* TargetStopSequence = nullptr;
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
 	UBlendSpace* MoveBlendSpace;
@@ -161,5 +118,4 @@ protected:
 	UBlendSpace* WalkStopBlendSpace;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation|Locomotion", meta=(BlueprintThreadSafe))
 	UBlendSpace* RunStopBlendSpace;
-
 };
