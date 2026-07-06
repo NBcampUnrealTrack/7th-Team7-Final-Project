@@ -53,6 +53,10 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Jump_Up, "Sound.Feng.Jump.Up") //목소리
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Death, "Sound.Feng.Death") //목소리
 
+	//스패로우
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Sparrow_Attack, "Sound.Sparrow.Attack") //발사
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Sparrow_Death, "Sound.Sparrow.Death") //목소리
+
 	/* 상호 작용 */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_LootBox_Open, "Sound.Interaction.LootBox.Open")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_LootBox_Close, "Sound.Interaction.LootBox.Close")
