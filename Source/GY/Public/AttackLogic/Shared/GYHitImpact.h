@@ -1,7 +1,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "GYHitImpact.generated.h"
+
+
 
 USTRUCT(BlueprintType)
 struct GY_API FGYHitImpact
@@ -16,6 +19,7 @@ struct GY_API FGYHitImpact
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.0"))
 	float StunAmount = 10.f;
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag HitFXCueTag;
