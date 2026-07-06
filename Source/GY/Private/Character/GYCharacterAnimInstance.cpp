@@ -10,6 +10,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Character/GYCharacterMovementComponent.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Logging/GYLogManager.h"
 
 
 void UGYCharacterAnimInstance::NativeInitializeAnimation()
@@ -24,7 +25,6 @@ void UGYCharacterAnimInstance::NativeInitializeAnimation()
 
 		RunningSpeed = 600.f;
 	}
-
 }
 
 void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -33,13 +33,15 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (OwnerCharacter && MovementComponent)
 	{
-
 		Velocity = MovementComponent->Velocity;
 		GroundSpeed = Velocity.Size2D();
 
 		bHasAcceleration = !MovementComponent->GetCurrentAcceleration().IsNearlyZero();
 
 		bShouldMove = (GroundSpeed > MinSpeedThreshold) && bHasAcceleration;
+
+		BrakingDeceleration = MovementComponent->BrakingDecelerationWalking;
+		BrakingFriction = MovementComponent->BrakingFriction;
 
 		if (GroundSpeed > MinSpeedThreshold)
 		{
@@ -54,6 +56,7 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsFalling = MovementComponent->IsFalling();
 	}
 
+	//스턴, 스태거 로직
 	if (AbilitySystemComponent == nullptr && OwnerCharacter != nullptr)
 	{
 		AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwnerCharacter);
@@ -65,12 +68,14 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsStaggered = AbilitySystemComponent->HasMatchingGameplayTag(GYStateTags::State_Hit_Stagger);
 	}
 
+
+	//사다리 로직
 	UGYCharacterMovementComponent* GyMovement = Cast<UGYCharacterMovementComponent>(MovementComponent);
 	const bool bIsClimbingMode = GyMovement && GyMovement->IsClimbing();
 
 	bIsClimbing = bIsClimbingMode;
 
-	if (bIsClimbingMode  && IsValid(OwnerCharacter))
+	if (bIsClimbingMode && IsValid(OwnerCharacter))
 	{
 		const FVector CurrentVelocity = OwnerCharacter->GetVelocity();
 		const FVector ClimbAxis = OwnerCharacter->GetActorUpVector();
@@ -86,11 +91,32 @@ void UGYCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		ClimbPlayRate = 0.f;
 	}
-
 }
 
 void UGYCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
 
+	CalculateDistanceToMatch(DeltaSeconds);
+}
+
+void UGYCharacterAnimInstance::CalculateDistanceToMatch(float DeltaSeconds)
+{
+	if (!bHasAcceleration && GroundSpeed > 0.f)
+	{
+		//가속도 (-방향) : 브레이크가속도 + 마찰력(v*friction)
+		const float EffectiveBraking = BrakingDeceleration + (BrakingFriction * GroundSpeed);
+		if (EffectiveBraking > 0.f)
+		{
+			// 등가속도시 이동거리  = v^2/2a
+
+			DistanceToMatch = (GroundSpeed * GroundSpeed) / (2.f * EffectiveBraking);
+			//달리기 걷기, 방향 구분 후 시퀀스 선택
+			const FGYDirectionalStopAnims& ActiveSet = bIsRunning ? RunStopAnimSet : WalkStopAnimSet;
+			TargetStopSequence = ActiveSet.GetSequenceByDirection(Direction);
+
+			return;
+		}
+	}
+	DistanceToMatch = 0.f;
 }
