@@ -113,9 +113,9 @@ void UGYCharacterAnimInstance::CalculateDistanceToMatch(float DeltaSeconds)
 		if (EffectiveBraking > 0.f)
 		{
 			// 등가속도시 이동거리  = v^2/2a
-			//커브 규격에 맞추기 위해 -(음수) 붙이기(계산결과도 원래 음수 나옴)
+			//
 
-			DistanceToMatch = - (GroundSpeed * GroundSpeed) / (2.f * EffectiveBraking);
+			DistanceToMatch =  (GroundSpeed * GroundSpeed) / (2.f * EffectiveBraking);
 
 
 			return;
