@@ -27,6 +27,7 @@ public class GYEditor : ModuleRules
                 "Blutility",
                 "UMGEditor",
                 "UnrealEd",
+                "AssetRegistry",
                 "EditorScriptingUtilities",
                 "GY",
 				"EditorFramework",

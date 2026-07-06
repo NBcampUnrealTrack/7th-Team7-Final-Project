@@ -22,6 +22,7 @@ enum class EEnemyType : uint8
 	BossFlower		UMETA(DisplayName = "BossFlower"),
 	NormalFlower	UMETA(DisplayName = "NormalFlower"),
 	PlantRoot		UMETA(DisplayName = "PlantRoot"),
+	Knight			UMETA(DisplayName = "Knight"),
 	BossBTTest		UMETA(DisplayName = "BossBTTest"),
 };
 

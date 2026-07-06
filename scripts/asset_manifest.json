@@ -11320,6 +11320,24 @@
                                                                                                         }
                                                                                                     ]
                                                                                     },
+                   "EssentialAnimation/GreatSword/Animation/UE5/Montage/AM_GY_ChapterBoss_GreatSword_Attack03.uasset":  {
+                                                                                                                            "history":  [
+                                                                                                                                            {
+                                                                                                                                                "by":  "rhkrd",
+                                                                                                                                                "at":  "2026-07-06 17:02:43",
+                                                                                                                                                "note":  ""
+                                                                                                                                            }
+                                                                                                                                        ]
+                                                                                                                        },
+                   "EssentialAnimation/GreatSword/Animation/UE5/Montage/AM_GY_ChapterBoss_GreatSword_Attack04.uasset":  {
+                                                                                                                            "history":  [
+                                                                                                                                            {
+                                                                                                                                                "by":  "rhkrd",
+                                                                                                                                                "at":  "2026-07-06 17:02:43",
+                                                                                                                                                "note":  ""
+                                                                                                                                            }
+                                                                                                                                        ]
+                                                                                                                        },
                    "EssentialAnimation/GreatSword/Animation/UE5/Montage/ComboB/AM_GY_ChapterBoss_GreatSword_ComboB_Attack01.uasset":  {
                                                                                                                                           "history":  [
                                                                                                                                                           {
@@ -11329,6 +11347,33 @@
                                                                                                                                                           }
                                                                                                                                                       ]
                                                                                                                                       },
+                   "EssentialAnimation/GreatSword/Animation/UE5/Montage/ComboD/AM_GY_ChapterBoss_GreatSword_ComboD_Attack01.uasset":  {
+                                                                                                                                          "history":  [
+                                                                                                                                                          {
+                                                                                                                                                              "by":  "rhkrd",
+                                                                                                                                                              "at":  "2026-07-06 17:02:43",
+                                                                                                                                                              "note":  ""
+                                                                                                                                                          }
+                                                                                                                                                      ]
+                                                                                                                                      },
+                   "EssentialAnimation/GreatSword/Animation/UE5/Montage/ComboE/AM_GY_ChapterBoss_GreatSword_ComboE_Attack01.uasset":  {
+                                                                                                                                          "history":  [
+                                                                                                                                                          {
+                                                                                                                                                              "by":  "rhkrd",
+                                                                                                                                                              "at":  "2026-07-06 17:02:43",
+                                                                                                                                                              "note":  ""
+                                                                                                                                                          }
+                                                                                                                                                      ]
+                                                                                                                                      },
+                   "EssentialAnimation/GreatSword/Animation/UE5/Montage/Dodge/AM_GY_ChapterBoss_GreatSword_Dodge01.uasset":  {
+                                                                                                                                 "history":  [
+                                                                                                                                                 {
+                                                                                                                                                     "by":  "rhkrd",
+                                                                                                                                                     "at":  "2026-07-06 17:02:43",
+                                                                                                                                                     "note":  ""
+                                                                                                                                                 }
+                                                                                                                                             ]
+                                                                                                                             },
                    "Medieval_Warrior/Animation/GreatSword/1H_Attack/UE5_1H_Attack_01_Seq.uasset":  {
                                                                                                        "history":  [
                                                                                                                        {

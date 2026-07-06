@@ -31,6 +31,7 @@ namespace  EnemyBBKeys
 	static const FName PatrolPosition		= TEXT("PatrolPosition");
 	static const FName MovementEQS			= TEXT("MovementEQS");
 	static const FName AbilitySelectionInterval		= TEXT("AbilitySelectionInterval");
+	static const FName PhasePending			= TEXT("PhasePending");
 
 }
 

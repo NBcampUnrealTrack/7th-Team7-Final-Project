@@ -35,6 +35,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Block_LoopEnd, "Event.Block.LoopEnd");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_WeaponTrace_Hit, "Event.Enemy.WeaponTrace.Hit");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_WeaponTrace_Begin, "Event.Enemy.WeaponTrace.Begin");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_LaunchProjectile, "Event.Enemy.LaunchProjectile");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_Slam_Land, "Event.Enemy.Slam.Land");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_Teleport_Trigger, "Event.Enemy.Teleport.Trigger");

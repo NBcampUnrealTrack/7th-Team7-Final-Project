@@ -34,11 +34,18 @@ public:
 	virtual bool CanAttackDistance(AActor* Owner, AActor* Target);
 	virtual bool CanAttackAngle(AActor* Owner, AActor* Target);
 
+	// 몽타주의 트레이스 노티파이(EnemyAttackState/LaunchProjectile) 개수 = weight 슬롯 개수.
+	// GYEditor의 테이블 동기화와 런타임 콤보 weight 분배가 같은 규칙을 공유한다.
+	static int32 CountTraceNotifies(const UAnimMontage* Montage);
+
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 	void RecalculateAttackDataFromMontage();
 #endif
 protected:
+	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilitySpec& Spec) override;
+
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo,
@@ -56,9 +63,20 @@ protected:
 	UFUNCTION()
 	void OnWeaponHit(FGameplayEventData Payload);
 
+	// 트레이스 윈도우(스윙) 시작 시 weight 인덱스 진행 — 빗나간 스윙도 인덱스를 소비한다
+	UFUNCTION()
+	void OnWeaponWindowBegin(FGameplayEventData Payload);
+
 	virtual const FHitDamageWeight* GetCurrentHitWeight() const;
 
-	int32 HitCount = 0;
+	// EnemyAbilityWeightTable에서 자기 클래스 행을 찾아 weight를 로드 (부여 시 1회)
+	void LoadHitWeightsFromTable();
+
+	// 테이블 행(flat 배열)을 어빌리티에 반영. 콤보는 override하여 스텝별로 분배.
+	virtual void ApplyWeightRow(const struct FEnemyAbilityWeightRow& Row);
+
+	// 현재 몇 번째 트레이스 윈도우인지 (INDEX_NONE = 아직 스윙 전, begin 이벤트마다 +1)
+	int32 WeaponWindowIndex = INDEX_NONE;
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
 	float AttackRange = 200.f;

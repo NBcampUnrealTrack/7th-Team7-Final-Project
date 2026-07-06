@@ -10,6 +10,8 @@
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "EnvironmentQuery/EnvQuery.h"
 #include "Enemy/AnimNotify/EnemyAttackState.h"
+#include "Enemy/AnimNotify/LaunchProjectile.h"
+#include "AbilitySystem/GYCombatSettings.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
@@ -34,6 +36,58 @@ UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 
 	ActivationBlockedTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
 	ActivationOwnedTags.AddTag(GYGameplayTags::Ability_Attack_Enemy);
+}
+
+int32 UGYEnemyAttackAbilityBase::CountTraceNotifies(const UAnimMontage* Montage)
+{
+	if (!Montage) return 0;
+
+	int32 Count = 0;
+	for (const FAnimNotifyEvent& NotifyEvent : Montage->Notifies)
+	{
+		if (NotifyEvent.NotifyStateClass &&
+			NotifyEvent.NotifyStateClass->IsA<UEnemyAttackState>())
+		{
+			Count++;
+			continue;
+		}
+		if (NotifyEvent.Notify && NotifyEvent.Notify->IsA<ULaunchProjectile>())
+		{
+			Count++;
+		}
+	}
+	return Count;
+}
+
+void UGYEnemyAttackAbilityBase::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilitySpec& Spec)
+{
+	Super::OnGiveAbility(ActorInfo, Spec);
+
+	LoadHitWeightsFromTable();
+}
+
+void UGYEnemyAttackAbilityBase::LoadHitWeightsFromTable()
+{
+	const UGYCombatSettings* Settings = GetDefault<UGYCombatSettings>();
+	const UDataTable* Table = Settings ? Settings->EnemyAbilityWeightTable.LoadSynchronous() : nullptr;
+	if (!Table) return;
+
+	const FSoftObjectPath MyClassPath(GetClass());
+	for (const TPair<FName, uint8*>& Pair : Table->GetRowMap())
+	{
+		const FEnemyAbilityWeightRow* Row = reinterpret_cast<const FEnemyAbilityWeightRow*>(Pair.Value);
+		if (Row && Row->AbilityClass.ToSoftObjectPath() == MyClassPath)
+		{
+			ApplyWeightRow(*Row);
+			return;
+		}
+	}
+}
+
+void UGYEnemyAttackAbilityBase::ApplyWeightRow(const FEnemyAbilityWeightRow& Row)
+{
+	HitDamageWeights = Row.HitDamageWeights;
 }
 
 bool UGYEnemyAttackAbilityBase::CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const
@@ -278,7 +332,7 @@ void UGYEnemyAttackAbilityBase::OnMontageInterrupted()
 
 void UGYEnemyAttackAbilityBase::StartWeaponHitListener()
 {
-	HitCount = 0;
+	WeaponWindowIndex = INDEX_NONE;
 
 	UAbilityTask_WaitGameplayEvent* HitTask =
 		UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
@@ -288,11 +342,28 @@ void UGYEnemyAttackAbilityBase::StartWeaponHitListener()
 			false);
 	HitTask->EventReceived.AddDynamic(this, &UGYEnemyAttackAbilityBase::OnWeaponHit);
 	HitTask->ReadyForActivation();
+
+	UAbilityTask_WaitGameplayEvent* WindowTask =
+		UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+			this,
+			GYGameplayTags::Event_Enemy_WeaponTrace_Begin,
+			nullptr,
+			false);
+	WindowTask->EventReceived.AddDynamic(this, &UGYEnemyAttackAbilityBase::OnWeaponWindowBegin);
+	WindowTask->ReadyForActivation();
+}
+
+void UGYEnemyAttackAbilityBase::OnWeaponWindowBegin(FGameplayEventData Payload)
+{
+	++WeaponWindowIndex;
 }
 
 const FHitDamageWeight* UGYEnemyAttackAbilityBase::GetCurrentHitWeight() const
 {
-	return HitDamageWeights.IsValidIndex(HitCount) ? &HitDamageWeights[HitCount] : nullptr;
+	if (HitDamageWeights.IsEmpty()) return nullptr;
+
+	const int32 Index = FMath::Clamp(WeaponWindowIndex, 0, HitDamageWeights.Num() - 1);
+	return &HitDamageWeights[Index];
 }
 
 void UGYEnemyAttackAbilityBase::OnWeaponHit(FGameplayEventData Payload)
@@ -351,6 +422,4 @@ void UGYEnemyAttackAbilityBase::OnWeaponHit(FGameplayEventData Payload)
 
 		TargetASC->ExecuteGameplayCue(HitCueTag, CueParams);
 	}
-
-	++HitCount;
 }
