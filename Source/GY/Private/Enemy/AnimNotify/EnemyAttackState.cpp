@@ -37,6 +37,13 @@ void UEnemyAttackState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
 	AActor* OwnerActor = MeshComp->GetOwner();
 	if (!OwnerActor) return;
 
+	{
+		FGameplayEventData BeginPayload;
+		BeginPayload.Instigator = OwnerActor;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+			OwnerActor, GYGameplayTags::Event_Enemy_WeaponTrace_Begin, BeginPayload);
+	}
+
 	if (Mode == EAttackMode::SocketSweep)
 	{
 		const TArray<FName>* SocketsPtr = nullptr;

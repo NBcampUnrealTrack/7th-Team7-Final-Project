@@ -6,6 +6,8 @@ void UEnemyMeleeAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	if (!IsActive()) return;
+
 	StartWeaponHitListener();
 
 	PlayAttackMontage();

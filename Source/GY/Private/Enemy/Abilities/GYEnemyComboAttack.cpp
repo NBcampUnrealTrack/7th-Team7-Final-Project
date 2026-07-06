@@ -35,7 +35,35 @@ const FHitDamageWeight* UGYEnemyComboAttack::GetCurrentHitWeight() const
 {
 	if (!ComboSteps.IsValidIndex(ComboIndex)) return nullptr;
 	const TArray<FHitDamageWeight>& W = ComboSteps[ComboIndex].HitWeights;
-	return W.IsValidIndex(HitCount) ? &W[HitCount] : nullptr;
+	if (W.IsEmpty()) return nullptr;
+
+	const int32 Index = FMath::Clamp(WeaponWindowIndex, 0, W.Num() - 1);
+	return &W[Index];
+}
+
+void UGYEnemyComboAttack::ApplyWeightRow(const FEnemyAbilityWeightRow& Row)
+{
+	const TArray<FHitDamageWeight>& Flat = Row.HitDamageWeights;
+	int32 Cursor = 0;
+
+	auto TakeSlice = [&Flat, &Cursor](int32 Count, TArray<FHitDamageWeight>& Out)
+	{
+		Out.SetNum(Count);
+		for (int32 i = 0; i < Count; ++i)
+		{
+			if (Flat.IsValidIndex(Cursor))
+			{
+				Out[i] = Flat[Cursor];
+			}
+			++Cursor;
+		}
+	};
+
+	TakeSlice(CountTraceNotifies(AttackMontage), HitDamageWeights);
+	for (FComboStep& Step : ComboSteps)
+	{
+		TakeSlice(CountTraceNotifies(Step.Montage), Step.HitWeights);
+	}
 }
 
 bool UGYEnemyComboAttack::ShouldContinueCombo() const
@@ -107,7 +135,7 @@ void UGYEnemyComboAttack::PlayComboMontage(int32 Index)
 	}
 
 	ComboIndex = Index;
-	HitCount = 0; // 새 스텝의 Weight[0]부터
+	WeaponWindowIndex = INDEX_NONE;
 
 	CurrentMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this, NAME_None, ComboSteps[Index].Montage, 1.f, NAME_None, true);

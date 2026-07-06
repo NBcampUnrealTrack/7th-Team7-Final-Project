@@ -44,6 +44,8 @@ namespace GYGameplayTags
 
 	// Enemy Attack events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_WeaponTrace_Hit)
+	// 트레이스 윈도우(스윙) 시작 — 어빌리티가 HitDamageWeights 인덱스를 스윙 기준으로 맞추는 데 사용
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_WeaponTrace_Begin)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_LaunchProjectile)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Slam_Land)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Teleport_Trigger)

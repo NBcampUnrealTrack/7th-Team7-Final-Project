@@ -42,6 +42,10 @@ protected:
 		const FGameplayEventData* TriggerEventData) override;
 
 	virtual const FHitDamageWeight* GetCurrentHitWeight() const override;
+
+	// flat 테이블 배열을 [AttackMontage 몫 → ComboSteps 순서]로 분배 (GYEditor 동기화와 동일 규칙)
+	virtual void ApplyWeightRow(const FEnemyAbilityWeightRow& Row) override;
+
 	virtual bool ShouldContinueCombo() const;
 
 	UFUNCTION()
