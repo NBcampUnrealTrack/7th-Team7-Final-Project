@@ -2,9 +2,6 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-#include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
-
 UAbilityTask_HomeToTarget* UAbilityTask_HomeToTarget::CreateHomeToTarget(
     UGameplayAbility* OwningAbility, AActor* Target, float InDuration,
     float InMaxRotationSpeed, float InInterpSpeed, bool bInUseConstantSpeed)
@@ -25,12 +22,8 @@ void UAbilityTask_HomeToTarget::Activate()
         if (UCharacterMovementComponent* Movement = Char->GetCharacterMovement())
         {
         	bSavedOrientToMovement = Movement->bOrientRotationToMovement;
-        	//bSavedUseControllerRotationYaw = Char->bUseControllerRotationYaw;
-        	//bSavedUseControllerDesiredRotation = Movement->bUseControllerDesiredRotation;
 
         	Movement->bOrientRotationToMovement = false;
-        	//Char->bUseControllerRotationYaw = false;
-        	//Movement->bUseControllerDesiredRotation = false;
 
         	bStateSaved = true;
         }
@@ -89,8 +82,6 @@ void UAbilityTask_HomeToTarget::OnDestroy(bool bInOwnerFinished)
             if (UCharacterMovementComponent* Movement = Char->GetCharacterMovement())
             {
             	Movement->bOrientRotationToMovement = bSavedOrientToMovement;
-            	// Char->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
-            	// Movement->bUseControllerDesiredRotation = bSavedUseControllerDesiredRotation;
             }
         }
         bStateSaved = false;
