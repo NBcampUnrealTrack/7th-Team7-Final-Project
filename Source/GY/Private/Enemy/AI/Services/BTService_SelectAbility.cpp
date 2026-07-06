@@ -37,24 +37,21 @@ void UBTService_SelectAbility::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 	AActor* Target = Cast<AActor>(BlackboardComponent->GetValueAsObject(EnemyBBKeys::TargetActor));
 	if (!Target) return;
 
-	const float DistToTarget = FVector::Dist(
-		Enemy->GetActorLocation(), Target->GetActorLocation());
-
-	UGYEnemyAttackAbilityBase* BestAbility = nullptr;
-	FGameplayAbilitySpecHandle BestHandle;
-	float BestScore = -1.f;
-
-	FVector ToTarget = (Target->GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
-	float DotResult = FVector::DotProduct(Enemy->GetActorForwardVector(), ToTarget);
-	float AngleDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(DotResult, -1.f, 1.f)));
-
 	UObject* LastUsed = BlackboardComponent
 	->GetValueAsObject(EnemyBBKeys::LastUsedAbility);
 
+	struct FAbilityScore
+	{
+		UGYEnemyAttackAbilityBase* Ability;
+		float Score;
+	};
+
+	TArray<FAbilityScore> Candidates;
+	float AccScores = 0.f;
+
 	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
 	{
-		UGYEnemyAttackAbilityBase* AttackAbility =
-			Cast<UGYEnemyAttackAbilityBase>(Spec.Ability);
+		UGYEnemyAttackAbilityBase* AttackAbility = Cast<UGYEnemyAttackAbilityBase>(Spec.Ability);
 		if (!AttackAbility) continue;
 
 		float Score = UGYEnemyAttackAbilityBase::CalcAbilityScore(
@@ -62,22 +59,31 @@ void UBTService_SelectAbility::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 
 		if (Score < 0.f) continue;;
 
-		if (Score > BestScore)
+		Candidates.Add({AttackAbility, Score});
+		AccScores += Score;
+	}
+
+	if (Candidates.Num() == 0 || AccScores <= 0.f) return;
+
+	const float Roll = FMath::FRandRange(0.f, AccScores);
+	float Cumulative = 0.f;
+
+	UGYEnemyAttackAbilityBase* SelectedAbility = nullptr;
+
+	for (const FAbilityScore& C : Candidates)
+	{
+		Cumulative += C.Score;
+		if (Roll <= Cumulative)
 		{
-			BestScore = Score;
-			BestAbility = AttackAbility;
-			BestHandle = Spec.Handle;
+			SelectedAbility = C.Ability;
+			break;
 		}
 	}
 
-	if (!BestAbility) return;
+	if (!SelectedAbility) return;
 
-
-
-	BlackboardComponent->SetValueAsObject(EnemyBBKeys::SelectedAbility, BestAbility);
-	BlackboardComponent->SetValueAsObject(EnemyBBKeys::LastUsedAbility, BestAbility);
+	BlackboardComponent->SetValueAsObject(EnemyBBKeys::SelectedAbility, SelectedAbility);
+	BlackboardComponent->SetValueAsObject(EnemyBBKeys::LastUsedAbility, SelectedAbility);
 	return;
-
-
 }
 
