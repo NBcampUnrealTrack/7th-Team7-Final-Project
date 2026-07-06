@@ -44,6 +44,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Stun, "Sound.Player.Stun")
 
 	/* 적 사운드 */
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Enemy_Regen, "Sound.Enemy.Regen")
+
 
 	//펭마오
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Attack_1, "Sound.Feng.Attack.1") //휘두르기

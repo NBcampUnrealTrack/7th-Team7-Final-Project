@@ -60,6 +60,10 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_TimeRift, "GameplayCue.Interaction.TimeRift");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_TimeRift_Rest, "GameplayCue.Interaction.TimeRift.Rest");
 
+	// 적 리젠
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Regen, "GameplayCue.Enemy.Regen");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Feng_Death, "GameplayCue.Feng.Death");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Sparrow_Death, "GameplayCue.Sparrow.Death");
 
 	// 상태 이상
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Stun, "GameplayCue.Status.Stun");

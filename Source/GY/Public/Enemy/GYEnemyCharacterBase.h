@@ -191,6 +191,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Death")
 	float DeactivateDelay = 3.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy|Death")
+	FGameplayTag DeathCueTag;
+
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Perception")
 	FName SightSocketName = TEXT("head");
 
