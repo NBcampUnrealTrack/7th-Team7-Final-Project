@@ -106,6 +106,15 @@ void AGYPlayerController::OnPossess(APawn* InPawn)
 	}
 
 	UGYPawnExtensionComponent::RequestInitStateRecheck(GetPawn());
+
+	// 오디오 리스너 : 폰 기준으로
+	if (IsLocalController() && InPawn)
+	{
+		SetAudioListenerOverride(
+			InPawn->GetRootComponent(),
+			FVector::ZeroVector,
+			FRotator::ZeroRotator);
+	}
 }
 
 void AGYPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
