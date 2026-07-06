@@ -185,8 +185,6 @@ void AGYEnemyCharacterBase::BeginPlay()
 
 	GetCapsuleComponent()->SetCollisionProfileName("Pawn");
 
-	SpawnWeapons();
-
 	if (HasAuthority())
 	{
 		bIsDead = false;
@@ -741,37 +739,6 @@ void AGYEnemyCharacterBase::CachedWeaponTraceSockets()
 	});
 
 	WeaponTraceSockets = Found;
-}
-
-void AGYEnemyCharacterBase::SpawnWeapons()
-{
-	UWorld* World = GetWorld();
-	if (!World || !GetMesh()) return;
-
-	for (const FEnemyWeaponSpawn& Def : WeaponsToSpawn)
-	{
-		if (!Def.WeaponClass) continue;
-
-		FActorSpawnParameters Params;
-		Params.Owner = this;
-		Params.Instigator = this;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		AGYWeaponActor* Weapon = World->SpawnActor<AGYWeaponActor>(Def.WeaponClass, Params);
-		if (!Weapon) continue;
-
-		Weapon->AttachToComponent(GetMesh(),
-			FAttachmentTransformRules::SnapToTargetNotIncludingScale, Def.AttachSocket);
-		Weapon->SetActorRelativeTransform(Def.RelativeTransform);
-
-		EquippedWeapons.Add(Weapon->GetWeaponTypeTag(), Weapon);
-	}
-}
-
-AGYWeaponActor* AGYEnemyCharacterBase::GetWeaponBySlot(FGameplayTag SlotTag) const
-{
-	const TObjectPtr<AGYWeaponActor>* Found = EquippedWeapons.Find(SlotTag);
-	return Found ? *Found : nullptr;
 }
 
 UGYWeaponHitBox* AGYEnemyCharacterBase::GetBodyHitBox(FGameplayTag PartTag) const

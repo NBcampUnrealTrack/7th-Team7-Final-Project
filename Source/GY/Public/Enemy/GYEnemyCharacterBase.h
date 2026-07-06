@@ -11,6 +11,8 @@
 
 class UHitReactionComponent;
 class UPhysicalAnimationComponent;
+class AGYWeaponActor;
+class UGYWeaponHitBox;
 class UGYEnemyVitalAttributeSet;
 class UGYEnemyDamageAttributeSet;
 class UEnemyAnimInstance;
@@ -20,25 +22,6 @@ class UEnemyBootstrapComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDead, AGYEnemyCharacterBase*, Enemy);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, AGYEnemyCharacterBase*, Enemy, float, DamageAmount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyReady, AGYEnemyCharacterBase*, Enemy);
-
-class AGYWeaponActor;
-class UGYWeaponHitBox;
-
-USTRUCT(BlueprintType)
-struct FEnemyWeaponSpawn
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<AGYWeaponActor> WeaponClass;
-
-	UPROPERTY(EditAnywhere)
-	FName AttachSocket = TEXT("Weapon_R");
-
-	UPROPERTY(EditAnywhere)
-	FTransform RelativeTransform;
-};
-
 
 UCLASS(Abstract, BlueprintType, Blueprintable)
 class GY_API AGYEnemyCharacterBase : public ACharacter, public IAbilitySystemInterface, public IWorldPartitionLevelPlacedActor, public IGenericTeamAgentInterface
@@ -111,6 +94,9 @@ public:
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 
 	void SetSightSocket(FName InSocketName, const FRotator& InRotationOffset);
+
+	UFUNCTION(BlueprintPure, Category = "Combat|Weapon")
+	virtual AGYWeaponActor* GetWeaponBySlot(FGameplayTag SlotTag) const { return nullptr; };
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -150,8 +136,6 @@ protected:
 
 	void CachedWeaponTraceSockets();
 
-	void SpawnWeapons();
-
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyDead OnEnemyDead;
@@ -168,12 +152,6 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Combat|WeaponTrace")
 	float WeaponTraceRadius = 10.f;
-
-	UPROPERTY(EditAnywhere, Category = "Combat|Weapon")
-	TArray<FEnemyWeaponSpawn> WeaponsToSpawn;
-
-	UFUNCTION(BlueprintPure, Category = "Combat|Weapon")
-	AGYWeaponActor* GetWeaponBySlot(FGameplayTag SlotTag) const;
 
 	UGYWeaponHitBox* GetBodyHitBox(FGameplayTag PartTag) const;
 
@@ -195,9 +173,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|GAS")
 	TObjectPtr<UGYEnemyDamageAttributeSet> DamageAttribute;
-
-	UPROPERTY(Transient)
-	TMap<FGameplayTag, TObjectPtr<AGYWeaponActor>> EquippedWeapons;
 
 	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
 	bool bIsDead = false;

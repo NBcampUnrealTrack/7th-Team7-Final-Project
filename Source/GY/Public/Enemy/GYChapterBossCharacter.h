@@ -1,0 +1,110 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GYEnemyCharacterBase.h"
+#include "GYChapterBossCharacter.generated.h"
+
+class AGYWeaponActor;
+class ALevelSequenceActor;
+class ULevelSequencePlayer;
+
+USTRUCT(BlueprintType)
+struct FEnemyWeaponSpawn
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AGYWeaponActor> WeaponClass;
+
+	UPROPERTY(EditAnywhere)
+	FName AttachSocket = TEXT("Weapon_R");
+
+	UPROPERTY(EditAnywhere)
+	FTransform RelativeTransform;
+
+	/** 2페이즈 무기처럼 시작 시 숨겨둘 무기 */
+	UPROPERTY(EditAnywhere)
+	bool bInitiallyHidden = false;
+};
+
+USTRUCT()
+struct FBossPhaseWeaponSwap
+{
+	GENERATED_BODY()
+
+	/** 장검용 BlendSpace/피격·사망 시퀀스/태그 몽타주 */
+	UPROPERTY(EditAnywhere)
+	FEnemyAnimationConfig AnimationConfig;
+
+	UPROPERTY(EditAnywhere)
+	FGameplayTag HideWeaponSlot;
+
+	UPROPERTY(EditAnywhere)
+	FGameplayTag ShowWeaponSlot;
+
+	/** 장검용 SocketSweep 트레이스 소켓 (비우면 유지) */
+	UPROPERTY(EditAnywhere)
+	TArray<FName> NewWeaponTraceSockets;
+};
+
+UCLASS()
+class GY_API AGYChapterBossCharacter : public AGYEnemyCharacterBase
+{
+	GENERATED_BODY()
+
+public:
+	virtual AGYWeaponActor* GetWeaponBySlot(FGameplayTag SlotTag) const override;
+
+	/** 모든 클라에서 레벨 시퀀스 재생 */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayCinematic(const FSoftObjectPath& SequencePath);
+
+	/** 서버 대검 -> 장검 전환. 복제되어 클라에도 적용 */
+	void SwapToSecondPhaseWeapon();
+
+	bool HasSwappedWeapon() const { return bPhase2Weapon; }
+
+protected:
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	void SpawnWeapons();
+
+	UFUNCTION()
+	void OnRep_Phase2Weapon();
+
+	/** 서버·클라 공통 적용: BlendSpace/몽타주맵/무기 토글/트레이스 소켓 */
+	void ApplySecondPhaseWeapon();
+
+	void OnPhaseHealthChanged(const FOnAttributeChangeData& Data);
+
+	UFUNCTION()
+	void HandleCinematicFinished();
+
+public:
+	UPROPERTY(EditAnywhere, Category = "Combat|Weapon")
+	TArray<FEnemyWeaponSpawn> WeaponsToSpawn;
+
+	/** 이 체력 비율 이하로 떨어지면 1회 페이즈 트리거 (BB키 세팅) */
+	UPROPERTY(EditAnywhere, Category = "Boss|Phase", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float PhaseHealthRatio = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Boss|Phase")
+	FBossPhaseWeaponSwap SecondPhaseWeapon;
+
+protected:
+	UPROPERTY(Transient)
+	TMap<FGameplayTag, TObjectPtr<AGYWeaponActor>> EquippedWeapons;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Phase2Weapon)
+	bool bPhase2Weapon = false;
+
+	bool bPhaseTriggered = false;
+
+	UPROPERTY(Transient)
+	TObjectPtr<ALevelSequenceActor> ActiveSequenceActor;
+
+	UPROPERTY(Transient)
+	TObjectPtr<ULevelSequencePlayer> ActiveSequencePlayer;
+};
