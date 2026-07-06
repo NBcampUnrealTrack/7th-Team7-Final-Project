@@ -124,6 +124,10 @@ void UGYEnemyComboAttack::PlayComboMontage(int32 Index)
 	// 이전 태스크 콜백 언바인드 → 콤보 전환 시 종료 콜백 오발동 방지
 	if (CurrentMontageTask)
 	{
+		CurrentMontageTask->OnCompleted.RemoveAll(this);
+		CurrentMontageTask->OnBlendOut.RemoveAll(this);
+		CurrentMontageTask->OnInterrupted.RemoveAll(this);
+		CurrentMontageTask->OnCancelled.RemoveAll(this);
 		CurrentMontageTask->EndTask();
 		CurrentMontageTask = nullptr;
 	}
