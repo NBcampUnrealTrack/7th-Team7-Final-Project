@@ -35,6 +35,7 @@ public class GYEditor : ModuleRules
 				"ToolMenus",
 				"PropertyEditor",
 				"DetailCustomizations",
+				"AnimationBlueprintLibrary",
 
 
             }
