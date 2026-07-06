@@ -30,12 +30,8 @@ void UBTService_DebugEQSItems::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 
-	UGYEnemyAttackAbilityBase* SelectedAbility = Cast<UGYEnemyAttackAbilityBase>(
-			BB->GetValueAsObject(EnemyBBKeys::SelectedAbility));
-	if (!SelectedAbility) return ;
+
 	FEnvQueryRequest QueryRequest(QueryTemplate, AIC->GetPawn());
-	QueryRequest.SetFloatParam(TEXT("AttackRadius"), SelectedAbility->AttackRange * 0.95f);
-	QueryRequest.SetFloatParam(TEXT("AttackRadiusMin"), SelectedAbility->AttackRange * 0.5f);
 	QueryRequest.Execute(EEnvQueryRunMode::AllMatching,
 		this, &UBTService_DebugEQSItems::OnQueryFinished);
 }

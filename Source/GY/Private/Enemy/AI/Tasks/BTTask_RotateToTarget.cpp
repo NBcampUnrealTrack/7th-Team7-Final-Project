@@ -65,15 +65,6 @@ void UBTTask_RotateToTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* 
 	FRotator TargetRot = ToTarget.ToOrientationRotator();
 	FRotator CurrentRot = Enemy->GetActorRotation();
 
-	float YawDiff = FMath::Abs(FRotator::NormalizeAxis(TargetRot.Yaw - CurrentRot.Yaw));
-
-	if (YawDiff <= AcceptableAngle)
-	{
-		Enemy->SetOrientToMovement(true);
-		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-		return;
-	}
-
 	FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaSeconds, RotationSpeed / 90.f);
 	Enemy->SetActorRotation(FRotator(0.f, NewRot.Yaw, 0.f));
 }

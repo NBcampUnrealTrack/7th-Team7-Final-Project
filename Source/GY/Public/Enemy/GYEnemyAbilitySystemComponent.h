@@ -33,6 +33,9 @@ public:
 	TSubclassOf<UGYPeriodicAttributeEffect> StunRegenEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<UGYPeriodicAttributeEffect> ActivityPointsRegenEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<UGameplayEffect> CombatStateEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS")
