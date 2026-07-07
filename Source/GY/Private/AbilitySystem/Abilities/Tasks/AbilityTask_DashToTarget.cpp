@@ -29,6 +29,11 @@ void UAbilityTask_DashToTarget::Activate()
 		return;
 	}
 
+	if (UCharacterMovementComponent* CMC = Char->GetCharacterMovement())
+	{
+		SavedWalkSpeed = CMC->MaxWalkSpeed;
+		CMC->MaxWalkSpeed = DashSpeed;
+	}
 	bTickingTask = true;
 }
 
@@ -83,6 +88,7 @@ void UAbilityTask_DashToTarget::OnDestroy(bool bInOwnerFinished)
 		if (UCharacterMovementComponent* CMC = Char->GetCharacterMovement())
 		{
 			CMC->Velocity = FVector::ZeroVector;
+			CMC->MaxWalkSpeed = SavedWalkSpeed;
 		}
 	}
 
