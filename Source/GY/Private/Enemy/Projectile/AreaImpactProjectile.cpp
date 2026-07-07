@@ -7,6 +7,7 @@
 #include "Engine/OverlapResult.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Logging/GYLogManager.h"
+#include "NiagaraFunctionLibrary.h"
 
 void AAreaImpactProjectile::OnProjectileOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                                 UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -112,5 +113,14 @@ void AAreaImpactProjectile::TriggerImpact(const FVector& ImpactLocation)
 			CueParams.Normal   = FVector::UpVector;
 			SourceASC->ExecuteGameplayCue(ImpactCueTag, CueParams);
 		}
+	}
+
+	if (ImpactVFX)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			World,
+			ImpactVFX,
+			ImpactLocation,
+			FRotator::ZeroRotator);
 	}
 }
