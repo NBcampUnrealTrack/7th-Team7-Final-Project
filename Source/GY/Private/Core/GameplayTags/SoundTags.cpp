@@ -59,6 +59,18 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Sparrow_Attack, "Sound.Sparrow.Attack") //발사
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Sparrow_Death, "Sound.Sparrow.Death") //목소리
 
+	//보스
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Impact, "Sound.Boss.Impact") //터지는 소리
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Seed, "Sound.Boss.Seed") //씨앗날리는거
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Poison, "Sound.Boss.Poison") //독 퍼지는
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Bloom, "Sound.Boss.Bloom") //떨어지는
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Roar, "Sound.Boss.Roar")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Vine, "Sound.Boss.Vine") //페이즈2
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Pawn_Death, "Sound.Boss.Pawn.Death")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Pawn_Attack, "Sound.Boss.Pawn.Attack")
+
+	//중간보스
+
 	/* 상호 작용 */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_LootBox_Open, "Sound.Interaction.LootBox.Open")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_LootBox_Close, "Sound.Interaction.LootBox.Close")
