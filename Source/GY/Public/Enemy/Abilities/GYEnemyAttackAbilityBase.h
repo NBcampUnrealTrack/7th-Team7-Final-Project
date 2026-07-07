@@ -51,6 +51,14 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
 
+	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
+
+	virtual void ApplyCost(const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo) const override;
+
 	UFUNCTION()
 	void PlayAttackMontage();
 	UFUNCTION()
@@ -108,6 +116,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Damage")
 	TArray<FHitDamageWeight> HitDamageWeights;
+
+	UPROPERTY(BlueprintReadOnly, Category="Cost")
+	float ActivateCost = 0.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (Categories = "GameplayCue"))
 	FGameplayTag HitCueTag; // 피격 시 카메라 이펙트

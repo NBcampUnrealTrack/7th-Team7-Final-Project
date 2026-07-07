@@ -37,4 +37,7 @@ struct FEnemyAbilityWeightRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FHitDamageWeight> HitDamageWeights;
+
+	UPROPERTY(EditAnywhere, meta=(ClampMin="0"))
+	float ActivateCost = 0.f;
 };
