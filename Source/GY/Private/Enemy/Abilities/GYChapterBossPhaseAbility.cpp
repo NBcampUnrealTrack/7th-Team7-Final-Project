@@ -72,6 +72,11 @@ void UGYChapterBossPhaseAbility::OnWeaponSwapTime()
 
 	Boss->SwapToSecondPhaseWeapon();
 
+	for (const FGameplayTag& Tag : PhaseTagsToAdd)
+	{
+		ASC->AddLooseGameplayTag(Tag);
+	}
+
 	for (const TSubclassOf<UGameplayAbility>& AbilityClass : AbilitiesToRemove)
 	{
 		if (FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromClass(AbilityClass))

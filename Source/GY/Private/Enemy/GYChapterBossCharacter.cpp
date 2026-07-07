@@ -1,5 +1,6 @@
 #include "Enemy/GYChapterBossCharacter.h"
 
+#include "Animation/BlendSpace.h"
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
@@ -135,9 +136,11 @@ void AGYChapterBossCharacter::ApplySecondPhaseWeapon()
 
 	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
-		InitAnimInstanceAssets(AnimInst, SecondPhaseWeapon.AnimationConfig);
+		if (UBlendSpace* NewBS = SecondPhaseWeapon.LocomotionBlendSpace.LoadSynchronous())
+		{
+			AnimInst->SetLocomotionBlendSpace(NewBS);
+		}
 	}
-	BuildMontageMap(SecondPhaseWeapon.AnimationConfig);
 
 	if (HasAuthority())
 	{

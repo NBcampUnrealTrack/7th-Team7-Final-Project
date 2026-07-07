@@ -142,6 +142,8 @@ float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Abi
 {
 	if (!Ability || !ASC) return -1.f;
 
+	if (!Ability->DoesAbilitySatisfyTagRequirements(*ASC)) return -1.f;
+
 	const float Current = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetActivityPointsAttribute());
 	if (Current < Ability->ActivateCost) return -1.f;
 

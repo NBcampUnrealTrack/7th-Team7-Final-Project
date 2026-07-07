@@ -7,6 +7,7 @@
 class AGYWeaponActor;
 class ALevelSequenceActor;
 class ULevelSequencePlayer;
+class UBlendSpace;
 
 USTRUCT(BlueprintType)
 struct FEnemyWeaponSpawn
@@ -32,9 +33,9 @@ struct FBossPhaseWeaponSwap
 {
 	GENERATED_BODY()
 
-	/** 장검용 BlendSpace/피격·사망 시퀀스/태그 몽타주 */
+	/** 2페이즈(장검) 로코모션 BlendSpace */
 	UPROPERTY(EditAnywhere)
-	FEnemyAnimationConfig AnimationConfig;
+	TSoftObjectPtr<UBlendSpace> LocomotionBlendSpace;
 
 	UPROPERTY(EditAnywhere)
 	FGameplayTag HideWeaponSlot;
