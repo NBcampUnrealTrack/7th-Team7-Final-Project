@@ -10,6 +10,7 @@
 #include "SkillTreeEditor/AssetTypeActions_SkillTree.h"
 #include "Enemy/AnimNotify/EnemyAttackState.h"
 #include "Enemy/AnimNotify/LaunchProjectile.h"
+#include "Misc/MessageDialog.h"
 
 #define LOCTEXT_NAMESPACE "FGYEditorModule"
 
@@ -81,16 +82,36 @@ void FGYEditorModule::OnObjectPreSave(UObject* Object, FObjectPreSaveContext Con
 	if (!BP->ParentClass || !BP->ParentClass->IsChildOf(UGYEnemyAttackAbilityBase::StaticClass()))
 		return;
 
-	SyncAbilityWeightRow(BP);
+	// 변경이 실제로 필요할 때만 팝업
+	if (!SyncAbilityWeightRow(BP, /*bDryRun=*/true))
+		return;
+
+	// 쿠킹/오토세이브 같은 절차적 저장에서는 모달을 띄울 수 없으므로 기존처럼 자동 적용
+	if (Context.IsProceduralSave())
+	{
+		SyncAbilityWeightRow(BP);
+		return;
+	}
+
+	const FText Message = FText::Format(
+		LOCTEXT("SyncWeightRowPrompt",
+			"'{0}' 어빌리티의 Trace Notify 개수가 변경되었습니다.\n"
+			"EnemyAbilityWeights 테이블의 행을 수정하시겠습니까?"),
+		FText::FromString(BP->GetName()));
+
+	if (FMessageDialog::Open(EAppMsgType::YesNo, Message) == EAppReturnType::Yes)
+	{
+		SyncAbilityWeightRow(BP);
+	}
 }
 
-void FGYEditorModule::SyncAbilityWeightRow(class UBlueprint* BP)
+bool FGYEditorModule::SyncAbilityWeightRow(class UBlueprint* BP, bool bDryRun)
 {
-	if (!BP->GeneratedClass) return;
+	if (!BP->GeneratedClass) return false;
 
 	UGYEnemyAttackAbilityBase* CDO =
 		Cast<UGYEnemyAttackAbilityBase>(BP->GeneratedClass->GetDefaultObject());
-	if (!CDO) return;
+	if (!CDO) return false;
 
 	int32 TraceCount = UGYEnemyAttackAbilityBase::CountTraceNotifies(CDO->AttackMontage);
 
@@ -106,7 +127,7 @@ void FGYEditorModule::SyncAbilityWeightRow(class UBlueprint* BP)
 
 	UDataTable* DataTable = LoadObject<UDataTable>(nullptr,
 		TEXT("/Game/GY/Data/Tables/EnemyAbilityWeights"));
-	if (!DataTable) return;
+	if (!DataTable) return false;
 
 	const FName RowName = *BP->GetName();
 
@@ -118,16 +139,19 @@ void FGYEditorModule::SyncAbilityWeightRow(class UBlueprint* BP)
 		if (Existing->HitDamageWeights.Num() == TraceCount &&
 			Existing->AbilityClass.ToSoftObjectPath() == FSoftObjectPath(BP->GeneratedClass))
 		{
-			return;
+			return false; // 변경 필요 없음
 		}
 		NewRow.HitDamageWeights = Existing->HitDamageWeights;
 		NewRow.ActivateCost = Existing->ActivateCost;
 	}
 
+	if (bDryRun) return true; // 수정이 필요하지만 적용은 안 함
+
 	NewRow.HitDamageWeights.SetNum(TraceCount);
 
 	DataTable->AddRow(RowName, NewRow);
 	DataTable->MarkPackageDirty();
+	return true;
 }
 
 void FGYEditorModule::SyncAllAbilityWeightRows()
@@ -149,6 +173,9 @@ void FGYEditorModule::SyncAllAbilityWeightRows()
 	TArray<FAssetData> Assets;
 	AssetRegistry.GetAssets(Filter, Assets);
 
+	// 개별 팝업이 연달아 뜨지 않도록 수정이 필요한 BP를 먼저 모은 뒤 한 번만 묻는다
+	TArray<UBlueprint*> PendingBPs;
+
 	for (const FAssetData& Asset : Assets)
 	{
 		FString GeneratedClassPath;
@@ -159,6 +186,30 @@ void FGYEditorModule::SyncAllAbilityWeightRows()
 		if (!DerivedClasses.Contains(ClassPath)) continue;
 
 		if (UBlueprint* BP = Cast<UBlueprint>(Asset.GetAsset()))
+		{
+			if (SyncAbilityWeightRow(BP, /*bDryRun=*/true))
+			{
+				PendingBPs.Add(BP);
+			}
+		}
+	}
+
+	if (PendingBPs.IsEmpty()) return;
+
+	FString NameList;
+	for (const UBlueprint* BP : PendingBPs)
+	{
+		NameList += FString::Printf(TEXT("\n - %s"), *BP->GetName());
+	}
+
+	const FText Message = FText::Format(
+		LOCTEXT("SyncAllWeightRowsPrompt",
+			"EnemyAbilityWeights 테이블과 어긋난 어빌리티가 {0}개 있습니다.{1}\n\n테이블을 수정하시겠습니까?"),
+		PendingBPs.Num(), FText::FromString(NameList));
+
+	if (FMessageDialog::Open(EAppMsgType::YesNo, Message) == EAppReturnType::Yes)
+	{
+		for (UBlueprint* BP : PendingBPs)
 		{
 			SyncAbilityWeightRow(BP);
 		}
