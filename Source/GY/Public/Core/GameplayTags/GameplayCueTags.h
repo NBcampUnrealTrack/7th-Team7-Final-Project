@@ -61,9 +61,20 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_Door_Close);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_TimeRift);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_TimeRift_Rest);
+
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Enemy_Regen);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Feng_Death);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Sparrow_Death);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Pawn_Death);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Boss_Impact);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Boss_Bloom);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Boss_Poison);
+
 	/* 상태 이상 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Stun);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Stagger);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Poison);
+
 	/* 카메라 이펙트 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_Zoom);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Camera_Shake);

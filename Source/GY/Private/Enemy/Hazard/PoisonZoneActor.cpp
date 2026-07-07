@@ -64,6 +64,9 @@ void APoisonZoneActor::OnZoneBeginOverlap(UPrimitiveComponent* OverlappedCompone
 		SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data, TargetASC);
 
 	ActivePoisonHandles.Add(TargetASC, Active);
+
+	TargetASC->ExecuteGameplayCue(ZoneSoundTag);
+	TargetASC->AddGameplayCue(ZonePostProcessTag);
 }
 
 void APoisonZoneActor::OnZoneEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -83,6 +86,7 @@ void APoisonZoneActor::OnZoneEndOverlap(UPrimitiveComponent* OverlappedComponent
 		TargetASC->RemoveActiveGameplayEffect(*Found);
 		ActivePoisonHandles.Remove(TargetASC);
 	}
+	TargetASC->RemoveGameplayCue(ZonePostProcessTag);
 }
 
 void APoisonZoneActor::BeginPlay()

@@ -53,8 +53,12 @@ protected:
 	TSubclassOf<UGameplayEffect> PoisonEffectClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "PoisonZone|Cue",
-		meta = (Categories = "GameplayCue", ToolTip = "장판 등장 VFX/SFX 큐."))
-	FGameplayTag ZoneCueTag;
+		meta = (Categories = "GameplayCue", ToolTip = "SFX 큐."))
+	FGameplayTag ZoneSoundTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PoisonZone|Cue",
+		meta = (Categories = "GameplayCue", ToolTip = "Post Process 큐."))
+	FGameplayTag ZonePostProcessTag;
 
 	UPROPERTY()
 	TWeakObjectPtr<AActor> InstigatorActor;

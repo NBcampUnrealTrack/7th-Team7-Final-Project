@@ -14,6 +14,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Animation/BlendSpace.h"
 #include "Core/GameplayTags/FactionTags.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "GameStates/GYGameState.h"
 #include "Logging/GYLogManager.h"
@@ -503,6 +504,12 @@ void AGYEnemyCharacterBase::Die()
 		QuestMsg.Count = 1;
 		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Quest_Event, QuestMsg);
 	}
+
+	// 사운드
+	if (AbilitySystemComponent && DeathCueTag.IsValid())
+	{
+		AbilitySystemComponent->ExecuteGameplayCue(DeathCueTag);
+	}
 }
 
 #if WITH_EDITOR
@@ -556,6 +563,12 @@ void AGYEnemyCharacterBase::Activate()
 		/*bSweep=*/false,
 		nullptr,
 		ETeleportType::TeleportPhysics);
+
+	// 리젠 이펙트
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Enemy_Regen);
+	}
 
 	if (!Bootstrap->GetDataAsset())
 	{

@@ -60,10 +60,19 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_TimeRift, "GameplayCue.Interaction.TimeRift");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_TimeRift_Rest, "GameplayCue.Interaction.TimeRift.Rest");
 
+	// 적 리젠
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Regen, "GameplayCue.Enemy.Regen");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Feng_Death, "GameplayCue.Feng.Death");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Sparrow_Death, "GameplayCue.Sparrow.Death");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Pawn_Death, "GameplayCue.Pawn.Death");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Boss_Impact, "GameplayCue.Boss.Impact");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Boss_Bloom, "GameplayCue.Boss.Bloom");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Boss_Poison, "GameplayCue.Boss.Poison");
 
-	// 상태 이상
+	// 상태 이상 - 포스트 프로세스
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Stun, "GameplayCue.Status.Stun");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Stagger, "GameplayCue.Status.Stagger");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Poison, "GameplayCue.Status.Poison");
 
 	// 카메라 이펙트
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Camera_Zoom, "GameplayCue.Camera.Zoom");

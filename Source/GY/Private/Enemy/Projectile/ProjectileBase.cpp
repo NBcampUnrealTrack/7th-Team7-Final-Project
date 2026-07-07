@@ -2,6 +2,8 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystemGlobals.h"
+#include "GameplayCueManager.h"
 #include "GenericTeamAgentInterface.h"
 #include "Components/SphereComponent.h"
 #include "Core/GYCollisionChannels.h"
@@ -113,6 +115,16 @@ void AProjectileBase::OnProjectileMovementStop(const FHitResult& ImpactResult)
 void AProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (SoundCueTag.IsValid())
+	{
+		if (UGameplayCueManager* CueManager = UAbilitySystemGlobals::Get().GetGameplayCueManager())
+		{
+			FGameplayCueParameters CueParams;
+			CueParams.Location = GetActorLocation();
+			CueManager->HandleGameplayCue(this, SoundCueTag, EGameplayCueEvent::Executed, CueParams);
+		}
+	}
 }
 
 

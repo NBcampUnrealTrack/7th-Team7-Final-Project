@@ -4,6 +4,8 @@
 #include "ProjectileBase.h"
 #include "AreaImpactProjectile.generated.h"
 
+class UNiagaraSystem;
+
 UCLASS()
 class GY_API AAreaImpactProjectile : public AProjectileBase
 {

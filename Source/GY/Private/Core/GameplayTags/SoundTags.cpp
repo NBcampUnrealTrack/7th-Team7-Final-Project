@@ -44,8 +44,32 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Stun, "Sound.Player.Stun")
 
 	/* 적 사운드 */
-	UE_DEFINE_GAMEPLAY_TAG(Sound_Goblin_Roar, "Sound.Goblin.Roar")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Enemy_Regen, "Sound.Enemy.Regen")
 
+
+	//펭마오
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Attack_1, "Sound.Feng.Attack.1") //휘두르기
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Attack_2, "Sound.Feng.Attack.2") //찍기
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Attack_3, "Sound.Feng.Attack.3") //두번휘두르기
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Attack_4, "Sound.Feng.Attack.4") //목소리
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Jump_Up, "Sound.Feng.Jump.Up") //목소리
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Feng_Death, "Sound.Feng.Death") //목소리
+
+	//스패로우
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Sparrow_Attack, "Sound.Sparrow.Attack") //발사
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Sparrow_Death, "Sound.Sparrow.Death") //목소리
+
+	//보스
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Impact, "Sound.Boss.Impact") //터지는 소리
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Seed, "Sound.Boss.Seed") //씨앗날리는거
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Poison, "Sound.Boss.Poison") //독 퍼지는
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Bloom, "Sound.Boss.Bloom") //떨어지는
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Roar, "Sound.Boss.Roar")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Vine, "Sound.Boss.Vine") //페이즈2
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Pawn_Death, "Sound.Boss.Pawn.Death")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Pawn_Attack, "Sound.Boss.Pawn.Attack")
+
+	//중간보스
 
 	/* 상호 작용 */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_LootBox_Open, "Sound.Interaction.LootBox.Open")
