@@ -16,7 +16,6 @@
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
-#include "Logging/GYLogManager.h"
 
 ULockOnComponent::ULockOnComponent()
 {
@@ -205,15 +204,6 @@ void ULockOnComponent::OnRep_CurrentTarget()
 {
 	const bool bCurrentActive = CurrentTarget.IsValid();
 
-	if (AActor* Owner = GetOwner())
-	{
-		GY_LOG(Combat, KHB,
-			"[%s %s] OnRep_CurrentTarget | NewTarget=%s | Rot=%s",
-			Owner->HasAuthority() ? TEXT("SERVER") : TEXT("CLIENT"), *Owner->GetName(),
-			bCurrentActive ? *CurrentTarget->GetName() : TEXT("None"),
-			*Owner->GetActorRotation().ToString());
-	}
-
 	SetComponentTickEnabled(bCurrentActive);
 
 	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
@@ -337,21 +327,13 @@ AActor* ULockOnComponent::FindBestTarget() const
 
 void ULockOnComponent::UpdateRotationToTarget(float DeltaTime)
 {
-	APawn* OwnerPawn = Cast<APawn>(GetOwner());
-
-	if (GFrameCounter % 30 == 0 && OwnerPawn)
-	{
-		GY_LOG(Combat, KHB,
-			"[%s %s] UpdateRotationToTarget | Suppressed=%d | LocallyControlled=%d | CurRot=%s",
-			OwnerPawn->HasAuthority() ? TEXT("SERVER") : TEXT("CLIENT"),
-			*OwnerPawn->GetName(), bRotationSuppressed, OwnerPawn->IsLocallyControlled(),
-			*OwnerPawn->GetActorRotation().ToString());
-	}
-
 	if (bRotationSuppressed) return;
 
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (!OwnerPawn) return;
 	if (!OwnerPawn->HasAuthority() && !OwnerPawn->IsLocallyControlled()) return;
+	
+
 	if (!CurrentTarget.IsValid()) return;
 
 	if (const AGYPlayerState* PS = OwnerPawn->GetPlayerState<AGYPlayerState>())
