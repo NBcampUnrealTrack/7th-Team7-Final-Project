@@ -66,6 +66,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Feng_Death);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Sparrow_Death);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Pawn_Death);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Boss_Impact);
 
 	/* 상태 이상 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Stun);

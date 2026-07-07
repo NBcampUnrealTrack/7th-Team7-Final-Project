@@ -114,13 +114,4 @@ void AAreaImpactProjectile::TriggerImpact(const FVector& ImpactLocation)
 			SourceASC->ExecuteGameplayCue(ImpactCueTag, CueParams);
 		}
 	}
-
-	if (ImpactVFX)
-	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			World,
-			ImpactVFX,
-			ImpactLocation,
-			FRotator::ZeroRotator);
-	}
 }

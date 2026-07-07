@@ -29,9 +29,5 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Cue", meta = (Categories = "GameplayCue"))
 	FGameplayTag ImpactCueTag;
 
-	/** 소멸 시 재생할 Niagara 이펙트 */
-	UPROPERTY(EditDefaultsOnly, Category = "VFX")
-	TObjectPtr<UNiagaraSystem> ImpactVFX;
-
 	bool bImpacted = false;
 };
