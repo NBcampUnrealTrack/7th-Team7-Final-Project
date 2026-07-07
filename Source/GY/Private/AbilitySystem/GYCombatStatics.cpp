@@ -169,6 +169,44 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 		return;
 	}
 
+	//JustGuard
+	if (TargetASC->HasMatchingGameplayTag(GYGameplayTags::Ability_State_JustGuarding))
+	{
+		{
+			FGameplayEventData Payload;
+			Payload.EventTag = GYGameplayTags::Event_JustGuard_Hit;
+			Payload.Instigator = SourceASC->GetAvatarActor();
+
+			if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC))
+			{
+				GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_JustGuard_Hit, Payload);
+			}
+			else
+			{
+				TargetASC->HandleGameplayEvent(GYGameplayTags::Event_JustGuard_Hit, &Payload);
+			}
+		}
+
+		{
+			FGameplayEventData Payload;
+			Payload.EventTag = GYGameplayTags::Event_JustGuarded;
+			Payload.Instigator = TargetASC->GetAvatarActor();
+
+			if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(SourceASC))
+			{
+				GYASC->Multicast_SendGameplayEvent(GYGameplayTags::Event_JustGuarded, Payload);
+			}
+			else
+			{
+				SourceASC->HandleGameplayEvent(GYGameplayTags::Event_JustGuarded, &Payload);
+			}
+		}
+
+		return;
+	}
+
+
+
 	// 블록: 부분 감산(닷지처럼 전부 무효 아님). 각도/활성 판정은 GetActiveBlock(새 경로 전용, 공유 HandleBlockCheck 미사용).
 	// HP는 BlockReduction을 execution이 ×(1-r), 경직/무력도 같은 비율로 축소해 넘김.
 	const FGYBlockData* ActiveBlock = GetActiveBlock(TargetASC, SourceASC);

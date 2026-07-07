@@ -59,8 +59,9 @@ protected:
 
 	void PlayComboMontage(int32 Index);
 
-private:
 	int32 ComboIndex = 0;
+
+private:
 
 	UPROPERTY()
 	TObjectPtr<UAbilityTask_PlayMontageAndWait> CurrentMontageTask;
