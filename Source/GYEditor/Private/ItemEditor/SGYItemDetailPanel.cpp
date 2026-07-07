@@ -1,6 +1,8 @@
 #include "ItemEditor/SGYItemDetailPanel.h"
 
 #include "ItemEditor/GYItemEditorController.h"
+#include "ItemEditor/SGYItemPoolPanel.h"
+#include "ItemEditor/SGYItemStatsPanel.h"
 #include "ItemEditor/SGYItemValidationPanel.h"
 
 #include "Items/ItemDefinition.h"
@@ -34,6 +36,18 @@ void SGYItemDetailPanel::Construct(const FArguments& InArgs, TSharedRef<FGYItemE
 			SAssignNew(ValidationPanel, SGYItemValidationPanel)
 		]
 		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(4.f, 0.f)
+		[
+			SAssignNew(StatsPanel, SGYItemStatsPanel, InController)
+		]
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(4.f)
+		[
+			SAssignNew(PoolPanel, SGYItemPoolPanel, InController)
+		]
+		+ SVerticalBox::Slot()
 		.FillHeight(1.f)
 		.Padding(4.f, 0.f, 4.f, 4.f)
 		[
@@ -46,7 +60,16 @@ void SGYItemDetailPanel::SetItem(UItemDefinition* Item)
 {
 	CurrentItem = Item;
 	DetailsView->SetObject(Item);
+	StatsPanel->SetItem(Item);
+	PoolPanel->SetItem(Item);
 	RefreshValidation();
+}
+
+void SGYItemDetailPanel::RefreshAll()
+{
+	RefreshValidation();
+	StatsPanel->Refresh();
+	PoolPanel->Refresh();
 }
 
 void SGYItemDetailPanel::RefreshValidation()

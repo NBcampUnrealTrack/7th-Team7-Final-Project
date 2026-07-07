@@ -7,9 +7,25 @@
 #include "UObject/ObjectKey.h"
 
 class IGYItemValidationRule;
+class UDataTable;
 class UItemDefinition;
+class URegionLootData;
 struct FAssetData;
 struct FPropertyChangedEvent;
+
+struct FGYPoolRowValues
+{
+	int32 Weight = 1;
+	int32 MinCount = 1;
+	int32 MaxCount = 1;
+};
+
+struct FGYPoolMembership
+{
+	TWeakObjectPtr<UDataTable> Pool;
+	bool bMember = false;
+	FGYPoolRowValues Values;
+};
 
 // 아이템 에디터의 데이터 허브. 에셋 스캔·밸리데이션·저장을 담당하고 UI는 이 결과만 그린다.
 class FGYItemEditorController
@@ -33,6 +49,18 @@ public:
 	void ValidateAll();
 	void SaveAllDirty();
 
+	// 베이스 스탯 행 (행 키 = ItemId)
+	UDataTable* ResolveBaseStatsTable(const UItemDefinition* Item) const;
+	bool CreateBaseStatsRow(UItemDefinition* Item);
+	bool DeleteBaseStatsRow(UItemDefinition* Item);
+
+	// 아이템 풀 소속
+	TArray<FGYPoolMembership> QueryPoolMembership(const UItemDefinition* Item) const;
+	TOptional<FGYPoolRowValues> GetPoolRowValues(const UItemDefinition* Item, UDataTable* Pool) const;
+	void SetPoolMembership(UItemDefinition* Item, UDataTable* Pool, bool bMember);
+	void SetPoolRowValues(UItemDefinition* Item, UDataTable* Pool, const FGYPoolRowValues& Values);
+	TArray<FText> QueryRegionExposure(const UItemDefinition* Item) const;
+
 	FSimpleMulticastDelegate OnDataChanged;
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
@@ -54,8 +82,11 @@ private:
 	TArray<FGYItemValidationMessage> GlobalIssues;
 	TArray<TUniquePtr<IGYItemValidationRule>> Rules;
 
-	// 마지막 검증에서 참조한 DT/Region. GC 방지 + 일괄 저장 대상 수집용
-	TArray<TObjectPtr<UObject>> RelatedAssets;
+	// 마지막 검증에서 참조한 DT/Region. GC 방지 + 저장/편집 대상 조회용
+	TObjectPtr<UDataTable> WeaponStatsTable;
+	TObjectPtr<UDataTable> ArmorStatsTable;
+	TArray<TObjectPtr<UDataTable>> ItemPools;
+	TArray<TObjectPtr<URegionLootData>> Regions;
 
 	bool bRefreshQueued = false;
 	bool bRescanQueued = false;

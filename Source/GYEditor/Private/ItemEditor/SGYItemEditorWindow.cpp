@@ -42,7 +42,7 @@ SGYItemEditorWindow::~SGYItemEditorWindow()
 void SGYItemEditorWindow::HandleDataChanged()
 {
 	BrowserPanel->RefreshList();
-	DetailPanel->RefreshValidation();
+	DetailPanel->RefreshAll();
 }
 
 void SGYItemEditorWindow::HandleItemSelected(UItemDefinition* Item)
