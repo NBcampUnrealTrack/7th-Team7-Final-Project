@@ -320,4 +320,14 @@ TArray<TUniquePtr<IGYItemValidationRule>> MakeDefaultItemValidationRules()
 	return Rules;
 }
 
+TArray<TUniquePtr<IGYItemValidationRule>> MakeSaveTimeItemValidationRules()
+{
+	TArray<TUniquePtr<IGYItemValidationRule>> Rules;
+	Rules.Add(MakeUnique<FItemIdRule>());
+	Rules.Add(MakeUnique<FSlotConsistencyRule>());
+	Rules.Add(MakeUnique<FStatsRowRule>());
+	Rules.Add(MakeUnique<FCategoryRule>());
+	return Rules;
+}
+
 #undef LOCTEXT_NAMESPACE

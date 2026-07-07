@@ -161,4 +161,26 @@ FGYItemValidationContext FGYItemValidationContext::Build(const TArray<UItemDefin
 	return Context;
 }
 
+FGYItemValidationContext FGYItemValidationContext::BuildSingleAsset(UItemDefinition* Item)
+{
+	FGYItemValidationContext Context;
+
+	if (IsValid(Item))
+	{
+		Context.ItemsById.FindOrAdd(Item->ItemId).Add(Item);
+	}
+
+	const UGYEquipmentSettings* Settings = GetDefault<UGYEquipmentSettings>();
+	if (!Settings->WeaponBaseStatsTable.IsNull())
+	{
+		Context.WeaponStatsTable = Settings->WeaponBaseStatsTable.LoadSynchronous();
+	}
+	if (!Settings->ArmorBaseStatsTable.IsNull())
+	{
+		Context.ArmorStatsTable = Settings->ArmorBaseStatsTable.LoadSynchronous();
+	}
+
+	return Context;
+}
+
 #undef LOCTEXT_NAMESPACE

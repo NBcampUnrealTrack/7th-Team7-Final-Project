@@ -26,4 +26,7 @@ struct FGYItemValidationContext
 	TArray<FGYItemValidationMessage> GlobalIssues;
 
 	static FGYItemValidationContext Build(const TArray<UItemDefinition*>& Items);
+
+	// 저장 시 검증용 경량 빌드 — 풀/Region 스캔 없이 스탯 테이블만 로드
+	static FGYItemValidationContext BuildSingleAsset(UItemDefinition* Item);
 };
