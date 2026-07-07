@@ -45,6 +45,9 @@ protected:
 	FGameplayTagContainer InvulnerabilityTags;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Phase")
+	FGameplayTagContainer PhaseTagsToAdd;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Phase")
 	TArray<TSubclassOf<UGameplayAbility>> AbilitiesToRemove;   // 대검 패턴
 
 	UPROPERTY(EditDefaultsOnly, Category = "Phase")
