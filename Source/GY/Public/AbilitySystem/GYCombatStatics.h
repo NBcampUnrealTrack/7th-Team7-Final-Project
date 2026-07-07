@@ -52,4 +52,7 @@ public:
 		UAbilitySystemComponent* TargetASC,
 	UAbilitySystemComponent* SourceASC,
 	float Effective);
+
+	// BossActor의 전투 플레이어 전원의 ASC에서 CueTag를 실행. 히트 여부와 무관하게 브로드캐스트하는 연출용 - 카메라
+	static void ExecuteCueOnBossParticipants(AActor* BossActor, FGameplayTag CueTag);
 };

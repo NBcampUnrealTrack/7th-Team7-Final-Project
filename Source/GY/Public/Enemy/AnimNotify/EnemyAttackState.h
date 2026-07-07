@@ -39,6 +39,10 @@ public:
 private:
 	UGYWeaponHitBox* ResolveHitBox(AActor* Owner) const;
 
+	/** 보스 참가자 전원 카메라 쉐이크 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GroundImpact")
+	FGameplayTag GroundImpactCueTag;
+
 private:
 	TArray<FVector> PreCenters;
 	TSet<TObjectPtr<AActor>> HitActors;

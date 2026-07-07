@@ -2,6 +2,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/GameplayAbilityTypes.h"
+#include "AbilitySystem/GYCombatStatics.h"
 #include "AbilitySystem/Abilities/Parried/ParriedEventContext.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Enemy/Actor/TentacleActor.h"
@@ -66,6 +67,13 @@ void UEnemyAttackState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
 
 	if (UGYWeaponHitBox* Box = ResolveHitBox(OwnerActor))
 		Box->BeginHitDetection(OwnerActor);
+
+	// 페이즈2 타격 판정이 시작되는 이 시점(=지면 접촉 시점)에 보스 참가자 전원에게 카메라 연출 Cue 브로드캐스트.
+	if (GroundImpactCueTag.IsValid())
+	{
+		AActor* BossActor = Cast<ATentacleActor>(OwnerActor) ? OwnerActor->GetOwner() : OwnerActor;
+		UGYCombatStatics::ExecuteCueOnBossParticipants(BossActor, GroundImpactCueTag);
+	}
 }
 
 void UEnemyAttackState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime,

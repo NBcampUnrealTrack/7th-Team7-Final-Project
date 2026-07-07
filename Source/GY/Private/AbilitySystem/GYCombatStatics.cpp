@@ -1,4 +1,6 @@
 #include "AbilitySystem/GYCombatStatics.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Enemy/GYBossCharacterBase.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
 #include "AbilitySystemComponent.h"
@@ -331,4 +333,25 @@ void UGYCombatStatics::ReportDamageToPerception(UAbilitySystemComponent* TargetA
 		Effective,
 		SourceActor->GetActorLocation(),
 		TargetActor->GetActorLocation());
+}
+
+void UGYCombatStatics::ExecuteCueOnBossParticipants(AActor* BossActor, FGameplayTag CueTag)
+{
+	if (!CueTag.IsValid()) return;
+
+	AGYBossCharacterBase* Boss = Cast<AGYBossCharacterBase>(BossActor);
+	if (!Boss) return;
+
+	for (APawn* Pawn : Boss->GetParticipantPawns())
+	{
+		if (!Pawn) continue;
+
+		if (UAbilitySystemComponent* PlayerASC =
+			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
+		{
+			FGameplayCueParameters CueParams;
+			CueParams.NormalizedMagnitude = 1.f;
+			PlayerASC->ExecuteGameplayCue(CueTag, CueParams);
+		}
+	}
 }
