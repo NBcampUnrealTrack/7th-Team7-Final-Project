@@ -64,6 +64,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Regen, "GameplayCue.Enemy.Regen");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Feng_Death, "GameplayCue.Feng.Death");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Sparrow_Death, "GameplayCue.Sparrow.Death");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Pawn_Death, "GameplayCue.Pawn.Death");
+
 
 	// 상태 이상
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Stun, "GameplayCue.Status.Stun");
