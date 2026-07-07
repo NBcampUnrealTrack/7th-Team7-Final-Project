@@ -27,6 +27,7 @@ public:
 	void Construct(const FArguments& InArgs, TSharedRef<FGYItemEditorController> InController);
 
 	void RefreshList();
+	void SelectItem(UItemDefinition* Item);
 
 private:
 	TSharedRef<ITableRow> GenerateRow(TSharedPtr<FGYItemBrowserEntry> Entry, const TSharedRef<STableViewBase>& OwnerTable);

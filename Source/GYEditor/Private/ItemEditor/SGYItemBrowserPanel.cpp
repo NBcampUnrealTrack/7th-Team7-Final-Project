@@ -2,6 +2,7 @@
 
 #include "ItemEditor/GYItemEditorController.h"
 #include "ItemEditor/GYItemEditorShared.h"
+#include "ItemEditor/Wizard/SGYItemCreationWizard.h"
 
 #include "Core/GameplayTags/EquipmentTags.h"
 #include "Items/ItemDefinition.h"
@@ -143,6 +144,24 @@ void SGYItemBrowserPanel::Construct(const FArguments& InArgs, TSharedRef<FGYItem
 			.Padding(0.f, 0.f, 4.f, 0.f)
 			[
 				SNew(SButton)
+				.Text(LOCTEXT("NewItem", "+ 새 아이템"))
+				.OnClicked_Lambda([this]()
+				{
+					UItemDefinition* NewItem = SGYItemCreationWizard::ShowModal(Controller.ToSharedRef());
+					if (NewItem != nullptr)
+					{
+						Controller->RefreshAll();
+						SelectItem(NewItem);
+						Controller->SaveAllDirty();
+					}
+					return FReply::Handled();
+				})
+			]
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.Padding(0.f, 0.f, 4.f, 0.f)
+			[
+				SNew(SButton)
 				.Text(LOCTEXT("Refresh", "새로고침"))
 				.OnClicked_Lambda([this]()
 				{
@@ -183,6 +202,13 @@ void SGYItemBrowserPanel::RefreshList()
 {
 	RebuildGlobalIssues();
 	ApplyFilter();
+}
+
+void SGYItemBrowserPanel::SelectItem(UItemDefinition* Item)
+{
+	SelectedItem = Item;
+	ApplyFilter();
+	OnItemSelected.ExecuteIfBound(Item);
 }
 
 TSharedRef<ITableRow> SGYItemBrowserPanel::GenerateRow(
