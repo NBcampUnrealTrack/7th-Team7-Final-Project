@@ -39129,6 +39129,20 @@
                                                                                                                                                     "by":  "CM",
                                                                                                                                                     "at":  "2026-07-05 22:05:35",
                                                                                                                                                     "note":  null
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "by":  "CM",
+                                                                                                                                                    "at":  "2026-07-07 11:38:55",
+                                                                                                                                                    "note":  ""
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                            },
+                   "Sword_Animations/Animations/Montage/LongSword_Attack01/AM_GY_ChapterBoss_LongSword_Attack01_3.uasset":  {
+                                                                                                                                "history":  [
+                                                                                                                                                {
+                                                                                                                                                    "by":  "CM",
+                                                                                                                                                    "at":  "2026-07-07 11:38:55",
+                                                                                                                                                    "note":  ""
                                                                                                                                                 }
                                                                                                                                             ]
                                                                                                                             },
@@ -39137,6 +39151,51 @@
                                                                                                                                                 {
                                                                                                                                                     "by":  "CM",
                                                                                                                                                     "at":  "2026-07-05 20:51:45",
+                                                                                                                                                    "note":  ""
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                            },
+                   "Sword_Animations/Animations/Montage/LongSword_Attack02/AM_GY_ChapterBoss_LongSword_Attack02_2.uasset":  {
+                                                                                                                                "history":  [
+                                                                                                                                                {
+                                                                                                                                                    "by":  "CM",
+                                                                                                                                                    "at":  "2026-07-07 11:38:55",
+                                                                                                                                                    "note":  ""
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                            },
+                   "Sword_Animations/Animations/Montage/LongSword_Attack02/AM_GY_ChapterBoss_LongSword_Attack02_3.uasset":  {
+                                                                                                                                "history":  [
+                                                                                                                                                {
+                                                                                                                                                    "by":  "CM",
+                                                                                                                                                    "at":  "2026-07-07 11:38:55",
+                                                                                                                                                    "note":  ""
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                            },
+                   "Sword_Animations/Animations/Montage/LongSword_Attack02/AM_GY_ChapterBoss_LongSword_Attack02_4.uasset":  {
+                                                                                                                                "history":  [
+                                                                                                                                                {
+                                                                                                                                                    "by":  "CM",
+                                                                                                                                                    "at":  "2026-07-07 11:38:55",
+                                                                                                                                                    "note":  ""
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                            },
+                   "Sword_Animations/Animations/Montage/LongSword_Attack02/AM_GY_ChapterBoss_LongSword_Attack02_5.uasset":  {
+                                                                                                                                "history":  [
+                                                                                                                                                {
+                                                                                                                                                    "by":  "CM",
+                                                                                                                                                    "at":  "2026-07-07 11:38:55",
+                                                                                                                                                    "note":  ""
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                            },
+                   "Sword_Animations/Animations/Montage/LongSword_Attack02/AM_GY_ChapterBoss_LongSword_Attack02_6.uasset":  {
+                                                                                                                                "history":  [
+                                                                                                                                                {
+                                                                                                                                                    "by":  "CM",
+                                                                                                                                                    "at":  "2026-07-07 11:38:55",
                                                                                                                                                     "note":  ""
                                                                                                                                                 }
                                                                                                                                             ]
