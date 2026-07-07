@@ -37,8 +37,10 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_HitStop)
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Parkour)
+
 	// State
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Parrying)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_JustGuarding)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Dodging)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Sprint)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Blocking)

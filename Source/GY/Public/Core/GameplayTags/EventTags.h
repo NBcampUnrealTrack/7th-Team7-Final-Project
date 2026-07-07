@@ -38,6 +38,10 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Parry_Hit)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Parried)
 
+	// JustGuard events
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_JustGuard_Hit)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_JustGuarded)
+
 	// Block events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Block_Hit)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Block_LoopEnd)

@@ -39,6 +39,7 @@ namespace GYGameplayTags
 
 	// State
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Parrying, "Ability.State.Parrying");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_State_JustGuarding, "Ability.State.JustGuarding");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Dodging, "Ability.State.Dodging");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Sprint, "Ability.State.Sprint");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Blocking, "Ability.State.Blocking");
