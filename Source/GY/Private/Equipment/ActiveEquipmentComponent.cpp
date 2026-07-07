@@ -25,6 +25,7 @@
 #include "Items/Fragments/ItemFragment_Weapon.h"
 #include "Items/ItemDefinition.h"
 #include "Items/WeaponBaseStatsRow.h"
+#include "Logging/GYLogManager.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
@@ -146,10 +147,18 @@ UEquipmentInstance* UActiveEquipmentComponent::EquipItem(const FInventoryEntry& 
 	if (!IsValid(ItemDefinition)) return nullptr;
 
 	const UItemFragment_Equippable* EquippableFragment = ItemDefinition->FindFragment<UItemFragment_Equippable>();
-	if (EquippableFragment == nullptr) return nullptr;
+	if (EquippableFragment == nullptr)
+	{
+		GY_WARN(Content, KDY, "장착 실패: %s에 Equippable fragment가 없음", *ItemDefinition->GetName());
+		return nullptr;
+	}
 
 	const FGameplayTag SlotTag = EquippableFragment->SlotTag;
-	if (!SlotTag.IsValid()) return nullptr;
+	if (!SlotTag.IsValid())
+	{
+		GY_WARN(Content, KDY, "장착 실패: %s의 SlotTag가 비어 있음", *ItemDefinition->GetName());
+		return nullptr;
+	}
 
 	UnequipItem(SlotTag);
 
@@ -358,7 +367,11 @@ void UActiveEquipmentComponent::ApplyWeaponBaseStats(UEquipmentInstance* Instanc
 	if (!IsValid(Table)) return;
 
 	const FWeaponBaseStatsRow* Row = Table->FindRow<FWeaponBaseStatsRow>(Def->ItemId, TEXT("ApplyWeaponBaseStats"));
-	if (Row == nullptr) return;
+	if (Row == nullptr)
+	{
+		GY_WARN(Content, KDY, "%s: %s에 ItemId '%s' 행이 없어 무기 베이스 스탯이 적용되지 않음", *Def->GetName(), *Table->GetName(), *Def->ItemId.ToString());
+		return;
+	}
 
 	ApplyFlatStatEffect(Instance, ASC, Settings->BaseATKEffectClass, Row->BaseATK, SlotTag);
 }
@@ -375,7 +388,11 @@ void UActiveEquipmentComponent::ApplyArmorBaseStats(UEquipmentInstance* Instance
 	if (!IsValid(Table)) return;
 
 	const FArmorBaseStatsRow* Row = Table->FindRow<FArmorBaseStatsRow>(Def->ItemId, TEXT("ApplyArmorBaseStats"));
-	if (Row == nullptr) return;
+	if (Row == nullptr)
+	{
+		GY_WARN(Content, KDY, "%s: %s에 ItemId '%s' 행이 없어 방어구 베이스 스탯이 적용되지 않음", *Def->GetName(), *Table->GetName(), *Def->ItemId.ToString());
+		return;
+	}
 
 	ApplyFlatStatEffect(Instance, ASC, Settings->BaseDEFEffectClass, Row->BaseDEF, SlotTag);
 	ApplyFlatStatEffect(Instance, ASC, Settings->BaseMaxHPEffectClass, Row->BaseHP, SlotTag);
