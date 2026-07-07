@@ -7,6 +7,7 @@
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "GameFramework/PlayerController.h"
+#include "Logging/GYLogManager.h"
 
 void UGYDirectionLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
@@ -34,6 +35,8 @@ void UGYDirectionLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWa
 			if (ULockOnComponent* LockOn = Character->GetLockOnComponent())
 			{
 				LockOn->SetRotationSuppressed(false);
+				GY_LOG(Combat, KHB, "[%s %s] LockOn RotationSuppressed -> false (OnAbilityEnd, Cancelled=%d)",
+					Character->HasAuthority() ? TEXT("SERVER") : TEXT("CLIENT"), *Character->GetName(), bWasCancelled);
 			}
 		}
 		bSuppressedLockOn = false;
@@ -135,11 +138,17 @@ void UGYDirectionLogic::BeginRotation()
 	{
 		LockOn->SetRotationSuppressed(true);
 		bSuppressedLockOn = true;
+		GY_LOG(Combat, KHB, "[%s %s] LockOn RotationSuppressed -> true (Ability=%s)",
+			Character->HasAuthority() ? TEXT("SERVER") : TEXT("CLIENT"), *Character->GetName(),
+			*Ability->GetName());
 	}
 	else if (!bShouldSuppress && bSuppressedLockOn)
 	{
 		LockOn->SetRotationSuppressed(false);
 		bSuppressedLockOn = false;
+		GY_LOG(Combat, KHB, "[%s %s] LockOn RotationSuppressed -> false (Ability=%s)",
+			Character->HasAuthority() ? TEXT("SERVER") : TEXT("CLIENT"), *Character->GetName(),
+			*Ability->GetName());
 	}
 
 	const TOptional<float> TargetYaw = ResolveTargetYaw();

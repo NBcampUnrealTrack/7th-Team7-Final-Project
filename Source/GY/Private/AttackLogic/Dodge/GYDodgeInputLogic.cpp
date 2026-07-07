@@ -11,6 +11,7 @@
 #include "Core/GameplayTags/StateTags.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Logging/GYLogManager.h"
 
 using GYAttributeCostHelpers::ApplyCost;
 
@@ -106,6 +107,14 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		float cost = FVector::DotProduct(Forward, CachedDodgeDirection);
 		float sint = FVector::CrossProduct(Forward, CachedDodgeDirection).Z;
 		float DodgeAngle = FMath::RadiansToDegrees(FMath::Atan2(sint, cost));
+
+		const bool bClientLockedOn = ASC->HasMatchingGameplayTag(GYStateTags::State_LockOn);
+		GY_LOG(Combat, KHB,
+			"[CLIENT %s] Dodge Calc | LockOn=%d | RawInput=%s | UsedDir=%s | Forward=%s | Rot=%s | Angle=%.1f",
+			*Character->GetName(), bClientLockedOn,
+			*(CMC ? CMC->GetLastInputVector() : FVector::ZeroVector).ToString(),
+			*CachedDodgeDirection.ToString(), *Forward.ToString(),
+			*Character->GetActorRotation().ToString(), DodgeAngle);
 
 		//-----------------------------------
 		//구조체에 계산한 값(DodgeAngle) 넣기
@@ -252,8 +261,17 @@ void UGYDodgeInputLogic::OnTargetDataReceived(const FGameplayAbilityTargetDataHa
 			FVector InputVector = DodgeData->InputVector;
 			// 서버 측 몽타주 재생 로직
 
+			ACharacter* ServerCharacter = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+			const bool bServerLockedOn = ASC->HasMatchingGameplayTag(GYStateTags::State_LockOn);
+			GY_LOG(Combat, KHB,
+				"[SERVER %s] Dodge Recv | LockOn=%d | RecvAngle=%.1f | RecvInputVec=%s | CurrentForward=%s | CurrentRot=%s",
+				ServerCharacter ? *ServerCharacter->GetName() : TEXT("None"), bServerLockedOn,
+				ReceivedAngle, *InputVector.ToString(),
+				ServerCharacter ? *ServerCharacter->GetActorForwardVector().ToString() : TEXT("N/A"),
+				ServerCharacter ? *ServerCharacter->GetActorRotation().ToString() : TEXT("N/A"));
+
 			//서버측 캐릭터 회전
-			if (!CachedAbility->GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(GYStateTags::State_LockOn))
+			if (!bServerLockedOn)
 			{
 				RotateInstanceCharacterMesh(InputVector);
 			}
