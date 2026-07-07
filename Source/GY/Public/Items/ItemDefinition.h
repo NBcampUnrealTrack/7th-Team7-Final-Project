@@ -33,6 +33,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly)
 	TArray<TObjectPtr<UItemFragment>> Fragments;
 
+	virtual FPrimaryAssetId GetPrimaryAssetId() const override
+	{
+		return FPrimaryAssetId("Item", ItemId);
+	}
+
 	UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "FragmentClass"))
 	const UItemFragment* FindFragmentByClass(TSubclassOf<UItemFragment> FragmentClass) const;
 
