@@ -330,7 +330,10 @@ void ULockOnComponent::UpdateRotationToTarget(float DeltaTime)
 	if (bRotationSuppressed) return;
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	if (!OwnerPawn || !OwnerPawn->IsLocallyControlled()) return;
+	if (!OwnerPawn) return;
+	if (!OwnerPawn->HasAuthority() && !OwnerPawn->IsLocallyControlled()) return;
+	
+
 	if (!CurrentTarget.IsValid()) return;
 
 	if (const AGYPlayerState* PS = OwnerPawn->GetPlayerState<AGYPlayerState>())
