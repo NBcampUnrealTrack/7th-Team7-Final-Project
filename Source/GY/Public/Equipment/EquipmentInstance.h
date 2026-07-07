@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "EquipmentInstance.generated.h"
 
 class AActor;
@@ -38,8 +37,6 @@ public:
 	UFUNCTION(BlueprintPure)
 	FGuid GetInstanceId() const { return InstanceId; }
 
-	FAbilitySetGrantedHandles& GetMutableGrantedHandles() { return GrantedHandles; }
-
 protected:
 	UAbilitySystemComponent* FindAbilitySystemComponent() const;
 
@@ -59,9 +56,6 @@ protected:
 
 	UPROPERTY()
 	TWeakObjectPtr<APawn> OwnerPawn;
-
-	UPROPERTY()
-	FAbilitySetGrantedHandles GrantedHandles;
 
 	// 소켓에 부착한 외형 액터들 (로컬 코스메틱 — 복제 안 함, 각 클라가 스폰)
 	UPROPERTY()

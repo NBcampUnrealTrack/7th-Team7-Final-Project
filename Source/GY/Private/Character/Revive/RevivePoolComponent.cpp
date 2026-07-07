@@ -4,6 +4,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Core/GYCollisionChannels.h"
 #include "Net/UnrealNetwork.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "Character/GYCharacter.h"
 #include "Character/Revive/GYReviveConfig.h"
@@ -111,9 +112,9 @@ void URevivePoolComponent::StartReviving(AGYCharacter* Reviver)
 
 	if (AGYPlayerState* ReviverPS = Reviver->GetPlayerState<AGYPlayerState>())
 	{
-		if (UAbilitySystemComponent* ASC = ReviverPS->GetAbilitySystemComponent())
+		if (UGYAbilitySystemComponent* ASC = ReviverPS->GetGYAbilitySystemComponent())
 		{
-			ASC->AddLooseGameplayTag(GYStateTags::State_Action_Reviving, 1, EGameplayTagReplicationState::TagOnly);
+			ASC->Grant_AddLooseTag(GYStateTags::State_Action_Reviving, GYStateTags::State_Action_Reviving, 1, EGameplayTagReplicationState::TagOnly);
 		}
 	}
 
@@ -122,9 +123,9 @@ void URevivePoolComponent::StartReviving(AGYCharacter* Reviver)
 	{
 		if (AGYPlayerState* DownedPS = DownedChar->GetPlayerState<AGYPlayerState>())
 		{
-			if (UAbilitySystemComponent* ASC = DownedPS->GetAbilitySystemComponent())
+			if (UGYAbilitySystemComponent* ASC = DownedPS->GetGYAbilitySystemComponent())
 			{
-				ASC->AddLooseGameplayTag(GYStateTags::State_Life_BeingRevived, 1, EGameplayTagReplicationState::TagOnly);
+				ASC->Grant_AddLooseTag(GYStateTags::State_Life_BeingRevived, GYStateTags::State_Life_BeingRevived, 1, EGameplayTagReplicationState::TagOnly);
 			}
 		}
 	}
@@ -136,9 +137,9 @@ void URevivePoolComponent::StopReviving()
 
 	if (AGYPlayerState* ReviverPS = CurrentReviver->GetPlayerState<AGYPlayerState>())
 	{
-		if (UAbilitySystemComponent* ASC = ReviverPS->GetAbilitySystemComponent())
+		if (UGYAbilitySystemComponent* ASC = ReviverPS->GetGYAbilitySystemComponent())
 		{
-			ASC->RemoveLooseGameplayTag(GYStateTags::State_Action_Reviving, 1, EGameplayTagReplicationState::TagOnly);
+			ASC->RevokeGrantSource(GYStateTags::State_Action_Reviving);
 		}
 	}
 
@@ -147,9 +148,9 @@ void URevivePoolComponent::StopReviving()
 	{
 		if (AGYPlayerState* DownedPS = DownedChar->GetPlayerState<AGYPlayerState>())
 		{
-			if (UAbilitySystemComponent* ASC = DownedPS->GetAbilitySystemComponent())
+			if (UGYAbilitySystemComponent* ASC = DownedPS->GetGYAbilitySystemComponent())
 			{
-				ASC->RemoveLooseGameplayTag(GYStateTags::State_Life_BeingRevived, 1, EGameplayTagReplicationState::TagOnly);
+				ASC->RevokeGrantSource(GYStateTags::State_Life_BeingRevived);
 			}
 		}
 	}

@@ -275,6 +275,7 @@ void UGYAbilitySystemComponent::ApplyCombatTag()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	if (!CombatStateEffect) return;
+	if (CombatStateEffectHandle.IsValid()) return;
 
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	FGameplayEffectSpecHandle Spec = MakeOutgoingSpec(CombatStateEffect, 1.f, Context);
@@ -287,6 +288,7 @@ void UGYAbilitySystemComponent::ApplyCombatTag()
 void UGYAbilitySystemComponent::RemoveCombatTag()
 {
 	RemoveActiveGameplayEffect(CombatStateEffectHandle, 1);
+	CombatStateEffectHandle = FActiveGameplayEffectHandle();
 
 }
 

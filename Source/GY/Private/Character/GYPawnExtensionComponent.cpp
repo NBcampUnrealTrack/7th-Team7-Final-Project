@@ -5,10 +5,12 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/AbilitySet.h"
+#include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "Character/GYPawnData.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
+#include "Core/GameplayTags/GrantSourceTags.h"
 #include "Engine/World.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/Pawn.h"
@@ -120,9 +122,9 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 		const UGYPawnData* PawnData = PS->GetPawnData();
 
 		// 진영 태그 부여(서버). 데이터(PawnData)에서 읽음.
-		if (PawnData && PawnData->Faction.IsValid())
+		if (PawnData && PawnData->Faction.IsValid() && !ASC->HasGrantSource(GYGameplayTags::Source_PawnData_Faction))
 		{
-			ASC->AddLooseGameplayTag(PawnData->Faction, 1, EGameplayTagReplicationState::TagOnly);
+			ASC->Grant_AddLooseTag(GYGameplayTags::Source_PawnData_Faction, PawnData->Faction, 1, EGameplayTagReplicationState::TagOnly);
 		}
 
 		// base 어트리뷰트 값 초기화(서버). 값 정책은 PlayerState 소관.
@@ -132,12 +134,18 @@ void UGYPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMan
 		if (PawnData)
 		{
 			CachedASC = ASC;
-			for (const UAbilitySet* AbilitySet : PawnData->AbilitySets)
+
+			if (!ASC->HasGrantSource(GYGameplayTags::Source_PawnData_AbilitySet))
 			{
-				if (AbilitySet)
+				FAbilitySetGrantedHandles Temp;
+				for (const UAbilitySet* AbilitySet : PawnData->AbilitySets)
 				{
-					AbilitySet->GiveToAbilitySystem(ASC, &GrantedHandles);
+					if (AbilitySet)
+					{
+						AbilitySet->GiveToAbilitySystem(ASC, &Temp);
+					}
 				}
+				ASC->Grant_AdoptHandles(GYGameplayTags::Source_PawnData_AbilitySet, Temp);
 			}
 		}
 	}
@@ -229,7 +237,7 @@ void UGYPawnExtensionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason
 	// 부여한 AbilitySet 회수(서버). 폰 파괴 시 ASC에서 어빌리티/GE 제거.
 	if (CachedASC.IsValid())
 	{
-		GrantedHandles.TakeFromAbilitySystem(CachedASC.Get());
+		CachedASC->RevokeGrantSource(GYGameplayTags::Source_PawnData_AbilitySet);
 		CachedASC.Reset();
 	}
 

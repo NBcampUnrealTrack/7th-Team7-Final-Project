@@ -7,6 +7,7 @@
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/PlayerState.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Character/GYCharacter.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Engine/OverlapResult.h"
 #include "GameFramework/Character.h"
@@ -16,6 +17,23 @@
 #include "Net/UnrealNetwork.h"
 #include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
+
+static bool IsLockOnTargetInvalid(const AActor* Target)
+{
+	if (!IsValid(Target)) return true;
+
+	if (const AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Target))
+	{
+		return Enemy->IsDead();
+	}
+
+	if (const AGYCharacter* Char = Cast<AGYCharacter>(Target))
+	{
+		return Char->IsDead() || Char->IsDowned();
+	}
+
+	return false;
+}
 
 ULockOnComponent::ULockOnComponent()
 {
@@ -138,6 +156,11 @@ void ULockOnComponent::StartLockOn()
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	if (CurrentTarget.IsValid()) return;
 
+	if (const AGYCharacter* Owner = Cast<AGYCharacter>(GetOwner()))
+	{
+		if (Owner->IsDead() || Owner->IsDowned()) return;
+	}
+
 	AActor* Target = FindBestTarget();
 	if (!Target) return;
 
@@ -249,18 +272,7 @@ void ULockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 	if (GetOwner()->HasAuthority())
 	{
-		bool bTargetInvalid = false;
-		if (!IsValid(CurrentTarget.Get()))
-		{
-			bTargetInvalid = true;
-		}
-		else if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(CurrentTarget.Get()))
-		{
-			if (Enemy->IsDead())
-			{
-				bTargetInvalid = true;
-			}
-		}
+		const bool bTargetInvalid = IsLockOnTargetInvalid(CurrentTarget.Get());
 
 		if (bTargetInvalid)
 		{
@@ -307,11 +319,7 @@ AActor* ULockOnComponent::FindBestTarget() const
 	{
 		AActor* Candidate = Overlap.GetActor();
 		if (!Candidate || Candidate == Owner) continue;
-
-		if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Candidate))
-		{
-			if (Enemy->IsDead()) continue;
-		}
+		if (IsLockOnTargetInvalid(Candidate)) continue;
 
 		//TODO 팀 판정
 		const float DistSq = FVector::DistSquared(OwnerLoc, Candidate->GetActorLocation());
@@ -534,11 +542,7 @@ AActor* ULockOnComponent::FindDirectionalTarget(FVector2D Direction) const
 	{
 		AActor* Candidate = Overlap.GetActor();
 		if (!Candidate || Candidate == OwnerPawn || Candidate == CurrentRef) continue;
-
-		if (AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Candidate))
-		{
-			if (Enemy->IsDead()) continue;
-		}
+		if (IsLockOnTargetInvalid(Candidate)) continue;
 		// TODO 팀 판정
 
 		const FVector ToCand = Candidate->GetActorLocation() - CameraLoc;
