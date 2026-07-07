@@ -39206,6 +39206,11 @@
                                                                                                                                                     "by":  "CM",
                                                                                                                                                     "at":  "2026-07-05 20:51:45",
                                                                                                                                                     "note":  ""
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "by":  "CM",
+                                                                                                                                                    "at":  "2026-07-07 14:06:49",
+                                                                                                                                                    "note":  ""
                                                                                                                                                 }
                                                                                                                                             ]
                                                                                                                             },
@@ -39214,6 +39219,11 @@
                                                                                                                                                  {
                                                                                                                                                      "by":  "CM",
                                                                                                                                                      "at":  "2026-07-06 13:11:38",
+                                                                                                                                                     "note":  ""
+                                                                                                                                                 },
+                                                                                                                                                 {
+                                                                                                                                                     "by":  "CM",
+                                                                                                                                                     "at":  "2026-07-07 16:15:37",
                                                                                                                                                      "note":  ""
                                                                                                                                                  }
                                                                                                                                              ]
@@ -39254,6 +39264,15 @@
                                                                                                                                                              }
                                                                                                                                                          ]
                                                                                                                                          },
+                   "Sword_Animations/Animations/Sequence2/02_Attack/12_Run_Attact/Run_Attack_02_Seq_DisableRootMotion.uasset":  {
+                                                                                                                                    "history":  [
+                                                                                                                                                    {
+                                                                                                                                                        "by":  "CM",
+                                                                                                                                                        "at":  "2026-07-07 16:15:37",
+                                                                                                                                                        "note":  ""
+                                                                                                                                                    }
+                                                                                                                                                ]
+                                                                                                                                },
                    "Sword_Animations/Animations/Sequence2/02_Attack/13_Parry_Counter_Attack/Parry_Counter_Attack_R_Seq.uasset":  {
                                                                                                                                      "history":  [
                                                                                                                                                      {
@@ -39263,6 +39282,15 @@
                                                                                                                                                      }
                                                                                                                                                  ]
                                                                                                                                  },
+                   "Sword_Animations/Animations/Sequence2/06_Dodge/02_Dodge_Combat/Dodge_Combat_B_R_45_Seq.uasset":  {
+                                                                                                                         "history":  [
+                                                                                                                                         {
+                                                                                                                                             "by":  "CM",
+                                                                                                                                             "at":  "2026-07-07 14:06:49",
+                                                                                                                                             "note":  ""
+                                                                                                                                         }
+                                                                                                                                     ]
+                                                                                                                     },
                    "Sword_Animations/Animations/Sequence2/06_Dodge/06_Dodge_Combat_to_Run/Dodge_Combat_to_Run_B_Seq.uasset":  {
                                                                                                                                   "history":  [
                                                                                                                                                   {
