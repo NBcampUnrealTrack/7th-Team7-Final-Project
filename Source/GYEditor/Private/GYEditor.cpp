@@ -121,6 +121,7 @@ void FGYEditorModule::SyncAbilityWeightRow(class UBlueprint* BP)
 			return;
 		}
 		NewRow.HitDamageWeights = Existing->HitDamageWeights;
+		NewRow.ActivateCost = Existing->ActivateCost;
 	}
 
 	NewRow.HitDamageWeights.SetNum(TraceCount);

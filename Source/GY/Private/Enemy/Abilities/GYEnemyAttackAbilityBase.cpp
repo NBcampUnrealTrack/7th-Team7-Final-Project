@@ -17,6 +17,8 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "AbilitySystem/Abilities/Parried/ParriedEventContext.h"
+#include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
+#include "Core/GameplayTags/EffectTags.h"
 #include "Core/GameplayTags/EventTags.h"
 
 UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
@@ -88,6 +90,7 @@ void UGYEnemyAttackAbilityBase::LoadHitWeightsFromTable()
 void UGYEnemyAttackAbilityBase::ApplyWeightRow(const FEnemyAbilityWeightRow& Row)
 {
 	HitDamageWeights = Row.HitDamageWeights;
+	ActivateCost = Row.ActivateCost;
 }
 
 bool UGYEnemyAttackAbilityBase::CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const
@@ -138,6 +141,11 @@ float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Abi
 	const UAbilitySystemComponent* ASC, AActor* Owner, AActor* Target, const UObject* LastUsed)
 {
 	if (!Ability || !ASC) return -1.f;
+
+	if (Ability->ActivateCost <= 0.f) return true;
+
+	const float Current = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetActivityPointsAttribute());
+	if (Current < Ability->ActivateCost) return -1.f;
 
 	const float DistToTarget = FVector::Dist(
 		Owner->GetActorLocation(), Target->GetActorLocation());
@@ -304,6 +312,43 @@ void UGYEnemyAttackAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
+	}
+}
+
+bool UGYEnemyAttackAbilityBase::CheckCost(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (ActivateCost <= 0.f) return true;
+
+	UAbilitySystemComponent* ASC = ActorInfo ? ActorInfo->AbilitySystemComponent.Get() : nullptr;
+	if (!ASC) return false;
+
+	const float Current = ASC->GetNumericAttribute(UGYEnemyVitalAttributeSet::GetActivityPointsAttribute());
+	return Current >= ActivateCost;
+}
+
+void UGYEnemyAttackAbilityBase::ApplyCost(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const
+{
+	if (ActivateCost <= 0.f) return;
+
+	UAbilitySystemComponent* ASC = ActorInfo ? ActorInfo->AbilitySystemComponent.Get() : nullptr;
+	if (!ASC) return;
+
+	TSubclassOf<UGameplayEffect> CostEffect = GetCostGameplayEffect()->GetClass();
+	if (!CostEffect) return;
+
+	FGameplayEffectContextHandle Ctx = ASC->MakeEffectContext();
+	Ctx.SetAbility(this);
+
+	FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(CostEffect, GetAbilityLevel(), Ctx);
+
+	if (Spec.IsValid())
+	{
+		Spec.Data->SetSetByCallerMagnitude(
+			GYEffectTags::ActivateCost_SetByCaller,
+			-ActivateCost);
+		ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
 	}
 }
 
