@@ -7,20 +7,20 @@ struct FPoorforceManagedPath;
 
 namespace PoorforcePathResolver
 {
-	const FPoorforceManagedPath* ResolveLongestPrefix(
+	POORFORCE_API const FPoorforceManagedPath* ResolveLongestPrefix(
 		const FString& PackageName,
 		const TArray<FPoorforceManagedPath>& Paths);
 
-	FString MakeRelativePath(const FString& PackageName, const FPoorforceManagedPath& Match);
+	POORFORCE_API FString MakeRelativePath(const FString& PackageName, const FPoorforceManagedPath& Match);
 
-	FString MakeLockKey(const FString& Namespace, const FString& RelativePath);
+	POORFORCE_API FString MakeLockKey(const FString& Namespace, const FString& RelativePath);
 
 	// 락 키(<ns>:asset:<rel> 또는 asset:<rel>)에서 RelativePath 만 뽑는다.
 	FString ExtractRelativePathFromKey(const FString& LockKey);
 
 	// RelativePath + LockOnly ManagedPaths 로 디스크의 .uasset/.umap 을 찾아
 	// 리포 루트 기준 git 상대경로를 복원한다 (LFS unlock 인자용). 실패 시 false.
-	bool ReconstructLockOnlyGitPath(
+	POORFORCE_API bool ReconstructLockOnlyGitPath(
 		const FString& RelativePath,
 		const TArray<FPoorforceManagedPath>& Paths,
 		FString& OutGitPath);

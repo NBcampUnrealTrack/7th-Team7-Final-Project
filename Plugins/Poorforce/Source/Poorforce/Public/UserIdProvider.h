@@ -4,7 +4,7 @@
 
 namespace PoorforceUserId
 {
-	const FString& Get();
+	POORFORCE_API const FString& Get();
 
 	void ResetForTest();
 }
