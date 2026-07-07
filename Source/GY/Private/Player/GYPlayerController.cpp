@@ -106,15 +106,21 @@ void AGYPlayerController::OnPossess(APawn* InPawn)
 	}
 
 	UGYPawnExtensionComponent::RequestInitStateRecheck(GetPawn());
+}
 
-	// 오디오 리스너 : 폰 기준으로
-	if (IsLocalController() && InPawn)
-	{
-		SetAudioListenerOverride(
-			InPawn->GetRootComponent(),
-			FVector::ZeroVector,
-			FRotator::ZeroRotator);
-	}
+void AGYPlayerController::AcknowledgePossession(APawn* P)
+{
+	Super::AcknowledgePossession(P);
+
+	// OnPossess는 서버 권한 로직이라 소유 클라이언트에서 호출되지 않는다.
+	// 오디오 리스너는 로컬 폰 기준으로 맞춰야 하므로, 클라이언트 로컬 셋업 시점인 여기서 처리한다.
+	if (!P) return;
+
+	SetAudioListenerOverride(
+		P->GetRootComponent(),
+		FVector::ZeroVector,
+		FRotator::ZeroRotator);
+	GY_LOG(Player, CYS, "오디오 리스너 변경: %s", *P->GetName());
 }
 
 void AGYPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
