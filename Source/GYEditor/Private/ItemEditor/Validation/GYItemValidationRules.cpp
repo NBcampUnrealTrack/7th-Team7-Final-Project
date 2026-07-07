@@ -314,7 +314,8 @@ TArray<TUniquePtr<IGYItemValidationRule>> MakeDefaultItemValidationRules()
 	Rules.Add(MakeUnique<FCategoryRule>());
 	Rules.Add(MakeUnique<FPoolMembershipRule>());
 	Rules.Add(MakeUnique<FRegionExposureRule>());
-	Rules.Add(MakeUnique<FVisualRule>());
+	// TODO (KDY): 외형 액터 스폰은 현재 무기만 사용하기로 해서 검사 보류. 방어구 외형이 생기면 다시 켜기
+	// Rules.Add(MakeUnique<FVisualRule>());
 	Rules.Add(MakeUnique<FUnconsumedFragmentRule>());
 	return Rules;
 }
