@@ -43,6 +43,7 @@ const FHitDamageWeight* UGYEnemyComboAttack::GetCurrentHitWeight() const
 
 void UGYEnemyComboAttack::ApplyWeightRow(const FEnemyAbilityWeightRow& Row)
 {
+	ActivateCost = Row.ActivateCost;
 	const TArray<FHitDamageWeight>& Flat = Row.HitDamageWeights;
 	int32 Cursor = 0;
 
