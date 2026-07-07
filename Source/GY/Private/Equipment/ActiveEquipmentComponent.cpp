@@ -1,8 +1,9 @@
 #include "Equipment/ActiveEquipmentComponent.h"
 
 #include "AbilitySystem/AbilitySet.h"
+#include "AbilitySystem/AbilitySetGrantedHandles.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/GYOnHitModifierComponent.h"
-#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Core/GameplayTags/OptionTags.h"
 #include "Enchant/EnchantMagnitudeEffectRow.h"
@@ -76,6 +77,8 @@ void UActiveEquipmentComponent::InitializeLoadoutBinding()
 	AGYPlayerState* PS = OwningPawn->GetPlayerState<AGYPlayerState>();
 	if (!IsValid(PS)) return;
 
+	CachedASC = PS->GetGYAbilitySystemComponent();
+
 	UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent();
 	if (!IsValid(Loadout)) return;
 
@@ -91,6 +94,17 @@ void UActiveEquipmentComponent::InitializeLoadoutBinding()
 
 void UActiveEquipmentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		for (const FEquipmentEntry& Entry : EquippedItems.Entries)
+		{
+			if (IsValid(Entry.Instance))
+			{
+				RevokeAbilitySets(Entry.Instance, Entry.SlotTag);
+			}
+		}
+	}
+
 	RemoveAllVisuals();
 
 	if (BoundLoadout.IsValid())
@@ -144,16 +158,7 @@ UEquipmentInstance* UActiveEquipmentComponent::EquipItem(const FInventoryEntry& 
 	UEquipmentInstance* NewInstance = NewObject<UEquipmentInstance>(GetOwner());
 	NewInstance->Initialize(Entry.InstanceId, Entry.Definition);
 	NewInstance->OnEquipped(Pawn);
-	ApplyAbilitySetsFromEntry(NewInstance, Entry);
-
-	const FGameplayTag WeaponTypeTag = GetWeaponTypeTag(ItemDefinition);
-	if (WeaponTypeTag.IsValid())
-	{
-		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
-		{
-			ASC->AddLooseGameplayTag(WeaponTypeTag, 1, EGameplayTagReplicationState::TagOnly);
-		}
-	}
+	ApplyAbilitySetsFromEntry(NewInstance, Entry, SlotTag);
 
 	FEquipmentEntry NewEntry;
 	NewEntry.SlotTag = SlotTag;
@@ -185,18 +190,9 @@ bool UActiveEquipmentComponent::UnequipItem(FGameplayTag SlotTag)
 
 	if (IsValid(Instance))
 	{
-		RevokeAbilitySets(Instance);
+		RevokeAbilitySets(Instance, SlotTag);
 		Instance->OnUnequipped(Pawn);
 		RemoveReplicatedSubObject(Instance);
-
-		const FGameplayTag WeaponTypeTag = GetWeaponTypeTag(Instance->GetItemDefinition());
-		if (WeaponTypeTag.IsValid())
-		{
-			if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
-			{
-				ASC->RemoveLooseGameplayTag(WeaponTypeTag, 1, EGameplayTagReplicationState::TagOnly);
-			}
-		}
 	}
 
 	EquippedItems.Entries.RemoveAt(Index);
@@ -258,36 +254,40 @@ void UActiveEquipmentComponent::RefreshEquipment(const FInventoryEntry& Entry)
 	UEquipmentInstance* Instance = Found->Instance;
 	if (!IsValid(Instance)) return;
 
-	RevokeAbilitySets(Instance);
-	ApplyAbilitySetsFromEntry(Instance, Entry);
+	RevokeAbilitySets(Instance, Found->SlotTag);
+	ApplyAbilitySetsFromEntry(Instance, Entry, Found->SlotTag);
 
 	EquippedItems.MarkItemDirty(*Found);
 	MARK_PROPERTY_DIRTY_FROM_NAME(UActiveEquipmentComponent, EquippedItems, this);
 }
 
-void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const FInventoryEntry& Entry)
+void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const FInventoryEntry& Entry, FGameplayTag SlotTag)
 {
 	if (!IsValid(Instance)) return;
 
 	UItemDefinition* Def = Entry.Definition.LoadSynchronous();
 	if (!IsValid(Def)) return;
 
-	APawn* Pawn = Cast<APawn>(GetOwner());
-	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);
+	UGYAbilitySystemComponent* ASC = CachedASC.Get();
 	if (!IsValid(ASC)) return;
+
+	const FGameplayTag WeaponTypeTag = GetWeaponTypeTag(Def);
+	if (WeaponTypeTag.IsValid())
+	{
+		ASC->Grant_AddLooseTag(SlotTag, WeaponTypeTag, 1, EGameplayTagReplicationState::TagOnly);
+	}
 
 	const UItemFragment_GrantedAbilitySet* GrantFragment = Def->FindFragment<UItemFragment_GrantedAbilitySet>();
 	if (GrantFragment != nullptr && IsValid(GrantFragment->AbilitySet))
 	{
-		GrantFragment->AbilitySet->GiveToAbilitySystem(
-			ASC,
-			&Instance->GetMutableGrantedHandles(),
-			Instance);
+		FAbilitySetGrantedHandles Temp;
+		GrantFragment->AbilitySet->GiveToAbilitySystem(ASC, &Temp, Instance);
+		ASC->Grant_AdoptHandles(SlotTag, Temp);
 	}
 
-	ApplyWeaponBaseStats(Instance, Def, ASC);
-	ApplyArmorBaseStats(Instance, Def, ASC);
-	ApplyEnchantOptions(Instance, Entry, ASC);
+	ApplyWeaponBaseStats(Instance, Def, ASC, SlotTag);
+	ApplyArmorBaseStats(Instance, Def, ASC, SlotTag);
+	ApplyEnchantOptions(Instance, Entry, ASC, SlotTag);
 
 	// TODO: SetByCaller(Stat.Modifier.Deviation = 1 + Entry.StatDeviation) 주입 — Template GE 인프라 후
 	// TODO: Entry.SocketedGemInstanceIds 순회 → 각 Gem의 AbilitySet 부여 — GemSocketService 후
@@ -295,7 +295,7 @@ void UActiveEquipmentComponent::ApplyAbilitySetsFromEntry(UEquipmentInstance* In
 	// TODO: ApplyMasteryPenaltyIfNeeded — MasteryComponent (character 도메인) 후
 }
 
-void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance, const FInventoryEntry& Entry, UAbilitySystemComponent* ASC)
+void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance, const FInventoryEntry& Entry, UGYAbilitySystemComponent* ASC, FGameplayTag SlotTag)
 {
 	if (Entry.RolledOptions.IsEmpty()) return;
 
@@ -327,8 +327,7 @@ void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance
 			Spec.Data->SetSetByCallerMagnitude(
 				GYGameplayTags::Stat_Modifier_OptionMagnitude1, Magnitude.Value * EffectRow->ValueScale);
 
-			const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
-			Instance->GetMutableGrantedHandles().GameplayEffectHandles.Add(Handle);
+			ASC->Grant_ApplyEffectSpec(SlotTag, *Spec.Data);
 
 			// 타격 시점에 값이 필요한 매그니튜드(온히트 효과 등)는 GE 적용과 별개로 OnHitModifier에도 등록
 			if (EffectRow->bHitTimeValue)
@@ -347,7 +346,7 @@ void UActiveEquipmentComponent::ApplyEnchantOptions(UEquipmentInstance* Instance
 	}
 }
 
-void UActiveEquipmentComponent::ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC)
+void UActiveEquipmentComponent::ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UGYAbilitySystemComponent* ASC, FGameplayTag SlotTag)
 {
 	const UItemFragment_Weapon* WeaponFragment = Def->FindFragment<UItemFragment_Weapon>();
 	if (WeaponFragment == nullptr) return;
@@ -361,10 +360,10 @@ void UActiveEquipmentComponent::ApplyWeaponBaseStats(UEquipmentInstance* Instanc
 	const FWeaponBaseStatsRow* Row = Table->FindRow<FWeaponBaseStatsRow>(Def->ItemId, TEXT("ApplyWeaponBaseStats"));
 	if (Row == nullptr) return;
 
-	ApplyFlatStatEffect(Instance, ASC, Settings->BaseATKEffectClass, Row->BaseATK);
+	ApplyFlatStatEffect(Instance, ASC, Settings->BaseATKEffectClass, Row->BaseATK, SlotTag);
 }
 
-void UActiveEquipmentComponent::ApplyArmorBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC)
+void UActiveEquipmentComponent::ApplyArmorBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UGYAbilitySystemComponent* ASC, FGameplayTag SlotTag)
 {
 	const UItemFragment_Armor* ArmorFragment = Def->FindFragment<UItemFragment_Armor>();
 	if (ArmorFragment == nullptr) return;
@@ -378,11 +377,11 @@ void UActiveEquipmentComponent::ApplyArmorBaseStats(UEquipmentInstance* Instance
 	const FArmorBaseStatsRow* Row = Table->FindRow<FArmorBaseStatsRow>(Def->ItemId, TEXT("ApplyArmorBaseStats"));
 	if (Row == nullptr) return;
 
-	ApplyFlatStatEffect(Instance, ASC, Settings->BaseDEFEffectClass, Row->BaseDEF);
-	ApplyFlatStatEffect(Instance, ASC, Settings->BaseMaxHPEffectClass, Row->BaseHP);
+	ApplyFlatStatEffect(Instance, ASC, Settings->BaseDEFEffectClass, Row->BaseDEF, SlotTag);
+	ApplyFlatStatEffect(Instance, ASC, Settings->BaseMaxHPEffectClass, Row->BaseHP, SlotTag);
 }
 
-void UActiveEquipmentComponent::ApplyFlatStatEffect(UEquipmentInstance* Instance, UAbilitySystemComponent* ASC, TSubclassOf<UGameplayEffect> EffectClass, float Value)
+void UActiveEquipmentComponent::ApplyFlatStatEffect(UEquipmentInstance* Instance, UGYAbilitySystemComponent* ASC, TSubclassOf<UGameplayEffect> EffectClass, float Value, FGameplayTag SlotTag)
 {
 	if (!IsValid(EffectClass)) return;
 	if (Value == 0.f) return;
@@ -395,11 +394,10 @@ void UActiveEquipmentComponent::ApplyFlatStatEffect(UEquipmentInstance* Instance
 
 	Spec.Data->SetSetByCallerMagnitude(GYGameplayTags::Stat_Modifier_OptionMagnitude1, Value);
 
-	const FActiveGameplayEffectHandle Handle = ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
-	Instance->GetMutableGrantedHandles().GameplayEffectHandles.Add(Handle);
+	ASC->Grant_ApplyEffectSpec(SlotTag, *Spec.Data);
 }
 
-void UActiveEquipmentComponent::RevokeAbilitySets(UEquipmentInstance* Instance)
+void UActiveEquipmentComponent::RevokeAbilitySets(UEquipmentInstance* Instance, FGameplayTag SlotTag)
 {
 	if (!IsValid(Instance)) return;
 
@@ -408,11 +406,10 @@ void UActiveEquipmentComponent::RevokeAbilitySets(UEquipmentInstance* Instance)
 		OnHitComp->UnregisterModifiers(Instance);
 	}
 
-	APawn* Pawn = Cast<APawn>(GetOwner());
-	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);
+	UGYAbilitySystemComponent* ASC = CachedASC.Get();
 	if (!IsValid(ASC)) return;
 
-	Instance->GetMutableGrantedHandles().TakeFromAbilitySystem(ASC);
+	ASC->RevokeGrantSource(SlotTag);
 }
 
 void UActiveEquipmentComponent::HandleItemEnchanted(FGuid InstanceId)

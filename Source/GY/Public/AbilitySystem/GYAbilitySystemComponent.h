@@ -3,6 +3,7 @@
 #include "AbilitySystemComponent.h"
 #include "AttributeSet.h"
 #include "GameplayTagContainer.h"
+#include "AbilitySystem/GYAbilityGrantLedger.h"
 #include "GYAbilitySystemComponent.generated.h"
 
 class UGYPeriodicAttributeEffect;
@@ -105,11 +106,33 @@ public:
 
 	UGameplayAbility* GetActiveAbilityByTag(const FGameplayTag& AbilityTag) const;
 
+	bool HasGrantSource(FGameplayTag Source) const { return GrantLedger.HasSource(Source); }
+
+	void Grant_AddLooseTag(FGameplayTag Source, FGameplayTag Tag, int32 Count = 1,
+		EGameplayTagReplicationState TagRepState = EGameplayTagReplicationState::None)
+	{
+		GrantLedger.AddLooseTag(this, Source, Tag, Count, TagRepState);
+	}
+
+	FActiveGameplayEffectHandle Grant_ApplyEffectSpec(FGameplayTag Source, const FGameplayEffectSpec& Spec)
+	{
+		return GrantLedger.ApplyEffectSpec(this, Source, Spec);
+	}
+
+	void Grant_AdoptHandles(FGameplayTag Source, const FAbilitySetGrantedHandles& Handles)
+	{
+		GrantLedger.AdoptHandles(Source, Handles);
+	}
+
+	void RevokeGrantSource(FGameplayTag Source) { GrantLedger.RevokeSource(this, Source); }
 
 protected:
 	virtual void OnRep_ReplicatedAnimMontage() override;
 
 private:
+	UPROPERTY()
+	FGYAbilityGrantLedger GrantLedger;
+
 	TMap<UAnimMontage*, float> MontageStartCache;
 	FTimerHandle CatchUpTimerHandle;
 

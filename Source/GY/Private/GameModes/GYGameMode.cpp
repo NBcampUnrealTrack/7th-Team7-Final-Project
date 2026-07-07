@@ -4,9 +4,9 @@
 #include "SkeletalMeshTypes.h"
 #include "Character/GYCharacter.h"
 #include "Character/GYPawnData.h"
-#include "Character/GYPawnExtensionComponent.h"
-#include "Character/GYPlayerActionConfig.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Experience/GYExperienceDefinition.h"
 #include "Experience/GYExperienceManagerComponent.h"
@@ -223,25 +223,10 @@ void AGYGameMode::PerformRespawn(APlayerController* PC)
 	AGYPlayerState* PS = PC->GetPlayerState<AGYPlayerState>();
 	if (!PS) return;
 
-	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
 	if (!ASC) return;
 
-	const UGYPlayerActionConfig* Config = nullptr;
-	if (APawn* OldPawn = PC->GetPawn())
-	{
-		if (UGYPawnExtensionComponent* ExtComp = OldPawn->FindComponentByClass<UGYPawnExtensionComponent>())
-		{
-			if (const UGYPawnData* PawnData = ExtComp->GetPawnData()) Config = PawnData->ActionConfig;
-		}
-	}
-
-	if (Config)
-	{
-		for (const FGameplayTag& Tag : Config->DeathTags)
-		{
-			ASC->RemoveLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
-		}
-	}
+	ASC->RevokeGrantSource(GYStateTags::State_Life_Dead);
 
 	FTransform SpawnTransform = FTransform::Identity;
 

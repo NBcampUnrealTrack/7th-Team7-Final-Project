@@ -7,10 +7,10 @@
 #include "Templates/SubclassOf.h"
 #include "ActiveEquipmentComponent.generated.h"
 
-class UAbilitySystemComponent;
 class UEquipmentInstance;
 class UEquipmentLoadoutComponent;
 class UGameplayEffect;
+class UGYAbilitySystemComponent;
 class UItemDefinition;
 
 UCLASS(ClassGroup = (Equipment), meta = (BlueprintSpawnableComponent))
@@ -50,14 +50,14 @@ public:
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	void ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const struct FInventoryEntry& Entry);
-	void RevokeAbilitySets(UEquipmentInstance* Instance);
+	void ApplyAbilitySetsFromEntry(UEquipmentInstance* Instance, const struct FInventoryEntry& Entry, FGameplayTag SlotTag);
+	void RevokeAbilitySets(UEquipmentInstance* Instance, FGameplayTag SlotTag);
 
-	void ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC);
-	void ApplyArmorBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UAbilitySystemComponent* ASC);
-	void ApplyEnchantOptions(UEquipmentInstance* Instance, const struct FInventoryEntry& Entry, UAbilitySystemComponent* ASC);
+	void ApplyWeaponBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UGYAbilitySystemComponent* ASC, FGameplayTag SlotTag);
+	void ApplyArmorBaseStats(UEquipmentInstance* Instance, UItemDefinition* Def, UGYAbilitySystemComponent* ASC, FGameplayTag SlotTag);
+	void ApplyEnchantOptions(UEquipmentInstance* Instance, const struct FInventoryEntry& Entry, UGYAbilitySystemComponent* ASC, FGameplayTag SlotTag);
 
-	void ApplyFlatStatEffect(UEquipmentInstance* Instance, UAbilitySystemComponent* ASC, TSubclassOf<UGameplayEffect> EffectClass, float Value);
+	void ApplyFlatStatEffect(UEquipmentInstance* Instance, UGYAbilitySystemComponent* ASC, TSubclassOf<UGameplayEffect> EffectClass, float Value, FGameplayTag SlotTag);
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Equipment")
 	FEquipmentList EquippedItems;
@@ -66,4 +66,6 @@ protected:
 
 	// 구독한 Loadout(PlayerState 소유). EndPlay에서 구독 해제용.
 	TWeakObjectPtr<UEquipmentLoadoutComponent> BoundLoadout;
+
+	TWeakObjectPtr<UGYAbilitySystemComponent> CachedASC;
 };

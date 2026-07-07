@@ -3,6 +3,7 @@
 #include "AbilitySystemComponent.h"
 #include "MotionWarpingComponent.h"
 #include "Logging/GYLogManager.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
 
 #include "Character/GYPawnData.h"
 #include "Character/GYPawnExtensionComponent.h"
@@ -330,6 +331,11 @@ void AGYCharacter::HandleDeath()
 	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
 	{
 		ASC->CancelAllAbilities();
+
+		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
+		{
+			GYASC->RemoveCombatTag();
+		}
 	}
 
 	if (UCharacterMovementComponent* Move = GetCharacterMovement())
@@ -355,13 +361,16 @@ void AGYCharacter::HandleDeath()
 	{
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+		if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 		{
-			if (Config)
+			if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
 			{
-				for (const FGameplayTag& Tag : Config->DeathTags)
+				if (Config)
 				{
-					ASC->AddLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+					for (const FGameplayTag& Tag : Config->DeathTags)
+					{
+						ASC->Grant_AddLooseTag(GYStateTags::State_Life_Dead, Tag, 1, EGameplayTagReplicationState::TagOnly);
+					}
 				}
 			}
 		}
@@ -457,11 +466,14 @@ void AGYCharacter::DisableRagdoll()
 
 void AGYCharacter::EnterDownedState(const UGYReviveConfig* Config)
 {
-	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		for (const FGameplayTag& Tag : Config->DownedTags)
+		if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
 		{
-			ASC->AddLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+			for (const FGameplayTag& Tag : Config->DownedTags)
+			{
+				ASC->Grant_AddLooseTag(GYStateTags::State_Life_Downed, Tag, 1, EGameplayTagReplicationState::TagOnly);
+			}
 		}
 	}
 
@@ -516,18 +528,18 @@ void AGYCharacter::Revive(const UGYReviveConfig* Config)
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Interactable, ECR_Ignore);
 
-	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		if (Config)
+		if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
 		{
-			for (const FGameplayTag& Tag : Config->DownedTags)
+			if (Config)
 			{
-				ASC->RemoveLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
-			}
+				ASC->RevokeGrantSource(GYStateTags::State_Life_Downed);
 
-			const float MaxHP = ASC->GetNumericAttribute(UGYPlayerVitalAttributeSet::GetMaxHealthAttribute());
-			ASC->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetCurrentHealthAttribute(),
-				MaxHP * Config->ReviveHealthGrantedPercent);
+				const float MaxHP = ASC->GetNumericAttribute(UGYPlayerVitalAttributeSet::GetMaxHealthAttribute());
+				ASC->SetNumericAttributeBase(UGYPlayerVitalAttributeSet::GetCurrentHealthAttribute(),
+					MaxHP * Config->ReviveHealthGrantedPercent);
+			}
 		}
 	}
 
@@ -578,21 +590,21 @@ void AGYCharacter::GiveUp()
 	const UGYPlayerActionConfig* ActionConfig = GetActionConfig();
 	const UGYReviveConfig* ReviveConfig = ActionConfig ? ActionConfig->ReviveConfig.Get() : nullptr;
 
-	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
 	{
-		if (ReviveConfig)
+		if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
 		{
-			for (const FGameplayTag& Tag : ReviveConfig->DownedTags)
+			if (ReviveConfig)
 			{
-				ASC->RemoveLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+				ASC->RevokeGrantSource(GYStateTags::State_Life_Downed);
 			}
-		}
 
-		if (ActionConfig)
-		{
-			for (const FGameplayTag& Tag : ActionConfig->DeathTags)
+			if (ActionConfig)
 			{
-				ASC->AddLooseGameplayTag(Tag, 1, EGameplayTagReplicationState::TagOnly);
+				for (const FGameplayTag& Tag : ActionConfig->DeathTags)
+				{
+					ASC->Grant_AddLooseTag(GYStateTags::State_Life_Dead, Tag, 1, EGameplayTagReplicationState::TagOnly);
+				}
 			}
 		}
 	}

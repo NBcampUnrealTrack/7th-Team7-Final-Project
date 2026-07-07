@@ -9,6 +9,7 @@
 #include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "Core/GameplayTags/GrantSourceTags.h"
 #include "GameplayEffect.h"
 #include "Character/GYPawnData.h"
 #include "Currency/CurrencyComponent.h"
@@ -135,11 +136,13 @@ void AGYPlayerState::InitializeBaseAttributes()
 	// 파생 스탯(STR/DEX 기반) 무한 GE 적용. 1차 스탯 base 세팅 이후에 적용해야 캡처값이 맞음.
 	if (CurrentPawnData->DerivedStatsEffect)
 	{
+		AbilitySystemComponent->RevokeGrantSource(GYGameplayTags::Source_PawnData_DerivedStats);
+
 		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
 		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(CurrentPawnData->DerivedStatsEffect, 1.f, Context);
 		if (Spec.IsValid())
 		{
-			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+			AbilitySystemComponent->Grant_ApplyEffectSpec(GYGameplayTags::Source_PawnData_DerivedStats, *Spec.Data.Get());
 		}
 	}
 }

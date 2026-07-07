@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "Components/GameFrameworkInitStateInterface.h"
 #include "Components/PawnComponent.h"
 #include "Engine/TimerHandle.h"
@@ -58,8 +57,6 @@ private:
 	// 일정 시간 내 초기화가 GameplayReady까지 못 가면(=복제값 누락 등으로 조용히 멈춤) 어디서 막혔는지 경고로 노출한다.
 	void OnInitWatchdog();
 
-	// PawnData의 AbilitySet 부여 핸들. EndPlay에서 ASC로부터 회수한다.
-	FAbilitySetGrantedHandles GrantedHandles;
 	TWeakObjectPtr<UGYAbilitySystemComponent> CachedASC;
 
 	FTimerHandle InitWatchdogTimer;
