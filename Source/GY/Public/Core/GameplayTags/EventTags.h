@@ -33,6 +33,7 @@ namespace GYGameplayTags
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Ability_Parkour_Execute)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Ability_Dodge_Execute)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Ability_Cancelable)
 
 	// Parry events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Parry_Hit)

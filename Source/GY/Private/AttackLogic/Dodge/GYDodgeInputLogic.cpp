@@ -6,6 +6,7 @@
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
 #include "AbilitySystemComponent.h"
+#include "MotionWarpingComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/StateTags.h"
@@ -142,6 +143,10 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 			}
 		}
 
+		//모션워핑 코드
+		UpdateDodgeWarpTarget(Character, CachedDodgeDirection, DodgeData->DodgeImpulse);
+
+
 		//몽타주 재생
 		MontageDuration = Ability->PlayMontageForLogic(SelectedMontage, 1.f);
 	}
@@ -182,17 +187,41 @@ void UGYDodgeInputLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bW
 		DodgeEndTask->EndTask();
 		DodgeEndTask = nullptr;
 	}
+
+	if (UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo())
+	{
+		ASC->RemoveLooseGameplayTag(GYStateTags::State_Cancelable);
+	}
+
 	RemoveDodgeTag();
 	CachedAbility.Reset();
 }
 
 TArray<FGameplayTag> UGYDodgeInputLogic::GetSubscribedEventTags() const
 {
-	return { GYGameplayTags::Event_Anim_TagApplyStart, GYGameplayTags::Event_Ability_Dodge_Execute };
+	return { GYGameplayTags::Event_Anim_TagApplyStart, GYGameplayTags::Event_Ability_Dodge_Execute, GYGameplayTags::Event_Ability_Cancelable };
 }
 
 void UGYDodgeInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload)
 {
+	if (EventTag == GYGameplayTags::Event_Ability_Cancelable)
+	{
+		if (CachedAbility.IsValid())
+		{
+			CachedAbility->RequestEnd(false);
+		}
+		return;
+
+		// // 추후 종료, 지속 선택 가능하게 하기 위한 코드.. 아직 미완성
+		// if (UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo())
+		// {
+		//
+		// 	ASC->AddLooseGameplayTag(GYStateTags::State_Cancelable);
+		// }
+		//
+		// return;
+	}
+
 	if (EventTag != GYGameplayTags::Event_Anim_TagApplyStart || !CachedAbility.IsValid()) return;
 
 	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
@@ -268,6 +297,16 @@ void UGYDodgeInputLogic::OnTargetDataReceived(const FGameplayAbilityTargetDataHa
 					UAnimMontage* SelectedMontage = MontageSet->GetMontageByAngle(ReceivedAngle);
 					if (SelectedMontage)
 					{
+						//서버측 모션워핑
+						const UGYDodgeFragment* DF = CachedAbility->GetFragment<UGYDodgeFragment>();
+						const FGYDodgeData* ServerDodgeData = DF ? DF->GetBestMatchingData(OwnedTags) : nullptr;
+						ACharacter* Character = Cast<ACharacter>(CachedAbility->GetAvatarActorFromActorInfo());
+
+						if (ServerDodgeData && Character)
+						{
+							UpdateDodgeWarpTarget(Character, InputVector, ServerDodgeData->DodgeImpulse);
+						}
+
 						// 서버 측 몽타주 재생 및 길이 반환
 						float ServerMontageDuration = CachedAbility->PlayMontageForLogic(SelectedMontage, 1.f);
 
@@ -285,11 +324,32 @@ void UGYDodgeInputLogic::OnTargetDataReceived(const FGameplayAbilityTargetDataHa
 
 void UGYDodgeInputLogic::RemoveDodgeTag()
 {
+
 	if (!CachedAbility.IsValid() || !CachedDodgeAppliedTag.IsValid()) return;
 	UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo();
 	if (ASC && ASC->HasMatchingGameplayTag(CachedDodgeAppliedTag))
 	{
 		ASC->RemoveLooseGameplayTag(CachedDodgeAppliedTag);
+	}
+
+}
+
+void UGYDodgeInputLogic::UpdateDodgeWarpTarget(ACharacter* Character, const FVector& InputVector, float DodgeImpulse)
+{
+	if (!Character) return;
+
+	if (UMotionWarpingComponent* WarpingComp = Character->FindComponentByClass<UMotionWarpingComponent>())
+	{
+		// 시작 위치 및 입력 방향과 충격량을 기반으로 목표 위치 계산
+		FVector StartLoc = Character->GetActorLocation();
+		FVector TargetLoc = StartLoc + (InputVector * DodgeImpulse);
+
+		// 워핑 타겟 업데이트
+		WarpingComp->AddOrUpdateWarpTargetFromLocationAndRotation(
+			FName("DodgeTarget"),
+			TargetLoc,
+			Character->GetActorRotation()
+		);
 	}
 }
 
