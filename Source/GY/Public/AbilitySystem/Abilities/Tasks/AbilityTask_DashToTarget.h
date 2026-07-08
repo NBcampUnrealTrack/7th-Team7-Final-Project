@@ -40,6 +40,8 @@ protected:
 	float DashSpeed = 800.f;
 	float StopDistanceSq = 0.f;
 	float CosFrontHalfAngle = 0.f;
-	float SavedWalkSpeed = 0.f;
 	bool bBroadcasted = false;
+	TWeakObjectPtr<UAbilitySystemComponent> CachedASC;
+	FActiveGameplayEffectHandle MovementSpeedGEHandle;
+
 };

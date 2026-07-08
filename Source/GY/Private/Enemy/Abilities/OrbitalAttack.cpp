@@ -97,11 +97,6 @@ void UOrbitalAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const float Speed = (MoveSpeedOverride > 0.f)
 		? MoveSpeedOverride
 		: Char->GetCharacterMovement()->MaxWalkSpeed;
-	const float Duration = FMath::Max(ArcLen / FMath::Max(Speed, 1.f), 0.1f);
-
-
-
-
 
 	MoveTask = UAbilityTask_ArcMove::Create(this, Target, Dest, Control, Speed,
 	                                        EArcMoveRotationMode::FaceMoveDirection);

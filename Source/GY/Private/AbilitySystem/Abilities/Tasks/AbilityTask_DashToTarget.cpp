@@ -1,6 +1,7 @@
 #include "AbilitySystem/Abilities/Tasks/AbilityTask_DashToTarget.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Enemy/Abilities/GYEnemyComboAttack.h"
 #include "GameFramework/Character.h"
@@ -29,11 +30,26 @@ void UAbilityTask_DashToTarget::Activate()
 		return;
 	}
 
-	if (UCharacterMovementComponent* CMC = Char->GetCharacterMovement())
+	CachedASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Char);
+	if (!CachedASC.IsValid())
 	{
-		SavedWalkSpeed = CMC->MaxWalkSpeed;
-		CMC->MaxWalkSpeed = DashSpeed;
+		if (!bBroadcasted) { OnCancelled.Broadcast(); bBroadcasted = true; }
+		EndTask();
+		return;
 	}
+	UGameplayEffect* GE = NewObject<UGameplayEffect>(
+	GetTransientPackage(), TEXT("GE_MoveSpeedOverride_Dynamic"));
+
+	GE->DurationPolicy = EGameplayEffectDurationType::Infinite;
+
+	FGameplayModifierInfo ModInfo;
+	ModInfo.Attribute = UGYVitalAttributeSet::GetMovementSpeedAttribute();
+	ModInfo.ModifierOp = EGameplayModOp::Override;
+	ModInfo.ModifierMagnitude = FScalableFloat(DashSpeed);
+	GE->Modifiers.Add(ModInfo);
+
+	FGameplayEffectSpec Spec(GE, CachedASC->MakeEffectContext(), 1.f);
+	MovementSpeedGEHandle = CachedASC->ApplyGameplayEffectSpecToSelf(Spec);
 	bTickingTask = true;
 }
 
@@ -75,10 +91,8 @@ void UAbilityTask_DashToTarget::TickTask(float DeltaTime)
 		}
 	}
 
-	if (UCharacterMovementComponent* CMC = Char->GetCharacterMovement())
-	{
-		CMC->Velocity = Forward * DashSpeed;
-	}
+	Char->AddMovementInput(Forward, 1.f);
+
 }
 
 void UAbilityTask_DashToTarget::OnDestroy(bool bInOwnerFinished)
@@ -88,7 +102,6 @@ void UAbilityTask_DashToTarget::OnDestroy(bool bInOwnerFinished)
 		if (UCharacterMovementComponent* CMC = Char->GetCharacterMovement())
 		{
 			CMC->Velocity = FVector::ZeroVector;
-			CMC->MaxWalkSpeed = SavedWalkSpeed;
 		}
 	}
 
@@ -100,5 +113,10 @@ void UAbilityTask_DashToTarget::OnDestroy(bool bInOwnerFinished)
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
 			Owner, GYGameplayTags::Event_Enemy_Combo_Branch, Payload);
 	}
+	if (CachedASC.IsValid())
+	{
+		CachedASC->RemoveActiveGameplayEffect(MovementSpeedGEHandle);
+	}
+	CachedASC.Reset();
 	Super::OnDestroy(bInOwnerFinished);
 }
