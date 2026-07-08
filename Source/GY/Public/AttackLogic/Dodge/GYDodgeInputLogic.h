@@ -68,6 +68,8 @@ private:
 
 	void RemoveDodgeTag();
 
+	//모션워핑 업데이트 함수
+	void UpdateDodgeWarpTarget(ACharacter* Character, const FVector& InputVector, float DodgeImpulse);
 
 	UFUNCTION()
 	void RotateInstanceCharacterMesh(const FVector& InputVector);
