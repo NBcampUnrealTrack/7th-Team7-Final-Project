@@ -88,9 +88,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Orbital")
 	FVector NavProjectExtent = FVector(200.f, 200.f, 200.f);
 
-	UPROPERTY(EditDefaultsOnly, Category="Orbital", meta=(ClampMin="0"))
-	int32 ThrowCount = 3;
-
+	bool bAdvancingThrow = false;
 protected:
 	UPROPERTY() TObjectPtr<UAbilityTask_ArcMove> MoveTask;
 	UPROPERTY() TObjectPtr<UAbilityTask_AimAtTarget> AimTask;

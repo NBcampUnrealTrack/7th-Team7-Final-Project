@@ -122,8 +122,14 @@ void UOrbitalAttack::PlayNextThrow()
 	ACharacter* Char = Cast<ACharacter>(GetAvatarActorFromActorInfo());
 	if (!Char) return;
 
+	bAdvancingThrow = false;
+
 	if (CurrentMontageTask)
 	{
+		CurrentMontageTask->OnCompleted.RemoveAll(this);
+		CurrentMontageTask->OnBlendOut.RemoveAll(this);
+		CurrentMontageTask->OnInterrupted.RemoveAll(this);
+		CurrentMontageTask->OnCancelled.RemoveAll(this);
 		CurrentMontageTask->EndTask();
 		CurrentMontageTask = nullptr;
 	}
@@ -136,24 +142,26 @@ void UOrbitalAttack::PlayNextThrow()
 	ProjectileClass = V.ProjectileClass;
 	TargetLocationSpread = V.TargetLocationSpread;
 
-	// CurrentMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-	// 	this, NAME_None, V.Montage, PlayRate, NAME_None, true);
-	// CurrentMontageTask->OnCompleted.AddDynamic(this, &UOrbitalAttack::HandleMontageEnded);
-	// CurrentMontageTask->OnBlendOut.AddDynamic(this, &UOrbitalAttack::HandleMontageEnded);
-	// CurrentMontageTask->OnInterrupted.AddDynamic(this, &UOrbitalAttack::HandleMontageInterrupted);
-	// CurrentMontageTask->OnCancelled.AddDynamic(this, &UOrbitalAttack::HandleMontageInterrupted);
-	// CurrentMontageTask->ReadyForActivation();
+	CurrentMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this, NAME_None, V.Montage, PlayRate, NAME_None, true);
+	CurrentMontageTask->OnCompleted.AddDynamic(this, &UOrbitalAttack::HandleMontageEnded);
+	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UOrbitalAttack::HandleMontageEnded);
+	CurrentMontageTask->OnInterrupted.AddDynamic(this, &UOrbitalAttack::HandleMontageInterrupted);
+	CurrentMontageTask->OnCancelled.AddDynamic(this, &UOrbitalAttack::HandleMontageInterrupted);
+	CurrentMontageTask->ReadyForActivation();
 }
 
 void UOrbitalAttack::HandleMontageEnded()
 {
-	CurrentMontageTask = nullptr;
+	if (bAdvancingThrow) return;
+	bAdvancingThrow = true;
 	PlayNextThrow();
 }
 
 void UOrbitalAttack::HandleMontageInterrupted()
 {
 	CurrentMontageTask = nullptr;
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void UOrbitalAttack::HandleMoveEnded()

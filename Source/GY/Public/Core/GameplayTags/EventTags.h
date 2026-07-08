@@ -54,6 +54,9 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Slam_Land)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Teleport_Trigger)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_SpawnAreaDenialZones)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_FireBreath_Tick)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_FireBreath_Start)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_FireBreath_End)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Combo_Branch)
 
 	//TimeRift
