@@ -57,7 +57,7 @@ AGYCharacter::AGYCharacter(const FObjectInitializer& ObjectInitializer)
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
 	StimuliSource->RegisterForSense(UAISense_Hearing::StaticClass());
 	StimuliSource->bAutoRegister = true;
-
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 	TeamId = FGenericTeamId(GYTeams::Player);
 }
 
