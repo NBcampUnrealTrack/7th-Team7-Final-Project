@@ -56,6 +56,9 @@ protected:
 	FGameplayTag RequiredStateTag; // 보스 처치 상태 태그 - 보스 잡기 전엔 상호작용 불가능하게
 	UPROPERTY(EditAnywhere, Category = "Cinematic")
 	TSoftObjectPtr<ULevelSequence> Cinematic;
+
+	UPROPERTY(EditAnywhere, Category = "Cinematic")
+	FName BossBindingTag = TEXT("Boss");
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Replicated, Category = "Cinematic")
 	EGYCinematicGateMode Mode = EGYCinematicGateMode::Ending;
 

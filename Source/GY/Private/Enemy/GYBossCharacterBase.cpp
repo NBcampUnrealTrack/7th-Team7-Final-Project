@@ -16,6 +16,7 @@
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "GameFramework/PlayerState.h"
+#include "Logging/GYLogManager.h"
 
 #include "Net/UnrealNetwork.h"
 #include "UI/GYUIMessages.h"
@@ -283,6 +284,22 @@ void AGYBossCharacterBase::HandleMinionDead(AGYEnemyCharacterBase* Minion)
 	OnMinionCountChanged.Broadcast(ActiveMinions.Num());
 }
 
+void AGYBossCharacterBase::HideBossForCinematic()
+{
+	// Multicast_PlayCinematic이 데디케이트 서버에서 이미 return 되어 시퀀스 자체가 재생되지 않지만,
+	// Event Track이 다른 경로로 호출될 경우를 대비해 방어적으로 가드
+	if (IsRunningDedicatedServer()) return;
+
+	SetActorHiddenInGame(true);
+}
+
+void AGYBossCharacterBase::ShowBossForCinematic()
+{
+	if (IsRunningDedicatedServer()) return;
+
+	SetActorHiddenInGame(false);
+}
+
 void AGYBossCharacterBase::HandleCinematicFinished()
 {
 	if (ActiveSequenceActor)
@@ -303,6 +320,8 @@ void AGYBossCharacterBase::Multicast_PlayCinematic_Implementation(const FSoftObj
 
 	UWorld* World = GetWorld();
 	if (!World) return;
+
+	HideBossForCinematic();
 
 	ULevelSequence* Sequence = Cast<ULevelSequence>(SequencePath.TryLoad());
 	if (!Sequence) return;

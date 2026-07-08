@@ -65,6 +65,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Boss|Components")
 	UBossPhaseComponent* GetPhaseComponent() const { return PhaseComponent; }
 
+	// 시퀀서 Event Track에서 호출 - 보스를 숨김/표시 (클라이언트 로컬 처리, 데디케이트 서버는 무시)
+	UFUNCTION(BlueprintCallable, Category = "Boss|Cinematic")
+	void HideBossForCinematic();
+
+	UFUNCTION(BlueprintCallable, Category = "Boss|Cinematic")
+	void ShowBossForCinematic();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
