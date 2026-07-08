@@ -80,5 +80,9 @@ void UArenaImpactAbility::OnProjectileHit(FGameplayEventData Payload)
 	HitContext.StaggerAmount    = Stagger;
 	HitContext.StunAmount       = Stun;
 	HitContext.bGivesParriedReaction = false;
+	if (HitDamageWeights.IsValidIndex(0))
+	{
+		HitContext.KnockbackStrength = HitDamageWeights[0].KnockbackStrength;
+	}
 	UGYCombatStatics::ApplyHitImpact(HitContext);
 }

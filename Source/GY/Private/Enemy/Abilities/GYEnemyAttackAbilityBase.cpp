@@ -95,6 +95,7 @@ void UGYEnemyAttackAbilityBase::ApplyWeightRow(const FEnemyAbilityWeightRow& Row
 	ActivateCost = Row.ActivateCost;
 	CooldownDuration = Row.CoolTime;
 	bHasCooldown = Row.CoolTime > 0.f;
+	BaseDamageScore = Row.BaseScore;
 }
 
 const FGameplayTagContainer* UGYEnemyAttackAbilityBase::GetCooldownTags() const
@@ -485,6 +486,7 @@ void UGYEnemyAttackAbilityBase::OnWeaponHit(FGameplayEventData Payload)
 		HitContext.Additive = W->Additive;
 		HitContext.StaggerAmount = W->Stagger;
 		HitContext.StunAmount = W->Stun;
+		HitContext.KnockbackStrength = W->KnockbackStrength;
 	}
 
 	UGYCombatStatics::ApplyHitImpact(HitContext);

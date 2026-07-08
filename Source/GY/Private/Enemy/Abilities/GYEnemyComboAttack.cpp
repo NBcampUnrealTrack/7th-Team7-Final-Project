@@ -46,6 +46,7 @@ void UGYEnemyComboAttack::ApplyWeightRow(const FEnemyAbilityWeightRow& Row)
 	ActivateCost = Row.ActivateCost;
 	CooldownDuration = Row.CoolTime;
 	bHasCooldown = Row.CoolTime > 0.f;
+	BaseDamageScore = Row.BaseScore;
 	const TArray<FHitDamageWeight>& Flat = Row.HitDamageWeights;
 	int32 Cursor = 0;
 
