@@ -24,6 +24,10 @@ struct FHitDamageWeight
 	/** 이 타격이 가하는 무력(Stun) 게이지 누적량 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Stun = 0.f;
+
+	/** 이 타격이 가하는 넉백 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float KnockbackStrength = 500.f;
 };
 
 
@@ -46,7 +50,4 @@ struct FEnemyAbilityWeightRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, meta = ( ClampMin = "0" ))
 	float BaseScore = 0.f;
-
-	UPROPERTY(EditAnywhere)
-	float KnockbackStrength = 500.f;
 };

@@ -17,6 +17,7 @@ enum class EEnemyType : uint8
 	None			UMETA(DisplayName = "None"),
 	FengMao			UMETA(DisplayName = "FengMao"),
 	Sparrow			UMETA(DisplayName = "Sparrow"),
+	IggyScorch			UMETA(DisplayName = "IggyScorch"),
 	Melee			UMETA(DisplayName = "Melee"),
 	Ranged			UMETA(DisplayName = "Ranged"),
 	BossFlower		UMETA(DisplayName = "BossFlower"),

@@ -201,9 +201,19 @@ void URangedAttackBase::SpawnProjectile()
 		Target = ResolveAttackTarget(AIC);
 	}
 
+	FVector TargetPos = Target ? Target->GetActorLocation() : FVector::ZeroVector;
+
+	if (Target && TargetLocationSpread > 0.f)
+	{
+		const float Angle = FMath::RandRange(0.f, 2.f * PI);
+		const float R = FMath::RandRange(0.f, TargetLocationSpread);
+		TargetPos.X += FMath::Cos(Angle) * R;
+		TargetPos.Y += FMath::Sin(Angle) * R;
+	}
+
 	const FVector BaseDir = Target
-	? (Target->GetActorLocation() - LaunchPos).GetSafeNormal()
-	: Pawn->GetActorForwardVector();
+		? (TargetPos - LaunchPos).GetSafeNormal()
+		: Pawn->GetActorForwardVector();
 
 	const int32 ShotCount = FMath::Max(1, ProjectileCount);
 
