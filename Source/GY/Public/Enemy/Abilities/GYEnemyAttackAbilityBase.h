@@ -59,6 +59,12 @@ protected:
 		const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo) const override;
 
+	virtual const FGameplayTagContainer* GetCooldownTags() const override;
+
+	virtual void ApplyCooldown(const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo) const override;
+
 	UFUNCTION()
 	void PlayAttackMontage();
 	UFUNCTION()
@@ -107,6 +113,14 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Selection")
 	bool bHasCooldown = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Cooldown", meta = (Categories = "Cooldown"))
+	FGameplayTag CooldownTag;
+
+	float CooldownDuration = 0.f;
+
+	UPROPERTY(Transient)
+	FGameplayTagContainer TempCooldownTags;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Montage")
 	TObjectPtr<UAnimMontage> AttackMontage;
