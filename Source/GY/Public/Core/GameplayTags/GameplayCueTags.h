@@ -11,7 +11,6 @@ namespace GYGameplayTags
 
 	/* 피격 리액션 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_HitReaction);
-	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Combat_Knockback);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Stagger);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Player_Stun);
 

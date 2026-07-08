@@ -93,7 +93,7 @@ void UHitReactionComponent::ApplyMaterialOverlay(UMaterialInterface* OverlayMate
 void UHitReactionComponent::ApplyKnockBack(const FVector& HitDirection, float Strength)
 {
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
-	if (!OwnerCharacter) return;
+	if (!OwnerCharacter || !OwnerCharacter->HasAuthority()) return;
 	const FVector Launch = HitDirection * Strength*KnockbackScale + FVector(0.f, 0.f, 100.f);
 	OwnerCharacter->LaunchCharacter(Launch, true, false);
 }
