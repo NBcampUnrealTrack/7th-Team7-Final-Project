@@ -24,7 +24,7 @@ void AQuestTriggerVolume::BeginPlay()
 {
 	Super::BeginPlay();
 
-	BoxComponent->OnComponentBeginOverlap.AddDynamic(
+	BoxComponent->OnComponentBeginOverlap.AddUniqueDynamic(
 		this,
 		&AQuestTriggerVolume::OnMeshBeginOverlap);
 }
