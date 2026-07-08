@@ -174,6 +174,15 @@ void UEnemyBootstrapComponent::ApplyAllConfigs()
 	ApplyVisualConfig(LoadedDataAsset->VisualConfig);
 	ApplyAnimConfig(LoadedDataAsset->AnimationConfig);
 	ApplyAIConfig(LoadedDataAsset->AIConfig);
+
+	// DA에 설정된 경우에만 덮어쓰기 (BP에서 직접 세팅한 값 유지)
+	if (LoadedDataAsset->GASConfig.DeathCueTag.IsValid())
+	{
+		if (AGYEnemyCharacterBase* Owner = GetEnemyOwner())
+		{
+			Owner->SetDeathCueTag(LoadedDataAsset->GASConfig.DeathCueTag);
+		}
+	}
 }
 
 void UEnemyBootstrapComponent::ApplyVisualConfig(const FEnemyVisualConfig& Config)

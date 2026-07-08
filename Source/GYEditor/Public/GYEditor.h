@@ -21,7 +21,9 @@ public:
 
 private:
 	void OnObjectPreSave(UObject* Object, FObjectPreSaveContext Context);
-	void SyncAbilityWeightRow(class UBlueprint* BP);
+
+	// bDryRun == true면 수정하지 않고 "수정이 필요한지"만 반환
+	bool SyncAbilityWeightRow(class UBlueprint* BP, bool bDryRun = false);
 
 	// 에디터 시작 시 기존 어빌리티 BP 전체를 테이블에 백필 (저장된 적 없는 BP도 행이 생기도록)
 	void SyncAllAbilityWeightRows();

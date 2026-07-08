@@ -89,6 +89,8 @@ public:
 
 	UEnemyBootstrapComponent* GetBootstrap() const { return Bootstrap; }
 
+	void SetDeathCueTag(const FGameplayTag& InTag) { DeathCueTag = InTag; }
+
 	virtual float GetStatScaleValue() const;
 
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
@@ -191,7 +193,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Death")
 	float DeactivateDelay = 3.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy|Death")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy|Death",
+		meta = (Categories = "GameplayCue"))
 	FGameplayTag DeathCueTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Perception")

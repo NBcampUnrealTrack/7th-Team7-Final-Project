@@ -111,6 +111,11 @@ struct FEnemyGASConfig
 	/** 공격 데미지 Effect */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS|Combat")
 	TSoftClassPtr<UGameplayEffect> AttackEffect;
+
+	/** 사망 시 실행할 GameplayCue */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS|Cue",
+		meta = (Categories = "GameplayCue"))
+	FGameplayTag DeathCueTag;
 };
 
 //TODO 은서: Sound, VFX 넣을지 고려
