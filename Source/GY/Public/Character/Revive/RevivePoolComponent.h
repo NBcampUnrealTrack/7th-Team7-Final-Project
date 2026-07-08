@@ -65,6 +65,9 @@ private:
 
 	void CompleteRevive();
 
+	/** 부활 진행도를 UI 메시지 버스로 방송 */
+	void BroadcastProgress() const;
+
 	UFUNCTION()
 	void OnRep_AccumulatedPercent();
 };
