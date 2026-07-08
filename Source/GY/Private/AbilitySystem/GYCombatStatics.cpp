@@ -252,14 +252,17 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 		AActor* SourceActor = SourceASC->GetAvatarActor();
 		if (TargetActor && SourceActor)
 		{
-			FGameplayCueParameters CueParams;
-			CueParams.Normal = (TargetActor->GetActorLocation() - SourceActor->GetActorLocation()).GetSafeNormal();
-			CueParams.RawMagnitude = HitContext.KnockbackStrength;
-			CueParams.Instigator = SourceActor;
-			CueParams.EffectCauser = TargetActor;
-			CueParams.Location = TargetActor->GetActorLocation();
 
-			TargetASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Combat_Knockback, CueParams);
+			FVector Normal = (TargetActor->GetActorLocation() - SourceActor->GetActorLocation()).GetSafeNormal();
+
+			UHitReactionComponent* HitReact = TargetActor->FindComponentByClass<UHitReactionComponent>();
+			if (HitReact)
+			{
+				const FVector HitDirection = Normal;
+				const float Strength = HitContext.KnockbackStrength;
+
+				HitReact->ApplyKnockBack(HitDirection, Strength);
+			}
 		}
 	}
 
