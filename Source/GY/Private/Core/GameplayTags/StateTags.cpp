@@ -20,6 +20,7 @@ namespace GYStateTags
 	UE_DEFINE_GAMEPLAY_TAG(State_Combat_SuperArmor, "State.Combat.SuperArmor");
 	UE_DEFINE_GAMEPLAY_TAG(State_Combat_Invulnerable, "State.Combat.Invulnerable");
 
+	UE_DEFINE_GAMEPLAY_TAG(State_Cancelable, "State.Cancelable")
 	UE_DEFINE_GAMEPLAY_TAG(State_LockOn, "State.LockOn")
 
 	UE_DEFINE_GAMEPLAY_TAG(State_Regen_Delay_Stamina, "State.Regen.Delay.Stamina");
