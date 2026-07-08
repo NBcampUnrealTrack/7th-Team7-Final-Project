@@ -310,6 +310,16 @@ struct GY_API FGYRevivalProgressMessage
 	UPROPERTY(BlueprintReadWrite) FGameplayTag InputActionTag;
 };
 
+/** 부활 홀드 */
+USTRUCT(BlueprintType)
+struct GY_API FGYReviveHoldMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite) bool bHeld = false;
+	UPROPERTY(BlueprintReadWrite) float Duration = 0.f;
+};
+
 /** 엔딩 시작 */
 USTRUCT(BlueprintType)
 struct GY_API FGYEndingStartedMessage

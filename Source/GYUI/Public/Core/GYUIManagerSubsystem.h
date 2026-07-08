@@ -23,6 +23,7 @@ struct FGYEndingStartedMessage;
 struct FGYIntroCinematicMessage;
 struct FGYWorldResetMessage;
 struct FGYClockOverlayMessage;
+struct FGYReviveHoldMessage;
 /**
  * 로컬마다 생성, 관리되는 UI 총괄 매니저
  */
@@ -185,4 +186,23 @@ private:
 
 	void HandleEnterCinematic(FGameplayTag, const FGYCinematicMessage& Msg);
 	FGameplayMessageListenerHandle EnterCinematicHandle;
+
+	/** 부활 진행 위젯 */
+	void HandleRevivalTagChanged(const FGameplayTag Tag, int32 NewCount);
+	void UpdateRevivalWidget();
+
+	FDelegateHandle RevivingTagHandle;
+	FDelegateHandle BeingRevivedTagHandle;
+	TWeakObjectPtr<UCommonActivatableWidget> ActiveRevivalWidget;
+
+	/** 다운 상태 포기 키 홀드 */
+	void HandleReviveHold(FGameplayTag, const FGYReviveHoldMessage& Msg);
+	void TickGiveUpProgress();
+	void StopGiveUpProgress();
+
+	FGameplayMessageListenerHandle ReviveHoldHandle;
+	bool bReviveHoldActive = false;
+	float GiveUpHoldStartTime = 0.f;
+	float GiveUpHoldDuration = 0.f;
+	FTimerHandle GiveUpProgressTimerHandle;
 };

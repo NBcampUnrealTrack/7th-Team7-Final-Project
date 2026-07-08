@@ -12,6 +12,9 @@
 #include "Core/GameplayTags/StateTags.h"
 #include "Interaction/InteractionOption.h"
 #include "Player/GYPlayerState.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "UI/GYUIMessages.h"
 
 URevivePoolComponent::URevivePoolComponent()
 {
@@ -192,6 +195,7 @@ void URevivePoolComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 		{
 			DecorationActor->OnRevivePoolPercentChanged(AccumulatedPercent);
 		}
+		BroadcastProgress();
 	}
 
 	if (AccumulatedPercent >= ActiveConfig->RevivePoolRequiredPercent)
@@ -256,4 +260,17 @@ void URevivePoolComponent::OnRep_AccumulatedPercent()
 	{
 		DecorationActor->OnRevivePoolPercentChanged(AccumulatedPercent);
 	}
+	BroadcastProgress();
+}
+
+void URevivePoolComponent::BroadcastProgress() const
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	FGYRevivalProgressMessage Msg;
+	Msg.CurrentValue = AccumulatedPercent;
+	Msg.MaxValue     = GetRequiredPercent();
+
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Player_RevivalProgress, Msg);
 }
