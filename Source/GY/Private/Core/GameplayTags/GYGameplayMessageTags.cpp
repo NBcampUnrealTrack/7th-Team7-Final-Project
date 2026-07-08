@@ -69,6 +69,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Message_Boss_Stat_Poise, "Message.Boss.Stat.Poise");
 
 	UE_DEFINE_GAMEPLAY_TAG(Message_Player_RevivalProgress, "Message.Player.RevivalProgress");
+	UE_DEFINE_GAMEPLAY_TAG(Message_Player_ReviveHold, "Message.Player.ReviveHold");
 
 	UE_DEFINE_GAMEPLAY_TAG(Message_Ending_Started, "Message.Ending.Started");
 	UE_DEFINE_GAMEPLAY_TAG(Message_Ending_CinematicFinished, "Message.Ending.CinematicFinished");

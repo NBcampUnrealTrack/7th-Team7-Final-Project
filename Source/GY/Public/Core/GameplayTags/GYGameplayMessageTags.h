@@ -91,6 +91,8 @@ namespace GYGameplayTags
 
 	// 부활
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Player_RevivalProgress);
+	// 부활 홀드
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Player_ReviveHold);
 
 	// 엔딩 시퀀스
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Ending_Started);
