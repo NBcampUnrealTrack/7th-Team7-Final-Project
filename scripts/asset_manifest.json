@@ -39224,6 +39224,15 @@
                                                                                                                                                 }
                                                                                                                                             ]
                                                                                                                             },
+                   "Sword_Animations/Animations/Montage/LongSword_Attack04/AM_GY_ChapterBoss_LongSword_Attack04_1.uasset":  {
+                                                                                                                                "history":  [
+                                                                                                                                                {
+                                                                                                                                                    "by":  "CM",
+                                                                                                                                                    "at":  "2026-07-08 18:32:56",
+                                                                                                                                                    "note":  ""
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                            },
                    "Sword_Animations/Animations/Montage/LongSword_RunAttack/AM_GY_ChapterBoss_LongSword_Run_Attack.uasset":  {
                                                                                                                                  "history":  [
                                                                                                                                                  {
@@ -39247,11 +39256,47 @@
                                                                                                                                                   }
                                                                                                                                               ]
                                                                                                                               },
+                   "Sword_Animations/Animations/Sequence2/02_Attack/01_Combo_Attack_01/Combo_Attack_01_02_Seq.uasset":  {
+                                                                                                                            "history":  [
+                                                                                                                                            {
+                                                                                                                                                "by":  "CM",
+                                                                                                                                                "at":  "2026-07-08 18:32:56",
+                                                                                                                                                "note":  ""
+                                                                                                                                            }
+                                                                                                                                        ]
+                                                                                                                        },
+                   "Sword_Animations/Animations/Sequence2/02_Attack/01_Combo_Attack_01/Combo_Attack_01_All_Seq.uasset":  {
+                                                                                                                             "history":  [
+                                                                                                                                             {
+                                                                                                                                                 "by":  "CM",
+                                                                                                                                                 "at":  "2026-07-08 18:32:56",
+                                                                                                                                                 "note":  ""
+                                                                                                                                             }
+                                                                                                                                         ]
+                                                                                                                         },
                    "Sword_Animations/Animations/Sequence2/02_Attack/02_Combo_Attack_02/Combo_Attack_02_02_Seq.uasset":  {
                                                                                                                             "history":  [
                                                                                                                                             {
                                                                                                                                                 "by":  "CM",
                                                                                                                                                 "at":  "2026-07-05 20:51:45",
+                                                                                                                                                "note":  ""
+                                                                                                                                            }
+                                                                                                                                        ]
+                                                                                                                        },
+                   "Sword_Animations/Animations/Sequence2/02_Attack/03_Combo_Attack_03/Combo_Attack_03_All_Seq.uasset":  {
+                                                                                                                             "history":  [
+                                                                                                                                             {
+                                                                                                                                                 "by":  "CM",
+                                                                                                                                                 "at":  "2026-07-08 18:32:56",
+                                                                                                                                                 "note":  ""
+                                                                                                                                             }
+                                                                                                                                         ]
+                                                                                                                         },
+                   "Sword_Animations/Animations/Sequence2/02_Attack/04_Combo_Attack_04/Combo_Attack_04_01_Seq.uasset":  {
+                                                                                                                            "history":  [
+                                                                                                                                            {
+                                                                                                                                                "by":  "CM",
+                                                                                                                                                "at":  "2026-07-08 18:32:56",
                                                                                                                                                 "note":  ""
                                                                                                                                             }
                                                                                                                                         ]
