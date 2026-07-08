@@ -94,7 +94,7 @@ void UHitReactionComponent::ApplyKnockBack(const FVector& HitDirection, float St
 {
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
 	if (!OwnerCharacter || !OwnerCharacter->HasAuthority()) return;
-	const FVector Launch = HitDirection * Strength*KnockbackScale + FVector(0.f, 0.f, 100.f);
+	const FVector Launch = HitDirection * Strength*KnockbackScale + FVector(0.f, 0.f, 0.f);
 	OwnerCharacter->LaunchCharacter(Launch, true, false);
 }
 

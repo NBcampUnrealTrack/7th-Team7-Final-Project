@@ -4,10 +4,16 @@
 #include "Abilities/GameplayAbilityTypes.h"
 #include "AbilitySystem/Abilities/Parried/ParriedEventContext.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "DrawDebugHelpers.h"
+
+static TAutoConsoleVariable<int32> CVarShowHitBox(
+	TEXT("gy.ShowHitBox"), 0,
+	TEXT("히트박스 디버그 표시 (0=끄기, 1=판정 구간만, 2=상시 표시)"));
 
 UGYWeaponHitBox::UGYWeaponHitBox()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = true;
 
 	SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetCollisionObjectType(ECC_WorldDynamic);
@@ -35,6 +41,22 @@ void UGYWeaponHitBox::EndHitDetection()
 	SetGenerateOverlapEvents(false);
 	SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HitActors.Reset();
+}
+
+void UGYWeaponHitBox::TickComponent(float DeltaTime, ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	const int32 Show = CVarShowHitBox.GetValueOnGameThread();
+	if (Show == 0) return;
+
+	const bool bDetecting = GetCollisionEnabled() != ECollisionEnabled::NoCollision;
+	if (!bDetecting && Show < 2) return;
+
+	DrawDebugBox(GetWorld(), GetComponentLocation(), GetScaledBoxExtent(),
+		GetComponentQuat(), bDetecting ? FColor::Orange : FColor::Silver,
+		false, -1.f, 0, bDetecting ? 2.f : 1.f);
 }
 
 void UGYWeaponHitBox::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* Other, UPrimitiveComponent* OtherComp,
