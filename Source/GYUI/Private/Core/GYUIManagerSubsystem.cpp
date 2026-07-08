@@ -44,6 +44,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 				MSG->UnregisterListener(ClockOverlayHandle);
 				MSG->UnregisterListener(ToggleSettingsListenerHandle);
 				MSG->UnregisterListener(EnterCinematicHandle);
+				MSG->UnregisterListener(ReviveHoldHandle);
 			}
 		}
 		UnbindASC();
@@ -147,6 +148,10 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		{
 			MSG.UnregisterListener(EnterCinematicHandle);
 		}
+		if (ReviveHoldHandle.IsValid())
+		{
+			MSG.UnregisterListener(ReviveHoldHandle);
+		}
 
 		RegionEnterListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Region_Entered, this, &UGYUIManagerSubsystem::HandleRegionEntered);
@@ -166,6 +171,8 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 			GYGameplayTags::Message_UI_ToggleSettings, this, &UGYUIManagerSubsystem::HandleToggleSettings);
 		EnterCinematicHandle = MSG.RegisterListener(
 			   GYGameplayTags::Message_Cinematic_State, this, &UGYUIManagerSubsystem::HandleEnterCinematic);
+		ReviveHoldHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_Player_ReviveHold, this, &UGYUIManagerSubsystem::HandleReviveHold);
 	}
 }
 
@@ -308,6 +315,8 @@ void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 		{
 			if (NewCount > 0)
 			{
+				StopGiveUpProgress();
+				UpdateRevivalWidget();
 				PlayClockOverlay(0.f, GYStateTags::State_Life_Dead);
 			}
 			else
@@ -315,6 +324,12 @@ void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 				RequestStopClockOverlay();
 			}
 		});
+
+	// 부활 진행 위젯 - 부활 시전자/대상 태그 감지
+	RevivingTagHandle = InASC->RegisterGameplayTagEvent(GYStateTags::State_Action_Reviving, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &UGYUIManagerSubsystem::HandleRevivalTagChanged);
+	BeingRevivedTagHandle = InASC->RegisterGameplayTagEvent(GYStateTags::State_Life_BeingRevived, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &UGYUIManagerSubsystem::HandleRevivalTagChanged);
 
 	for (const auto& Pair : TagWidgetMap)
 	{
@@ -326,6 +341,8 @@ void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 	{
 		PlayClockOverlay(0.f, GYStateTags::State_Life_Dead);
 	}
+
+	UpdateRevivalWidget();
 }
 
 void UGYUIManagerSubsystem::RegisterTagDrivenWidget(
@@ -496,6 +513,28 @@ void UGYUIManagerSubsystem::UnbindASC()
 			                                     EGameplayTagEventType::NewOrRemoved);
 			DeathTagHandle.Reset();
 		}
+
+		if (RevivingTagHandle.IsValid())
+		{
+			BoundASC->UnregisterGameplayTagEvent(RevivingTagHandle, GYStateTags::State_Action_Reviving,
+												 EGameplayTagEventType::NewOrRemoved);
+			RevivingTagHandle.Reset();
+		}
+
+		if (BeingRevivedTagHandle.IsValid())
+		{
+			BoundASC->UnregisterGameplayTagEvent(BeingRevivedTagHandle, GYStateTags::State_Life_BeingRevived,
+												 EGameplayTagEventType::NewOrRemoved);
+			BeingRevivedTagHandle.Reset();
+		}
+
+		StopGiveUpProgress();
+		if (ActiveRevivalWidget.IsValid())
+		{
+			ActiveRevivalWidget->RemoveFromParent();
+			ActiveRevivalWidget = nullptr;
+		}
+
 		StopClockOverlay();
 		UnregisterStatBroadcast();
 	}
@@ -800,4 +839,88 @@ void UGYUIManagerSubsystem::HandleEnterCinematic(FGameplayTag, const FGYCinemati
 	if (!Layer) return;
 
 	Layer->SetVisibility(Msg.bIsPlaying ? ESlateVisibility::Collapsed : ESlateVisibility::SelfHitTestInvisible);
+}
+
+void UGYUIManagerSubsystem::HandleRevivalTagChanged(const FGameplayTag, int32)
+{
+	UpdateRevivalWidget();
+}
+
+void UGYUIManagerSubsystem::UpdateRevivalWidget()
+{
+	const bool bInRevival = bReviveHoldActive ||
+		(BoundASC.IsValid() &&
+		 (BoundASC->GetTagCount(GYStateTags::State_Action_Reviving) > 0 ||
+		  BoundASC->GetTagCount(GYStateTags::State_Life_BeingRevived) > 0));
+
+	if (bInRevival)
+	{
+		if (!ActiveRevivalWidget.IsValid())
+		{
+			ULocalPlayer* LP = GetLocalPlayer();
+			APlayerController* PC = LP ? LP->GetPlayerController(GetWorld()) : nullptr;
+			const UGYUISettings* Settings = GetDefault<UGYUISettings>();
+			UClass* WidgetClass = Settings ? Settings->RevivalWidgetClass.LoadSynchronous() : nullptr;
+			if (PC && WidgetClass)
+			{
+				UCommonActivatableWidget* W = CreateWidget<UCommonActivatableWidget>(PC, WidgetClass);
+				if (W)
+				{
+					W->SetVisibility(ESlateVisibility::HitTestInvisible);
+					W->AddToViewport(1100);
+					ActiveRevivalWidget = W;
+				}
+			}
+		}
+	}
+	else if (ActiveRevivalWidget.IsValid())
+	{
+		ActiveRevivalWidget->RemoveFromParent();
+		ActiveRevivalWidget = nullptr;
+	}
+}
+
+void UGYUIManagerSubsystem::HandleReviveHold(FGameplayTag, const FGYReviveHoldMessage& Msg)
+{
+	bReviveHoldActive = Msg.bHeld;
+
+	UWorld* World = GetWorld();
+	if (Msg.bHeld && World)
+	{
+		GiveUpHoldStartTime = World->GetTimeSeconds();
+		GiveUpHoldDuration = Msg.Duration;
+		World->GetTimerManager().SetTimer(
+			GiveUpProgressTimerHandle, this, &UGYUIManagerSubsystem::TickGiveUpProgress, 0.05f, true);
+		TickGiveUpProgress();
+	}
+	else
+	{
+		StopGiveUpProgress();
+	}
+
+	UpdateRevivalWidget();
+}
+
+void UGYUIManagerSubsystem::TickGiveUpProgress()
+{
+	UWorld* World = GetWorld();
+	if (!World || GiveUpHoldDuration <= 0.f) return;
+
+	const float Elapsed = World->GetTimeSeconds() - GiveUpHoldStartTime;
+
+	FGYRevivalProgressMessage Msg;
+	Msg.CurrentValue = FMath::Clamp(Elapsed, 0.f, GiveUpHoldDuration);
+	Msg.MaxValue = GiveUpHoldDuration;
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(
+		GYGameplayTags::Message_Player_RevivalProgress, Msg);
+}
+
+void UGYUIManagerSubsystem::StopGiveUpProgress()
+{
+	bReviveHoldActive = false;
+	GiveUpHoldDuration = 0.f;
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(GiveUpProgressTimerHandle);
+	}
 }
