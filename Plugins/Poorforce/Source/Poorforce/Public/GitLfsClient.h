@@ -22,8 +22,8 @@ namespace PoorforceGitLfs
 
 	using FOnLockComplete = TFunction<void(const FLockOutcome& Outcome)>;
 
-	void TryLock(const FString& RelativeFilePath, FOnLockComplete OnComplete);
+	POORFORCE_API void TryLock(const FString& RelativeFilePath, FOnLockComplete OnComplete);
 
 	// fire-and-forget. 결과는 로그로만.
-	void TryUnlock(const FString& RelativeFilePath);
+	POORFORCE_API void TryUnlock(const FString& RelativeFilePath);
 }

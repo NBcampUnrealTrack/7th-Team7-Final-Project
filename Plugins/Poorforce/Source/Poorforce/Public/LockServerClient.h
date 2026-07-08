@@ -27,7 +27,7 @@ namespace PoorforceLock
 	FLockEntry ParseLockValue(const FString& RawValue);
 }
 
-class FLockServerClient : public TSharedFromThis<FLockServerClient>
+class POORFORCE_API FLockServerClient : public TSharedFromThis<FLockServerClient>
 {
 public:
 	using FAcquireCallback   = TFunction<void(PoorforceLock::EAcquireResult Result)>;

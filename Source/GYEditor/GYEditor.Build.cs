@@ -37,6 +37,9 @@ public class GYEditor : ModuleRules
 				"PropertyEditor",
 				"DetailCustomizations",
 				"AnimationBlueprintLibrary",
+				"DataValidation",
+				"Json",
+				"Poorforce",
 
 
             }

@@ -6,6 +6,7 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "EdGraphUtilities.h"
 #include "Misc/PackageName.h"
+#include "ItemEditor/GYItemEditorRegistration.h"
 #include "SkillTreeEditor/SkillTreeNodeFactory.h"
 #include "SkillTreeEditor/AssetTypeActions_SkillTree.h"
 #include "Enemy/AnimNotify/EnemyAttackState.h"
@@ -34,6 +35,8 @@ void FGYEditorModule::StartupModule()
 		this, &FGYEditorModule::OnObjectPreSave
 	);
 
+	FGYItemEditorRegistration::Register();
+
 	IAssetRegistry& AssetRegistry =
 		FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
 	if (AssetRegistry.IsLoadingAssets())
@@ -49,6 +52,8 @@ void FGYEditorModule::StartupModule()
 
 void FGYEditorModule::ShutdownModule()
 {
+	FGYItemEditorRegistration::Unregister();
+
     if (DebugMenuManager.IsValid())
     {
         DebugMenuManager->Shutdown();
