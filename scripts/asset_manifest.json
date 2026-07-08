@@ -22471,6 +22471,11 @@
                                                                                                       "by":  "Admin",
                                                                                                       "at":  "2026-06-25 00:08:47",
                                                                                                       "note":  ""
+                                                                                                  },
+                                                                                                  {
+                                                                                                      "by":  "Admin",
+                                                                                                      "at":  "2026-07-08 23:03:40",
+                                                                                                      "note":  ""
                                                                                                   }
                                                                                               ]
                                                                               },
@@ -38755,6 +38760,33 @@
                                                                                                   }
                                                                                               ]
                                                                               },
+                   "Sp_Clock_Factory/Materials/Master_Materials/MM_Global.uasset":  {
+                                                                                        "history":  [
+                                                                                                        {
+                                                                                                            "by":  "Admin",
+                                                                                                            "at":  "2026-07-08 23:03:40",
+                                                                                                            "note":  ""
+                                                                                                        }
+                                                                                                    ]
+                                                                                    },
+                   "Sp_Clock_Factory/Materials/Material_Instances/MI_Fence.uasset":  {
+                                                                                         "history":  [
+                                                                                                         {
+                                                                                                             "by":  "Admin",
+                                                                                                             "at":  "2026-07-08 23:03:40",
+                                                                                                             "note":  ""
+                                                                                                         }
+                                                                                                     ]
+                                                                                     },
+                   "Sp_Clock_Factory/Meshes/Structures/SM_Fence_PivotFix.uasset":  {
+                                                                                       "history":  [
+                                                                                                       {
+                                                                                                           "by":  "Admin",
+                                                                                                           "at":  "2026-07-08 23:03:40",
+                                                                                                           "note":  ""
+                                                                                                       }
+                                                                                                   ]
+                                                                                   },
                    "Sword_and_Shield/Animations/Sequence2/03_Walk/02_Walk_Combat/02_Walk_Combat_F_L_45/Walk_Combat_Loop_F_L_45_Seq.uasset":  {
                                                                                                                                                  "history":  [
                                                                                                                                                                  {
