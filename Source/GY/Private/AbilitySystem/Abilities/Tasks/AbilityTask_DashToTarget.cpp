@@ -38,7 +38,7 @@ void UAbilityTask_DashToTarget::Activate()
 		return;
 	}
 	UGameplayEffect* GE = NewObject<UGameplayEffect>(
-	GetTransientPackage(), TEXT("GE_MoveSpeedOverride_Dynamic"));
+	CachedASC.Get(), TEXT("GE_MoveSpeedOverride_Dynamic"));
 
 	GE->DurationPolicy = EGameplayEffectDurationType::Infinite;
 
@@ -113,7 +113,7 @@ void UAbilityTask_DashToTarget::OnDestroy(bool bInOwnerFinished)
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
 			Owner, GYGameplayTags::Event_Enemy_Combo_Branch, Payload);
 	}
-	if (CachedASC.IsValid())
+	if (CachedASC.IsValid() && MovementSpeedGEHandle.IsValid())
 	{
 		CachedASC->RemoveActiveGameplayEffect(MovementSpeedGEHandle);
 	}
