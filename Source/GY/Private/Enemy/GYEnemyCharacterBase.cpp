@@ -273,6 +273,7 @@ void AGYEnemyCharacterBase::HandleBootstrapConfigsApplied()
 
 	BuildMontageMap(Data->AnimationConfig);
 	CachedWeaponTraceSockets();
+	CreateBodyHitBoxes(Data);
 
 	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
@@ -752,6 +753,31 @@ void AGYEnemyCharacterBase::CachedWeaponTraceSockets()
 	});
 
 	WeaponTraceSockets = Found;
+}
+
+void AGYEnemyCharacterBase::CreateBodyHitBoxes(const UEnemyDataAsset* Data)
+{
+	if (!Data || Data->BodyHitBoxes.Num() == 0) return;
+
+	USkeletalMeshComponent* SkeletalMesh = GetMesh();
+	if (!SkeletalMesh) return;
+
+	for (const FEnemyHitBoxDef& Def : Data->BodyHitBoxes)
+	{
+		if (!Def.SlotOrPartTag.IsValid()) continue;
+		if (GetBodyHitBox(Def.SlotOrPartTag)) continue;
+
+		UGYWeaponHitBox* Box = NewObject<UGYWeaponHitBox>(this);
+		if (!Box) continue;
+
+		Box->SlotOrPartTag = Def.SlotOrPartTag;
+		Box->HitBoneName = Def.HitBoneName;
+		Box->SetBoxExtent(Def.BoxExtent);
+		Box->RegisterComponent();
+		Box->AttachToComponent(SkeletalMesh,
+			FAttachmentTransformRules::KeepRelativeTransform, Def.AttachSocket);
+		Box->SetRelativeTransform(Def.RelativeTransform);
+	}
 }
 
 UGYWeaponHitBox* AGYEnemyCharacterBase::GetBodyHitBox(FGameplayTag PartTag) const
