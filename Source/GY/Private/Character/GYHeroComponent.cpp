@@ -24,6 +24,9 @@
 #include "Player/GYPlayerState.h"
 #include "TimerManager.h"
 #include "Player/GYPlayerController.h"
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "UI/GYUIMessages.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
 
 // 이 컴포넌트의 이름표는 "Hero"로 지정합니다.
 const FName UGYHeroComponent::NAME_ActorFeatureName("Hero");
@@ -272,6 +275,14 @@ void UGYHeroComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
 				if (Config->GiveUpInputTag.IsValid() && InputTag == Config->GiveUpInputTag)
 				{
 					Char->StartGiveUpTimer();
+					if (UWorld* World = GetWorld()) // 포기 키를 누르고 있는 동안 진행 위젯 표시
+					{
+						FGYReviveHoldMessage Msg;
+						Msg.bHeld = true;
+						Msg.Duration = Config->GiveUpHoldTime;
+						UGameplayMessageSubsystem::Get(World).BroadcastMessage(
+							GYGameplayTags::Message_Player_ReviveHold, Msg);
+					}
 					return;
 				}
 			}
@@ -332,6 +343,13 @@ void UGYHeroComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 				if (Config->GiveUpInputTag.IsValid() && InputTag == Config->GiveUpInputTag)
 				{
 					Char->CancelGiveUpTimer();
+					if (UWorld* World = GetWorld()) // 키를 떼면 진행 위젯 숨김
+					{
+						FGYReviveHoldMessage Msg;
+						Msg.bHeld = false;
+						UGameplayMessageSubsystem::Get(World).BroadcastMessage(
+							GYGameplayTags::Message_Player_ReviveHold, Msg);
+					}
 					return;
 				}
 			}
