@@ -138,6 +138,8 @@ protected:
 
 	void CachedWeaponTraceSockets();
 
+	void CreateBodyHitBoxes(const class UEnemyDataAsset* Data);
+
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Events")
 	FOnEnemyDead OnEnemyDead;

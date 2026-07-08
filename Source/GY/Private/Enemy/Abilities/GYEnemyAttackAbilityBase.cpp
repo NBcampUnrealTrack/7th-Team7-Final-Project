@@ -9,6 +9,7 @@
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "EnvironmentQuery/EnvQuery.h"
+#include "Enemy/Abilities/GYEnemyCooldownEffect.h"
 #include "Enemy/AnimNotify/EnemyAttackState.h"
 #include "Enemy/AnimNotify/LaunchProjectile.h"
 #include "AbilitySystem/GYCombatSettings.h"
@@ -25,6 +26,7 @@ UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
+	CooldownGameplayEffectClass = UGYEnemyCooldownEffect::StaticClass();
 
 	ActivationBlockedTags.AddTag(GYStateTags::State_Hit_Stun);
 	ActivationBlockedTags.AddTag(GYStateTags::State_Life_Dead);
@@ -91,6 +93,36 @@ void UGYEnemyAttackAbilityBase::ApplyWeightRow(const FEnemyAbilityWeightRow& Row
 {
 	HitDamageWeights = Row.HitDamageWeights;
 	ActivateCost = Row.ActivateCost;
+	CooldownDuration = Row.CoolTime;
+	bHasCooldown = Row.CoolTime > 0.f;
+	BaseDamageScore = Row.BaseScore;
+}
+
+const FGameplayTagContainer* UGYEnemyAttackAbilityBase::GetCooldownTags() const
+{
+	FGameplayTagContainer* Mutable = const_cast<FGameplayTagContainer*>(&TempCooldownTags);
+	Mutable->Reset();
+	if (CooldownTag.IsValid())
+	{
+		Mutable->AddTag(CooldownTag);
+	}
+	return Mutable;
+}
+
+void UGYEnemyAttackAbilityBase::ApplyCooldown(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo) const
+{
+	UGameplayEffect* CooldownGE = GetCooldownGameplayEffect();
+	if (!CooldownGE || CooldownDuration <= 0.f || !CooldownTag.IsValid()) return;
+
+	FGameplayEffectSpecHandle Spec = MakeOutgoingGameplayEffectSpec(CooldownGE->GetClass(), GetAbilityLevel());
+	if (Spec.IsValid())
+	{
+		Spec.Data->DynamicGrantedTags.AddTag(CooldownTag);
+		Spec.Data->SetSetByCallerMagnitude(GYEffectTags::Cooldown_SetByCaller, CooldownDuration);
+		ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, Spec);
+	}
 }
 
 bool UGYEnemyAttackAbilityBase::CanBeSelectedByAI(const UAbilitySystemComponent* ASC, float DistToTarget) const
@@ -454,6 +486,7 @@ void UGYEnemyAttackAbilityBase::OnWeaponHit(FGameplayEventData Payload)
 		HitContext.Additive = W->Additive;
 		HitContext.StaggerAmount = W->Stagger;
 		HitContext.StunAmount = W->Stun;
+		HitContext.KnockbackStrength = W->KnockbackStrength;
 	}
 
 	UGYCombatStatics::ApplyHitImpact(HitContext);

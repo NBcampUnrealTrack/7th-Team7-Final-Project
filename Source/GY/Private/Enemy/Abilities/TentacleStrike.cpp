@@ -253,6 +253,7 @@ void UTentacleStrike::OnTentacleHit(FGameplayEventData Payload)
 		HitContext.Additive = W.Additive;
 		HitContext.StaggerAmount = W.Stagger;
 		HitContext.StunAmount = W.Stun;
+		HitContext.KnockbackStrength = W.KnockbackStrength;
 	}
 
 	UGYCombatStatics::ApplyHitImpact(HitContext);

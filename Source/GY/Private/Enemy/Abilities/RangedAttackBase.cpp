@@ -171,6 +171,10 @@ void URangedAttackBase::OnProjectileHit(FGameplayEventData Payload)
 	HitContext.StaggerAmount = StaggerAmount;
 	HitContext.StunAmount = StunAmount;
 	HitContext.bGivesParriedReaction = false;
+	if (HitDamageWeights.IsValidIndex(0))
+	{
+		HitContext.KnockbackStrength = HitDamageWeights[0].KnockbackStrength;
+	}
 
 	UGYCombatStatics::ApplyHitImpact(HitContext);
 

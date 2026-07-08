@@ -122,6 +122,38 @@ struct FEnemyGASConfig
 //TODO 은서: Sound, VFX 넣을지 고려
 //TODO 은서: Reward도 고려 필요
 
+/**
+ * 부위/무기 판정용 히트박스 정의.
+ * 공용 BP(EnemyCharacterBase)는 몬스터별 메시를 모르므로,
+ * 히트박스는 BP가 아니라 여기(몬스터별 DataAsset)에 정의하고 스폰 시 런타임 생성한다.
+ * EnemyAttackState 노티파이(Mode=BodyPart)의 HitBoxTag와 SlotOrPartTag가 일치해야 판정이 켜진다.
+ */
+USTRUCT(BlueprintType)
+struct FEnemyHitBoxDef
+{
+	GENERATED_BODY()
+
+	/** 노티파이 HitBoxTag와 매칭되는 식별 태그 (Weapon.* 하위) */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (Categories = "Weapon"))
+	FGameplayTag SlotOrPartTag;
+
+	/** 히트박스를 붙일 스켈레톤 소켓/본 이름 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName AttachSocket;
+
+	/** 패링/가드 리액션 계산에 전달되는 본 이름 (보통 AttachSocket과 동일 본) */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName HitBoneName;
+
+	/** 소켓 기준 상대 트랜스폼 (소켓을 정확히 배치했다면 0 유지 권장) */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FTransform RelativeTransform;
+
+	/** 박스 절반 크기 — gy.ShowHitBox 2 로 실제 게임에서 보면서 조정 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FVector BoxExtent = FVector(32.f, 32.f, 32.f);
+};
+
 USTRUCT(BlueprintType)
 struct FEnemyRewardConfig
 {
@@ -165,6 +197,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reward")
 	FEnemyRewardConfig RewardConfig;
+
+	/** 부위 공격용 히트박스 목록 — 필요 없는 몬스터는 비워둔다 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat|HitBox")
+	TArray<FEnemyHitBoxDef> BodyHitBoxes;
 
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override
 	{

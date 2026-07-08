@@ -13,5 +13,6 @@ namespace GYEffectTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Damage_Type_Poison)
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Damage_Poison_SetByCaller_PerTick)
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(ActivateCost_SetByCaller)
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_SetByCaller)
 
 }
