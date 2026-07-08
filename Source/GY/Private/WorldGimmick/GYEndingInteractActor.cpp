@@ -14,7 +14,9 @@
 #include "Components/BoxComponent.h"
 #include "Core/GYCollisionChannels.h"
 #include "Core/GameplayTags/QuestTags.h"
+#include "Enemy/GYBossCharacterBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/GYUIMessages.h"
 
@@ -207,6 +209,19 @@ void AGYEndingInteractActor::Multicast_PlayCinematic_Implementation(const FSoftO
 	}
 	ActiveSequencePlayer = Player;
 	ActiveSequenceActor = OutActor;
+
+	// 실제 보스 액터를 찾아 Binding Tag로 런타임에 주입
+	TArray<AActor*> FoundBosses;
+	UGameplayStatics::GetAllActorsOfClass(World, AGYBossCharacterBase::StaticClass(), FoundBosses);
+	if (FoundBosses.Num() > 0)
+	{
+		OutActor->AddBindingByTag(BossBindingTag, FoundBosses[0], /*bAllowBindingsFromAsset=*/ false);
+	}
+	else
+	{
+		GY_WARN(Network, CYS, "[%s] No boss actor found to bind for tag '%s'",
+			*GetName(), *BossBindingTag.ToString());
+	}
 
 	Player->OnFinished.AddDynamic(this, &AGYEndingInteractActor::HandleCinematicFinished);
 

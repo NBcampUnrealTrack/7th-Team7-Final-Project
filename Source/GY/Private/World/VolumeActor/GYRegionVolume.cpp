@@ -24,8 +24,8 @@ AGYRegionVolume::AGYRegionVolume()
 void AGYRegionVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AGYRegionVolume::OnOverlapBegin);
-	TriggerBox->OnComponentEndOverlap.AddDynamic(this, &AGYRegionVolume::OnOverlapEnd);
+	TriggerBox->OnComponentBeginOverlap.AddUniqueDynamic(this, &AGYRegionVolume::OnOverlapBegin);
+	TriggerBox->OnComponentEndOverlap.AddUniqueDynamic(this, &AGYRegionVolume::OnOverlapEnd);
 
 	if (UWorld* World = GetWorld())
 	{

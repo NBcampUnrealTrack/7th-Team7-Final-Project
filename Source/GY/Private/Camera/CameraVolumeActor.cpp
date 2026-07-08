@@ -25,11 +25,11 @@ void ACameraVolumeActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	BoxComponent->OnComponentBeginOverlap.AddDynamic(
+	BoxComponent->OnComponentBeginOverlap.AddUniqueDynamic(
 		this,
 		&ACameraVolumeActor::OnMeshBeginOverlap);
 
-	BoxComponent->OnComponentEndOverlap.AddDynamic(
+	BoxComponent->OnComponentEndOverlap.AddUniqueDynamic(
 		this,
 		&ACameraVolumeActor::OnMeshEndOverlap);
 }

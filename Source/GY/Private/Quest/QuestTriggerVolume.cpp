@@ -24,7 +24,7 @@ void AQuestTriggerVolume::BeginPlay()
 {
 	Super::BeginPlay();
 
-	BoxComponent->OnComponentBeginOverlap.AddDynamic(
+	BoxComponent->OnComponentBeginOverlap.AddUniqueDynamic(
 		this,
 		&AQuestTriggerVolume::OnMeshBeginOverlap);
 }
@@ -61,6 +61,17 @@ void AQuestTriggerVolume::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp
 	// 클라이언트: 자신의 캐릭터만, 각 플레이어 독립적으로 한 번
 	if (!Character->IsLocallyControlled()) return;
 	if (bDialoguePlayed && !bIsLoop) return;
+
+	const FGameplayTag DialogueTag = GetRandomQuestTag();
+
+	// Quest 태그는 선행 퀘스트 완료 체크, Dialogue 태그는 체크 없이 재생
+	static const FGameplayTag QuestRootTag = FGameplayTag::RequestGameplayTag(FName("Quest"));
+	if (DialogueTag.MatchesTag(QuestRootTag))
+	{
+		UQuestSubsystem* QS = GetQuestSubsystem();
+		if (!QS || !QS->ArePrerequisitesMet(DialogueTag))
+			return;
+	}
 
 	bDialoguePlayed = true;
 	GY_LOG(Content, CYS, "NPC와의 대화");
