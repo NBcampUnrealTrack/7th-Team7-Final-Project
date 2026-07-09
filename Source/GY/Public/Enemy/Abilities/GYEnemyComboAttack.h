@@ -5,6 +5,7 @@
 #include "GYEnemyComboAttack.generated.h"
 
 class UAbilityTask_PlayMontageAndWait;
+class AProjectileBase;
 
 USTRUCT(BlueprintType)
 struct FComboStep
@@ -25,6 +26,48 @@ struct FComboStep
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combo")
 	TArray<FHitDamageWeight> HitWeights;
+
+	// true면 이 스텝 몽타주의 LaunchProjectile 노티 시점에 검기 발사
+	UPROPERTY(EditDefaultsOnly, Category = "Combo|Projectile")
+	bool bLaunchProjectile = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combo|Projectile",
+		meta = (EditCondition = "bLaunchProjectile", EditConditionHides))
+	TSubclassOf<AProjectileBase> ProjectileClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combo|Projectile",
+		meta = (EditCondition = "bLaunchProjectile", EditConditionHides))
+	float ProjectileSpeed = 1500.f;
+
+	// 발사 위치로 쓸 검 Actor 슬롯. 못 찾으면 SkeletalMesh의 CalcSocket에서 발사
+	UPROPERTY(EditDefaultsOnly, Category = "Combo|Projectile",
+		meta = (EditCondition = "bLaunchProjectile", EditConditionHides))
+	FGameplayTag WeaponSlotTag;
+
+	// 검 StaticMesh의 소켓. None이면 검 Actor 원점
+	UPROPERTY(EditDefaultsOnly, Category = "Combo|Projectile",
+		meta = (EditCondition = "bLaunchProjectile", EditConditionHides))
+	FName WeaponSocket;
+
+	// true면 바닥에 붙어서 나감(바닥 위 GroundHeightOffset 높이, 수평 직진), false면 소켓 위치에서 나감
+	UPROPERTY(EditDefaultsOnly, Category = "Combo|Projectile",
+		meta = (EditCondition = "bLaunchProjectile", EditConditionHides))
+	bool bLaunchFromGround = false;
+
+	// 바닥에서 띄울 높이
+	UPROPERTY(EditDefaultsOnly, Category = "Combo|Projectile",
+		meta = (EditCondition = "bLaunchProjectile && bLaunchFromGround", EditConditionHides))
+	float GroundHeightOffset = 30.f;
+
+	// true면 타겟 몸통 중심으로 높이 보정, false면 발사 높이 그대로 수평 직진 (소켓 모드에서만)
+	UPROPERTY(EditDefaultsOnly, Category = "Combo|Projectile",
+		meta = (EditCondition = "bLaunchProjectile && !bLaunchFromGround", EditConditionHides))
+	bool bAimAtTargetCenter = true;
+
+	// 검기 모양의 Z축(Yaw) 회전 오프셋(도). 진행 방향 기준으로 더해지며 날아가는 방향은 안 바뀜
+	UPROPERTY(EditDefaultsOnly, Category = "Combo|Projectile",
+		meta = (EditCondition = "bLaunchProjectile", EditConditionHides))
+	float SlashYawOffset = 0.f;
 };
 
 UCLASS()
@@ -50,6 +93,9 @@ protected:
 
 	UFUNCTION()
 	void OnComboBranch(FGameplayEventData Payload);
+
+	UFUNCTION()
+	void OnLaunchProjectile(FGameplayEventData Payload);
 
 	UFUNCTION()
 	void OnComboMontageEnded();
