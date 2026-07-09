@@ -48,7 +48,7 @@ void AGYEndingInteractActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 void AGYEndingInteractActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	GetWorldTimerManager().ClearTimer(IntroTimerHandle);
+	GetWorldTimerManager().ClearTimer(PostCinematicTimerHandle);
 
 	if (ActiveSequencePlayer)
 	{
@@ -131,12 +131,10 @@ void AGYEndingInteractActor::OnInteract(FGameplayTag OptionTag, APawn* Interacto
 	if (bAdded && Current >= RequiredCount)
 	{
 		bConsumed = true;
+		TeleportAllPawnsToOrigin(); // 시네마틱 동안 화면에 안 보이도록 원점으로 임시 이동
 		Multicast_PlayCinematic(Cinematic.ToSoftObjectPath()); // 시네마틱 전체 작동
-		if (Mode == EGYCinematicGateMode::Intro)
-		{
-			GetWorldTimerManager().SetTimer(IntroTimerHandle, this,
-				&AGYEndingInteractActor::OnIntroTimerExpired, CinematicDuration, false);
-		}
+		GetWorldTimerManager().SetTimer(PostCinematicTimerHandle, this,
+			&AGYEndingInteractActor::OnPostCinematicTimerExpired, CinematicDuration, false);
 	}
 	else
 	{
@@ -210,36 +208,28 @@ void AGYEndingInteractActor::Multicast_PlayCinematic_Implementation(const FSoftO
 	ActiveSequencePlayer = Player;
 	ActiveSequenceActor = OutActor;
 
-	// 실제 보스 액터를 찾아 Binding Tag로 런타임에 주입
-	TArray<AActor*> FoundBosses;
-	UGameplayStatics::GetAllActorsOfClass(World, AGYBossCharacterBase::StaticClass(), FoundBosses);
-	if (FoundBosses.Num() > 0)
+	if (Mode == EGYCinematicGateMode::Intro)
 	{
-		OutActor->AddBindingByTag(BossBindingTag, FoundBosses[0], /*bAllowBindingsFromAsset=*/ false);
-	}
-	else
-	{
-		GY_WARN(Network, CYS, "[%s] No boss actor found to bind for tag '%s'",
-			*GetName(), *BossBindingTag.ToString());
+		// 실제 보스 액터를 찾아 Binding Tag로 런타임에 주입
+		TArray<AActor*> FoundBosses;
+		UGameplayStatics::GetAllActorsOfClass(World, AGYBossCharacterBase::StaticClass(), FoundBosses);
+		if (FoundBosses.Num() > 0)
+		{
+			OutActor->AddBindingByTag(BossBindingTag, FoundBosses[0], /*bAllowBindingsFromAsset=*/ false);
+		}
+		else
+		{
+			GY_WARN(Network, CYS, "[%s] No boss actor found to bind for tag '%s'",
+				*GetName(), *BossBindingTag.ToString());
+		}
 	}
 
 	Player->OnFinished.AddDynamic(this, &AGYEndingInteractActor::HandleCinematicFinished);
 
-	if (Mode == EGYCinematicGateMode::Intro)
-	{
-		if (APlayerController* LocalPC = UGameplayStatics::GetPlayerController(this, 0))
-		{
-			if (APawn* LocalPawn = LocalPC->GetPawn())
-			{
-				LocalPawn->SetActorHiddenInGame(true);
-			}
-		}
-
-		// UI 꺼줘
-		FGYCinematicMessage Msg;
-		Msg.bIsPlaying = true;
-		UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
-	}
+	// UI 꺼줘
+	FGYCinematicMessage Msg;
+	Msg.bIsPlaying = true;
+	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
 
 	Player->Play();
 }
@@ -261,23 +251,27 @@ void AGYEndingInteractActor::HandleCinematicFinished()
 	UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
 }
 
-void AGYEndingInteractActor::OnIntroTimerExpired()
+void AGYEndingInteractActor::OnPostCinematicTimerExpired()
 {
 	// 시네마틱 타이머 종료 후 로직
-	if (!HasAuthority() || !PostCinematicSpawnPoint) return;
+	if (!HasAuthority()) return;
 
-	AGameStateBase* GS = GetWorld() ? GetWorld()->GetGameState() : nullptr;
-	if (!GS) return;
-
-	const FVector DestLoc = PostCinematicSpawnPoint->GetActorLocation();
-	const FRotator DestRot = PostCinematicSpawnPoint->GetActorRotation();
-
-	for (APlayerState* PS : GS->PlayerArray)
+	if (PostCinematicSpawnPoint)
 	{
-		if (PS && PS->GetPawn())
+		AGameStateBase* GS = GetWorld() ? GetWorld()->GetGameState() : nullptr;
+		if (GS)
 		{
-			// 플레이어 보스전 내부 이동
-			PS->GetPawn()->TeleportTo(DestLoc, DestRot);
+			const FVector DestLoc = PostCinematicSpawnPoint->GetActorLocation();
+			const FRotator DestRot = PostCinematicSpawnPoint->GetActorRotation();
+
+			for (APlayerState* PS : GS->PlayerArray)
+			{
+				if (PS && PS->GetPawn())
+				{
+					// 플레이어 이동
+					PS->GetPawn()->TeleportTo(DestLoc, DestRot);
+				}
+			}
 		}
 	}
 
@@ -286,19 +280,18 @@ void AGYEndingInteractActor::OnIntroTimerExpired()
 		// 보스전 블로킹 제거
 		BlockingActor->Destroy();
 	}
-
-	Multicast_ShowAllPawns();
 }
 
-void AGYEndingInteractActor::Multicast_ShowAllPawns_Implementation()
+void AGYEndingInteractActor::TeleportAllPawnsToOrigin()
 {
-	if (IsRunningDedicatedServer()) return;
+	AGameStateBase* GS = GetWorld() ? GetWorld()->GetGameState() : nullptr;
+	if (!GS) return;
 
-	if (APlayerController* LocalPC = UGameplayStatics::GetPlayerController(this, 0))
+	for (APlayerState* PS : GS->PlayerArray)
 	{
-		if (APawn* LocalPawn = LocalPC->GetPawn())
+		if (PS && PS->GetPawn())
 		{
-			LocalPawn->SetActorHiddenInGame(false);
+			PS->GetPawn()->TeleportTo(FVector::ZeroVector, FRotator::ZeroRotator);
 		}
 	}
 }
@@ -313,4 +306,13 @@ void AGYEndingInteractActor::BroadcastCinematicFinishedLocal()
 
 	UGameplayMessageSubsystem::Get(World).BroadcastMessage(
 		GYGameplayTags::Message_Ending_CinematicFinished, Msg);
+}
+
+void AGYEndingInteractActor::RevealAtDesignatedLocation()
+{
+	if (!HasAuthority() || bRevealed || !RevealTargetPoint) return;
+
+	bRevealed = true;
+	SetActorLocation(RevealTargetPoint->GetActorLocation());
+	SetActorRotation(RevealTargetPoint->GetActorRotation());
 }

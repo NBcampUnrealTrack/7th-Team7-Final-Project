@@ -4,6 +4,8 @@
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
+#include "Character/GYCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "Enemy/GYBossAIController.h"
 #include "Enemy/EnemyAnimInstance.h"
 #include "Enemy/Component/BossBootstrapComponent.h"
@@ -312,6 +314,15 @@ void AGYBossCharacterBase::HandleCinematicFinished()
 	FGYCinematicMessage Msg;
 	Msg.bIsPlaying = false;
 	UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
+
+	// 연출(로컬 재생)이 끝난 시점에 서버로 알려서, 엔딩 액터의 실제 위치를 이 타이밍에 맞춰 이동시킴
+	if (APlayerController* LocalPC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		if (AGYCharacter* LocalCharacter = Cast<AGYCharacter>(LocalPC->GetPawn()))
+		{
+			LocalCharacter->Server_NotifyBossRevealFinished();
+		}
+	}
 }
 
 void AGYBossCharacterBase::Multicast_PlayCinematic_Implementation(const FSoftObjectPath& SequencePath)
