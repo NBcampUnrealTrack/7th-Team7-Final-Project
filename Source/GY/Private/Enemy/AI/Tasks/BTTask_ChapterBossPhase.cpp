@@ -32,6 +32,8 @@ EBTNodeResult::Type UBTTask_ChapterBossPhase::ExecuteTask(UBehaviorTreeComponent
 		if (UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent())
 		{
 			BB->SetValueAsBool(EnemyBBKeys::PhasePending, false);
+			BB->SetValueAsObject(EnemyBBKeys::SelectedAbility,nullptr);
+			BB->SetValueAsObject(EnemyBBKeys::LastUsedAbility,nullptr);
 		}
 		return EBTNodeResult::Failed;
 	}
@@ -72,6 +74,8 @@ void UBTTask_ChapterBossPhase::OnAbilityEnded(const FAbilityEndedData& Data)
 		if (UBlackboardComponent* BB = BTC->GetBlackboardComponent())
 		{
 			BB->SetValueAsBool(EnemyBBKeys::PhasePending, false);
+			BB->SetValueAsObject(EnemyBBKeys::SelectedAbility, nullptr);
+			BB->SetValueAsObject(EnemyBBKeys::LastUsedAbility, nullptr);
 		}
 		FinishLatentTask(*BTC, EBTNodeResult::Succeeded);
 	}

@@ -44,7 +44,12 @@ EBTNodeResult::Type UBTTask_ExecuteSelectedAbility::ExecuteTask(UBehaviorTreeCom
 		}
 	}
 
-	if (!Handle.IsValid()) return EBTNodeResult::Failed;
+	if (!Handle.IsValid())
+	{
+		// ASC에서 제거된 어빌리티(페이즈 교체 등)가 BB에 남은 경우 — 비워서 재선택 유도
+		BB->SetValueAsObject(EnemyBBKeys::SelectedAbility, nullptr);
+		return EBTNodeResult::Failed;
+	}
 
 	CachedOwnerComp = &OwnerComp;
 	CachedASC = ASC;
@@ -57,6 +62,7 @@ EBTNodeResult::Type UBTTask_ExecuteSelectedAbility::ExecuteTask(UBehaviorTreeCom
 		ASC->OnAbilityEnded.RemoveAll(this);
 		CachedOwnerComp = nullptr;
 		CachedASC = nullptr;
+		BB->SetValueAsObject(EnemyBBKeys::SelectedAbility, nullptr);
 		return EBTNodeResult::Failed;
 	}
 
