@@ -21,6 +21,7 @@
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "Core/GameplayTags/EffectTags.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
 {
@@ -345,10 +346,12 @@ void UGYEnemyAttackAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
+
 }
 
+
 bool UGYEnemyAttackAbilityBase::CheckCost(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags) const
+                                          const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags) const
 {
 	if (ActivateCost <= 0.f) return true;
 

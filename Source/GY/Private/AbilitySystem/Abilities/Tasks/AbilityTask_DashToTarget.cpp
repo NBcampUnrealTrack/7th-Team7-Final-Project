@@ -9,7 +9,7 @@
 
 UAbilityTask_DashToTarget* UAbilityTask_DashToTarget::CreateDashToTarget(
     UGameplayAbility* OwningAbility, AActor* Target,
-    float InDashSpeed, float InStopDistance, float InFrontHalfAngleDeg)
+    float InDashSpeed, float InStopDistance, float InFrontHalfAngleDeg, bool bUseAcc)
 {
     UAbilityTask_DashToTarget* Task = NewAbilityTask<UAbilityTask_DashToTarget>(OwningAbility);
 	Task->OwningAbilityRef = OwningAbility;
@@ -17,6 +17,7 @@ UAbilityTask_DashToTarget* UAbilityTask_DashToTarget::CreateDashToTarget(
     Task->DashSpeed = FMath::Max(InDashSpeed, 1.f);
     Task->StopDistanceSq = FMath::Square(FMath::Max(InStopDistance, 0.f));
     Task->CosFrontHalfAngle = FMath::Cos(FMath::DegreesToRadians(FMath::Clamp(InFrontHalfAngleDeg, 0.f, 180.f)));
+	Task->bUseAcc = bUseAcc;
     return Task;
 }
 
@@ -37,6 +38,17 @@ void UAbilityTask_DashToTarget::Activate()
 		EndTask();
 		return;
 	}
+
+	if (!bUseAcc)
+	{
+		UCharacterMovementComponent* CMC = Char->GetCharacterMovement();
+		if (CMC)
+		{
+			SavedAcc = CMC->MaxAcceleration;
+			CMC->MaxAcceleration = 10000;
+		}
+	}
+
 	UGameplayEffect* GE = NewObject<UGameplayEffect>(
 	CachedASC.Get(), TEXT("GE_MoveSpeedOverride_Dynamic"));
 
@@ -102,6 +114,11 @@ void UAbilityTask_DashToTarget::OnDestroy(bool bInOwnerFinished)
 		if (UCharacterMovementComponent* CMC = Char->GetCharacterMovement())
 		{
 			CMC->Velocity = FVector::ZeroVector;
+
+			if (!bUseAcc)
+			{
+				CMC->MaxAcceleration = SavedAcc;
+			}
 		}
 	}
 

@@ -27,6 +27,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Knight_LongSword_Attack02, "Cooldown.Enemy.Knight.LongSword.Attack02");
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Knight_LongSword_Attack03, "Cooldown.Enemy.Knight.LongSword.Attack03");
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Knight_LongSword_Attack04, "Cooldown.Enemy.Knight.LongSword.Attack04");
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Knight_LongSword_Attack05, "Cooldown.Enemy.Knight.LongSword.Attack05");
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Knight_LongSword_Ultimate, "Cooldown.Enemy.Knight.LongSword.Ultimate");
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Knight_LongSword_RunAttack, "Cooldown.Enemy.Knight.LongSword.RunAttack");
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Knight_LongSword_JustGuardAttack, "Cooldown.Enemy.Knight.LongSword.JustGuardAttack");
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Knight_LongSword_Dodge, "Cooldown.Enemy.Knight.LongSword.Dodge");

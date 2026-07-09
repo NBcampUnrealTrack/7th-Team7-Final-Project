@@ -84,6 +84,12 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
 
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		bool bReplicateEndAbility,
+		bool bWasCancelled) override;
+
 	virtual const FHitDamageWeight* GetCurrentHitWeight() const override;
 
 	// flat 테이블 배열을 [AttackMontage 몫 → ComboSteps 순서]로 분배 (GYEditor 동기화와 동일 규칙)
@@ -106,6 +112,9 @@ protected:
 	void PlayComboMontage(int32 Index);
 
 	int32 ComboIndex = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|Selection")
+	bool bFlying = false;
 
 private:
 
