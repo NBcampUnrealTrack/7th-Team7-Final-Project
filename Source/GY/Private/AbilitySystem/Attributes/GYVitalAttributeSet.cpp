@@ -88,6 +88,17 @@ void UGYVitalAttributeSet::OnRep_StunRecoveryPerTick(const FGameplayAttributeDat
 void UGYVitalAttributeSet::OnRep_MovementSpeed(const FGameplayAttributeData& OldMovementSpeed)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGYVitalAttributeSet, MovementSpeed, OldMovementSpeed);
+	if (AActor* OwningActor = GetOwningActor())
+	{
+		if (ACharacter* OwningChar = Cast<ACharacter>(OwningActor))
+		{
+			if (UGYCharacterMovementComponent* Move =
+				Cast<UGYCharacterMovementComponent>(OwningChar->GetMovementComponent()))
+			{
+				Move->MaxWalkSpeed = GetMovementSpeed();
+			}
+		}
+	}
 }
 
 
@@ -117,20 +128,29 @@ void UGYVitalAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribut
 	}
 }
 
+void UGYVitalAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+{
+	Super::PostAttributeChange(Attribute, OldValue, NewValue);
+	if (Attribute == GetMovementSpeedAttribute())
+	{
+		if (AActor* OwningActor = GetOwningActor())
+		{
+			if (ACharacter* OwningChar = Cast<ACharacter>(OwningActor))
+			{
+				if (UGYCharacterMovementComponent* Move =
+					Cast<UGYCharacterMovementComponent>(OwningChar->GetMovementComponent()))
+				{
+					Move->MaxWalkSpeed = NewValue;
+				}
+			}
+		}
+	}
+}
+
 void UGYVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	if (Data.EvaluatedData.Attribute == GetMovementSpeedAttribute())
-	{
-		AActor* OwningActor = GetOwningActor();
-		if (!OwningActor) return;
-		ACharacter* OwningChar = Cast<ACharacter>(OwningActor);
-		if (!OwningChar) return;
-		UGYCharacterMovementComponent* Move = Cast<UGYCharacterMovementComponent>(OwningChar->GetMovementComponent());
-		if (!Move) return;
-		Move->MaxWalkSpeed = GetMovementSpeed();
-	}
 
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{

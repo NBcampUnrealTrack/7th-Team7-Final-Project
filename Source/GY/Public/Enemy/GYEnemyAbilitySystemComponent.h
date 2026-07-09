@@ -46,5 +46,4 @@ private:
 	FActiveGameplayEffectHandle StunRegenGEHandle;
 	FActiveGameplayEffectHandle CombatStateEffectHandle;
 	FActiveGameplayEffectHandle ActivityPointsRegenEffectHandle;
-	FActiveGameplayEffectHandle ActivityPointsUsedEffectHandle;
 };

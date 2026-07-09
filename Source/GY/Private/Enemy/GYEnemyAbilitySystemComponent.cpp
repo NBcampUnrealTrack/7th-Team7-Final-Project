@@ -69,7 +69,9 @@ void UGYEnemyAbilitySystemComponent::ApplyActivityPointsUsedEffect()
 {
 	AActor* Owner = GetOwner();
 	if (!Owner || !Owner->HasAuthority()) return;
-	ApplyEffect(ActivityPointsUsedEffect, ActivityPointsUsedEffectHandle);
+
+	FGameplayEffectSpec Spec(ActivityPointsUsedEffect->GetDefaultObject<UGameplayEffect>(), MakeEffectContext(), 1.f);
+	ApplyGameplayEffectSpecToSelf(Spec);
 }
 
 void UGYEnemyAbilitySystemComponent::ApplyCombatTag()
