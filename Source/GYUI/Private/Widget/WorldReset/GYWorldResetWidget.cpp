@@ -39,8 +39,10 @@ void UGYWorldResetWidget::ResetHands()
 {
     MinuteAngle = 0.f;
     HourAngle = 0.f;
+    SpinnerAngle = 0.f;
     if (Image_HourHand) Image_HourHand->SetRenderTransformAngle(0.f);
     if (Image_MinuteHand) Image_MinuteHand->SetRenderTransformAngle(0.f);
+    if (Image_Spinner) Image_Spinner->SetRenderTransformAngle(0.f);
 }
 
 void UGYWorldResetWidget::ApplyVisuals(float BgOpacity, float ContentOpacity)
@@ -52,6 +54,7 @@ void UGYWorldResetWidget::ApplyVisuals(float BgOpacity, float ContentOpacity)
     if (Image_ClockFace) Image_ClockFace->SetRenderOpacity(ContentOpacity);
     if (Image_HourHand) Image_HourHand->SetRenderOpacity(ContentOpacity);
     if (Image_MinuteHand) Image_MinuteHand->SetRenderOpacity(ContentOpacity);
+    if (Image_Spinner) Image_Spinner->SetRenderOpacity(ContentOpacity);
 }
 
 void UGYWorldResetWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -64,8 +67,10 @@ void UGYWorldResetWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 
     MinuteAngle = FMath::Fmod(MinuteAngle - MinuteHandSpeedDeg * InDeltaTime, 360.f);
     HourAngle = FMath::Fmod(HourAngle - HourHandSpeedDeg * InDeltaTime, 360.f);
+    SpinnerAngle = FMath::Fmod(SpinnerAngle + SpinnerSpeedDeg * InDeltaTime, 360.f);
     if (Image_MinuteHand) Image_MinuteHand->SetRenderTransformAngle(MinuteAngle);
     if (Image_HourHand) Image_HourHand->SetRenderTransformAngle(HourAngle);
+    if (Image_Spinner) Image_Spinner->SetRenderTransformAngle(SpinnerAngle);
 
     switch (Phase)
     {
