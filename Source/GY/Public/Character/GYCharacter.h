@@ -59,6 +59,10 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_StartFacingLerp(float StartYaw, float TargetYaw, float LerpTime);
 
+	// 보스 사망 연출(시퀀서)이 로컬에서 끝났을 때, 서버에 엔딩 액터 실제 이동을 요청
+	UFUNCTION(Server, Reliable)
+	void Server_NotifyBossRevealFinished();
+
 	UFUNCTION(BlueprintCallable, Category = "AI|Noise")
 	void MakeFootstepNoise();
 

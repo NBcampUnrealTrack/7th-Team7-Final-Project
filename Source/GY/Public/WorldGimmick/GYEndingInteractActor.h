@@ -36,6 +36,9 @@ public:
 	virtual void GatherInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const override;
 	virtual void OnInteract(FGameplayTag OptionTag, APawn* Interactor) override;
 
+	// 보스 사망 연출(시퀀서)이 끝난 뒤, 서버 권위로 실제 위치를 이동시킴
+	void RevealAtDesignatedLocation();
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> Root;
@@ -90,20 +93,26 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<ALevelSequenceActor> ActiveSequenceActor;
 
-	// Intro 모드 전용
-	UPROPERTY(EditInstanceOnly, Category = "Cinematic|Intro")
+	// 보스 사망 연출 종료 후 이 액터가 실제로 이동할 위치 (서버 권위, Outro 전용)
+	UPROPERTY(EditInstanceOnly, Category = "Cinematic")
+	TObjectPtr<AActor> RevealTargetPoint;
+
+	bool bRevealed = false;
+
+	// 시네마틱 재생 후 처리 (Intro/Ending 공용)
+	UPROPERTY(EditInstanceOnly, Category = "Cinematic")
 	TObjectPtr<AActor> PostCinematicSpawnPoint;
 
-	UPROPERTY(EditInstanceOnly, Category = "Cinematic|Intro")
+	UPROPERTY(EditInstanceOnly, Category = "Cinematic")
 	TObjectPtr<AActor> BlockingActor;
 
-	UPROPERTY(EditInstanceOnly, Category = "Cinematic|Intro")
+	UPROPERTY(EditInstanceOnly, Category = "Cinematic")
 	float CinematicDuration = 5.0f;
 
-	FTimerHandle IntroTimerHandle;
+	FTimerHandle PostCinematicTimerHandle;
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ShowAllPawns();
 
-	void OnIntroTimerExpired();
+	void OnPostCinematicTimerExpired();
 };

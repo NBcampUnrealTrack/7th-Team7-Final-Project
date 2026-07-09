@@ -33,6 +33,8 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Hearing.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "WorldGimmick/GYEndingInteractActor.h"
 #include "UI/GYUIMessages.h"
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimInstance.h"
@@ -189,6 +191,23 @@ void AGYCharacter::Server_StartFacingLerp_Implementation(float StartYaw, float T
 	FacingLerpStartTime = GetWorld()->GetTimeSeconds();
 
 	GetWorldTimerManager().SetTimer(FacingLerpTimer, this, &AGYCharacter::TickFacingLerp, 0.016f, true);
+}
+
+void AGYCharacter::Server_NotifyBossRevealFinished_Implementation()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(World, AGYEndingInteractActor::StaticClass(), FoundActors);
+
+	for (AActor* Found : FoundActors)
+	{
+		if (AGYEndingInteractActor* EndingActor = Cast<AGYEndingInteractActor>(Found))
+		{
+			EndingActor->RevealAtDesignatedLocation();
+		}
+	} //TODO:: 모든 순회... 나중에 리팩토링 해야할듯.
 }
 
 void AGYCharacter::TickFacingLerp()
