@@ -11,4 +11,5 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interaction_Ladder_Activate)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interaction_Boss_Intro)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interaction_Boss_Outro)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interaction_SecretDiary)
 }

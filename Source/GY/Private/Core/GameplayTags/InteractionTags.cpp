@@ -9,4 +9,5 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Interaction_Ending_Start, "Interaction.Ending.Start");
 	UE_DEFINE_GAMEPLAY_TAG(Interaction_Boss_Intro, "Interaction.Boss.Intro");
 	UE_DEFINE_GAMEPLAY_TAG(Interaction_Boss_Outro, "Interaction.Boss.Outro");
+	UE_DEFINE_GAMEPLAY_TAG(Interaction_SecretDiary, "Interaction.SecretDiary");
 }
