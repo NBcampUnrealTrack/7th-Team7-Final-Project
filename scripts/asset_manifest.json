@@ -11029,6 +11029,11 @@
                                                                                                       "by":  "rhkrd",
                                                                                                       "at":  "2026-07-07 15:42:00",
                                                                                                       "note":  ""
+                                                                                                  },
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-09 14:45:59",
+                                                                                                      "note":  ""
                                                                                                   }
                                                                                               ]
                                                                               },
@@ -11330,6 +11335,1203 @@
                                                                                                         }
                                                                                                     ]
                                                                                     },
+                   "DarkMeleeFXPack/FX/Animations/Anim_Anim_ChargedSlash.uasset":  {
+                                                                                       "history":  [
+                                                                                                       {
+                                                                                                           "by":  "rhkrd",
+                                                                                                           "at":  "2026-07-09 14:45:59",
+                                                                                                           "note":  ""
+                                                                                                       }
+                                                                                                   ]
+                                                                                   },
+                   "DarkMeleeFXPack/FX/Animations/Anim_Charged.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Animations/Anim_Idle.uasset":  {
+                                                                          "history":  [
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                              "note":  ""
+                                                                                          }
+                                                                                      ]
+                                                                      },
+                   "DarkMeleeFXPack/FX/Blueprints/BP_Camera_Shake.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-09 14:45:59",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "DarkMeleeFXPack/FX/Blueprints/BP_PlayVFX.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-09 14:45:59",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
+                   "DarkMeleeFXPack/FX/Materials/Curves/CA_Color.uasset":  {
+                                                                               "history":  [
+                                                                                               {
+                                                                                                   "by":  "rhkrd",
+                                                                                                   "at":  "2026-07-09 14:45:59",
+                                                                                                   "note":  ""
+                                                                                               }
+                                                                                           ]
+                                                                           },
+                   "DarkMeleeFXPack/FX/Materials/Curves/CC_Color_01.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-09 14:45:59",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_ControlUV_Param.uasset":  {
+                                                                                            "history":  [
+                                                                                                            {
+                                                                                                                "by":  "rhkrd",
+                                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                                "note":  ""
+                                                                                                            }
+                                                                                                        ]
+                                                                                        },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_Dissolve.uasset":  {
+                                                                                     "history":  [
+                                                                                                     {
+                                                                                                         "by":  "rhkrd",
+                                                                                                         "at":  "2026-07-09 14:45:59",
+                                                                                                         "note":  ""
+                                                                                                     }
+                                                                                                 ]
+                                                                                 },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_Dissolve2.uasset":  {
+                                                                                      "history":  [
+                                                                                                      {
+                                                                                                          "by":  "rhkrd",
+                                                                                                          "at":  "2026-07-09 14:45:59",
+                                                                                                          "note":  ""
+                                                                                                      }
+                                                                                                  ]
+                                                                                  },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_DissolveEdgeFade.uasset":  {
+                                                                                             "history":  [
+                                                                                                             {
+                                                                                                                 "by":  "rhkrd",
+                                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                                 "note":  ""
+                                                                                                             }
+                                                                                                         ]
+                                                                                         },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_EdgeFade2.uasset":  {
+                                                                                      "history":  [
+                                                                                                      {
+                                                                                                          "by":  "rhkrd",
+                                                                                                          "at":  "2026-07-09 14:45:59",
+                                                                                                          "note":  ""
+                                                                                                      }
+                                                                                                  ]
+                                                                                  },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_NoiseHollowingOut.uasset":  {
+                                                                                              "history":  [
+                                                                                                              {
+                                                                                                                  "by":  "rhkrd",
+                                                                                                                  "at":  "2026-07-09 14:45:59",
+                                                                                                                  "note":  ""
+                                                                                                              }
+                                                                                                          ]
+                                                                                          },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_NoisePannerUV_Param.uasset":  {
+                                                                                                "history":  [
+                                                                                                                {
+                                                                                                                    "by":  "rhkrd",
+                                                                                                                    "at":  "2026-07-09 14:45:59",
+                                                                                                                    "note":  ""
+                                                                                                                }
+                                                                                                            ]
+                                                                                            },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_OpacityDepthFade_Param.uasset":  {
+                                                                                                   "history":  [
+                                                                                                                   {
+                                                                                                                       "by":  "rhkrd",
+                                                                                                                       "at":  "2026-07-09 14:45:59",
+                                                                                                                       "note":  ""
+                                                                                                                   }
+                                                                                                               ]
+                                                                                               },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_ParticleBlur.uasset":  {
+                                                                                         "history":  [
+                                                                                                         {
+                                                                                                             "by":  "rhkrd",
+                                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                                             "note":  ""
+                                                                                                         }
+                                                                                                     ]
+                                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_ParticleColor.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_Ref.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-09 14:45:59",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_TexSV.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-09 14:45:59",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_TextureRefine.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_TextureUV.uasset":  {
+                                                                                      "history":  [
+                                                                                                      {
+                                                                                                          "by":  "rhkrd",
+                                                                                                          "at":  "2026-07-09 14:45:59",
+                                                                                                          "note":  ""
+                                                                                                      }
+                                                                                                  ]
+                                                                                  },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_TurblentUV.uasset":  {
+                                                                                       "history":  [
+                                                                                                       {
+                                                                                                           "by":  "rhkrd",
+                                                                                                           "at":  "2026-07-09 14:45:59",
+                                                                                                           "note":  ""
+                                                                                                       }
+                                                                                                   ]
+                                                                                   },
+                   "DarkMeleeFXPack/FX/Materials/Functions/MF_UVCropping.uasset":  {
+                                                                                       "history":  [
+                                                                                                       {
+                                                                                                           "by":  "rhkrd",
+                                                                                                           "at":  "2026-07-09 14:45:59",
+                                                                                                           "note":  ""
+                                                                                                       }
+                                                                                                   ]
+                                                                                   },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Base_03.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-09 14:45:59",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_BaseTex_Clamp.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Flare_01.uasset":  {
+                                                                                     "history":  [
+                                                                                                     {
+                                                                                                         "by":  "rhkrd",
+                                                                                                         "at":  "2026-07-09 14:45:59",
+                                                                                                         "note":  ""
+                                                                                                     }
+                                                                                                 ]
+                                                                                 },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Flare_05.uasset":  {
+                                                                                     "history":  [
+                                                                                                     {
+                                                                                                         "by":  "rhkrd",
+                                                                                                         "at":  "2026-07-09 14:45:59",
+                                                                                                         "note":  ""
+                                                                                                     }
+                                                                                                 ]
+                                                                                 },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Flow_01.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-09 14:45:59",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Glow_09.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-09 14:45:59",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Glow_10.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-09 14:45:59",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Glow_11.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-09 14:45:59",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Glow_12.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-09 14:45:59",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_GroundCrack_01.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-09 14:45:59",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_KnifeFlow_01.uasset":  {
+                                                                                         "history":  [
+                                                                                                         {
+                                                                                                             "by":  "rhkrd",
+                                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                                             "note":  ""
+                                                                                                         }
+                                                                                                     ]
+                                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_KnifeFlow_02.uasset":  {
+                                                                                         "history":  [
+                                                                                                         {
+                                                                                                             "by":  "rhkrd",
+                                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                                             "note":  ""
+                                                                                                         }
+                                                                                                     ]
+                                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_KnifeFlow_03.uasset":  {
+                                                                                         "history":  [
+                                                                                                         {
+                                                                                                             "by":  "rhkrd",
+                                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                                             "note":  ""
+                                                                                                         }
+                                                                                                     ]
+                                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_KnifeFlow_04.uasset":  {
+                                                                                         "history":  [
+                                                                                                         {
+                                                                                                             "by":  "rhkrd",
+                                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                                             "note":  ""
+                                                                                                         }
+                                                                                                     ]
+                                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_KnifeFlow_06.uasset":  {
+                                                                                         "history":  [
+                                                                                                         {
+                                                                                                             "by":  "rhkrd",
+                                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                                             "note":  ""
+                                                                                                         }
+                                                                                                     ]
+                                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_KnifeFlow_07.uasset":  {
+                                                                                         "history":  [
+                                                                                                         {
+                                                                                                             "by":  "rhkrd",
+                                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                                             "note":  ""
+                                                                                                         }
+                                                                                                     ]
+                                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_KnifeLight_02.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_KnifeLight_03.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_KnifeLight_07.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Ref.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-09 14:45:59",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Rock_01.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-09 14:45:59",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Smoke_02.uasset":  {
+                                                                                     "history":  [
+                                                                                                     {
+                                                                                                         "by":  "rhkrd",
+                                                                                                         "at":  "2026-07-09 14:45:59",
+                                                                                                         "note":  ""
+                                                                                                     }
+                                                                                                 ]
+                                                                                 },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_Smoke_05.uasset":  {
+                                                                                     "history":  [
+                                                                                                     {
+                                                                                                         "by":  "rhkrd",
+                                                                                                         "at":  "2026-07-09 14:45:59",
+                                                                                                         "note":  ""
+                                                                                                     }
+                                                                                                 ]
+                                                                                 },
+                   "DarkMeleeFXPack/FX/Materials/Instances/MI_WPOFresnel.uasset":  {
+                                                                                       "history":  [
+                                                                                                       {
+                                                                                                           "by":  "rhkrd",
+                                                                                                           "at":  "2026-07-09 14:45:59",
+                                                                                                           "note":  ""
+                                                                                                       }
+                                                                                                   ]
+                                                                                   },
+                   "DarkMeleeFXPack/FX/Materials/M_Blur_01.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/M_Flare_01.uasset":  {
+                                                                          "history":  [
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                              "note":  ""
+                                                                                          }
+                                                                                      ]
+                                                                      },
+                   "DarkMeleeFXPack/FX/Materials/M_Flow_01.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/M_Glow_02.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/M_GreatSword.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "DarkMeleeFXPack/FX/Materials/M_GroundCrack_01.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-09 14:45:59",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "DarkMeleeFXPack/FX/Materials/M_KnifeFlow_01.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-09 14:45:59",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "DarkMeleeFXPack/FX/Materials/M_KnifeLight_02.uasset":  {
+                                                                               "history":  [
+                                                                                               {
+                                                                                                   "by":  "rhkrd",
+                                                                                                   "at":  "2026-07-09 14:45:59",
+                                                                                                   "note":  ""
+                                                                                               }
+                                                                                           ]
+                                                                           },
+                   "DarkMeleeFXPack/FX/Materials/M_MonderColor.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Materials/M_Ref.uasset":  {
+                                                                     "history":  [
+                                                                                     {
+                                                                                         "by":  "rhkrd",
+                                                                                         "at":  "2026-07-09 14:45:59",
+                                                                                         "note":  ""
+                                                                                     }
+                                                                                 ]
+                                                                 },
+                   "DarkMeleeFXPack/FX/Materials/M_Rock_01.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Materials/M_Spark.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-09 14:45:59",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "DarkMeleeFXPack/FX/Materials/M_VFX_Clamp.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-09 14:45:59",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
+                   "DarkMeleeFXPack/FX/Materials/M_VFX_Master.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "DarkMeleeFXPack/FX/Materials/M_WeaponFire.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "DarkMeleeFXPack/FX/Materials/M_WPOFresnel.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "DarkMeleeFXPack/FX/Meshes/SM_CrossPlan_01.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "DarkMeleeFXPack/FX/Meshes/SM_GreatSword.uasset":  {
+                                                                          "history":  [
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                              "note":  ""
+                                                                                          }
+                                                                                      ]
+                                                                      },
+                   "DarkMeleeFXPack/FX/Meshes/SM_GroundCrack.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-09 14:45:59",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
+                   "DarkMeleeFXPack/FX/Meshes/SM_Slash02.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-09 14:45:59",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "DarkMeleeFXPack/FX/Meshes/SM_Stone_01.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-09 14:45:59",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "DarkMeleeFXPack/FX/Meshes/SM_Trail_01.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-09 14:45:59",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "DarkMeleeFXPack/FX/Modulars/NM_LocationBySpeed.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-09 14:45:59",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "DarkMeleeFXPack/FX/Niagaras/ChargedSlash/NS_Charge.uasset":  {
+                                                                                     "history":  [
+                                                                                                     {
+                                                                                                         "by":  "rhkrd",
+                                                                                                         "at":  "2026-07-09 14:45:59",
+                                                                                                         "note":  ""
+                                                                                                     }
+                                                                                                 ]
+                                                                                 },
+                   "DarkMeleeFXPack/FX/Niagaras/ChargedSlash/NS_GroundCarck.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "DarkMeleeFXPack/FX/Niagaras/ChargedSlash/NS_KnifeFlow.uasset":  {
+                                                                                        "history":  [
+                                                                                                        {
+                                                                                                            "by":  "rhkrd",
+                                                                                                            "at":  "2026-07-09 14:45:59",
+                                                                                                            "note":  ""
+                                                                                                        }
+                                                                                                    ]
+                                                                                    },
+                   "DarkMeleeFXPack/FX/Niagaras/ChargedSlash/NS_Trail_Sword.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "DarkMeleeFXPack/FX/Niagaras/WeaponFX/NS_WeaponFX.uasset":  {
+                                                                                   "history":  [
+                                                                                                   {
+                                                                                                       "by":  "rhkrd",
+                                                                                                       "at":  "2026-07-09 14:45:59",
+                                                                                                       "note":  ""
+                                                                                                   }
+                                                                                               ]
+                                                                               },
+                   "DarkMeleeFXPack/FX/Textures/T_Black.uasset":  {
+                                                                      "history":  [
+                                                                                      {
+                                                                                          "by":  "rhkrd",
+                                                                                          "at":  "2026-07-09 14:45:59",
+                                                                                          "note":  ""
+                                                                                      }
+                                                                                  ]
+                                                                  },
+                   "DarkMeleeFXPack/FX/Textures/T_FireMask.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Textures/T_Flare_01.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Textures/T_Flare_03.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Textures/T_Flare_04.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Textures/T_Flow_10.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-09 14:45:59",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "DarkMeleeFXPack/FX/Textures/T_FluidSmoke_03_D.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-09 14:45:59",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Decal_01.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Decal_02.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Decal_03.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Decal_04.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Decal_05.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "DarkMeleeFXPack/FX/Textures/T_fx_e_fluid_021.uasset":  {
+                                                                               "history":  [
+                                                                                               {
+                                                                                                   "by":  "rhkrd",
+                                                                                                   "at":  "2026-07-09 14:45:59",
+                                                                                                   "note":  ""
+                                                                                               }
+                                                                                           ]
+                                                                           },
+                   "DarkMeleeFXPack/FX/Textures/T_fx_tex_noise_0004.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-09 14:45:59",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0012.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_00123.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-09 14:45:59",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0021.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0109.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0110.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0119.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0148.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0168.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0188.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0189.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0192.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0198.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0200.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0201.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0209.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Tile_0211.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_FX_Trail_0003.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-09 14:45:59",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "DarkMeleeFXPack/FX/Textures/T_Glow_01.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-09 14:45:59",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "DarkMeleeFXPack/FX/Textures/T_GPBAR_Liquid_Noise.uasset":  {
+                                                                                   "history":  [
+                                                                                                   {
+                                                                                                       "by":  "rhkrd",
+                                                                                                       "at":  "2026-07-09 14:45:59",
+                                                                                                       "note":  ""
+                                                                                                   }
+                                                                                               ]
+                                                                               },
+                   "DarkMeleeFXPack/FX/Textures/T_GreatSword_D.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_GreatSword_M.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_GreatSword_N.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-09 14:45:59",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "DarkMeleeFXPack/FX/Textures/T_GroundCrack_A.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-09 14:45:59",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "DarkMeleeFXPack/FX/Textures/T_GroundCrack_M.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-09 14:45:59",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "DarkMeleeFXPack/FX/Textures/T_GroundCrack_N.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-09 14:45:59",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "DarkMeleeFXPack/FX/Textures/T_i_daoguang055_1774.uasset":  {
+                                                                                   "history":  [
+                                                                                                   {
+                                                                                                       "by":  "rhkrd",
+                                                                                                       "at":  "2026-07-09 14:45:59",
+                                                                                                       "note":  ""
+                                                                                                   }
+                                                                                               ]
+                                                                               },
+                   "DarkMeleeFXPack/FX/Textures/T_ky_rock02.uasset":  {
+                                                                          "history":  [
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                              "note":  ""
+                                                                                          }
+                                                                                      ]
+                                                                      },
+                   "DarkMeleeFXPack/FX/Textures/T_ky_rock02_nor.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-09 14:45:59",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "DarkMeleeFXPack/FX/Textures/T_Mask.uasset":  {
+                                                                     "history":  [
+                                                                                     {
+                                                                                         "by":  "rhkrd",
+                                                                                         "at":  "2026-07-09 14:45:59",
+                                                                                         "note":  ""
+                                                                                     }
+                                                                                 ]
+                                                                 },
+                   "DarkMeleeFXPack/FX/Textures/T_Mask_011.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Textures/T_Mask_26.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-09 14:45:59",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "DarkMeleeFXPack/FX/Textures/T_Noise_01.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Textures/T_Random_53.uasset":  {
+                                                                          "history":  [
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                              "note":  ""
+                                                                                          }
+                                                                                      ]
+                                                                      },
+                   "DarkMeleeFXPack/FX/Textures/T_Smoke_MV.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Textures/T_Smoke01.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-09 14:45:59",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "DarkMeleeFXPack/FX/Textures/T_Star_01.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-09 14:45:59",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "DarkMeleeFXPack/FX/Textures/T_StretchSpark_01.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-09 14:45:59",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "DarkMeleeFXPack/FX/Textures/T_Sword_Slash_33_Wrap.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-09 14:45:59",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "DarkMeleeFXPack/FX/Textures/T_Top.uasset":  {
+                                                                    "history":  [
+                                                                                    {
+                                                                                        "by":  "rhkrd",
+                                                                                        "at":  "2026-07-09 14:45:59",
+                                                                                        "note":  ""
+                                                                                    }
+                                                                                ]
+                                                                },
+                   "DarkMeleeFXPack/FX/Textures/T_Trail_01.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-09 14:45:59",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "DarkMeleeFXPack/FX/Textures/T_VFX_Flare_Chromatic.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-09 14:45:59",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "DarkMeleeFXPack/FX/Textures/T_White.uasset":  {
+                                                                      "history":  [
+                                                                                      {
+                                                                                          "by":  "rhkrd",
+                                                                                          "at":  "2026-07-09 14:45:59",
+                                                                                          "note":  ""
+                                                                                      }
+                                                                                  ]
+                                                                  },
+                   "DarkMeleeFXPack/FX/Textures/T_Wipe_0011.uasset":  {
+                                                                          "history":  [
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-09 14:45:59",
+                                                                                              "note":  ""
+                                                                                          }
+                                                                                      ]
+                                                                      },
+                   "DarkMeleeFXPack/FX/Textures/T_WispCore_01.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-09 14:45:59",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
                    "EssentialAnimation/GreatSword/Animation/UE5/Montage/AM_GY_ChapterBoss_GreatSword_Attack03.uasset":  {
                                                                                                                             "history":  [
                                                                                                                                             {
