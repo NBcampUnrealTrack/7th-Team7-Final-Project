@@ -111,8 +111,8 @@ private:
 
 	FTimerHandle PostCinematicTimerHandle;
 
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_ShowAllPawns();
+	// 시네마틱 재생 직전, 플레이어 원점으로 이동
+	void TeleportAllPawnsToOrigin();
 
 	void OnPostCinematicTimerExpired();
 };

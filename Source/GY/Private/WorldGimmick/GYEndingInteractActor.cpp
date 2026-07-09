@@ -131,6 +131,7 @@ void AGYEndingInteractActor::OnInteract(FGameplayTag OptionTag, APawn* Interacto
 	if (bAdded && Current >= RequiredCount)
 	{
 		bConsumed = true;
+		TeleportAllPawnsToOrigin(); // 시네마틱 동안 화면에 안 보이도록 원점으로 임시 이동
 		Multicast_PlayCinematic(Cinematic.ToSoftObjectPath()); // 시네마틱 전체 작동
 		GetWorldTimerManager().SetTimer(PostCinematicTimerHandle, this,
 			&AGYEndingInteractActor::OnPostCinematicTimerExpired, CinematicDuration, false);
@@ -225,14 +226,6 @@ void AGYEndingInteractActor::Multicast_PlayCinematic_Implementation(const FSoftO
 
 	Player->OnFinished.AddDynamic(this, &AGYEndingInteractActor::HandleCinematicFinished);
 
-	if (APlayerController* LocalPC = UGameplayStatics::GetPlayerController(this, 0))
-	{
-		if (APawn* LocalPawn = LocalPC->GetPawn())
-		{
-			LocalPawn->SetActorHiddenInGame(true);
-		}
-	}
-
 	// UI 꺼줘
 	FGYCinematicMessage Msg;
 	Msg.bIsPlaying = true;
@@ -287,19 +280,18 @@ void AGYEndingInteractActor::OnPostCinematicTimerExpired()
 		// 보스전 블로킹 제거
 		BlockingActor->Destroy();
 	}
-
-	Multicast_ShowAllPawns();
 }
 
-void AGYEndingInteractActor::Multicast_ShowAllPawns_Implementation()
+void AGYEndingInteractActor::TeleportAllPawnsToOrigin()
 {
-	if (IsRunningDedicatedServer()) return;
+	AGameStateBase* GS = GetWorld() ? GetWorld()->GetGameState() : nullptr;
+	if (!GS) return;
 
-	if (APlayerController* LocalPC = UGameplayStatics::GetPlayerController(this, 0))
+	for (APlayerState* PS : GS->PlayerArray)
 	{
-		if (APawn* LocalPawn = LocalPC->GetPawn())
+		if (PS && PS->GetPawn())
 		{
-			LocalPawn->SetActorHiddenInGame(false);
+			PS->GetPawn()->TeleportTo(FVector::ZeroVector, FRotator::ZeroRotator);
 		}
 	}
 }
