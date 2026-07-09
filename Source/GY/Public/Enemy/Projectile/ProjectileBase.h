@@ -16,7 +16,7 @@ class GY_API AProjectileBase : public AActor
 public:
 	AProjectileBase();
 
-	void Launch(AActor* InInstigator, const FVector& InDirection, float InSpeed);
+	virtual void Launch(AActor* InInstigator, const FVector& InDirection, float InSpeed);
 protected:
 	virtual  void BeginPlay() override;
 

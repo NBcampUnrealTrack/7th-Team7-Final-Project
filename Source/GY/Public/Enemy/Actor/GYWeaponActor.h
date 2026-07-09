@@ -15,6 +15,7 @@ public:
 	AGYWeaponActor();
 
 	UGYWeaponHitBox* GetHitBox() const { return HitBox; }
+	UStaticMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 	FGameplayTag GetWeaponTypeTag() const { return WeaponTypeTag; }
 
 protected:

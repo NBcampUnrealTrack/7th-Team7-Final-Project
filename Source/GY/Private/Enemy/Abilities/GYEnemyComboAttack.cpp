@@ -3,8 +3,13 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Enemy/GYEnemyAIController.h"
+#include "Enemy/GYEnemyCharacterBase.h"
+#include "Enemy/Actor/GYWeaponActor.h"
+#include "Enemy/Projectile/ProjectileBase.h"
 #include "GameFramework/Pawn.h"
 
 void UGYEnemyComboAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -27,6 +32,12 @@ void UGYEnemyComboAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 			this, GYGameplayTags::Event_Enemy_Combo_Branch, nullptr, false);
 	BranchTask->EventReceived.AddDynamic(this, &UGYEnemyComboAttack::OnComboBranch);
 	BranchTask->ReadyForActivation();
+
+	UAbilityTask_WaitGameplayEvent* LaunchTask =
+		UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+			this, GYGameplayTags::Event_Enemy_LaunchProjectile, nullptr, false);
+	LaunchTask->EventReceived.AddDynamic(this, &UGYEnemyComboAttack::OnLaunchProjectile);
+	LaunchTask->ReadyForActivation();
 
 	PlayComboMontage(0);
 }
@@ -111,6 +122,75 @@ void UGYEnemyComboAttack::OnComboBranch(FGameplayEventData Payload)
 	// 현재 몽타주 자연 종료
 	// OnComboMontageEnded
 	// EndAbility
+}
+
+void UGYEnemyComboAttack::OnLaunchProjectile(FGameplayEventData Payload)
+{
+	++WeaponWindowIndex;
+
+	if (!ComboSteps.IsValidIndex(ComboIndex)) return;
+	const FComboStep& Step = ComboSteps[ComboIndex];
+	if (!Step.bLaunchProjectile || !Step.ProjectileClass) return;
+
+	APawn* Pawn = Cast<APawn>(GetAvatarActorFromActorInfo());
+	if (!Pawn) return;
+
+	FVector LaunchPos = Pawn->GetActorLocation();
+	if (USkeletalMeshComponent* Mesh = Pawn->FindComponentByClass<USkeletalMeshComponent>())
+	{
+		LaunchPos = Mesh->GetSocketLocation(CalcSocket);
+	}
+
+	if (const AGYEnemyCharacterBase* Enemy = Cast<AGYEnemyCharacterBase>(Pawn))
+	{
+		if (AGYWeaponActor* Weapon = Enemy->GetWeaponBySlot(Step.WeaponSlotTag))
+		{
+			LaunchPos = Step.WeaponSocket.IsNone()
+				? Weapon->GetActorLocation()
+				: Weapon->GetWeaponMesh()->GetSocketLocation(Step.WeaponSocket);
+		}
+	}
+
+	if (Step.bLaunchFromGround)
+	{
+		FHitResult GroundHit;
+		FCollisionQueryParams TraceParams(SCENE_QUERY_STAT(SlashLaunchGround), false, Pawn);
+		if (Pawn->GetWorld()->LineTraceSingleByChannel(GroundHit,
+			LaunchPos, LaunchPos - FVector(0.f, 0.f, 1000.f), ECC_Visibility, TraceParams))
+		{
+			LaunchPos.Z = GroundHit.ImpactPoint.Z + Step.GroundHeightOffset;
+		}
+	}
+
+	FVector Dir = Pawn->GetActorForwardVector();
+	if (AGYEnemyAIController* AI = Cast<AGYEnemyAIController>(Pawn->GetController()))
+	{
+		if (AActor* Target = AI->GetTargetActor())
+		{
+			FVector ToTarget = Target->GetActorLocation() - LaunchPos;
+			if (Step.bLaunchFromGround || !Step.bAimAtTargetCenter)
+			{
+				ToTarget.Z = 0.f;
+			}
+			if (ToTarget.Normalize())
+			{
+				Dir = ToTarget;
+			}
+		}
+	}
+
+	const FRotator SpawnRot(0.f, Dir.Rotation().Yaw + Step.SlashYawOffset, 0.f);
+
+	FActorSpawnParameters Params;
+	Params.Owner = Pawn;
+	Params.Instigator = Pawn;
+
+	AProjectileBase* Projectile = GetWorld()->SpawnActor<AProjectileBase>(
+		Step.ProjectileClass, LaunchPos, SpawnRot, Params);
+	if (Projectile)
+	{
+		Projectile->Launch(Pawn, Dir, Step.ProjectileSpeed);
+	}
 }
 
 void UGYEnemyComboAttack::OnComboMontageEnded()
