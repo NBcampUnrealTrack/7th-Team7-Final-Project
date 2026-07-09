@@ -32,5 +32,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Homing")
 	float InFrontHalfAngleDeg = 45.f;
 
+	UPROPERTY(EditAnywhere, Category="Homing")
+	bool bUseAcc = true;
+
 	static AActor* ResolveHomingTarget(AActor* Owner);
 };

@@ -7,6 +7,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Enemy/GYEnemyAIController.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Enemy/Actor/GYWeaponActor.h"
 #include "Enemy/Projectile/ProjectileBase.h"
@@ -21,6 +23,17 @@ void UGYEnemyComboAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
+	}
+
+	if (bFlying)
+	{
+		AActor* Actor = GetAvatarActorFromActorInfo();
+		if (!Actor) return;
+		ACharacter* Character = Cast<ACharacter>(Actor);
+		if (!Character) return;
+		UCharacterMovementComponent* CMC = Character->GetCharacterMovement();
+		if (!CMC) return;
+		CMC->SetMovementMode(MOVE_Flying);
 	}
 
 	// 히트 이벤트 리스너 (base 공유)
@@ -40,6 +53,25 @@ void UGYEnemyComboAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	LaunchTask->ReadyForActivation();
 
 	PlayComboMontage(0);
+}
+
+void UGYEnemyComboAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	bool bReplicateEndAbility, bool bWasCancelled)
+{
+
+	if (bFlying)
+	{
+		AActor* Actor = GetAvatarActorFromActorInfo();
+		if (!Actor) return;
+		ACharacter* Character = Cast<ACharacter>(Actor);
+		if (!Character) return;
+		UCharacterMovementComponent* CMC = Character->GetCharacterMovement();
+		if (!CMC) return;
+		CMC->SetMovementMode(MOVE_Walking);
+	}
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
 }
 
 const FHitDamageWeight* UGYEnemyComboAttack::GetCurrentHitWeight() const

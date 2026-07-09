@@ -29,7 +29,7 @@ void UAnimNotify_DashStart::Notify(USkeletalMeshComponent* MeshComp, UAnimSequen
 	AActor* Target = ResolveHomingTarget(Owner);
 	if (!Target) return;
 
-	UAbilityTask_DashToTarget* Task = UAbilityTask_DashToTarget::CreateDashToTarget(GA,Target, DashSpeed, StopDistance);
+	UAbilityTask_DashToTarget* Task = UAbilityTask_DashToTarget::CreateDashToTarget(GA,Target, DashSpeed, StopDistance, InFrontHalfAngleDeg, bUseAcc);
 	if (Task) Task->ReadyForActivation();
 }
 

@@ -19,7 +19,8 @@ public:
 		AActor* Target,
 		float DashSpeed,
 		float StopDistance,
-		float FrontHalfAngleDeg = 45.f);
+		float FrontHalfAngleDeg = 45.f,
+		bool bUseAcc = true);
 
 	virtual void Activate() override;
 	virtual void TickTask(float DeltaTime) override;
@@ -41,6 +42,8 @@ protected:
 	float StopDistanceSq = 0.f;
 	float CosFrontHalfAngle = 0.f;
 	bool bBroadcasted = false;
+	bool bUseAcc = true;
+	float SavedAcc = 0.f;
 	TWeakObjectPtr<UAbilitySystemComponent> CachedASC;
 	FActiveGameplayEffectHandle MovementSpeedGEHandle;
 

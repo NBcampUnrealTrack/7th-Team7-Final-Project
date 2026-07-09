@@ -40467,6 +40467,15 @@
                                                                                                                                                 }
                                                                                                                                             ]
                                                                                                                             },
+                   "Sword_Animations/Animations/Montage/LongSword_Attack05/AM_GY_ChapterBoss_LongSword_Attack05_1.uasset":  {
+                                                                                                                                "history":  [
+                                                                                                                                                {
+                                                                                                                                                    "by":  "CM",
+                                                                                                                                                    "at":  "2026-07-09 16:31:41",
+                                                                                                                                                    "note":  ""
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                            },
                    "Sword_Animations/Animations/Montage/LongSword_RunAttack/AM_GY_ChapterBoss_LongSword_Run_Attack.uasset":  {
                                                                                                                                  "history":  [
                                                                                                                                                  {
@@ -40490,6 +40499,47 @@
                                                                                                                                                   }
                                                                                                                                               ]
                                                                                                                               },
+                   "Sword_Animations/Animations/Montage/LongSword_Ultimate/AM_GY_ChapterBoss_LongSword_Ultimate1.uasset":  {
+                                                                                                                               "history":  [
+                                                                                                                                               {
+                                                                                                                                                   "by":  "CM",
+                                                                                                                                                   "at":  "2026-07-09 16:31:41",
+                                                                                                                                                   "note":  ""
+                                                                                                                                               },
+                                                                                                                                               {
+                                                                                                                                                   "by":  "CM",
+                                                                                                                                                   "at":  "2026-07-09 20:58:53",
+                                                                                                                                                   "note":  ""
+                                                                                                                                               }
+                                                                                                                                           ]
+                                                                                                                           },
+                   "Sword_Animations/Animations/Montage/LongSword_Ultimate/AM_GY_ChapterBoss_LongSword_Ultimate2.uasset":  {
+                                                                                                                               "history":  [
+                                                                                                                                               {
+                                                                                                                                                   "by":  "CM",
+                                                                                                                                                   "at":  "2026-07-09 16:31:41",
+                                                                                                                                                   "note":  ""
+                                                                                                                                               }
+                                                                                                                                           ]
+                                                                                                                           },
+                   "Sword_Animations/Animations/Montage/LongSword_Ultimate/AM_GY_ChapterBoss_LongSword_Ultimate4.uasset":  {
+                                                                                                                               "history":  [
+                                                                                                                                               {
+                                                                                                                                                   "by":  "CM",
+                                                                                                                                                   "at":  "2026-07-09 20:58:53",
+                                                                                                                                                   "note":  ""
+                                                                                                                                               }
+                                                                                                                                           ]
+                                                                                                                           },
+                   "Sword_Animations/Animations/Montage/LongSword_Ultimate/AM_GY_ChapterBoss_LongSword_Ultimate5.uasset":  {
+                                                                                                                               "history":  [
+                                                                                                                                               {
+                                                                                                                                                   "by":  "CM",
+                                                                                                                                                   "at":  "2026-07-09 20:58:53",
+                                                                                                                                                   "note":  ""
+                                                                                                                                               }
+                                                                                                                                           ]
+                                                                                                                           },
                    "Sword_Animations/Animations/Sequence2/02_Attack/01_Combo_Attack_01/Combo_Attack_01_02_Seq.uasset":  {
                                                                                                                             "history":  [
                                                                                                                                             {
@@ -40582,6 +40632,42 @@
                                                                                                                                                              }
                                                                                                                                                          ]
                                                                                                                                          },
+                   "Sword_Animations/Animations/Sequence2/02_Attack/10_Attack_Air_To_Floor_03/Attack_Air_To_Floor_End_03_Seq.uasset":  {
+                                                                                                                                           "history":  [
+                                                                                                                                                           {
+                                                                                                                                                               "by":  "CM",
+                                                                                                                                                               "at":  "2026-07-09 20:58:53",
+                                                                                                                                                               "note":  ""
+                                                                                                                                                           }
+                                                                                                                                                       ]
+                                                                                                                                       },
+                   "Sword_Animations/Animations/Sequence2/02_Attack/10_Attack_Air_To_Floor_03/Attack_Air_To_Floor_Loop_03_Seq.uasset":  {
+                                                                                                                                            "history":  [
+                                                                                                                                                            {
+                                                                                                                                                                "by":  "CM",
+                                                                                                                                                                "at":  "2026-07-09 20:58:53",
+                                                                                                                                                                "note":  ""
+                                                                                                                                                            }
+                                                                                                                                                        ]
+                                                                                                                                        },
+                   "Sword_Animations/Animations/Sequence2/02_Attack/10_Attack_Air_To_Floor_03/Attack_Air_To_Floor_Start_03_Seq.uasset":  {
+                                                                                                                                             "history":  [
+                                                                                                                                                             {
+                                                                                                                                                                 "by":  "CM",
+                                                                                                                                                                 "at":  "2026-07-09 20:58:53",
+                                                                                                                                                                 "note":  ""
+                                                                                                                                                             }
+                                                                                                                                                         ]
+                                                                                                                                         },
+                   "Sword_Animations/Animations/Sequence2/02_Attack/11_Attack_Up/Attack_Up_Floor_To_Air_02_Seq.uasset":  {
+                                                                                                                             "history":  [
+                                                                                                                                             {
+                                                                                                                                                 "by":  "CM",
+                                                                                                                                                 "at":  "2026-07-09 16:31:41",
+                                                                                                                                                 "note":  ""
+                                                                                                                                             }
+                                                                                                                                         ]
+                                                                                                                         },
                    "Sword_Animations/Animations/Sequence2/02_Attack/12_Run_Attact/Run_Attack_02_Seq_DisableRootMotion.uasset":  {
                                                                                                                                     "history":  [
                                                                                                                                                     {
