@@ -58,6 +58,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_Door_Close, "GameplayCue.Interaction.Door.Close");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_TimeRift, "GameplayCue.Interaction.TimeRift");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_TimeRift_Rest, "GameplayCue.Interaction.TimeRift.Rest");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Interaction_SecretDiary, "GameplayCue.Interaction.SecretDiary");
 
 	// 적 리젠
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Regen, "GameplayCue.Enemy.Regen");
