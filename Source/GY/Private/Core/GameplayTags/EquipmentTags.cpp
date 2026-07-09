@@ -15,4 +15,5 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Type_SwordAndShield, "Weapon.Type.SwordAndShield");
 
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Part_Body, "Weapon.Part.Body");
+	UE_DEFINE_GAMEPLAY_TAG(Weapon_Part_Foot, "Weapon.Part.Foot");
 }
