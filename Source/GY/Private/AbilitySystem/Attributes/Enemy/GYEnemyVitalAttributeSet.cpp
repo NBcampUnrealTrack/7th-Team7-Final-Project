@@ -50,12 +50,16 @@ void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 	UGYEnemyAbilitySystemComponent* EnemyASC = Cast<UGYEnemyAbilitySystemComponent>(GetOwningAbilitySystemComponent());
 	if (!EnemyASC) return;
 
-	if (Data.EvaluatedData.Attribute == GetActivityPointsAttribute() && Data.EvaluatedData.Magnitude<0.f)
+	if (Data.EvaluatedData.Attribute == GetActivityPointsAttribute())
 	{
-		EnemyASC->ApplyActivityPointsUsedEffect();
+		SetActivityPoints(FMath::Clamp(GetActivityPoints(), 0.f, GetMaxActivityPoints()));
+
+		if (Data.EvaluatedData.Magnitude < 0.f)
+		{
+			EnemyASC->ApplyActivityPointsUsedEffect();
+		}
+		return;
 	}
-
-
 
 	float CurrentValue = 0.f;
 	if (Data.EvaluatedData.Attribute == GetCurrentStaggerAttribute())
