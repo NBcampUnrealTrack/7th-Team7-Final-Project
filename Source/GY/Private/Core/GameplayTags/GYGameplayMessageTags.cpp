@@ -73,6 +73,7 @@ namespace GYGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Message_Ending_Started, "Message.Ending.Started");
 	UE_DEFINE_GAMEPLAY_TAG(Message_Ending_CinematicFinished, "Message.Ending.CinematicFinished");
+	UE_DEFINE_GAMEPLAY_TAG(Message_Ending_NarrativeFinished, "Message.Ending.NarrativeFinished");
 	UE_DEFINE_GAMEPLAY_TAG(Message_Ending_CreditsFinished, "Message.Ending.CreditsFinished");
 	UE_DEFINE_GAMEPLAY_TAG(Message_Ending_WaitingForPlayers, "Message.Ending.WaitingForPlayers");
 
