@@ -10,16 +10,16 @@ const FGYParryCounterSet* UGYParryCounterFragment::GetBestMatchingSet(const FGam
 {
 	const FGYParryCounterSet* DefaultResult = nullptr;
 
-	for (const auto& Pair : AttackSets)
+	for (const FGYParryCounterEntry& Entry : AttackSets)
 	{
-		if (!Pair.Key.IsValid())
+		if (Entry.RequiredTags.IsEmpty())
 		{
-			DefaultResult = &Pair.Value;
+			DefaultResult = &Entry.Set;
 			continue;
 		}
-		if (OwnedTags.HasTag(Pair.Key))
+		if (OwnedTags.HasAll(Entry.RequiredTags))
 		{
-			return &Pair.Value;
+			return &Entry.Set;
 		}
 	}
 

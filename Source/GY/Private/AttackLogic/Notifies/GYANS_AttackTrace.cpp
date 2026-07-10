@@ -11,6 +11,8 @@
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "DrawDebugHelpers.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 
 static const FGYCollisionShapeData* GetCurrentCollisionData(AActor* Owner)
 {
@@ -54,6 +56,39 @@ static FVector ComputeTraceOrigin(USkeletalMeshComponent* MeshComp, const FGYCol
 	return BoneLoc + BoneQuat.RotateVector(CollisionData ? CollisionData->Offset : FVector::ZeroVector);
 }
 
+// Mesh 타입 콜리전 전용 프록시를 얻거나 생성한다. 소켓에 오프셋 없이 부착되어 무기의 실제
+// 콜리전(심플 콜리전)을 그대로 스윕할 수 있게 한다. 렌더링되지 않고 서버·클라 양쪽에서 동일하게
+// 존재한다 (코스메틱 AGYEquipmentActor와 달리 데디 서버에서도 스킵되지 않음).
+static UStaticMeshComponent* GetOrCreateMeshProxy(FGYHitActorList& Entry, USkeletalMeshComponent* MeshComp,
+	const FGYCollisionShapeData* CollisionData)
+{
+	if (!CollisionData || !CollisionData->CollisionMesh) return nullptr;
+
+	AActor* Owner = MeshComp->GetOwner();
+	if (!Owner) return nullptr;
+
+	if (!Entry.MeshProxy)
+	{
+		UStaticMeshComponent* Proxy = NewObject<UStaticMeshComponent>(Owner, NAME_None, RF_Transient);
+		Proxy->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		Proxy->SetCollisionResponseToAllChannels(ECR_Ignore);
+		Proxy->SetGenerateOverlapEvents(false);
+		Proxy->SetHiddenInGame(true);
+		Proxy->SetVisibility(false);
+		Proxy->SetCastShadow(false);
+		Proxy->RegisterComponent();
+		Proxy->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetIncludingScale, CollisionData->BoneName);
+		Entry.MeshProxy = Proxy;
+	}
+
+	if (Entry.MeshProxy->GetStaticMesh() != CollisionData->CollisionMesh)
+	{
+		Entry.MeshProxy->SetStaticMesh(CollisionData->CollisionMesh);
+	}
+
+	return Entry.MeshProxy;
+}
+
 void UGYANS_AttackTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 	float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -61,7 +96,16 @@ void UGYANS_AttackTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequ
 	const FGYCollisionShapeData* CollisionData = GetCurrentCollisionData(MeshComp->GetOwner());
 	FGYHitActorList& Entry = HitActorsPerMesh.FindOrAdd(MeshComp);
 	Entry.Actors.Empty();
-	Entry.LastTraceOrigin = ComputeTraceOrigin(MeshComp, CollisionData);
+
+	if (CollisionData && CollisionData->ShapeType == EGYCollisionShapeType::Mesh)
+	{
+		UStaticMeshComponent* Proxy = GetOrCreateMeshProxy(Entry, MeshComp, CollisionData);
+		Entry.LastTraceOrigin = Proxy ? Proxy->GetComponentLocation() : ComputeTraceOrigin(MeshComp, CollisionData);
+	}
+	else
+	{
+		Entry.LastTraceOrigin = ComputeTraceOrigin(MeshComp, CollisionData);
+	}
 }
 
 void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -74,52 +118,73 @@ void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeque
 	if (!World) return;
 
 	const FGYCollisionShapeData* CollisionData = GetCurrentCollisionData(Owner);
-
-	const FQuat BoneQuat = MeshComp->GetSocketQuaternion(
-		CollisionData ? CollisionData->BoneName : FName(TEXT("hand_r")));
-	const FVector TraceOrigin = ComputeTraceOrigin(MeshComp, CollisionData);
-	const FQuat TraceRot = CollisionData
-		? (BoneQuat * CollisionData->Rotation.Quaternion())
-		: FQuat::Identity;
-
 	FGYHitActorList& Entry = HitActorsPerMesh.FindOrAdd(MeshComp);
-	const FVector SweepStart = Entry.LastTraceOrigin;
-	Entry.LastTraceOrigin = TraceOrigin;
 
-	FCollisionShape Shape;
-	if (CollisionData)
+	const bool bUseMeshProxy = CollisionData && CollisionData->ShapeType == EGYCollisionShapeType::Mesh;
+	UStaticMeshComponent* MeshProxy = bUseMeshProxy ? GetOrCreateMeshProxy(Entry, MeshComp, CollisionData) : nullptr;
+
+	FVector TraceOrigin;
+	FQuat TraceRot;
+	if (MeshProxy)
 	{
-		switch (CollisionData->ShapeType)
-		{
-		case EGYCollisionShapeType::Box:
-			Shape = FCollisionShape::MakeBox(CollisionData->BoxHalfExtent);
-			break;
-		case EGYCollisionShapeType::Capsule:
-			Shape = FCollisionShape::MakeCapsule(CollisionData->CapsuleRadius, CollisionData->CapsuleHalfHeight);
-			break;
-		default:
-			Shape = FCollisionShape::MakeSphere(CollisionData->SphereRadius);
-			break;
-		}
+		TraceOrigin = MeshProxy->GetComponentLocation();
+		TraceRot = MeshProxy->GetComponentQuat();
 	}
 	else
 	{
-		Shape = FCollisionShape::MakeSphere(50.f);
+		const FQuat BoneQuat = MeshComp->GetSocketQuaternion(
+			CollisionData ? CollisionData->BoneName : FName(TEXT("hand_r")));
+		TraceOrigin = ComputeTraceOrigin(MeshComp, CollisionData);
+		TraceRot = CollisionData
+			? (BoneQuat * CollisionData->Rotation.Quaternion())
+			: FQuat::Identity;
 	}
 
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(Owner);
+	const FVector SweepStart = Entry.LastTraceOrigin;
+	Entry.LastTraceOrigin = TraceOrigin;
 
 	TArray<FHitResult> Hits;
-	World->SweepMultiByChannel(
-		Hits,
-		SweepStart,
-		TraceOrigin,
-		TraceRot,
-		ECC_Pawn,
-		Shape,
-		QueryParams
-	);
+	if (MeshProxy)
+	{
+		FComponentQueryParams ComponentParams(NAME_None, Owner);
+		World->ComponentSweepMulti(Hits, MeshProxy, SweepStart, TraceOrigin, TraceRot, ComponentParams);
+	}
+	else
+	{
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(Owner);
+
+		FCollisionShape Shape;
+		if (CollisionData)
+		{
+			switch (CollisionData->ShapeType)
+			{
+			case EGYCollisionShapeType::Box:
+				Shape = FCollisionShape::MakeBox(CollisionData->BoxHalfExtent);
+				break;
+			case EGYCollisionShapeType::Capsule:
+				Shape = FCollisionShape::MakeCapsule(CollisionData->CapsuleRadius, CollisionData->CapsuleHalfHeight);
+				break;
+			default:
+				Shape = FCollisionShape::MakeSphere(CollisionData->SphereRadius);
+				break;
+			}
+		}
+		else
+		{
+			Shape = FCollisionShape::MakeSphere(50.f);
+		}
+
+		World->SweepMultiByChannel(
+			Hits,
+			SweepStart,
+			TraceOrigin,
+			TraceRot,
+			ECC_Pawn,
+			Shape,
+			QueryParams
+		);
+	}
 
 	TArray<TObjectPtr<AActor>>& HitActors = Entry.Actors;
 	bool bHitAny = false;
@@ -165,6 +230,14 @@ void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeque
 			DrawDebugCapsule(World, TraceOrigin, CollisionData->CapsuleHalfHeight, CollisionData->CapsuleRadius,
 				TraceRot, DebugColor, false, DebugDuration);
 			break;
+		case EGYCollisionShapeType::Mesh:
+			if (CollisionData->CollisionMesh)
+			{
+				const FBoxSphereBounds MeshBounds = CollisionData->CollisionMesh->GetBounds();
+				DrawDebugBox(World, TraceOrigin + TraceRot.RotateVector(MeshBounds.Origin), MeshBounds.BoxExtent,
+					TraceRot, DebugColor, false, DebugDuration);
+			}
+			break;
 		default:
 			DrawDebugSphere(World, TraceOrigin, CollisionData->SphereRadius, 12, DebugColor, false, DebugDuration);
 			break;
@@ -178,6 +251,13 @@ void UGYANS_AttackTrace::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequen
 {
 	if (MeshComp)
 	{
+		if (FGYHitActorList* Entry = HitActorsPerMesh.Find(MeshComp))
+		{
+			if (Entry->MeshProxy)
+			{
+				Entry->MeshProxy->DestroyComponent();
+			}
+		}
 		HitActorsPerMesh.Remove(MeshComp);
 	}
 }

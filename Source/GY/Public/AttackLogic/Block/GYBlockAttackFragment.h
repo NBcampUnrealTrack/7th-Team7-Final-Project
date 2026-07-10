@@ -24,7 +24,20 @@ struct FGYBlockAttackSet
 	FGYHitImpact HitImpact;
 };
 
-// 막기 추가입력에 사용할 몽타주·콜리전·히트값을 무기 태그별로 보유
+// 보유 태그가 RequiredTags를 모두 포함해야 선택됨. RequiredTags가 비어있으면 기본값(폴백)으로 사용
+USTRUCT(BlueprintType)
+struct FGYBlockAttackEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTagContainer RequiredTags;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGYBlockAttackSet Set;
+};
+
+// 막기 추가입력에 사용할 몽타주·콜리전·히트값을 무기별로 보유 (무기마다 다른 모션/수치)
 UCLASS(EditInlineNew, DefaultToInstanced)
 class GY_API UGYBlockAttackFragment : public UAbilityFragment
 {
@@ -33,9 +46,8 @@ class GY_API UGYBlockAttackFragment : public UAbilityFragment
 public:
 	UGYBlockAttackFragment();
 
-	// 무기 태그 → 막기 추가입력 세트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "BlockAttack")
-	TMap<FGameplayTag, FGYBlockAttackSet> AttackSets;
+	TArray<FGYBlockAttackEntry> AttackSets;
 
 	// 막기 피격 후 추가입력 가능 시간
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "BlockAttack", meta = (ClampMin = "0.1", Units = "s"))

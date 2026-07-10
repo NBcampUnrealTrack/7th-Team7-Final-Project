@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Logic/AbilityLogicBase.h"
+#include "GameplayTagContainer.h"
 #include "GYActiveTagLogic.generated.h"
 
 UCLASS()
@@ -16,4 +17,7 @@ public:
 
 private:
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
+
+	// OnExecute에서 실제로 부여한 태그 — OnAbilityEnd에서 정확히 이 값만 제거
+	FGameplayTagContainer AppliedTags;
 };
