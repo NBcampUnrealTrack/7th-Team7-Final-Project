@@ -25,6 +25,10 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+
+	virtual bool NativeOnHandleBackAction() override;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCanvasPanel> Viewport;
 	UPROPERTY(meta = (BindWidget))
