@@ -46,7 +46,6 @@ protected:
     virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	virtual void NativeOnInitialized() override;
-    virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
     virtual UWidget* NativeGetDesiredFocusTarget() const override;
 
 	UPROPERTY(meta = (BindWidget))
