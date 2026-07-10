@@ -12577,6 +12577,15 @@
                                                                                                                                                           }
                                                                                                                                                       ]
                                                                                                                                       },
+                   "EssentialAnimation/GreatSword/Animation/UE5/Montage/Dodge/AM_GY_ChapterBoss_GreatSword_Attack01.uasset":  {
+                                                                                                                                  "history":  [
+                                                                                                                                                  {
+                                                                                                                                                      "by":  "rhkrd",
+                                                                                                                                                      "at":  "2026-07-10 13:23:56",
+                                                                                                                                                      "note":  ""
+                                                                                                                                                  }
+                                                                                                                                              ]
+                                                                                                                              },
                    "EssentialAnimation/GreatSword/Animation/UE5/Montage/Dodge/AM_GY_ChapterBoss_GreatSword_Dodge01.uasset":  {
                                                                                                                                  "history":  [
                                                                                                                                                  {
@@ -37550,6 +37559,1509 @@
                                                                                  }
                                                                              ]
                                                              },
+                   "Slash_Pack/Materials/Crack/M_Slash_Pack_Crack.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Materials/Crack/MI_Slash_Pack_Crack2.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-10 13:23:56",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Slash_Pack/Materials/Crack/MI_Slash_Pack_Crack3.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-10 13:23:56",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Slash_Pack/Materials/Crack/MI_Slash_Pack_Crack4.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-10 13:23:56",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Slash_Pack/Materials/Crack/MI_Slash_Pack_Crack5.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-10 13:23:56",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Slash_Pack/Materials/Flash/M_Slash_Pack_Flash.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Materials/Flash/MI_Slash_Pack_Flash2.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-10 13:23:56",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Slash_Pack/Materials/Fragments/M_Slash_Pack_Fire1.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-10 13:23:56",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "Slash_Pack/Materials/Fragments/M_Slash_Pack_Star.uasset":  {
+                                                                                   "history":  [
+                                                                                                   {
+                                                                                                       "by":  "rhkrd",
+                                                                                                       "at":  "2026-07-10 13:23:56",
+                                                                                                       "note":  ""
+                                                                                                   }
+                                                                                               ]
+                                                                               },
+                   "Slash_Pack/Materials/Fragments/MI_Slash_Pack_Lightning1.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-10 13:23:56",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "Slash_Pack/Materials/M_Slash_Pack_Base.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Materials/M_Slash_Pack_Ligh.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Materials/M_Slash_Pack_Ray1.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Materials/M_Slash_Pack_Smoke.uasset":  {
+                                                                          "history":  [
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-10 13:23:56",
+                                                                                              "note":  ""
+                                                                                          }
+                                                                                      ]
+                                                                      },
+                   "Slash_Pack/Materials/M_Slash_Pack_Sparks.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
+                   "Slash_Pack/Materials/M_Slash_Pack_Sphere.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
+                   "Slash_Pack/Materials/M_Slash_Pack_Stone1.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
+                   "Slash_Pack/Materials/M_Slash_Pack_Wave.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Materials/MI_Slash_Pack_Ligh2.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
+                   "Slash_Pack/Materials/Slash/M_Slash_Pack_Slash5.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Materials/Slash/MI_Slash_Pack_Slash6.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-10 13:23:56",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Slash_Pack/Materials/Slash/Plane/M_Slash_Pack_Plane1.uasset":  {
+                                                                                       "history":  [
+                                                                                                       {
+                                                                                                           "by":  "rhkrd",
+                                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                                           "note":  ""
+                                                                                                       }
+                                                                                                   ]
+                                                                                   },
+                   "Slash_Pack/Materials/Slash/Plane/MI_Slash_Pack_Plane2.uasset":  {
+                                                                                        "history":  [
+                                                                                                        {
+                                                                                                            "by":  "rhkrd",
+                                                                                                            "at":  "2026-07-10 13:23:56",
+                                                                                                            "note":  ""
+                                                                                                        }
+                                                                                                    ]
+                                                                                    },
+                   "Slash_Pack/Materials/Slash/Plane/MI_Slash_Pack_Plane3.uasset":  {
+                                                                                        "history":  [
+                                                                                                        {
+                                                                                                            "by":  "rhkrd",
+                                                                                                            "at":  "2026-07-10 13:23:56",
+                                                                                                            "note":  ""
+                                                                                                        }
+                                                                                                    ]
+                                                                                    },
+                   "Slash_Pack/Materials/Slash/Plane/MI_Slash_Pack_Plane4.uasset":  {
+                                                                                        "history":  [
+                                                                                                        {
+                                                                                                            "by":  "rhkrd",
+                                                                                                            "at":  "2026-07-10 13:23:56",
+                                                                                                            "note":  ""
+                                                                                                        }
+                                                                                                    ]
+                                                                                    },
+                   "Slash_Pack/Materials/Slash/Plane/MI_Slash_Pack_Plane5.uasset":  {
+                                                                                        "history":  [
+                                                                                                        {
+                                                                                                            "by":  "rhkrd",
+                                                                                                            "at":  "2026-07-10 13:23:56",
+                                                                                                            "note":  ""
+                                                                                                        }
+                                                                                                    ]
+                                                                                    },
+                   "Slash_Pack/Materials/Slash/Slash1/M_Slash_Pack_Slash1_1.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-10 13:23:56",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "Slash_Pack/Materials/Slash/Slash1/MI_Slash_Pack_Slash1_2.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash1/MI_Slash_Pack_Slash1_3.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash1/MI_Slash_Pack_Slash1_4.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash1/MI_Slash_Pack_Slash1_5.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash2/M_Slash_Pack_Slash2_1.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-10 13:23:56",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "Slash_Pack/Materials/Slash/Slash2/MI_Slash_Pack_Slash2_2.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash2/MI_Slash_Pack_Slash2_3.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash2/MI_Slash_Pack_Slash2_4.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash2/MI_Slash_Pack_Slash2_5.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash3/M_Slash_Pack_Slash3_1.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-10 13:23:56",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "Slash_Pack/Materials/Slash/Slash3/MI_Slash_Pack_Slash3_2.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash3/MI_Slash_Pack_Slash3_3.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash3/MI_Slash_Pack_Slash3_4.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash3/MI_Slash_Pack_Slash3_5.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash4/M_Slash_Pack_Slash4_1.uasset":  {
+                                                                                          "history":  [
+                                                                                                          {
+                                                                                                              "by":  "rhkrd",
+                                                                                                              "at":  "2026-07-10 13:23:56",
+                                                                                                              "note":  ""
+                                                                                                          }
+                                                                                                      ]
+                                                                                      },
+                   "Slash_Pack/Materials/Slash/Slash4/MI_Slash_Pack_Slash4_2.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash4/MI_Slash_Pack_Slash4_3.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash4/MI_Slash_Pack_Slash4_4.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Slash/Slash4/MI_Slash_Pack_Slash4_5.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-10 13:23:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Slash_Pack/Materials/Trail/M_Slash_Pack_Trail1.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Materials/Trail/MI_Slash_Pack_Trail2.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-10 13:23:56",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Slash_Pack/Materials/Wave/M_Slash_Pack_Wave.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Slash_Pack/Materials/Wave/MI_Slash_Pack_Wave2.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Materials/Wave/MI_Slash_Pack_Wave3.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Materials/Wave/MI_Slash_Pack_Wave4.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Materials/Wave/MI_Slash_Pack_Wave5.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Plane1.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Plane2.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Plane3.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Plane3_1.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Plane4.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Plane4_1.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Plane5.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Plane5_1.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Plane6.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash1.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash1_1.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash2.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash2_1.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash3.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash4.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash4_2.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash4_3.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash5_1.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash5_3.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash6_1.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash6_2.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash6_3.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-10 13:23:56",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Slash7.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Sphere.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Spiral1.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-10 13:23:56",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "Slash_Pack/Mesh/SM_Slash_Pack_Stone1.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-10 13:23:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Slash_Pack/Textures/Crack/T_Slash_Pack_Crack.uasset":  {
+                                                                               "history":  [
+                                                                                               {
+                                                                                                   "by":  "rhkrd",
+                                                                                                   "at":  "2026-07-10 13:23:56",
+                                                                                                   "note":  ""
+                                                                                               }
+                                                                                           ]
+                                                                           },
+                   "Slash_Pack/Textures/Crack/T_Slash_Pack_Crack2.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Crack/T_Slash_Pack_Crack3.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Crack/T_Slash_Pack_Crack4.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Crack/T_Slash_Pack_Crack5.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Flash/T_Slash_Pack_Flash.uasset":  {
+                                                                               "history":  [
+                                                                                               {
+                                                                                                   "by":  "rhkrd",
+                                                                                                   "at":  "2026-07-10 13:23:56",
+                                                                                                   "note":  ""
+                                                                                               }
+                                                                                           ]
+                                                                           },
+                   "Slash_Pack/Textures/Flash/T_Slash_Pack_Flash2.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Fragments/T_Slash_Pack_Fire1.uasset":  {
+                                                                                   "history":  [
+                                                                                                   {
+                                                                                                       "by":  "rhkrd",
+                                                                                                       "at":  "2026-07-10 13:23:56",
+                                                                                                       "note":  ""
+                                                                                                   }
+                                                                                               ]
+                                                                               },
+                   "Slash_Pack/Textures/Fragments/T_Slash_Pack_Lightning1.uasset":  {
+                                                                                        "history":  [
+                                                                                                        {
+                                                                                                            "by":  "rhkrd",
+                                                                                                            "at":  "2026-07-10 13:23:56",
+                                                                                                            "note":  ""
+                                                                                                        }
+                                                                                                    ]
+                                                                                    },
+                   "Slash_Pack/Textures/Fragments/T_Slash_Pack_Star.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-10 13:23:56",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise10.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise11.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise12.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise13.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise14.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise15.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise16.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise17.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise18.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise19.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise2.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise20.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise21.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise22.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-10 13:23:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise3.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise5.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise6.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise7.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise8.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Noise/T_Slash_Pack_Noise9.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Slash/Slash/T_Slash_Pack_Slash1.uasset":  {
+                                                                                      "history":  [
+                                                                                                      {
+                                                                                                          "by":  "rhkrd",
+                                                                                                          "at":  "2026-07-10 13:23:56",
+                                                                                                          "note":  ""
+                                                                                                      }
+                                                                                                  ]
+                                                                                  },
+                   "Slash_Pack/Textures/Slash/Slash/T_Slash_Pack_Slash2.uasset":  {
+                                                                                      "history":  [
+                                                                                                      {
+                                                                                                          "by":  "rhkrd",
+                                                                                                          "at":  "2026-07-10 13:23:56",
+                                                                                                          "note":  ""
+                                                                                                      }
+                                                                                                  ]
+                                                                                  },
+                   "Slash_Pack/Textures/Slash/Slash/T_Slash_Pack_Slash3.uasset":  {
+                                                                                      "history":  [
+                                                                                                      {
+                                                                                                          "by":  "rhkrd",
+                                                                                                          "at":  "2026-07-10 13:23:56",
+                                                                                                          "note":  ""
+                                                                                                      }
+                                                                                                  ]
+                                                                                  },
+                   "Slash_Pack/Textures/Slash/Slash/T_Slash_Pack_Slash4.uasset":  {
+                                                                                      "history":  [
+                                                                                                      {
+                                                                                                          "by":  "rhkrd",
+                                                                                                          "at":  "2026-07-10 13:23:56",
+                                                                                                          "note":  ""
+                                                                                                      }
+                                                                                                  ]
+                                                                                  },
+                   "Slash_Pack/Textures/Slash/Slash/T_Slash_Pack_Slash5.uasset":  {
+                                                                                      "history":  [
+                                                                                                      {
+                                                                                                          "by":  "rhkrd",
+                                                                                                          "at":  "2026-07-10 13:23:56",
+                                                                                                          "note":  ""
+                                                                                                      }
+                                                                                                  ]
+                                                                                  },
+                   "Slash_Pack/Textures/Slash/Slash_Osn/T_Slash_Pack_Osn_Slash1.uasset":  {
+                                                                                              "history":  [
+                                                                                                              {
+                                                                                                                  "by":  "rhkrd",
+                                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                                  "note":  ""
+                                                                                                              }
+                                                                                                          ]
+                                                                                          },
+                   "Slash_Pack/Textures/Slash/Slash_Osn/T_Slash_Pack_Osn_Slash2.uasset":  {
+                                                                                              "history":  [
+                                                                                                              {
+                                                                                                                  "by":  "rhkrd",
+                                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                                  "note":  ""
+                                                                                                              }
+                                                                                                          ]
+                                                                                          },
+                   "Slash_Pack/Textures/Slash/Slash_Osn/T_Slash_Pack_Osn_Slash3.uasset":  {
+                                                                                              "history":  [
+                                                                                                              {
+                                                                                                                  "by":  "rhkrd",
+                                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                                  "note":  ""
+                                                                                                              }
+                                                                                                          ]
+                                                                                          },
+                   "Slash_Pack/Textures/Slash/Slash_Osn/T_Slash_Pack_Osn_Slash4.uasset":  {
+                                                                                              "history":  [
+                                                                                                              {
+                                                                                                                  "by":  "rhkrd",
+                                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                                  "note":  ""
+                                                                                                              }
+                                                                                                          ]
+                                                                                          },
+                   "Slash_Pack/Textures/Slash/Slash_Osn/T_Slash_Pack_Osn_Slash5.uasset":  {
+                                                                                              "history":  [
+                                                                                                              {
+                                                                                                                  "by":  "rhkrd",
+                                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                                  "note":  ""
+                                                                                                              }
+                                                                                                          ]
+                                                                                          },
+                   "Slash_Pack/Textures/Slash/T_Slash_Pack_Slash6.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Slash/T_Slash_Pack_Slash7.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Stone/T_Slash_Pack_Noise_Stone.uasset":  {
+                                                                                     "history":  [
+                                                                                                     {
+                                                                                                         "by":  "rhkrd",
+                                                                                                         "at":  "2026-07-10 13:23:56",
+                                                                                                         "note":  ""
+                                                                                                     }
+                                                                                                 ]
+                                                                                 },
+                   "Slash_Pack/Textures/Stone/T_Slash_Pack_Noise_Stone_normal.uasset":  {
+                                                                                            "history":  [
+                                                                                                            {
+                                                                                                                "by":  "rhkrd",
+                                                                                                                "at":  "2026-07-10 13:23:56",
+                                                                                                                "note":  ""
+                                                                                                            }
+                                                                                                        ]
+                                                                                        },
+                   "Slash_Pack/Textures/Stone/T_Slash_Pack_Noise_Stone_roughness.uasset":  {
+                                                                                               "history":  [
+                                                                                                               {
+                                                                                                                   "by":  "rhkrd",
+                                                                                                                   "at":  "2026-07-10 13:23:56",
+                                                                                                                   "note":  ""
+                                                                                                               }
+                                                                                                           ]
+                                                                                           },
+                   "Slash_Pack/Textures/T_Slash_Pack_Gra1.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-10 13:23:56",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "Slash_Pack/Textures/T_Slash_Pack_Gra2.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-10 13:23:56",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "Slash_Pack/Textures/T_Slash_Pack_Smoke1.uasset":  {
+                                                                          "history":  [
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-10 13:23:56",
+                                                                                              "note":  ""
+                                                                                          }
+                                                                                      ]
+                                                                      },
+                   "Slash_Pack/Textures/T_Slash_Pack_Wave.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-10 13:23:56",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "Slash_Pack/Textures/Trail/T_Slash_Pack_Trail1.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Trail/T_Slash_Pack_Trail2.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Trail/T_Slash_Pack_Trail3.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Trail/T_Slash_Pack_Trail4.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/Textures/Wave/T_Slash_Pack_Wave1.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Slash_Pack/Textures/Wave/T_Slash_Pack_Wave2.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Slash_Pack/Textures/Wave/T_Slash_Pack_Wave3.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Slash_Pack/Textures/Wave/T_Slash_Pack_Wave4.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Slash_Pack/Textures/Wave/T_Slash_Pack_Wave5.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-10 13:23:56",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash1_1.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash1_2.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash1_3.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash1_4.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash1_5.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash1_6.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash2_1.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash2_2.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash2_3.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash2_4.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash2_5.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash2_6.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash3_1.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash3_2.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash3_3.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash3_4.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash3_5.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash3_6.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash4_1.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash4_2.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash4_3.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash4_4.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash4_5.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash4_6.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash5_1.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash5_2.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash5_3.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash5_4.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash5_5.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Slash_Pack/VFX_Niagara/NS_Slash_Pack_Slash5_6.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-10 13:23:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
                    "SlashTrail_SoftTofu/Demo/ParagonKwang/Characters/Heroes/Kwang/Animations/Ability_Q_Catch.uasset":  {
                                                                                                                            "history":  [
                                                                                                                                            {
