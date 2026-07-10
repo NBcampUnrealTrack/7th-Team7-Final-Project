@@ -367,6 +367,13 @@ struct GY_API FGYEndingCreditsFinishedMessage
 	GENERATED_BODY()
 };
 
+/** 엔딩 네러티브 종료 알림 */
+USTRUCT(BlueprintType)
+struct GY_API FGYEndingNarrativeFinishedMessage
+{
+	GENERATED_BODY()
+};
+
 /** 설정 화면 토글 신호 */
 USTRUCT(BlueprintType)
 struct GY_API FGYToggleSettingsMessage
