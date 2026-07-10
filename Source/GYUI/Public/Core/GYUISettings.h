@@ -9,6 +9,7 @@ class UGYLootBoxScreenWidget;
 class UGYEndingCreditsWidget;
 class UGYInteractionWaitingWidget;
 class UGYWorldResetWidget;
+class UGYEndingNarrativeWidget;
 
 UCLASS(Config=Game, DefaultConfig, meta=(DisplayName="GY UI"))
 class GYUI_API UGYUISettings : public UDeveloperSettings
@@ -36,6 +37,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI|Ending")
 	TSoftClassPtr<UGYEndingCreditsWidget> EndingCreditsWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Config, Category="UI|Ending")
+	TSoftClassPtr<UGYEndingNarrativeWidget> EndingNarrativeWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI|Ending")
 	TSoftClassPtr<UGYInteractionWaitingWidget> InteractionWaitingWidgetClass;
