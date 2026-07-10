@@ -5,6 +5,7 @@
 #include "Enemy/DataTables/EnemyAbilityWeightRow.h"
 #include "GYEnemyAttackAbilityBase.generated.h"
 
+class UScoreModifier;
 class UEnvQuery;
 
 UENUM(BlueprintType)
@@ -130,6 +131,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Damage")
 	TArray<FHitDamageWeight> HitDamageWeights;
+
+	UPROPERTY(EditDefaultsOnly, Instanced, Category="Combat|Score")
+	TArray<TObjectPtr<UScoreModifier>> ScoreModifiers;
 
 	UPROPERTY(BlueprintReadOnly, Category="Cost")
 	float ActivateCost = 0.f;

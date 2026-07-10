@@ -21,6 +21,7 @@
 #include "AbilitySystem/Attributes/Enemy/GYEnemyVitalAttributeSet.h"
 #include "Core/GameplayTags/EffectTags.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "Enemy/Abilities/ScoreModifier/ScoreModifier.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 UGYEnemyAttackAbilityBase::UGYEnemyAttackAbilityBase()
@@ -204,6 +205,17 @@ float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Abi
 	float AngleScore = (HalfAngle > 0.f) ? FMath::Clamp(1.f - (AngleDeg / HalfAngle), 0.f, 1.f) : 1.f;
 
 	float EffectiveScore = DistScore * (0.5f + AngleScore * 0.5f);
+
+	float BonusSum = 0.f;
+	for (const UScoreModifier* Mod : Ability->ScoreModifiers)
+	{
+		if (Mod)
+		{
+			BonusSum += Mod->Evaluate(ASC, Owner, Target);
+		}
+	}
+	EffectiveScore += BonusSum;
+
 
 	if (Ability == LastUsed) EffectiveScore *= 0.3f;
 
