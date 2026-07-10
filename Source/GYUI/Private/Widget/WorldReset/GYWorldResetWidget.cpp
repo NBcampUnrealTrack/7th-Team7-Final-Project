@@ -14,6 +14,11 @@ void UGYWorldResetWidget::NativeConstruct()
 	ResetHands();
 }
 
+bool UGYWorldResetWidget::NativeOnHandleBackAction()
+{
+	return true;
+}
+
 void UGYWorldResetWidget::PlayResetSequence(float HoldOverride)
 {
 	HoldDuration = HoldOverride;
