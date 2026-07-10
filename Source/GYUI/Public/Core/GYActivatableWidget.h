@@ -25,6 +25,9 @@ struct FGYTagDrivenWidgetEntry
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UCommonActivatableWidget> WidgetClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	bool bBlocksOtherWidgets = true;
 };
 
 /**
@@ -44,6 +47,14 @@ public:
 
 protected:
 	virtual void NativeConstruct() override;
+	virtual bool NativeOnHandleBackAction() override;
+
+	/** ESC 입력 시 쌓여 있는 메뉴 전체 닫음 */
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+
+	/** UI 매니저를 통해 열려 있는 모든 메뉴 닫음 */
+	void RequestUIBack();
+
 	/** 해당 위젯의 입력 모드를 설정할 수 있게 함 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GY|Input")
 	EGYWidgetInputMode InputMode = EGYWidgetInputMode::Default;
@@ -54,5 +65,11 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "GY|UI")
 	TArray<FGYTagDrivenWidgetEntry> TagDrivenWidgets;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GY|Input")
+	FGameplayTag BackActionEventTag;
+
+	void HandleBackAction();
+	void SendServerGameplayEvent(FGameplayTag EventTag);
 
 };
