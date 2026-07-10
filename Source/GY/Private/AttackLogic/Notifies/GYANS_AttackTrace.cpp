@@ -94,9 +94,18 @@ void UGYANS_AttackTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequ
 	float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	if (!MeshComp) return;
-	const FGYCollisionShapeData* CollisionData = GetCurrentCollisionData(MeshComp->GetOwner());
+	AActor* Owner = MeshComp->GetOwner();
+	const FGYCollisionShapeData* CollisionData = GetCurrentCollisionData(Owner);
 	FGYHitActorList& Entry = HitActorsPerMesh.FindOrAdd(MeshComp);
 	Entry.Actors.Empty();
+
+	if (Owner)
+	{
+		FGameplayEventData Payload;
+		Payload.EventTag = GYGameplayTags::Event_Anim_Attack_TraceBegin;
+		Payload.Instigator = Owner;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Owner, GYGameplayTags::Event_Anim_Attack_TraceBegin, Payload);
+	}
 
 	if (CollisionData && CollisionData->ShapeType == EGYCollisionShapeType::Mesh)
 	{
@@ -260,6 +269,14 @@ void UGYANS_AttackTrace::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequen
 			}
 		}
 		HitActorsPerMesh.Remove(MeshComp);
+
+		if (AActor* Owner = MeshComp->GetOwner())
+		{
+			FGameplayEventData Payload;
+			Payload.EventTag = GYGameplayTags::Event_Anim_Attack_TraceEnd;
+			Payload.Instigator = Owner;
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Owner, GYGameplayTags::Event_Anim_Attack_TraceEnd, Payload);
+		}
 	}
 }
 

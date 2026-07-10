@@ -15,6 +15,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Inventory_ItemRemoved, "Event.Inventory.ItemRemoved");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Anim_Attack_DoTrace, "Event.Anim.Attack.DoTrace");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Anim_Attack_TraceBegin, "Event.Anim.Attack.TraceBegin");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Anim_Attack_TraceEnd, "Event.Anim.Attack.TraceEnd");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Anim_ComboWindowOpen, "Event.Anim.Combo.WindowOpen");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Anim_ComboWindowClose, "Event.Anim.Combo.WindowClose");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Anim_TagApplyStart, "Event.Anim.TagApplyStart");

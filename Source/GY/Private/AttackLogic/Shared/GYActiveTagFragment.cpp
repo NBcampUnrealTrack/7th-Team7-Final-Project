@@ -10,16 +10,16 @@ const FGameplayTagContainer* UGYActiveTagFragment::GetBestMatchingTags(const FGa
 {
 	const FGameplayTagContainer* DefaultResult = nullptr;
 
-	for (const FGYActiveTagEntry& Entry : TagSets)
+	for (const auto& Pair : TagSets)
 	{
-		if (Entry.RequiredTags.IsEmpty())
+		if (!Pair.Key.IsValid())
 		{
-			DefaultResult = &Entry.TagsToApply;
+			DefaultResult = &Pair.Value;
 			continue;
 		}
-		if (OwnedTags.HasAll(Entry.RequiredTags))
+		if (OwnedTags.HasTag(Pair.Key))
 		{
-			return &Entry.TagsToApply;
+			return &Pair.Value;
 		}
 	}
 
