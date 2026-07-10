@@ -17,6 +17,7 @@ public:
 	static UAbilityTask_DashToTarget* CreateDashToTarget(
 		UGameplayAbility* OwningAbility,
 		AActor* Target,
+		TSubclassOf<UGameplayEffect> InMoveSpeedGEClass,
 		float DashSpeed,
 		float StopDistance,
 		float FrontHalfAngleDeg = 45.f,
@@ -44,7 +45,10 @@ protected:
 	bool bBroadcasted = false;
 	bool bUseAcc = true;
 	float SavedAcc = 0.f;
+
 	TWeakObjectPtr<UAbilitySystemComponent> CachedASC;
+	UPROPERTY()
+	TSubclassOf<UGameplayEffect> MoveSpeedGEClass;
 	FActiveGameplayEffectHandle MovementSpeedGEHandle;
 
 };

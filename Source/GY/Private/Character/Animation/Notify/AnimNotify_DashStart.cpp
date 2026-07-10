@@ -13,6 +13,17 @@
 #include "Character/LockOn/LockOnComponent.h"
 #include "Enemy/GYEnemyAIController.h"
 
+UAnimNotify_DashStart::UAnimNotify_DashStart()
+{
+	static ConstructorHelpers::FClassFinder<UGameplayEffect> MoveSpeedGEFinder(
+		TEXT("/Game/GY/GAS/Effects/GE_MoveSpeed_Override.GE_MoveSpeed_Override_C"));
+	if (MoveSpeedGEFinder.Succeeded())
+	{
+		MoveSpeedGEClass = MoveSpeedGEFinder.Class;
+	}
+
+}
+
 void UAnimNotify_DashStart::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                                    const FAnimNotifyEventReference& EventReference)
 {
@@ -29,7 +40,7 @@ void UAnimNotify_DashStart::Notify(USkeletalMeshComponent* MeshComp, UAnimSequen
 	AActor* Target = ResolveHomingTarget(Owner);
 	if (!Target) return;
 
-	UAbilityTask_DashToTarget* Task = UAbilityTask_DashToTarget::CreateDashToTarget(GA,Target, DashSpeed, StopDistance, InFrontHalfAngleDeg, bUseAcc);
+	UAbilityTask_DashToTarget* Task = UAbilityTask_DashToTarget::CreateDashToTarget(GA,Target, MoveSpeedGEClass, DashSpeed, StopDistance, InFrontHalfAngleDeg, bUseAcc);
 	if (Task) Task->ReadyForActivation();
 }
 

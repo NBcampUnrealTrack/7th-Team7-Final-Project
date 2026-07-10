@@ -2,18 +2,20 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
+#include "Core/GameplayTags/EffectTags.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Enemy/Abilities/GYEnemyComboAttack.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 UAbilityTask_DashToTarget* UAbilityTask_DashToTarget::CreateDashToTarget(
-    UGameplayAbility* OwningAbility, AActor* Target,
+    UGameplayAbility* OwningAbility, AActor* Target, TSubclassOf<UGameplayEffect> InMoveSpeedGEClass,
     float InDashSpeed, float InStopDistance, float InFrontHalfAngleDeg, bool bUseAcc)
 {
     UAbilityTask_DashToTarget* Task = NewAbilityTask<UAbilityTask_DashToTarget>(OwningAbility);
 	Task->OwningAbilityRef = OwningAbility;
     Task->TargetActor = Target;
+	Task->MoveSpeedGEClass = InMoveSpeedGEClass;
     Task->DashSpeed = FMath::Max(InDashSpeed, 1.f);
     Task->StopDistanceSq = FMath::Square(FMath::Max(InStopDistance, 0.f));
     Task->CosFrontHalfAngle = FMath::Cos(FMath::DegreesToRadians(FMath::Clamp(InFrontHalfAngleDeg, 0.f, 180.f)));
@@ -49,19 +51,17 @@ void UAbilityTask_DashToTarget::Activate()
 		}
 	}
 
-	UGameplayEffect* GE = NewObject<UGameplayEffect>(
-	CachedASC.Get(), TEXT("GE_MoveSpeedOverride_Dynamic"));
+	FGameplayEffectSpecHandle SpecHandle = CachedASC->MakeOutgoingSpec(
+		MoveSpeedGEClass, 1.f, CachedASC->MakeEffectContext());
 
-	GE->DurationPolicy = EGameplayEffectDurationType::Infinite;
+	if (SpecHandle.IsValid())
+	{
+		SpecHandle.Data->SetSetByCallerMagnitude(
+			GYEffectTags::MovementSpeed_SetByCaller,
+			DashSpeed);
+		MovementSpeedGEHandle = CachedASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
+	}
 
-	FGameplayModifierInfo ModInfo;
-	ModInfo.Attribute = UGYVitalAttributeSet::GetMovementSpeedAttribute();
-	ModInfo.ModifierOp = EGameplayModOp::Override;
-	ModInfo.ModifierMagnitude = FScalableFloat(DashSpeed);
-	GE->Modifiers.Add(ModInfo);
-
-	FGameplayEffectSpec Spec(GE, CachedASC->MakeEffectContext(), 1.f);
-	MovementSpeedGEHandle = CachedASC->ApplyGameplayEffectSpecToSelf(Spec);
 	bTickingTask = true;
 }
 

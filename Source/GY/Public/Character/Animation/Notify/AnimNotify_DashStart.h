@@ -6,6 +6,7 @@
 #include "Animation/AnimNotifies/AnimNotify.h"
 #include "AnimNotify_DashStart.generated.h"
 
+class UGameplayEffect;
 /**
  *
  */
@@ -14,6 +15,8 @@ class GY_API UAnimNotify_DashStart : public UAnimNotify
 {
 	GENERATED_BODY()
 public:
+	UAnimNotify_DashStart();
+
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 		const FAnimNotifyEventReference& EventReference) override;
 
@@ -34,6 +37,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="Homing")
 	bool bUseAcc = true;
+
+	UPROPERTY(EditAnywhere, Category="Dash")
+	TSubclassOf<UGameplayEffect> MoveSpeedGEClass;
 
 	static AActor* ResolveHomingTarget(AActor* Owner);
 };
