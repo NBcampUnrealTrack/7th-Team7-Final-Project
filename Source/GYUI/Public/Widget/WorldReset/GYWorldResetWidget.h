@@ -36,6 +36,9 @@ protected:
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UImage> Image_MinuteHand;
 
+    UPROPERTY(meta = (BindWidgetOptional))
+    TObjectPtr<UImage> Image_Spinner;
+
     UPROPERTY(EditDefaultsOnly, Category = "GY|WorldReset", meta = (ClampMin = 0.0))
     float FadeInDuration = 1.0f;
 
@@ -51,6 +54,9 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "GY|WorldReset")
     float HourHandSpeedDeg = 60.f;
 
+    UPROPERTY(EditDefaultsOnly, Category = "GY|WorldReset")
+    float SpinnerSpeedDeg = 180.f;
+
     UPROPERTY(EditDefaultsOnly, Category = "GY|WorldReset", meta = (ClampMin = 0.0, ClampMax = 1.0))
     float BackgroundMaxOpacity = 1.0f;
 
@@ -63,6 +69,7 @@ private:
 	float PhaseElapsed = 0.f;
 	float MinuteAngle = 0.f;
 	float HourAngle = 0.f;
+	float SpinnerAngle = 0.f;
 
 	void EnterPhase(EPhase NewPhase);
 	void ApplyVisuals(float BgOpacity, float ContentOpacity);
