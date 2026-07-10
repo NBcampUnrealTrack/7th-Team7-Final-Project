@@ -18,6 +18,7 @@ class UScrollBox;
 class USizeBox;
 class UTextBlock;
 class UWidget;
+class UButton;
 class UGYSkillConnectionLinesWidget;
 /**
  *
@@ -87,10 +88,16 @@ protected:
 
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UButton> CloseButton;
+	TObjectPtr<UButton> CloseButton;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> ResetButton;
 
 	UFUNCTION()
 	void OnCloseButtonClicked();
+
+	UFUNCTION()
+	void OnResetButtonClicked();
 
 	UGYAbilitySystemComponent* GetOwnerASC() const;
 
