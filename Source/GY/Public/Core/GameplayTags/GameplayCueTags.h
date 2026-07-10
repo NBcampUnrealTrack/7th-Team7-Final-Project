@@ -83,4 +83,7 @@ namespace GYGameplayTags
 	/* 텔포 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Enemy_Teleport_Disappear);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Enemy_Teleport_Appear);
+
+	/* 폭탄 폭발 */
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Enemy_Bomb_Explosion);
 }

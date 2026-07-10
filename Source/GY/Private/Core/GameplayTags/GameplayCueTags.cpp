@@ -82,4 +82,7 @@ namespace GYGameplayTags
 	// 텔포
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Teleport_Disappear, "GameplayCue.Enemy.Teleport.Disappear");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Teleport_Appear, "GameplayCue.Enemy.Teleport.Appear");
+
+	// 폭탄 폭발
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Bomb_Explosion, "GameplayCue.Enemy.Bomb.Explosion");
 }
