@@ -14,6 +14,7 @@ class UGYPrimaryGameLayout;
 class UGYEndingCreditsWidget;
 class UGYInteractionWaitingWidget;
 class UGYWorldResetWidget;
+class UGYEndingNarrativeWidget;
 struct FGYRegionEnteredMessage;
 struct FGYRegionExitedMessage;
 struct FGYEndingCinematicFinishedMessage;
@@ -24,6 +25,7 @@ struct FGYIntroCinematicMessage;
 struct FGYWorldResetMessage;
 struct FGYClockOverlayMessage;
 struct FGYReviveHoldMessage;
+struct FGYEndingNarrativeFinishedMessage;
 /**
  * 로컬마다 생성, 관리되는 UI 총괄 매니저
  */
@@ -84,6 +86,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "GY|UI|Ending")
 	void StartEndingCredits();
+
+	UFUNCTION(BlueprintCallable, Category = "GY|UI|Ending")
+	void StartEndingNarrative();
+
+	UPROPERTY(EditDefaultsOnly, Category = "GY|UI|Ending")
+	float EndingCrossfadeHold = 0.75f;
 
 protected:
 	void UnbindASC();
@@ -170,15 +178,18 @@ private:
 	void HandleEndingStarted(FGameplayTag, const FGYEndingStartedMessage& Msg);
 	void HandleEndingWaiting(FGameplayTag, const FGYInteractionWaitingMessage& Msg);
 	void HandleEndingCinematicFinished(FGameplayTag, const FGYEndingCinematicFinishedMessage& Msg);
+	void HandleEndingNarrativeFinished(FGameplayTag, const FGYEndingNarrativeFinishedMessage&);
 	void HandleEndingCreditsFinished(FGameplayTag, const FGYEndingCreditsFinishedMessage& Msg);
 	void TravelToMainMenu() const;
 
 	FGameplayMessageListenerHandle EndingStartedHandle;
 	FGameplayMessageListenerHandle EndingWaitingHandle;
 	FGameplayMessageListenerHandle EndingCinematicFinishedHandle;
+	FGameplayMessageListenerHandle EndingNarrativeFinishedHandle;
 	FGameplayMessageListenerHandle EndingCreditsFinishedHandle;
 
 	TWeakObjectPtr<UCommonActivatableWidget> ActiveCreditsWidget;
+	TWeakObjectPtr<UCommonActivatableWidget> ActiveNarrativeWidget;
 	TWeakObjectPtr<UGYInteractionWaitingWidget> ActiveWaitingWidget;
 
 	void HandleToggleSettings(FGameplayTag Tag, const struct FGYToggleSettingsMessage& Msg);
@@ -205,4 +216,5 @@ private:
 	float GiveUpHoldStartTime = 0.f;
 	float GiveUpHoldDuration = 0.f;
 	FTimerHandle GiveUpProgressTimerHandle;
+	FTimerHandle NarrativeCleanupTimerHandle;
 };

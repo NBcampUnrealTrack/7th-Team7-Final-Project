@@ -22,6 +22,7 @@
 #include "Character/GYPawnData.h"
 #include "Character/GYPlayerActionConfig.h"
 #include "Widget/EndingCredits/GYEndingCreditsWidget.h"
+#include "Widget/EndingCredits/GYEndingNarrativeWidget.h"
 #include "Widget/Interaction/GYInteractionWaitingWidget.h"
 #include "Widget/WorldReset/GYWorldResetWidget.h"
 #include "Enemy/GYEnemyCharacterBase.h"
@@ -31,6 +32,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(RosterSyncHandle);
+		World->GetTimerManager().ClearTimer(NarrativeCleanupTimerHandle);
 		if (UGameInstance* GI = World->GetGameInstance())
 		{
 			if (UGameplayMessageSubsystem* MSG = GI->GetSubsystem<UGameplayMessageSubsystem>())
@@ -40,6 +42,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 				MSG->UnregisterListener(EndingStartedHandle);
 				MSG->UnregisterListener(EndingWaitingHandle);
 				MSG->UnregisterListener(EndingCinematicFinishedHandle);
+				MSG->UnregisterListener(EndingNarrativeFinishedHandle);
 				MSG->UnregisterListener(EndingCreditsFinishedHandle);
 				MSG->UnregisterListener(ClockOverlayHandle);
 				MSG->UnregisterListener(ToggleSettingsListenerHandle);
@@ -128,6 +131,10 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		{
 			MSG.UnregisterListener(EndingWaitingHandle);
 		}
+		if (EndingNarrativeFinishedHandle.IsValid())
+		{
+			MSG.UnregisterListener(EndingNarrativeFinishedHandle);
+		}
 		if (EndingCinematicFinishedHandle.IsValid())
 		{
 			MSG.UnregisterListener(EndingCinematicFinishedHandle);
@@ -163,6 +170,8 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 			GYGameplayTags::Message_Ending_WaitingForPlayers, this, &UGYUIManagerSubsystem::HandleEndingWaiting);
 		EndingCinematicFinishedHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Ending_CinematicFinished, this, &UGYUIManagerSubsystem::HandleEndingCinematicFinished);
+		EndingNarrativeFinishedHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_Ending_NarrativeFinished, this, &UGYUIManagerSubsystem::HandleEndingNarrativeFinished);
 		EndingCreditsFinishedHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Ending_CreditsFinished, this, &UGYUIManagerSubsystem::HandleEndingCreditsFinished);
 		ClockOverlayHandle = MSG.RegisterListener(
@@ -775,7 +784,64 @@ void UGYUIManagerSubsystem::HandleEndingCinematicFinished(FGameplayTag, const FG
 {
 	if (Msg.bShowCredits)
 	{
+		StartEndingNarrative();
+	}
+}
+
+void UGYUIManagerSubsystem::StartEndingNarrative()
+{
+	const UGYUISettings* Settings = GetDefault<UGYUISettings>();
+	UClass* WidgetClass = Settings ? Settings->EndingNarrativeWidgetClass.LoadSynchronous() : nullptr;
+	if (!WidgetClass)
+	{
 		StartEndingCredits();
+		return;
+	}
+
+	if (PrimaryGameLayout)
+	{
+		PrimaryGameLayout->ClearAllLayers();
+	}
+
+	UCommonActivatableWidget* Widget = PushWidgetToLayer(GYUILayerTags::UI_Layer_Menu, WidgetClass);
+	ActiveNarrativeWidget = Widget;
+}
+
+void UGYUIManagerSubsystem::HandleEndingNarrativeFinished(FGameplayTag, const FGYEndingNarrativeFinishedMessage&)
+{
+	const UGYUISettings* Settings = GetDefault<UGYUISettings>();
+	UClass* WidgetClass = Settings ? Settings->EndingCreditsWidgetClass.LoadSynchronous() : nullptr;
+	if (!WidgetClass)
+	{
+		if (ActiveNarrativeWidget.IsValid())
+		{
+			PopWidget(ActiveNarrativeWidget.Get());
+			ActiveNarrativeWidget = nullptr;
+		}
+		return;
+	}
+
+	UCommonActivatableWidget* Credits = PushWidgetToLayer(GYUILayerTags::UI_Layer_Modal, WidgetClass);
+	ActiveCreditsWidget = Credits;
+
+	UWorld* World = GetWorld();
+	if (World && Credits)
+	{
+		World->GetTimerManager().SetTimer(NarrativeCleanupTimerHandle,
+			FTimerDelegate::CreateWeakLambda(this, [this]()
+			{
+				if (ActiveNarrativeWidget.IsValid())
+				{
+					PopWidget(ActiveNarrativeWidget.Get());
+					ActiveNarrativeWidget = nullptr;
+				}
+			}),
+			EndingCrossfadeHold, /*bLoop=*/ false);
+	}
+	else if (ActiveNarrativeWidget.IsValid())
+	{
+		PopWidget(ActiveNarrativeWidget.Get());
+		ActiveNarrativeWidget = nullptr;
 	}
 }
 
