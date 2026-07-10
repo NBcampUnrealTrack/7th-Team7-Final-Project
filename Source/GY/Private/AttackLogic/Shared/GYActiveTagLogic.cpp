@@ -7,23 +7,31 @@
 void UGYActiveTagLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 {
 	CachedAbility = Ability;
+	AppliedTags.Reset();
 
 	const UGYActiveTagFragment* Fragment = Ability->GetFragment<UGYActiveTagFragment>();
-	if (!Fragment || Fragment->Tags.IsEmpty()) return;
+	if (!Fragment) return;
 
 	UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo();
 	if (!ASC) return;
 
-	ASC->AddLooseGameplayTags(Fragment->Tags);
+	FGameplayTagContainer OwnedTags;
+	ASC->GetOwnedGameplayTags(OwnedTags);
+
+	const FGameplayTagContainer* TagsToApply = Fragment->GetBestMatchingTags(OwnedTags);
+	if (!TagsToApply || TagsToApply->IsEmpty()) return;
+
+	AppliedTags = *TagsToApply;
+	ASC->AddLooseGameplayTags(AppliedTags);
 }
 
 void UGYActiveTagLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWasCancelled)
 {
-	const UGYActiveTagFragment* Fragment = Ability->GetFragment<UGYActiveTagFragment>();
-	if (Fragment && !Fragment->Tags.IsEmpty())
+	if (!AppliedTags.IsEmpty())
 	{
 		UAbilitySystemComponent* ASC = Ability->GetAbilitySystemComponentFromActorInfo();
-		if (ASC) ASC->RemoveLooseGameplayTags(Fragment->Tags);
+		if (ASC) ASC->RemoveLooseGameplayTags(AppliedTags);
+		AppliedTags.Reset();
 	}
 
 	CachedAbility.Reset();
