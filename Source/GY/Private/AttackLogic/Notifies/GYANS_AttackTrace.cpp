@@ -72,6 +72,7 @@ static UStaticMeshComponent* GetOrCreateMeshProxy(FGYHitActorList& Entry, USkele
 		UStaticMeshComponent* Proxy = NewObject<UStaticMeshComponent>(Owner, NAME_None, RF_Transient);
 		Proxy->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		Proxy->SetCollisionResponseToAllChannels(ECR_Ignore);
+		Proxy->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 		Proxy->SetGenerateOverlapEvents(false);
 		Proxy->SetHiddenInGame(true);
 		Proxy->SetVisibility(false);
@@ -147,7 +148,7 @@ void UGYANS_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeque
 	if (MeshProxy)
 	{
 		FComponentQueryParams ComponentParams(NAME_None, Owner);
-		World->ComponentSweepMulti(Hits, MeshProxy, SweepStart, TraceOrigin, TraceRot, ComponentParams);
+		World->ComponentSweepMultiByChannel(Hits, MeshProxy, SweepStart, TraceOrigin, TraceRot, ECC_Pawn, ComponentParams);
 	}
 	else
 	{
