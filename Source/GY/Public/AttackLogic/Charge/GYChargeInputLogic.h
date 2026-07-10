@@ -23,6 +23,8 @@ public:
 public:
 	const FGYCollisionShapeData* GetCurrentCollisionData() const;
 
+	void CancelMaxChargeTimer();
+
 private:
 	void ExecuteAttack();
 

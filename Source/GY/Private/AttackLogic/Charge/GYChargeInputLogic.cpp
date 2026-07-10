@@ -62,6 +62,11 @@ void UGYChargeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	}
 }
 
+void UGYChargeInputLogic::CancelMaxChargeTimer()
+{
+	if (MaxChargeTask) { MaxChargeTask->EndTask(); MaxChargeTask = nullptr; }
+}
+
 void UGYChargeInputLogic::OnMaxChargeFinished()
 {
 	MaxChargeTask = nullptr;

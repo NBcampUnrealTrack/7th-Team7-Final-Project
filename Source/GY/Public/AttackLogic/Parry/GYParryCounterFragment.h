@@ -24,20 +24,7 @@ struct FGYParryCounterSet
 	FGYHitImpact HitImpact;
 };
 
-// 보유 태그가 RequiredTags를 모두 포함해야 선택됨. RequiredTags가 비어있으면 기본값(폴백)으로 사용
-USTRUCT(BlueprintType)
-struct FGYParryCounterEntry
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FGameplayTagContainer RequiredTags;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FGYParryCounterSet Set;
-};
-
-// 패리 추가입력에 사용할 몽타주·콜리전·히트값을 무기별로 보유 (무기마다 다른 모션/수치)
+// 패리 추가입력에 사용할 몽타주·콜리전·히트값을 무기 태그별로 보유
 UCLASS(EditInlineNew, DefaultToInstanced)
 class GY_API UGYParryCounterFragment : public UAbilityFragment
 {
@@ -46,8 +33,9 @@ class GY_API UGYParryCounterFragment : public UAbilityFragment
 public:
 	UGYParryCounterFragment();
 
+	// 무기 태그 → 패리 추가입력 세트
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ParryCounter")
-	TArray<FGYParryCounterEntry> AttackSets;
+	TMap<FGameplayTag, FGYParryCounterSet> AttackSets;
 
 	// 패리 성공 후 추가입력 가능 시간
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ParryCounter", meta = (ClampMin = "0.1", Units = "s"))

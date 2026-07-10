@@ -10,16 +10,16 @@ const FGYBlockAttackSet* UGYBlockAttackFragment::GetBestMatchingSet(const FGamep
 {
 	const FGYBlockAttackSet* DefaultResult = nullptr;
 
-	for (const FGYBlockAttackEntry& Entry : AttackSets)
+	for (const auto& Pair : AttackSets)
 	{
-		if (Entry.RequiredTags.IsEmpty())
+		if (!Pair.Key.IsValid())
 		{
-			DefaultResult = &Entry.Set;
+			DefaultResult = &Pair.Value;
 			continue;
 		}
-		if (OwnedTags.HasAll(Entry.RequiredTags))
+		if (OwnedTags.HasTag(Pair.Key))
 		{
-			return &Entry.Set;
+			return &Pair.Value;
 		}
 	}
 

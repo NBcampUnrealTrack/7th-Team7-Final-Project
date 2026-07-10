@@ -20,6 +20,8 @@ namespace GYGameplayTags
 
 	// Attack events
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Anim_Attack_DoTrace)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Anim_Attack_TraceBegin)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Anim_Attack_TraceEnd)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Anim_ComboWindowOpen)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Anim_ComboWindowClose)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Anim_TagApplyStart)

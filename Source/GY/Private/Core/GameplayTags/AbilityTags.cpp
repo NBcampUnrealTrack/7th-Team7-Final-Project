@@ -36,6 +36,9 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ParryCounter, "Ability.Fragment.ParryCounter");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ActiveTag, "Ability.Fragment.ActiveTag");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_HitStop, "Ability.Fragment.HitStop");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ChargeSuperArmor, "Ability.Fragment.ChargeSuperArmor");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ChargeInfinite, "Ability.Fragment.ChargeInfinite");
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_ChargeParryEffect, "Ability.Fragment.ChargeParryEffect");
 
 	// State
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Parrying, "Ability.State.Parrying");

@@ -35,6 +35,9 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_ParryCounter)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_ActiveTag)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_HitStop)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_ChargeSuperArmor)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_ChargeInfinite)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_ChargeParryEffect)
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Parkour)
 
