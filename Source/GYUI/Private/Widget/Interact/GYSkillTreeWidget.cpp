@@ -64,6 +64,11 @@ void UGYSkillTreeWidget::NativeConstruct()
 	{
 		CloseButton->OnClicked.AddDynamic(this, &ThisClass::OnCloseButtonClicked);
 	}
+
+	if (ResetButton && !ResetButton->OnClicked.IsAlreadyBound(this, &ThisClass::OnResetButtonClicked))
+	{
+		ResetButton->OnClicked.AddDynamic(this, &ThisClass::OnResetButtonClicked);
+	}
 }
 
 void UGYSkillTreeWidget::NativeDestruct()
@@ -524,6 +529,17 @@ void UGYSkillTreeWidget::OnCloseButtonClicked()
 	if (!ASC) return;
 
 	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_SkillTree_Exit, FGameplayEventData());
+}
+
+void UGYSkillTreeWidget::OnResetButtonClicked()
+{
+	if (AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState()))
+	{
+		if (USkillTreeComponent* SkillTree = PS->GetSkillTreeComponent())
+		{
+			SkillTree->ServerResetSkillTree();
+		}
+	}
 }
 
 UGYAbilitySystemComponent* UGYSkillTreeWidget::GetOwnerASC() const

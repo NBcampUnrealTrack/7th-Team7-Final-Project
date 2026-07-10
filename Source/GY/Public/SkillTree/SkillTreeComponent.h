@@ -31,6 +31,13 @@ public:
 	// [SERVER] 노드 언락 + SkillEffect 적용. SP 비용/선행조건 검증은 호출자(GA_SkillUnlock) 소관
 	bool UnlockNode(const USkillNodeDataAsset* Node);
 
+	UFUNCTION(Server, Reliable)
+	void ServerResetSkillTree();
+
+	UFUNCTION(BlueprintCallable, Category="SkillTree")
+	void ResetSkillTree();
+
+
 	FOnSkillTreeChanged OnSkillTreeChanged;
 
 	// IGYSaveable — SP 잔량 차감은 스탯 복원(총량 리셋) 이후여야 함

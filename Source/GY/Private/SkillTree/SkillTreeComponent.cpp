@@ -1,5 +1,6 @@
 #include "SkillTree/SkillTreeComponent.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
@@ -52,6 +53,39 @@ bool USkillTreeComponent::UnlockNode(const USkillNodeDataAsset* Node)
 	ApplySkillEffect(Node);
 	OnSkillTreeChanged.Broadcast();
 	return true;
+}
+
+void USkillTreeComponent::ServerResetSkillTree_Implementation()
+{
+	ResetSkillTree();
+}
+
+void USkillTreeComponent::ResetSkillTree()
+{
+	AActor* Owner = GetOwner();
+	if (!Owner || !Owner->HasAuthority()) return;
+	UAbilitySystemComponent* ASC = ResolveASC();
+	if (!ASC) return;
+	for (FActiveGameplayEffectHandle EffectHandle : AppliedEffectHandles)
+	{
+		if (EffectHandle.IsValid() && ASC->GetActiveGameplayEffect(EffectHandle))
+		{
+			ASC->RemoveActiveGameplayEffect(EffectHandle);
+		}
+	}
+
+	FGameplayAttribute SkillPointAttribute = UGYProgressionAttributeSet::GetSkillPointAttribute();
+	const float Current = ASC->GetNumericAttribute(SkillPointAttribute);
+	const int32 Refund = UnlockedNodes.Num();
+
+	ASC->SetNumericAttributeBase(
+		SkillPointAttribute,
+		Current + Refund);
+
+	UnlockedNodes.Empty();
+	AppliedEffectHandles.Empty();
+
+	OnSkillTreeChanged.Broadcast();
 }
 
 void USkillTreeComponent::OnRep_UnlockedNodes()
