@@ -97,6 +97,7 @@ namespace GYGameplayTags
 	// 엔딩 시퀀스
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Ending_Started);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Ending_CinematicFinished);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Ending_NarrativeFinished);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Ending_CreditsFinished);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Message_Ending_WaitingForPlayers);
 
