@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "AIController.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
@@ -120,6 +121,25 @@ void URangedAttackBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 void URangedAttackBase::OnLaunchEvent(FGameplayEventData Payload)
 {
 	SpawnProjectile();
+}
+
+void URangedAttackBase::OnMontageFinished()
+{
+	if (ProjectileResolveExtraTime > 0.f)
+	{
+		UAbilityTask_WaitDelay* DelayTask =
+			UAbilityTask_WaitDelay::WaitDelay(this, ProjectileResolveExtraTime);
+		DelayTask->OnFinish.AddDynamic(this, &URangedAttackBase::OnProjectileResolveTimeout);
+		DelayTask->ReadyForActivation();
+		return;
+	}
+
+	Super::OnMontageFinished();
+}
+
+void URangedAttackBase::OnProjectileResolveTimeout()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void URangedAttackBase::OnProjectileHit(FGameplayEventData Payload)

@@ -69,7 +69,7 @@ protected:
 	UFUNCTION()
 	void PlayAttackMontage();
 	UFUNCTION()
-	void OnMontageFinished();
+	virtual void OnMontageFinished();
 	UFUNCTION()
 	void OnMontageInterrupted();
 
