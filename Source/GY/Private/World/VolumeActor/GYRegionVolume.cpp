@@ -7,13 +7,11 @@
 #include "UI/GYUIMessages.h"
 #include "Loot/RegionLootData.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
-#include "Net/UnrealNetwork.h"
 #include "GameFramework/PlayerController.h"
 
 AGYRegionVolume::AGYRegionVolume()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	bReplicates = true;
 
 	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
 	RootComponent = TriggerBox;
@@ -63,12 +61,6 @@ void AGYRegionVolume::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* 
 	HandlePawnExited(Pawn);
 }
 
-void AGYRegionVolume::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AGYRegionVolume, TargetBossActor); // 서버에서 복제한 액터 클라이언트로 동기화
-}
-
 void AGYRegionVolume::HandlePawnEntered(APawn* Pawn)
 {
 	if (!Pawn) return;
@@ -97,7 +89,7 @@ void AGYRegionVolume::HandlePawnEntered(APawn* Pawn)
 	Msg.RegionDisplayName = Region->RegionDisplayName;
 	Msg.RegionLevel = GetDefault<UGYWorldDataSettings>()->DefaultRegionLevel;
 	Msg.RegionIcon = Region->RegionIcon;
-	Msg.BossActor = TargetBossActor;
+	Msg.BossActor = TargetBossActor.Get();
 	Msg.Pawn = Pawn;
 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Region_Entered, Msg);
@@ -165,29 +157,5 @@ void AGYRegionVolume::TryNotifyLocalPawn()
 		++LocalPawnRetryCount;
 		World->GetTimerManager().SetTimer(LocalPawnRetryTimer, FTimerDelegate::CreateUObject(
 			this, &AGYRegionVolume::TryNotifyLocalPawn), 0.5f, false);
-	}
-}
-
-void AGYRegionVolume::OnRep_TargetBossActor()
-{
-	// BossActor 가 클라에 늦게 도착했을 때 메시지 재발행
-	if (GetNetMode() == NM_DedicatedServer) return;
-	if (!IsValid(TargetBossActor)) return;
-	TryBroadcastForLocalPawn();
-}
-
-void AGYRegionVolume::TryBroadcastForLocalPawn()
-{
-	if (!IsValid(TriggerBox)) return;
-	UWorld* World = GetWorld();
-	if (!World) return;
-
-	APlayerController* PC = World->GetFirstPlayerController();
-	APawn* LocalPawn = PC ? PC->GetPawn() : nullptr;
-	if (!LocalPawn) return;
-
-	if (TriggerBox->IsOverlappingActor(LocalPawn))
-	{
-		HandlePawnEntered(LocalPawn);
 	}
 }
