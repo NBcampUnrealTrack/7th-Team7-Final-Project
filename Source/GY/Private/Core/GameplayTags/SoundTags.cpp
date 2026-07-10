@@ -79,6 +79,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_Door_Close, "Sound.Interaction.Door.Close")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_TimeRift, "Sound.Interaction.TimeRift")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_TimeRift_Rest, "Sound.Interaction.TimeRift.Rest")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_SecretDiary, "Sound.Interaction.SecretDiary")
+
 
 	/* BGM */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_BGM_Combat, "Sound.BGM.Combat")

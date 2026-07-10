@@ -60,6 +60,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_Door_Close);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_TimeRift);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_TimeRift_Rest);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Interaction_SecretDiary);
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Enemy_Regen);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Feng_Death);

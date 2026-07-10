@@ -18,6 +18,9 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Quest_ID_004, "Quest.ID.004");
 	UE_DEFINE_GAMEPLAY_TAG(Quest_ID_005, "Quest.ID.005");
 
+	UE_DEFINE_GAMEPLAY_TAG(Diary_ID_001, "Diary.ID.001");
+	UE_DEFINE_GAMEPLAY_TAG(Diary_ID_002, "Diary.ID.002");
+
 	UE_DEFINE_GAMEPLAY_TAG(Dialogue_ID_001, "Dialogue.ID.001");
 	UE_DEFINE_GAMEPLAY_TAG(Dialogue_ID_002, "Dialogue.ID.002");
 	UE_DEFINE_GAMEPLAY_TAG(Dialogue_ID_003, "Dialogue.ID.003");
