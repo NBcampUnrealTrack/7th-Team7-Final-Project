@@ -50,13 +50,7 @@ void UGYTimeRiftWidget::NativeDestruct()
 
 void UGYTimeRiftWidget::OnExitButtonClicked()
 {
-
-	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState());
-	if (!PS) return;
-	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
-	if (!ASC) return;
-	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_Exit, FGameplayEventData());
-
+	RequestExit();
 }
 
 void UGYTimeRiftWidget::OnRestButtonClicked()
@@ -102,4 +96,9 @@ void UGYTimeRiftWidget::OnSkillTreeButtonClicked()
 	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
 	if (!ASC) return;
 	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_SkillTree, FGameplayEventData());
+}
+
+FGameplayTag UGYTimeRiftWidget::GetExitEventTag() const
+{
+	return GYGameplayTags::Event_TimeRift_Exit;
 }

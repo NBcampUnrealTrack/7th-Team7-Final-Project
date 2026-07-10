@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GYSkillNodeWidget.h"
-#include "Core/GYActivatableWidget.h"
+#include "Widget/Interact/GYTimeRiftPanelWidget.h"
 #include "GYSkillTreeWidget.generated.h"
 
 class UGYAbilitySystemComponent;
@@ -24,13 +24,15 @@ class UGYSkillConnectionLinesWidget;
  *
  */
 UCLASS()
-class GYUI_API UGYSkillTreeWidget : public UGYActivatableWidget
+class GYUI_API UGYSkillTreeWidget : public UGYTimeRiftPanelWidget
 {
 	GENERATED_BODY()
 
 public:
 
 protected:
+	virtual FGameplayTag GetExitEventTag() const override;
+
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;

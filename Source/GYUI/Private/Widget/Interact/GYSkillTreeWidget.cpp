@@ -523,12 +523,7 @@ void UGYSkillTreeWidget::CenterOnNodes(const FVector2D& ViewSize)
 
 void UGYSkillTreeWidget::OnCloseButtonClicked()
 {
-	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState());
-	if (!PS) return;
-	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
-	if (!ASC) return;
-
-	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_SkillTree_Exit, FGameplayEventData());
+	RequestExit();
 }
 
 void UGYSkillTreeWidget::OnResetButtonClicked()
@@ -603,3 +598,9 @@ void UGYSkillTreeWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
 	Super::NativeOnMouseLeave(InMouseEvent);
 }
+
+FGameplayTag UGYSkillTreeWidget::GetExitEventTag() const
+{
+	return GYGameplayTags::Event_TimeRift_SkillTree_Exit;
+}
+

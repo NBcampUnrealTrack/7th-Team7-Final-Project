@@ -104,12 +104,7 @@ bool UGYAltarWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 
 void UGYAltarWidget::OnCloseButtonClicked()
 {
-	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState());
-	if (!PS) return;
-	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
-	if (!ASC) return;
-
-	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_Altar_Exit, FGameplayEventData());
+	RequestExit();
 }
 
 void UGYAltarWidget::OnExecuteButtonClicked()
@@ -192,4 +187,9 @@ UAltarStorageComponent* UGYAltarWidget::ResolveAltarStorage() const
 void UGYAltarWidget::HandleEntryChanged(FGameplayTag, const FGYInventoryEntryMessage&)
 {
 	Refresh();
+}
+
+FGameplayTag UGYAltarWidget::GetExitEventTag() const
+{
+	return GYGameplayTags::Event_TimeRift_Altar_Exit;
 }

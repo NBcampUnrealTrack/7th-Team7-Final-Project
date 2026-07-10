@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Core/GYActivatableWidget.h"
+#include "Widget/Interact/GYTimeRiftPanelWidget.h"
 #include "GYTimeRiftWidget.generated.h"
 
 class UButton;
@@ -11,13 +11,16 @@ class UButton;
  *
  */
 UCLASS()
-class GYUI_API UGYTimeRiftWidget : public UGYActivatableWidget
+class GYUI_API UGYTimeRiftWidget : public UGYTimeRiftPanelWidget
 {
 	GENERATED_BODY()
 public:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
+
 protected:
+	virtual FGameplayTag GetExitEventTag() const override;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ExitButton;
 
