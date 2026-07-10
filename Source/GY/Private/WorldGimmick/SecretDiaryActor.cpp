@@ -8,6 +8,7 @@
 #include "Core/GameplayTags/InteractionTags.h"
 #include "Logging/GYLogManager.h"
 #include "Quest/QuestSubsystem.h"
+#include "TimerManager.h"
 
 
 ASecretDiaryActor::ASecretDiaryActor()
@@ -62,8 +63,20 @@ void ASecretDiaryActor::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 	if (!ASC) return;
 
 	FGameplayCueParameters CueParameters;
+	CueParameters.Instigator = Interactor;
 	CueParameters.Location = GetActorLocation();
 	ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Interaction_SecretDiary, CueParameters);
-	// 파괴
-	Destroy();
+
+	// 1초 뒤 파괴
+	if (bDestroyPending) return;
+	bDestroyPending = true;
+
+	TWeakObjectPtr<ASecretDiaryActor> WeakThis(this);
+	GetWorldTimerManager().SetTimer(DestroyTimerHandle, FTimerDelegate::CreateLambda([WeakThis]()
+	{
+		if (ASecretDiaryActor* StrongThis = WeakThis.Get())
+		{
+			StrongThis->Destroy();
+		}
+	}), 1.0f, false);
 }

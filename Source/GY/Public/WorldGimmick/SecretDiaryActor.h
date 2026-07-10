@@ -34,4 +34,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="GY")
 	TArray<FGameplayTag> DiaryTags;
+
+private:
+	// Destroy() 중복 예약 방지
+	bool bDestroyPending = false;
+
+	FTimerHandle DestroyTimerHandle;
 };
