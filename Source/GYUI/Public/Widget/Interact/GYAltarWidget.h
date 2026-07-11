@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Core/GYActivatableWidget.h"
+#include "Widget/Interact/GYTimeRiftPanelWidget.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Interaction/AltarStorageComponent.h"
 #include "GYAltarWidget.generated.h"
@@ -15,7 +15,7 @@ class UButton;
  *
  */
 UCLASS()
-class GYUI_API UGYAltarWidget : public UGYActivatableWidget
+class GYUI_API UGYAltarWidget : public UGYTimeRiftPanelWidget
 {
 	GENERATED_BODY()
 
@@ -43,6 +43,10 @@ public:
 	void OnCloseButtonClicked();
 	UFUNCTION()
 	void OnExecuteButtonClicked();
+
+protected:
+	virtual FGameplayTag GetExitEventTag() const override;
+
 private:
 	void EnsureSlots();
 	void Refresh();

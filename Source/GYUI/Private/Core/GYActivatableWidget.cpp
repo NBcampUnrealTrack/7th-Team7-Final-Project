@@ -1,6 +1,10 @@
 ﻿#include "Core/GYActivatableWidget.h"
 #include "CommonInputTypeEnum.h"
 #include "Core/GYUIManagerSubsystem.h"
+#include "Engine/LocalPlayer.h"
+#include "InputCoreTypes.h"
+#include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "Player/GYPlayerState.h"
 
 UGYActivatableWidget::UGYActivatableWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -38,7 +42,46 @@ void UGYActivatableWidget::NativeConstruct()
 	{
 		if (Entry.StateTag.IsValid() && Entry.WidgetClass)
 		{
-			UIManager->RegisterTagDrivenWidget(Entry.StateTag, Entry.LayerTag, Entry.WidgetClass);
+			UIManager->RegisterTagDrivenWidget(Entry.StateTag, Entry.LayerTag, Entry.WidgetClass, Entry.bBlocksOtherWidgets);
 		}
 	}
+}
+
+FReply UGYActivatableWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	if (InKeyEvent.GetKey() == EKeys::Escape) { HandleBackAction(); return FReply::Handled(); }
+	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+bool UGYActivatableWidget::NativeOnHandleBackAction()
+{
+	HandleBackAction();
+	return true;
+}
+
+void UGYActivatableWidget::HandleBackAction()
+{
+	if (BackActionEventTag.IsValid())
+	{
+		SendServerGameplayEvent(BackActionEventTag);
+		return;
+	}
+	RequestUIBack();
+}
+
+void UGYActivatableWidget::RequestUIBack()
+{
+	if (ULocalPlayer* LP = GetOwningLocalPlayer())
+		if (UGYUIManagerSubsystem* UI = LP->GetSubsystem<UGYUIManagerSubsystem>())
+			UI->HandleUIBack();
+}
+
+void UGYActivatableWidget::SendServerGameplayEvent(FGameplayTag EventTag)
+{
+	if (!EventTag.IsValid()) return;
+	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState());
+	if (!PS) return;
+	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
+	if (!ASC) return;
+	ASC->Server_SendGameplayEvent(EventTag, FGameplayEventData());
 }

@@ -10,6 +10,7 @@ UGYEndingNarrativeWidget::UGYEndingNarrativeWidget(const FObjectInitializer& Obj
 {
 	InputMode = EGYWidgetInputMode::Menu;
 	SetIsFocusable(true);
+	bIsBackHandler = true;
 
 	AdvanceKeys = {
 		EKeys::LeftMouseButton,
@@ -71,12 +72,25 @@ FReply UGYEndingNarrativeWidget::NativeOnMouseButtonDown(const FGeometry& InGeom
 FReply UGYEndingNarrativeWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
 	const FKey Key = InKeyEvent.GetKey();
+
+	// ESC는 아무 동작 없이 소비 - 엔딩 연출 위젯이 닫히지 않도록
+	if (Key == EKeys::Escape)
+	{
+		return FReply::Handled();
+	}
+
 	if (AdvanceKeys.Num() == 0 || AdvanceKeys.Contains(Key))
 	{
 		RequestAdvance();
 		return FReply::Handled();
 	}
 	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+bool UGYEndingNarrativeWidget::NativeOnHandleBackAction()
+{
+	// ESC 액션을 소비만 하고 위젯은 닫지 않음
+	return true;
 }
 
 void UGYEndingNarrativeWidget::RequestAdvance()

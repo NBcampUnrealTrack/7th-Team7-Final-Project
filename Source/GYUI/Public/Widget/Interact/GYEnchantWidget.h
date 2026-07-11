@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Core/GYActivatableWidget.h"
+#include "Widget/Interact/GYTimeRiftPanelWidget.h"
 #include "GYEnchantWidget.generated.h"
 
 class UProgressBar;
@@ -17,7 +17,7 @@ class UGYItemInfoWidget;
  *
  */
 UCLASS()
-class GYUI_API UGYEnchantWidget : public UGYActivatableWidget
+class GYUI_API UGYEnchantWidget : public UGYTimeRiftPanelWidget
 {
 	GENERATED_BODY()
 public:
@@ -30,6 +30,8 @@ public:
 	void SetTarget(const FGuid& InstanceId);
 
 protected:
+	virtual FGameplayTag GetExitEventTag() const override;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UGYEnchantSlotWidget> EnchantSlotWidget;
 

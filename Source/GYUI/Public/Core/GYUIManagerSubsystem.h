@@ -45,7 +45,8 @@ public:
 	void RegisterTagDrivenWidget(
 		FGameplayTag StateTag,
 		FGameplayTag LayerTag,
-		TSubclassOf<UCommonActivatableWidget> WidgetClass);
+		TSubclassOf<UCommonActivatableWidget> WidgetClass,
+		bool bBlocksOtherWidgets = true);
 
 
 	/** PrimaryGameLayout 생성 후 화면 띄움 */
@@ -68,6 +69,26 @@ public:
 	/** 클래스 단위 토글 — 이미 떠 있으면 pop, 아니면 push */
 	UFUNCTION(BlueprintCallable, Category = "GY|UI", meta = (DeterminesOutputType = "WidgetClass"))
 	UCommonActivatableWidget* ToggleWidgetInLayer(FGameplayTag LayerTag, TSubclassOf<UCommonActivatableWidget> WidgetClass);
+
+	/** 현재 Menu 레이어에 열려 있는 일반 메뉴 위젯을 전부 닫음 */
+	UFUNCTION(BlueprintCallable, Category = "GY|UI")
+	void CloseAllMenus();
+
+	/** ESC/뒤로가기 단일 처리 */
+	UFUNCTION(BlueprintCallable, Category = "GY|UI")
+	void HandleUIBack();
+
+	/** UI가 잠겨 있는지 여부 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GY|UI")
+	bool IsSystemUIActive() const;
+
+	/** 시네마틱/연출 등 게임플레이 쪽에서 위젯 열기를 잠글 때 사용 */
+	UFUNCTION(BlueprintCallable, Category = "GY|UI")
+	void PushUIInteractionBlock(FGameplayTag Reason);
+
+	/** PushUIInteractionBlock 해제 */
+	UFUNCTION(BlueprintCallable, Category = "GY|UI")
+	void PopUIInteractionBlock(FGameplayTag Reason);
 
 	/** 현재 활성화된 PrimaryGameLayout 참조 반환 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GY|UI")
@@ -112,6 +133,8 @@ private:
 		TSubclassOf<UCommonActivatableWidget> WidgetClass;
 		TWeakObjectPtr<UCommonActivatableWidget> ActiveWidget;
 		FDelegateHandle DelegateHandle;
+		/** 이 위젯이 떠 있는 동안 일반 메뉴 열기를 막을지 */
+		bool bBlocksOtherWidgets = true;
 	};
 
 	TMap<FGameplayTag, FTagWidgetEntry> TagWidgetMap;
@@ -119,6 +142,40 @@ private:
 
 	/** 클래스 단위 토글 위젯 활성 상태 추적 */
 	TMap<TSubclassOf<UCommonActivatableWidget>, TWeakObjectPtr<UCommonActivatableWidget>> ToggleWidgetMap;
+
+	/** 현재 Menu 레이어에 열려 있는 일반 메뉴 위젯들 */
+	TArray<TWeakObjectPtr<UCommonActivatableWidget>> ActiveMenuWidgets;
+
+	/** 현재 떠 있는 시스템 위젯들 */
+	TArray<TWeakObjectPtr<UCommonActivatableWidget>> ActiveSystemWidgets;
+
+	/** 위젯이 아닌 게임플레이 잠금 사유 */
+	TSet<FGameplayTag> ActiveUIBlockReasons;
+
+	/** HandleUIBack 중복 처리 방지용 */
+	uint64 LastUIBackFrame = 0;
+
+	/** 정책 없이 레이어에 그대로 push */
+	UCommonActivatableWidget* PushWidgetRaw(FGameplayTag LayerTag,
+	                                        TSubclassOf<UCommonActivatableWidget> WidgetClass);
+
+	/** 시스템 위젯 push */
+	UCommonActivatableWidget* PushSystemWidget(FGameplayTag LayerTag,
+	                                           TSubclassOf<UCommonActivatableWidget> WidgetClass);
+
+	/** 일반 메뉴 위젯을 추적 목록에 등록 */
+	void TrackMenuWidget(UCommonActivatableWidget* Widget);
+
+	bool HasBlockingSystemWidget() const;
+
+	/** 이동, 공격을 막아야 하는 UI 상태인지 */
+	bool ShouldBlockGameplayInput() const;
+
+	/** 현재 UI 상태에 맞춰 이동, 공격 차단 태그를 로컬 ASC에 반영 */
+	void RefreshGameplayInputBlock();
+
+	/** State.UI.MenuOpen 태그를 실제로 붙였는지 추적 */
+	bool bGameplayInputBlockApplied = false;
 
 	void OnTagChanged(const FGameplayTag Tag, int32 NewCount);
 

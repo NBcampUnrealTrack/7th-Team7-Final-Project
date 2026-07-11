@@ -115,17 +115,6 @@ UWidget* UGYSettingsWidget::NativeGetDesiredFocusTarget() const
     return const_cast<UGYSettingsWidget*>(this);
 }
 
-FReply UGYSettingsWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
-{
-	// IMC가 미설정인 경우 대비한 ESC 폴백
-	if (InKeyEvent.GetKey() == EKeys::Escape)
-	{
-		DeactivateWidget();
-		return FReply::Handled();
-	}
-	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
-}
-
 void UGYSettingsWidget::ShowTab(EGYSettingsTab Tab)
 {
     if (TabSwitcher)

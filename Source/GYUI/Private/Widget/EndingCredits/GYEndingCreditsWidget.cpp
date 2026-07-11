@@ -14,6 +14,8 @@ UGYEndingCreditsWidget::UGYEndingCreditsWidget(const FObjectInitializer& ObjectI
 {
 	InputMode = EGYWidgetInputMode::Menu;
 	SetIsFocusable(true);
+
+	bIsBackHandler = true;
 }
 
 void UGYEndingCreditsWidget::NativeConstruct()
@@ -189,4 +191,20 @@ void UGYEndingCreditsWidget::Finish()
 		UGameplayMessageSubsystem::Get(World).BroadcastMessage(
 			GYGameplayTags::Message_Ending_CreditsFinished, Msg);
 	}
+}
+
+FReply UGYEndingCreditsWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	// ESC는 아무 동작 없이 소비
+	if (InKeyEvent.GetKey() == EKeys::Escape)
+	{
+		return FReply::Handled();
+	}
+	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+bool UGYEndingCreditsWidget::NativeOnHandleBackAction()
+{
+	// ESC 액션을 소비만 하고 위젯은 닫지 않음
+	return true;
 }

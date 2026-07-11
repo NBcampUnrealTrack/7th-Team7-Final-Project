@@ -24,6 +24,9 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry&, float InDeltaTime) override;
 
+	/** 사망/세계리셋 연출은 ESC로 닫히면 안 됨 */
+	virtual bool NativeOnHandleBackAction() override;
+
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UImage> Image_Background;
 

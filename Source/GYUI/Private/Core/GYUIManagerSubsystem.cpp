@@ -1,4 +1,5 @@
 ﻿#include "Core/GYUIManagerSubsystem.h"
+#include "CoreGlobals.h"
 #include "GYUI/Public/Core/GYPrimaryGameLayout.h"
 #include "Widgets/CommonActivatableWidgetContainer.h"
 #include "Core/GYUISettings.h"
@@ -115,50 +116,17 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		UGameplayMessageSubsystem& MSG = UGameplayMessageSubsystem::Get(World);
 
 		// 등록 리스너 해제, 바인딩 중복 방지
-		if (RegionEnterListenerHandle.IsValid())
-		{
-			MSG.UnregisterListener(RegionEnterListenerHandle);
-		}
-		if (RegionExitListenerHandle.IsValid())
-		{
-			MSG.UnregisterListener(RegionExitListenerHandle);
-		}
-		if (EndingStartedHandle.IsValid())
-		{
-			MSG.UnregisterListener(EndingStartedHandle);
-		}
-		if (EndingWaitingHandle.IsValid())
-		{
-			MSG.UnregisterListener(EndingWaitingHandle);
-		}
-		if (EndingNarrativeFinishedHandle.IsValid())
-		{
-			MSG.UnregisterListener(EndingNarrativeFinishedHandle);
-		}
-		if (EndingCinematicFinishedHandle.IsValid())
-		{
-			MSG.UnregisterListener(EndingCinematicFinishedHandle);
-		}
-		if (EndingCreditsFinishedHandle.IsValid())
-		{
-			MSG.UnregisterListener(EndingCreditsFinishedHandle);
-		}
-		if (ClockOverlayHandle.IsValid())
-		{
-			MSG.UnregisterListener(ClockOverlayHandle);
-		}
-		if (ToggleSettingsListenerHandle.IsValid())
-		{
-			MSG.UnregisterListener(ToggleSettingsListenerHandle);
-		}
-		if (EnterCinematicHandle.IsValid())
-		{
-			MSG.UnregisterListener(EnterCinematicHandle);
-		}
-		if (ReviveHoldHandle.IsValid())
-		{
-			MSG.UnregisterListener(ReviveHoldHandle);
-		}
+		if (RegionEnterListenerHandle.IsValid()) { MSG.UnregisterListener(RegionEnterListenerHandle); }
+		if (RegionExitListenerHandle.IsValid()) { MSG.UnregisterListener(RegionExitListenerHandle); }
+		if (EndingStartedHandle.IsValid()) { MSG.UnregisterListener(EndingStartedHandle); }
+		if (EndingWaitingHandle.IsValid()) { MSG.UnregisterListener(EndingWaitingHandle); }
+		if (EndingCinematicFinishedHandle.IsValid()) { MSG.UnregisterListener(EndingCinematicFinishedHandle); }
+		if (EndingNarrativeFinishedHandle.IsValid()) {MSG.UnregisterListener(EndingNarrativeFinishedHandle);}
+		if (EndingCreditsFinishedHandle.IsValid()) { MSG.UnregisterListener(EndingCreditsFinishedHandle); }
+		if (ClockOverlayHandle.IsValid()) { MSG.UnregisterListener(ClockOverlayHandle); }
+		if (ToggleSettingsListenerHandle.IsValid()) { MSG.UnregisterListener(ToggleSettingsListenerHandle); }
+		if (EnterCinematicHandle.IsValid()) { MSG.UnregisterListener(EnterCinematicHandle); }
+		if (ReviveHoldHandle.IsValid()) { MSG.UnregisterListener(ReviveHoldHandle); }
 
 		RegionEnterListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_Region_Entered, this, &UGYUIManagerSubsystem::HandleRegionEntered);
@@ -352,12 +320,16 @@ void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 	}
 
 	UpdateRevivalWidget();
+
+	bGameplayInputBlockApplied = false;
+	RefreshGameplayInputBlock();
 }
 
 void UGYUIManagerSubsystem::RegisterTagDrivenWidget(
 	FGameplayTag StateTag,
 	FGameplayTag LayerTag,
-	TSubclassOf<UCommonActivatableWidget> WidgetClass)
+	TSubclassOf<UCommonActivatableWidget> WidgetClass,
+	bool bBlocksOtherWidgets)
 {
 	// 똑같은 태그 존재 시 기존 구독 취소
 	if (FTagWidgetEntry* ExistingEntry = TagWidgetMap.Find(StateTag))
@@ -372,6 +344,7 @@ void UGYUIManagerSubsystem::RegisterTagDrivenWidget(
 	FTagWidgetEntry Entry;
 	Entry.LayerTag = LayerTag;
 	Entry.WidgetClass = WidgetClass;
+	Entry.bBlocksOtherWidgets = bBlocksOtherWidgets;
 
 	if (BoundASC.IsValid())
 	{
@@ -393,9 +366,10 @@ void UGYUIManagerSubsystem::OnTagChanged(const FGameplayTag Tag, int32 NewCount)
 	{
 		if (!Entry->ActiveWidget.IsValid())
 		{
-			UCommonActivatableWidget* Widget = PushWidgetToLayer(Entry->LayerTag, Entry->WidgetClass);
+			UCommonActivatableWidget* Widget = Entry->bBlocksOtherWidgets
+				? PushSystemWidget(Entry->LayerTag, Entry->WidgetClass)
+				: PushWidgetRaw(Entry->LayerTag, Entry->WidgetClass);
 			Entry->ActiveWidget = Widget;
-
 		}
 	}
 	else //위젯 pop
@@ -441,13 +415,107 @@ void UGYUIManagerSubsystem::RemovePrimaryGameLayout()
 	HUDWidget = nullptr; // 레이아웃과 함께 사라지는 HUD 참조도 초기화
 }
 
-UCommonActivatableWidget* UGYUIManagerSubsystem::PushWidgetToLayer(FGameplayTag LayerTag,
-                                                                   TSubclassOf<UCommonActivatableWidget> WidgetClass)
+UCommonActivatableWidget* UGYUIManagerSubsystem::PushWidgetRaw(FGameplayTag LayerTag, TSubclassOf<UCommonActivatableWidget> WidgetClass)
 {
 	if (!PrimaryGameLayout) return nullptr;
-
-	// 레이아웃의 내부 로직으로 위젯 Push
 	return PrimaryGameLayout->PushWidgetToLayer(LayerTag, WidgetClass);
+}
+
+UCommonActivatableWidget* UGYUIManagerSubsystem::PushWidgetToLayer(FGameplayTag LayerTag, TSubclassOf<UCommonActivatableWidget> WidgetClass)
+{
+	if (LayerTag != GYUILayerTags::UI_Layer_Menu)
+	{
+		return PushWidgetRaw(LayerTag, WidgetClass);
+	}
+	if (IsSystemUIActive())
+	{
+		return nullptr;
+	}
+	CloseAllMenus();
+
+	UCommonActivatableWidget* Widget = PushWidgetRaw(LayerTag, WidgetClass);
+	TrackMenuWidget(Widget);
+	return Widget;
+}
+
+UCommonActivatableWidget* UGYUIManagerSubsystem::PushSystemWidget(FGameplayTag LayerTag, TSubclassOf<UCommonActivatableWidget> WidgetClass)
+{
+	CloseAllMenus();
+	UCommonActivatableWidget* Widget = PushWidgetRaw(LayerTag, WidgetClass);
+	if (Widget)
+	{
+		ActiveSystemWidgets.Add(Widget);
+		RefreshGameplayInputBlock();
+	}
+	return Widget;
+}
+
+void UGYUIManagerSubsystem::TrackMenuWidget(UCommonActivatableWidget* Widget)
+{
+	if (!Widget) return;
+
+	ActiveMenuWidgets.Add(Widget);
+	RefreshGameplayInputBlock(); //이동, 공격 차단
+
+	Widget->OnDeactivated().AddWeakLambda(this, [this, Widget]()
+	{
+		ActiveMenuWidgets.RemoveAll([Widget](const TWeakObjectPtr<UCommonActivatableWidget>& Entry)
+		{
+			return !Entry.IsValid() || Entry.Get() == Widget;
+		});
+		RefreshGameplayInputBlock(); // 마지막 메뉴가 닫히면 차단 해제
+	});
+}
+
+void UGYUIManagerSubsystem::CloseAllMenus()
+{
+	if (ActiveMenuWidgets.Num() == 0) return;
+
+	TArray<TWeakObjectPtr<UCommonActivatableWidget>> Snapshot = MoveTemp(ActiveMenuWidgets);
+	ActiveMenuWidgets.Reset();
+
+	for (const TWeakObjectPtr<UCommonActivatableWidget>& Entry : Snapshot)
+	{
+		if (Entry.IsValid())
+		{
+			PopWidget(Entry.Get());
+		}
+	}
+
+	RefreshGameplayInputBlock();
+}
+
+bool UGYUIManagerSubsystem::HasBlockingSystemWidget() const
+{
+	if (ActiveUIBlockReasons.Num() > 0) return true; // 시네마틱/네러티브
+	for (const TWeakObjectPtr<UCommonActivatableWidget>& W : ActiveSystemWidgets)
+	{
+		if (W.IsValid()) return true; // 시간의 틈, 스턴, 세계리셋, 엔딩
+	}
+	return false;
+}
+
+bool UGYUIManagerSubsystem::ShouldBlockGameplayInput() const
+{
+	return ActiveMenuWidgets.Num() > 0 || HasBlockingSystemWidget();
+}
+
+void UGYUIManagerSubsystem::RefreshGameplayInputBlock()
+{
+	if (!BoundASC.IsValid()) return;
+
+	const bool bShouldBlock = ShouldBlockGameplayInput();
+	if (bShouldBlock == bGameplayInputBlockApplied) return;
+
+	bShouldBlock ? BoundASC->AddLooseGameplayTag(GYStateTags::State_UI_MenuOpen)
+	             : BoundASC->RemoveLooseGameplayTag(GYStateTags::State_UI_MenuOpen);
+	bGameplayInputBlockApplied = bShouldBlock;
+}
+
+bool UGYUIManagerSubsystem::IsSystemUIActive() const
+{
+	if (ActiveRevivalWidget.IsValid() || bReviveHoldActive) return true;
+	return HasBlockingSystemWidget();
 }
 
 void UGYUIManagerSubsystem::PopWidget(UCommonActivatableWidget* Widget)
@@ -455,6 +523,14 @@ void UGYUIManagerSubsystem::PopWidget(UCommonActivatableWidget* Widget)
 	if (PrimaryGameLayout && Widget)
 	{
 		PrimaryGameLayout->RemoveWidgetFromLayer(Widget);
+	}
+	if (Widget)
+	{
+		const int32 Removed = ActiveSystemWidgets.RemoveAll([Widget](const TWeakObjectPtr<UCommonActivatableWidget>& E)
+		{
+			return !E.IsValid() || E.Get() == Widget;
+		});
+		if (Removed > 0) RefreshGameplayInputBlock();
 	}
 }
 
@@ -546,6 +622,13 @@ void UGYUIManagerSubsystem::UnbindASC()
 
 		StopClockOverlay();
 		UnregisterStatBroadcast();
+
+		// 이 ASC에 붙였던 UI 차단 태그 정리
+		if (bGameplayInputBlockApplied)
+		{
+			BoundASC->RemoveLooseGameplayTag(GYStateTags::State_UI_MenuOpen);
+			bGameplayInputBlockApplied = false;
+		}
 	}
 	BoundASC = nullptr;
 }
@@ -648,7 +731,8 @@ void UGYUIManagerSubsystem::HandleRegionEntered(FGameplayTag, const FGYRegionEnt
 {
 	ULocalPlayer* LP = GetLocalPlayer();
 	APlayerController* LocalPC = LP ? LP->GetPlayerController(GetWorld()) : nullptr;
-	APawn* LocalPawn = LocalPC ? LocalPC->GetPawn() : nullptr;if (!LocalPawn || Msg.Pawn.Get() != LocalPawn) return;
+	APawn* LocalPawn = LocalPC ? LocalPC->GetPawn() : nullptr;
+	if (!LocalPawn || Msg.Pawn.Get() != LocalPawn) return;
 
 	ActiveRegionId = Msg.RegionId;
 	if (IsValid(Msg.BossActor))
@@ -697,7 +781,7 @@ void UGYUIManagerSubsystem::PlayClockOverlay(float HoldDuration, FGameplayTag /*
 
 	StopClockOverlay();
 
-	UCommonActivatableWidget* W = PushWidgetToLayer(GYUILayerTags::UI_Layer_Menu, WidgetClass);
+	UCommonActivatableWidget* W = PushSystemWidget(GYUILayerTags::UI_Layer_Menu, WidgetClass);
 	UGYWorldResetWidget* Overlay = Cast<UGYWorldResetWidget>(W);
 	if (!Overlay) return;
 
@@ -747,7 +831,7 @@ void UGYUIManagerSubsystem::HandleEndingWaiting(FGameplayTag, const FGYInteracti
 				UClass* WidgetClass = Settings ? Settings->InteractionWaitingWidgetClass.LoadSynchronous() : nullptr;
 				if (WidgetClass)
 				{
-					UCommonActivatableWidget* W = PushWidgetToLayer(GYUILayerTags::UI_Layer_Menu, WidgetClass);
+					UCommonActivatableWidget* W = PushSystemWidget(GYUILayerTags::UI_Layer_Menu, WidgetClass);
 					ActiveWaitingWidget = Cast<UGYInteractionWaitingWidget>(W);
 				}
 			}
@@ -858,7 +942,7 @@ void UGYUIManagerSubsystem::StartEndingCredits()
 		PrimaryGameLayout->ClearAllLayers();
 	}
 
-	UCommonActivatableWidget* Widget = PushWidgetToLayer(GYUILayerTags::UI_Layer_Menu, WidgetClass);
+	UCommonActivatableWidget* Widget = PushSystemWidget(GYUILayerTags::UI_Layer_Menu, WidgetClass);
 	ActiveCreditsWidget = Widget;
 }
 
@@ -888,6 +972,26 @@ void UGYUIManagerSubsystem::TravelToMainMenu() const
 
 void UGYUIManagerSubsystem::HandleToggleSettings(FGameplayTag, const FGYToggleSettingsMessage&)
 {
+	HandleUIBack(); // ESC 키 - 뒤로가기 처리
+}
+
+void UGYUIManagerSubsystem::HandleUIBack()
+{
+	// ESC가 두 경로로 들어와도 한 프레임에 한 번만 처리
+	if (GFrameCounter == LastUIBackFrame) return;
+	LastUIBackFrame = GFrameCounter;
+
+	// 시스템 UI 중엔 무시
+	if (IsSystemUIActive()) return;
+
+	// 열려 있는 메뉴가 있으면 전부 닫고 끝
+	if (ActiveMenuWidgets.Num() > 0)
+	{
+		CloseAllMenus();
+		return;
+	}
+
+	// 아무것도 없을 때만 설정창 토글
 	const UGYUISettings* UISettings = GetDefault<UGYUISettings>();
 	if (!UISettings) return;
 
@@ -897,8 +1001,33 @@ void UGYUIManagerSubsystem::HandleToggleSettings(FGameplayTag, const FGYToggleSe
 	ToggleWidgetInLayer(GYUILayerTags::UI_Layer_Menu, Class);
 }
 
+void UGYUIManagerSubsystem::PushUIInteractionBlock(FGameplayTag Reason)
+{
+	if (!Reason.IsValid()) return;
+
+	ActiveUIBlockReasons.Add(Reason);
+	CloseAllMenus();
+	RefreshGameplayInputBlock();
+}
+
+void UGYUIManagerSubsystem::PopUIInteractionBlock(FGameplayTag Reason)
+{
+	ActiveUIBlockReasons.Remove(Reason);
+	RefreshGameplayInputBlock();
+}
+
 void UGYUIManagerSubsystem::HandleEnterCinematic(FGameplayTag, const FGYCinematicMessage& Msg)
 {
+	// 시네마틱/엔딩 네러티브 동안 위젯 열기 잠금
+	if (Msg.bIsPlaying)
+	{
+		PushUIInteractionBlock(GYGameplayTags::Message_Cinematic_State);
+	}
+	else
+	{
+		PopUIInteractionBlock(GYGameplayTags::Message_Cinematic_State);
+	}
+
 	if (!PrimaryGameLayout) return;
 
 	UCommonActivatableWidgetContainerBase* Layer = PrimaryGameLayout->GetLayerWidget(GYUILayerTags::UI_Layer_Game);
@@ -929,6 +1058,7 @@ void UGYUIManagerSubsystem::UpdateRevivalWidget()
 			UClass* WidgetClass = Settings ? Settings->RevivalWidgetClass.LoadSynchronous() : nullptr;
 			if (PC && WidgetClass)
 			{
+				CloseAllMenus();
 				UCommonActivatableWidget* W = CreateWidget<UCommonActivatableWidget>(PC, WidgetClass);
 				if (W)
 				{

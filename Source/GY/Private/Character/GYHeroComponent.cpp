@@ -27,6 +27,7 @@
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "UI/GYUIMessages.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
+#include "Core/GameplayTags/StateTags.h"
 
 // 이 컴포넌트의 이름표는 "Hero"로 지정합니다.
 const FName UGYHeroComponent::NAME_ActorFeatureName("Hero");
@@ -228,6 +229,12 @@ bool UGYHeroComponent::IsInputBlocked() const
 
 	UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent();
 	if (!ASC) return false;
+
+	// UI 메뉴가 열려 있으면 이동, 공격 차단
+	if (ASC->HasMatchingGameplayTag(GYStateTags::State_UI_MenuOpen))
+	{
+		return true;
+	}
 
 	UGYPawnExtensionComponent* ExtComp = Pawn->FindComponentByClass<UGYPawnExtensionComponent>();
 	const UGYPawnData* PawnData = ExtComp ? ExtComp->GetPawnData() : nullptr;

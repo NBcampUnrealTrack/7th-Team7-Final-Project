@@ -43,4 +43,5 @@ namespace GYStateTags
 
 	UE_DEFINE_GAMEPLAY_TAG(State_ActivityPoints_Used, "State.ActivityPoints.Used")
 
+	UE_DEFINE_GAMEPLAY_TAG(State_UI_MenuOpen, "State.UI.MenuOpen");
 }

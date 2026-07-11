@@ -141,12 +141,7 @@ void UGYEnchantWidget::NativeDestruct()
 
 void UGYEnchantWidget::OnCloseButtonClicked()
 {
-	AGYPlayerState* PS = Cast<AGYPlayerState>(GetOwningPlayerState());
-	if (!PS) return;
-	UGYAbilitySystemComponent* ASC = Cast<UGYAbilitySystemComponent>(PS->GetAbilitySystemComponent());
-	if (!ASC) return;
-
-	ASC->Server_SendGameplayEvent(GYGameplayTags::Event_TimeRift_Enchant_Exit, FGameplayEventData());
+	RequestExit();
 }
 
 void UGYEnchantWidget::HandleInventoryItemClicked(FGuid InstanceId)
@@ -195,6 +190,11 @@ void UGYEnchantWidget::OnExecuteButtonClicked()
 	{
 		InventoryComponent->Server_RequestEnchant(EnchantSlotWidget->GetItemInstanceId());
 	}
+}
+
+FGameplayTag UGYEnchantWidget::GetExitEventTag() const
+{
+	return GYGameplayTags::Event_TimeRift_Enchant_Exit;
 }
 
 #undef LOCTEXT_NAMESPACE

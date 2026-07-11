@@ -25,6 +25,8 @@ protected:
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
+	virtual bool NativeOnHandleBackAction() override;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Narrative")
 	TArray<FText> Lines;
 
