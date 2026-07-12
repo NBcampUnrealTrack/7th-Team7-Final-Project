@@ -41,11 +41,26 @@ void UGYTimeRiftWidget::NativeConstruct()
 void UGYTimeRiftWidget::NativeDestruct()
 {
 	Super::NativeDestruct();
-	ExitButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnExitButtonClicked);
-	RestButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnRestButtonClicked);
-	AltarButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnAltarButtonClicked);
-	EnchantButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnEnchantButtonClicked);
-	SkillTreeButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnSkillTreeButtonClicked);
+	if (ExitButton != nullptr)
+	{
+		ExitButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnExitButtonClicked);
+	}
+	if (RestButton != nullptr)
+	{
+		RestButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnRestButtonClicked);
+	}
+	if (AltarButton != nullptr)
+	{
+		AltarButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnAltarButtonClicked);
+	}
+	if (EnchantButton != nullptr)
+	{
+		EnchantButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnEnchantButtonClicked);
+	}
+	if (SkillTreeButton != nullptr)
+	{
+		SkillTreeButton->OnClicked.RemoveDynamic(this, &UGYTimeRiftWidget::OnSkillTreeButtonClicked);
+	}
 }
 
 void UGYTimeRiftWidget::OnExitButtonClicked()
