@@ -1,5 +1,6 @@
 #include "World/VolumeActor/GYBossTriggerVolume.h"
 #include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "UI/GYUIMessages.h"
@@ -28,6 +29,7 @@ void AGYBossTriggerVolume::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		World->GetTimerManager().ClearTimer(ServerResolveTimer);
 		World->GetTimerManager().ClearTimer(ShowRetryTimer);
 	}
+	StopInsideCheck();
 	HideBoss();
 	Super::EndPlay(EndPlayReason);
 }
@@ -48,6 +50,7 @@ void AGYBossTriggerVolume::HandlePawnEntered(APawn* Pawn)
 	if (Pawn->IsLocallyControlled())
 	{
 		bLocalPlayerInside = true;
+		TrackedLocalPawn = Pawn;
 		ShowRetryCount = 0;
 		TryShowBossLocal();
 	}
@@ -55,9 +58,10 @@ void AGYBossTriggerVolume::HandlePawnEntered(APawn* Pawn)
 
 void AGYBossTriggerVolume::HandlePawnExited(APawn* Pawn)
 {
-	if (!IsLocalPlayerPawn(Pawn)) return;
+	if (!IsLocalPlayerPawn(Pawn) && Pawn != TrackedLocalPawn.Get()) return;
 
 	bLocalPlayerInside = false;
+	TrackedLocalPawn = nullptr;
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(ShowRetryTimer);
@@ -138,11 +142,15 @@ void AGYBossTriggerVolume::ShowBoss(AGYEnemyCharacterBase* Boss)
 
 	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
 	bShown = true;
+
+	StartInsideCheck();
 }
 
 void AGYBossTriggerVolume::HideBoss()
 {
 	ShowRetryCount = 0;
+	StopInsideCheck();
+	TrackedLocalPawn = nullptr;
 
 	if (!bShown) return;
 	bShown = false;
@@ -155,4 +163,59 @@ void AGYBossTriggerVolume::HideBoss()
 	State.TargetBoss = nullptr;
 
 	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
+}
+
+APawn* AGYBossTriggerVolume::GetLocalPlayerPawn() const
+{
+	UWorld* World = GetWorld();
+	if (!World) return nullptr;
+
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APlayerController* PC = Cast<APlayerController>(*It))
+		{
+			if (PC->IsLocalController())
+			{
+				return PC->GetPawn();
+			}
+		}
+	}
+	return nullptr;
+}
+
+void AGYBossTriggerVolume::StartInsideCheck()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	World->GetTimerManager().SetTimer(InsideCheckTimer,
+		FTimerDelegate::CreateUObject(this, &AGYBossTriggerVolume::VerifyLocalPlayerStillInside),
+		InsideCheckInterval, true);
+}
+
+void AGYBossTriggerVolume::StopInsideCheck()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(InsideCheckTimer);
+	}
+}
+
+void AGYBossTriggerVolume::VerifyLocalPlayerStillInside()
+{
+	if (!bShown) { StopInsideCheck(); return; }
+
+	APawn* LocalPawn = GetLocalPlayerPawn();
+
+	const bool bInside = LocalPawn
+		&& (IsPawnOverlapping(LocalPawn) || IsLocationInside(LocalPawn->GetActorLocation()));
+
+	if (!bInside)
+	{
+		bLocalPlayerInside = false;
+		HideBoss();
+		return;
+	}
+	TrackedLocalPawn = LocalPawn;
+	bLocalPlayerInside = true;
 }

@@ -34,6 +34,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Boss")
 	int32 ResolveRetryMaxCount = 40;
 
+	UPROPERTY(EditAnywhere, Category = "Boss", meta = (ClampMin = "0.05"))
+	float InsideCheckInterval = 0.5f;
+
 private:
 	UPROPERTY(ReplicatedUsing = OnRep_ResolvedBoss)
 	TObjectPtr<AGYEnemyCharacterBase> ResolvedBoss;
@@ -48,6 +51,12 @@ private:
 
 	bool IsLocalPlayerPawn(const APawn* Pawn) const;
 
+	APawn* GetLocalPlayerPawn() const;
+
+	void StartInsideCheck();
+	void StopInsideCheck();
+	void VerifyLocalPlayerStillInside();
+
 	bool bLocalPlayerInside = false;
 	bool bShown = false;
 
@@ -56,4 +65,7 @@ private:
 
 	FTimerHandle ServerResolveTimer;
 	FTimerHandle ShowRetryTimer;
+	FTimerHandle InsideCheckTimer;
+
+	TWeakObjectPtr<APawn> TrackedLocalPawn;
 };
