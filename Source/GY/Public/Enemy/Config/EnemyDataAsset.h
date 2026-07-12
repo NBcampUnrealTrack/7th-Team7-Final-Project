@@ -17,8 +17,8 @@ enum class EEnemyType : uint8
 	None			UMETA(DisplayName = "None"),
 	FengMao			UMETA(DisplayName = "FengMao"),
 	Sparrow			UMETA(DisplayName = "Sparrow"),
-	IggyScorch			UMETA(DisplayName = "IggyScorch"),
-	GreyStone			UMETA(DisplayName = "GreyStone"),
+	IggyScorch		UMETA(DisplayName = "IggyScorch"),
+	GreyStone		UMETA(DisplayName = "GreyStone"),
 	Melee			UMETA(DisplayName = "Melee"),
 	Ranged			UMETA(DisplayName = "Ranged"),
 	BossFlower		UMETA(DisplayName = "BossFlower"),
@@ -26,6 +26,7 @@ enum class EEnemyType : uint8
 	PlantRoot		UMETA(DisplayName = "PlantRoot"),
 	Knight			UMETA(DisplayName = "Knight"),
 	BossBTTest		UMETA(DisplayName = "BossBTTest"),
+	Morigesh		UMETA(DisplayName = "Morigesh"),
 };
 
 USTRUCT(BlueprintType)

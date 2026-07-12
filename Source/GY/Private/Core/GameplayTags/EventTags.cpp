@@ -50,6 +50,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_FireBreath_Start, "Event.Enemy.FireBreath.Start")
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_FireBreath_End, "Event.Enemy.FireBreath.End")
 	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_Combo_Branch, "Event.Enemy.Combo.Branch")
+	UE_DEFINE_GAMEPLAY_TAG(Event_Enemy_Marker_Arrived, "Event.Enemy.Marker.Arrived")
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Exit, "Event.TimeRift.Exit");
 	UE_DEFINE_GAMEPLAY_TAG(Event_TimeRift_Rest, "Event.TimeRift.Rest");

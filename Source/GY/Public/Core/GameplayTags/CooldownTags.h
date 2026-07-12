@@ -60,4 +60,6 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Enemy_PlantRoot_Attack02)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Enemy_PlantRoot_Attack03)
 
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Enemy_Morigesh_Attack01)
+
 }

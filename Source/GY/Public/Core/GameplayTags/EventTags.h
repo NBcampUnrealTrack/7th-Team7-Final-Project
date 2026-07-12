@@ -61,6 +61,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_FireBreath_Start)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_FireBreath_End)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Combo_Branch)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Marker_Arrived)
 
 	//TimeRift
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_TimeRift_Rest)

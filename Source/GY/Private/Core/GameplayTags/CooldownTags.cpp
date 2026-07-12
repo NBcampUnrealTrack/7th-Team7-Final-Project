@@ -56,4 +56,6 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_PlantRoot_Attack02, "Cooldown.Enemy.PlantRoot.Attack02");
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_PlantRoot_Attack03, "Cooldown.Enemy.PlantRoot.Attack03");
 
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Morigesh_Attack01, "Cooldown.Enemy.Morigesh.Attack01")
+
 }

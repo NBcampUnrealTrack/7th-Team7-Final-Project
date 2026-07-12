@@ -9,6 +9,23 @@
 #include "Logging/GYLogManager.h"
 #include "NiagaraFunctionLibrary.h"
 
+void AAreaImpactProjectile::Detonate(AActor* InInstigator)
+{
+	if (!HasAuthority()) return;
+	if (bImpacted) return;
+
+	InstigatorActor = InInstigator;
+	bImpacted = true;
+
+	if (ProjectileMovement)
+	{
+		ProjectileMovement->StopMovementImmediately();
+	}
+
+	TriggerImpact(GetActorLocation());
+	SetLifeSpan(PostImpactLifeTime);
+}
+
 void AAreaImpactProjectile::OnProjectileOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                                 UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
