@@ -735,18 +735,6 @@ void UGYUIManagerSubsystem::HandleRegionEntered(FGameplayTag, const FGYRegionEnt
 	if (!LocalPawn || Msg.Pawn.Get() != LocalPawn) return;
 
 	ActiveRegionId = Msg.RegionId;
-	if (IsValid(Msg.BossActor))
-	{
-		// 재진입 시 없는 보스의 HP 위젯 다시 뜨는 문제 방지
-		const AGYEnemyCharacterBase* Boss = Cast<AGYEnemyCharacterBase>(Msg.BossActor);
-		if (Boss && Boss->IsDead()) return;
-
-		FGYBossStateMessage State;
-		State.bVisible = true;
-		State.TargetBoss = Msg.BossActor;
-
-		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
-	}
 }
 
 void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegionExitedMessage& Msg)
@@ -759,12 +747,6 @@ void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegion
 	if (Msg.RegionId == ActiveRegionId)
 	{
 		ActiveRegionId = FGameplayTag(); // 지역 정보 초기화
-
-		// UI 끄기
-		FGYBossStateMessage State;
-		State.bVisible = false;
-		State.TargetBoss = nullptr;
-		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
 	}
 }
 
