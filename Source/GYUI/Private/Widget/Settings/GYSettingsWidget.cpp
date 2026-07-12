@@ -290,6 +290,8 @@ void UGYSettingsWidget::HandleApplyGraphicsClicked()
     {
         Settings->ApplyAllSettings(this);
         Settings->SaveSettings();
+
+    	InitGraphicsTab();
     }
 }
 
