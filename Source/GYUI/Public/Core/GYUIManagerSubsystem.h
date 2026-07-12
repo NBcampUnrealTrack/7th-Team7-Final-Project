@@ -26,6 +26,7 @@ struct FGYWorldResetMessage;
 struct FGYClockOverlayMessage;
 struct FGYReviveHoldMessage;
 struct FGYEndingNarrativeFinishedMessage;
+struct FGYBossStateMessage;
 /**
  * 로컬마다 생성, 관리되는 UI 총괄 매니저
  */
@@ -97,6 +98,10 @@ public:
 	/** 어디서든 호출 가능한 정적 접근자 */
 	UFUNCTION(BlueprintCallable, Category = "GY|UI", meta = (WorldContext = "WorldContextObject"))
 	static UGYUIManagerSubsystem* Get(const UObject* WorldContextObject);
+
+	/** 로컬 플레이어가 보스전 중인지 여부 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GY|UI")
+	bool IsBossFightActive() const { return bBossFightActive; }
 
 	/** 캐시된 이름 반환 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GY|UI")
@@ -230,6 +235,11 @@ private:
 	FDelegateHandle DeathTagHandle;
 	FGameplayMessageListenerHandle ClockOverlayHandle;
 	TWeakObjectPtr<UGYWorldResetWidget> ActiveClockOverlayWidget;
+
+	/** 보스전 상태 추적 */
+	void HandleBossState(FGameplayTag, const FGYBossStateMessage& Msg);
+	FGameplayMessageListenerHandle BossStateListenerHandle;
+	bool bBossFightActive = false;
 
 	/** 엔딩 흐름 */
 	void HandleEndingStarted(FGameplayTag, const FGYEndingStartedMessage& Msg);

@@ -46,6 +46,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 				MSG->UnregisterListener(EndingNarrativeFinishedHandle);
 				MSG->UnregisterListener(EndingCreditsFinishedHandle);
 				MSG->UnregisterListener(ClockOverlayHandle);
+				MSG->UnregisterListener(BossStateListenerHandle);
 				MSG->UnregisterListener(ToggleSettingsListenerHandle);
 				MSG->UnregisterListener(EnterCinematicHandle);
 				MSG->UnregisterListener(ReviveHoldHandle);
@@ -124,6 +125,7 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		if (EndingNarrativeFinishedHandle.IsValid()) {MSG.UnregisterListener(EndingNarrativeFinishedHandle);}
 		if (EndingCreditsFinishedHandle.IsValid()) { MSG.UnregisterListener(EndingCreditsFinishedHandle); }
 		if (ClockOverlayHandle.IsValid()) { MSG.UnregisterListener(ClockOverlayHandle); }
+		if (BossStateListenerHandle.IsValid()) { MSG.UnregisterListener(BossStateListenerHandle); }
 		if (ToggleSettingsListenerHandle.IsValid()) { MSG.UnregisterListener(ToggleSettingsListenerHandle); }
 		if (EnterCinematicHandle.IsValid()) { MSG.UnregisterListener(EnterCinematicHandle); }
 		if (ReviveHoldHandle.IsValid()) { MSG.UnregisterListener(ReviveHoldHandle); }
@@ -144,6 +146,8 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 			GYGameplayTags::Message_Ending_CreditsFinished, this, &UGYUIManagerSubsystem::HandleEndingCreditsFinished);
 		ClockOverlayHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_UI_ClockOverlay, this, &UGYUIManagerSubsystem::HandleClockOverlay);
+		BossStateListenerHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_Boss_State, this, &UGYUIManagerSubsystem::HandleBossState);
 		ToggleSettingsListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_UI_ToggleSettings, this, &UGYUIManagerSubsystem::HandleToggleSettings);
 		EnterCinematicHandle = MSG.RegisterListener(
@@ -755,8 +759,18 @@ void UGYUIManagerSubsystem::HandleClockOverlay(FGameplayTag, const FGYClockOverl
 	PlayClockOverlay(Msg.HoldDuration, Msg.Reason);
 }
 
-void UGYUIManagerSubsystem::PlayClockOverlay(float HoldDuration, FGameplayTag /*Reason*/)
+void UGYUIManagerSubsystem::HandleBossState(FGameplayTag, const FGYBossStateMessage& Msg)
 {
+	bBossFightActive = Msg.bVisible;
+}
+
+void UGYUIManagerSubsystem::PlayClockOverlay(float HoldDuration, FGameplayTag Reason)
+{
+	if (bBossFightActive && Reason != GYStateTags::State_Life_Dead)
+	{
+		return;
+	}
+
 	const UGYUISettings* Settings = GetDefault<UGYUISettings>();
 	UClass* WidgetClass = Settings ? Settings->WorldResetWidgetClass.LoadSynchronous() : nullptr;
 	if (!WidgetClass) return;
