@@ -11015,6 +11015,11 @@
                                                                                                         "by":  "CM",
                                                                                                         "at":  "2026-07-10 21:31:43",
                                                                                                         "note":  null
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-13 18:10:44",
+                                                                                                        "note":  ""
                                                                                                     }
                                                                                                 ]
                                                                                 },
@@ -11038,6 +11043,11 @@
                                                                                                   {
                                                                                                       "by":  "rhkrd",
                                                                                                       "at":  "2026-07-09 14:45:59",
+                                                                                                      "note":  ""
+                                                                                                  },
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-13 18:10:44",
                                                                                                       "note":  ""
                                                                                                   }
                                                                                               ]
@@ -12600,6 +12610,42 @@
                                                                                                                                                  }
                                                                                                                                              ]
                                                                                                                              },
+                   "EssentialAnimation/GreatSword/Animation/UE5/Montage/Dodge/AM_GY_ChapterBoss_GreatSword_Dodge02.uasset":  {
+                                                                                                                                 "history":  [
+                                                                                                                                                 {
+                                                                                                                                                     "by":  "rhkrd",
+                                                                                                                                                     "at":  "2026-07-13 18:10:44",
+                                                                                                                                                     "note":  ""
+                                                                                                                                                 }
+                                                                                                                                             ]
+                                                                                                                             },
+                   "MadeNiagara/NS_Dark_Mist_3.uasset":  {
+                                                             "history":  [
+                                                                             {
+                                                                                 "by":  "rhkrd",
+                                                                                 "at":  "2026-07-13 18:10:44",
+                                                                                 "note":  ""
+                                                                             }
+                                                                         ]
+                                                         },
+                   "MadeNiagara/NS_FloorDust.uasset":  {
+                                                           "history":  [
+                                                                           {
+                                                                               "by":  "rhkrd",
+                                                                               "at":  "2026-07-13 18:10:44",
+                                                                               "note":  ""
+                                                                           }
+                                                                       ]
+                                                       },
+                   "MadeNiagara/NS_LightningCasting.uasset":  {
+                                                                  "history":  [
+                                                                                  {
+                                                                                      "by":  "rhkrd",
+                                                                                      "at":  "2026-07-13 18:10:44",
+                                                                                      "note":  ""
+                                                                                  }
+                                                                              ]
+                                                              },
                    "Medieval_Warrior/Animation/GreatSword/1H_Attack/UE5_1H_Attack_01_Seq.uasset":  {
                                                                                                        "history":  [
                                                                                                                        {
@@ -22772,6 +22818,15 @@
                                                                                                            }
                                                                                                        ]
                                                                                        },
+                   "Medieval_Warrior/Meshes/Full/SKEL_Medieval_Warrior_Skeleton.uasset":  {
+                                                                                              "history":  [
+                                                                                                              {
+                                                                                                                  "by":  "rhkrd",
+                                                                                                                  "at":  "2026-07-13 18:10:44",
+                                                                                                                  "note":  ""
+                                                                                                              }
+                                                                                                          ]
+                                                                                          },
                    "Medieval_Warzone/Meshes/SM_Anvil.uasset":  {
                                                                    "history":  [
                                                                                    {
