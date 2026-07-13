@@ -85,4 +85,9 @@ namespace GYGameplayTags
 
 	// 폭탄 폭발
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Bomb_Explosion, "GameplayCue.Enemy.Bomb.Explosion");
+
+	// 퀘스트
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Quest_Completed, "GameplayCue.Quest.Completed");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_World_Reset, "GameplayCue.World.Reset");
 }

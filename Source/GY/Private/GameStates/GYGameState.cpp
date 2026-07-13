@@ -6,7 +6,10 @@
 #include "UI/GYUIMessages.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "Experience/GYExperienceManagerComponent.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 
 AGYGameState::AGYGameState()
 {
@@ -124,6 +127,19 @@ void AGYGameState::NotifyWorldResetAll(float DurationOverride)
 {
 	if (!HasAuthority()) return;
 	Multicast_PlayWorldResetSequence(DurationOverride);
+
+	// 월드 리셋 이펙트 - 월드 파티션 없으면 실행 안됨(위에서 조건 짤림)
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(*It);
+		APawn* Pawn = PlayerController ? PlayerController->GetPawn() : nullptr;
+		IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(Pawn);
+		UAbilitySystemComponent* ASC = ASI ? ASI->GetAbilitySystemComponent() : nullptr;
+		if (ASC)
+		{
+			ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_World_Reset);
+		}
+	}
 }
 
 void AGYGameState::Multicast_PlayWorldResetSequence_Implementation(float DurationOverride)
