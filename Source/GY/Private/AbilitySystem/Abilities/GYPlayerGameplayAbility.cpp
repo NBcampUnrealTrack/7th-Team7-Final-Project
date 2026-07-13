@@ -15,10 +15,12 @@
 #include "AbilitySystem/Abilities/Logic/LogicInjectorComponent.h"
 #include "Character/GYCharacter.h"
 #include "Core/GameplayTags/EquipmentTags.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Equipment/ActiveEquipmentComponent.h"
 #include "Equipment/EquipmentInstance.h"
 #include "Items/ItemDefinition.h"
 #include "Items/Fragments/ItemFragment_Weapon.h"
+#include "Logging/GYLogManager.h"
 
 UGYPlayerGameplayAbility::UGYPlayerGameplayAbility()
 {
@@ -35,9 +37,21 @@ bool UGYPlayerGameplayAbility::CanActivateAbility(
 	const FGameplayTagContainer* TargetTags,
 	FGameplayTagContainer* OptionalRelevantTags) const
 {
+	const UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
+	if (!ASC) return false;
+
+	 const bool bCancelable = ASC->HasMatchingGameplayTag(GYStateTags::State_Cancelable);
+
+	if (bCancelable)
+	{
+		GY_WARN(Game, KHB, "캔슬가능 구간 진입")
+
+		return true;
+	}
+
 	if (IsActive()) return false;
 
-	if (const UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
+	if (ASC)
 	{
 		if (const UGYPlayerVitalAttributeSet* Attrs = ASC->GetSet<UGYPlayerVitalAttributeSet>())
 		{
