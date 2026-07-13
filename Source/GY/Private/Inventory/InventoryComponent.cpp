@@ -6,6 +6,7 @@
 #include "UObject/SoftObjectPath.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/ItemTags.h"
+#include "Core/GameplayTags/SoundTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Disassemble/DisassembleService.h"
 #include "Enchant/EnchantService.h"
@@ -207,7 +208,10 @@ void UInventoryComponent::Server_RequestEnchant_Implementation(const FGuid& Inst
 	Seed.GenerateNewSeed();
 
 	TArray<FRolledEnchantOption> Rolled;
-	Enchant->TryEnchant(this, Currency, InstanceId, Seed, Rolled);
+	if (Enchant->TryEnchant(this, Currency, InstanceId, Seed, Rolled))
+	{
+		PS->Client_PlaySound(GYGameplayTags::Sound_Interaction_TimeRift_Enchant);
+	}
 }
 
 

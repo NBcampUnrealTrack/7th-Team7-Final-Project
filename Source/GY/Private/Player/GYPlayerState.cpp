@@ -1,6 +1,7 @@
 #include "Player/GYPlayerState.h"
 
 #include "Character/GYPawnExtensionComponent.h"
+#include "Core/Sound/GYSoundManager.h"
 #include "GameFramework/Pawn.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/GYDamageAttributeSet.h"
@@ -81,6 +82,14 @@ void AGYPlayerState::SetLastCheckpointId(const FGuid& Id)
 	if (!HasAuthority()) return;
 	LastCheckpointId = Id;
 	ForceNetUpdate();
+}
+
+void AGYPlayerState::Client_PlaySound_Implementation(FGameplayTag SoundTag)
+{
+	if (UGYSoundManager* SoundManager = UGYSoundManager::Get(this))
+	{
+		SoundManager->PlaySound2D(SoundTag);
+	}
 }
 
 void AGYPlayerState::OnRep_PawnData()

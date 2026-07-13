@@ -15,7 +15,9 @@
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/SoundTags.h"
 #include "Core/GameplayTags/StateTags.h"
+#include "Core/Sound/GYSoundManager.h"
 #include "UI/GYUIMessages.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Curves/CurveFloat.h"
@@ -784,6 +786,11 @@ void UGYUIManagerSubsystem::PlayClockOverlay(float HoldDuration, FGameplayTag Re
 	ActiveClockOverlayWidget = Overlay;
 	Overlay->OnSequenceFinished.AddUObject(this, &UGYUIManagerSubsystem::HandleClockOverlayFinished);
 	Overlay->PlayResetSequence(HoldDuration);
+
+	if (UGYSoundManager* SoundManager = UGYSoundManager::Get(this))
+	{
+		SoundManager->PlaySound2D(GYGameplayTags::Sound_World_Clock);
+	}
 }
 
 void UGYUIManagerSubsystem::StopClockOverlay()

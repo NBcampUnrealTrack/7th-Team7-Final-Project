@@ -2,6 +2,7 @@
 #include "Quest/QuestSettings.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
+#include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/QuestTags.h"
@@ -9,6 +10,7 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "GameStates/GYGameState.h"
 #include "Logging/GYLogManager.h"
+#include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
 
 void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -127,6 +129,37 @@ void UQuestSubsystem::HandleQuestEvent(const FQuestEventData& EventData)
 	}
 
 	ProcessObjectiveProgress(EventData);
+}
+
+void UQuestSubsystem::GrantRewards(FGameplayTag QuestTag)
+{
+	const FQuestTableRow* Row = FindQuestRow(QuestTag);
+	if (!Row) return;
+	AGameStateBase* GS = GetWorld()->GetGameState<AGameStateBase>();
+	if (!GS || GS->PlayerArray.IsEmpty()) return;
+
+	for (APlayerState* PS : GS->PlayerArray)
+	{
+		AGYPlayerState* GYPS = Cast<AGYPlayerState>(PS);
+		if (!GYPS) continue;
+
+		UAbilitySystemComponent* ASC = GYPS->GetAbilitySystemComponent();
+		if (!ASC) continue;
+
+		UGameplayEffect* XPEffect = NewObject<UGameplayEffect>(
+			this,
+			MakeUniqueObjectName(this, UGameplayEffect::StaticClass(), TEXT("GE_EnemyReward_XP")));
+		XPEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
+
+		FGameplayModifierInfo Modifier;
+		Modifier.Attribute = UGYProgressionAttributeSet::GetXPAttribute();
+		Modifier.ModifierOp = EGameplayModOp::Additive;
+		Modifier.ModifierMagnitude = FScalableFloat(Row->Reward.Experience);
+		XPEffect->Modifiers.Add(Modifier);
+
+		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+		ASC->ApplyGameplayEffectToSelf(XPEffect, 1.f, Context);
+	}
 }
 
 bool UQuestSubsystem::StartQuest(FGameplayTag QuestTag)
@@ -265,6 +298,7 @@ void UQuestSubsystem::CompleteQuest(FGameplayTag QuestTag)
 			}
 		}
 	}
+	GrantRewards(QuestTag);
 }
 
 const FQuestRuntimeData* UQuestSubsystem::GetQuestRuntimeData(FGameplayTag QuestTag) const

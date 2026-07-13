@@ -3,6 +3,7 @@
 #include "AbilitySystemInterface.h"
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "GameplayTagContainer.h"
 #include "GYPlayerState.generated.h"
 
 class UAltarStorageComponent;
@@ -71,6 +72,10 @@ public:
 
 	FORCEINLINE FGuid GetLastCheckpointId() const { return LastCheckpointId; }
 	void SetLastCheckpointId(const FGuid& Id);
+
+	// [SERVER→OWNER CLIENT] 아이템/인벤토리 관련 액션 결과 사운드 재생 공용 채널
+	UFUNCTION(Client, Reliable)
+	void Client_PlaySound(FGameplayTag SoundTag);
 
 protected:
 	UFUNCTION()

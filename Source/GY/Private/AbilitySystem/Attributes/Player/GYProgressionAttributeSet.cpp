@@ -1,6 +1,7 @@
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "AbilitySystemComponent.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "Curves/CurveFloat.h"
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffect.h"
@@ -95,6 +96,8 @@ void UGYProgressionAttributeSet::PostGameplayEffectExecute(const FGameplayEffect
 			Vital->SetCurrentStun(Vital->GetMaxStun());
 			Vital->SetCurrentStamina(Vital->GetMaxStamina());
 		}
+
+		ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Player_LevelUp);
 		return;
 	}
 }

@@ -82,6 +82,8 @@ private:
 	FGameplayMessageListenerHandle QuestCompletedListenerHandle;
 	FGameplayMessageListenerHandle QuestEventListenerHandle;
 
+	void GrantRewards(FGameplayTag QuestTag);
+
 public:
 	bool StartQuest(FGameplayTag QuestTag);
 	void ProcessObjectiveProgress(const FQuestEventData& EventData);
