@@ -35,10 +35,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_RequestDisassemble();
 
-	// [SERVER→OWNER CLIENT] 분해 성공 시에만 사운드 재생
-	UFUNCTION(Client, Reliable)
-	void Client_PlayDisassembleSound(FGameplayTag SoundTag);
-
 	FOnAltarChanged OnAltarChanged;
 
 protected:

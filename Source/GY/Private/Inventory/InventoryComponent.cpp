@@ -7,7 +7,6 @@
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/ItemTags.h"
 #include "Core/GameplayTags/SoundTags.h"
-#include "Core/Sound/GYSoundManager.h"
 #include "Currency/CurrencyComponent.h"
 #include "Disassemble/DisassembleService.h"
 #include "Enchant/EnchantService.h"
@@ -211,15 +210,7 @@ void UInventoryComponent::Server_RequestEnchant_Implementation(const FGuid& Inst
 	TArray<FRolledEnchantOption> Rolled;
 	if (Enchant->TryEnchant(this, Currency, InstanceId, Seed, Rolled))
 	{
-		Client_PlayEnchantSound(GYGameplayTags::Sound_Interaction_TimeRift_Enchant);
-	}
-}
-
-void UInventoryComponent::Client_PlayEnchantSound_Implementation(FGameplayTag SoundTag)
-{
-	if (UGYSoundManager* SoundManager = UGYSoundManager::Get(this))
-	{
-		SoundManager->PlaySound2D(SoundTag);
+		PS->Client_PlaySound(GYGameplayTags::Sound_Interaction_TimeRift_Enchant);
 	}
 }
 

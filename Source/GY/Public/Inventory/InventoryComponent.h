@@ -52,10 +52,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_RequestEnchant(const FGuid& InstanceId);
 
-	// [SERVER→OWNER CLIENT] 인챈트 성공 시에만 사운드 재생
-	UFUNCTION(Client, Reliable)
-	void Client_PlayEnchantSound(FGameplayTag SoundTag);
-
 	FOnInventoryChanged OnInventoryChanged;
 
 	// IGYSaveable
