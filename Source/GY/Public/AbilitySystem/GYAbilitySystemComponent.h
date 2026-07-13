@@ -77,6 +77,10 @@ public:
 
 	void ApplyCombatTag();
 	void RemoveCombatTag();
+
+	// 보유 중인 Camera.Mode.* 루즈 태그 전부 제거
+	void RemoveAllCameraModeTags();
+
 	void NotifyAttributeChanged(const FGameplayAttribute& Attribute);
 
 	UPROPERTY(EditDefaultsOnly, Category="GAS")

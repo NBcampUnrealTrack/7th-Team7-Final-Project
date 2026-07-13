@@ -4,6 +4,7 @@
 #include "AbilitySystem/GYRegenDelayEffect.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
+#include "Core/GameplayTags/CameraTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Animation/AnimInstance.h"
@@ -290,6 +291,29 @@ void UGYAbilitySystemComponent::RemoveCombatTag()
 	RemoveActiveGameplayEffect(CombatStateEffectHandle, 1);
 	CombatStateEffectHandle = FActiveGameplayEffectHandle();
 
+}
+
+void UGYAbilitySystemComponent::RemoveAllCameraModeTags()
+{
+	static const FGameplayTag CameraModeTags[] = {
+		GYGameplayTags::Camera_Mode_Exploration,
+		GYGameplayTags::Camera_Mode_Boss,
+		GYGameplayTags::Camera_Mode_Boss_Phase2,
+		GYGameplayTags::Camera_Mode_Combat,
+		GYGameplayTags::Camera_Mode_Cinematic,
+		GYGameplayTags::Camera_Mode_ZoomIn,
+		GYGameplayTags::Camera_Mode_ZoomOut,
+		GYGameplayTags::Camera_Mode_Angle,
+	};
+
+	for (const FGameplayTag& Tag : CameraModeTags)
+	{
+		const int32 Count = GetGameplayTagCount(Tag);
+		if (Count > 0)
+		{
+			RemoveLooseGameplayTag(Tag, Count, EGameplayTagReplicationState::CountToOwner);
+		}
+	}
 }
 
 void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute& Attribute)
