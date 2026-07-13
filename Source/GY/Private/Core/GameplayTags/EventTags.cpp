@@ -28,6 +28,7 @@ namespace GYGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Ability_Parkour_Execute, "Event.Ability.Parkour.Execute");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Ability_Dodge_Execute, "Event.Ability.Dodge.Execute");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Ability_Charge_Execute, "Event.Ability.Charge.Execute");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Ability_Cancelable, "Event.Ability.Cancelable");
 
 	UE_DEFINE_GAMEPLAY_TAG(Event_Parry_Hit, "Event.Parry.Hit");

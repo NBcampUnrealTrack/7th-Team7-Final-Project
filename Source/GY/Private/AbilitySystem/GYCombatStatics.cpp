@@ -221,9 +221,13 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	float StunMultiplier = 1.f;
 	ResolveHitMultipliers(HitContext, DealtMultiplier, TakenMultiplier, StunMultiplier);
 
-	const float StaggerAmount = ActiveBlock ? HitContext.StaggerAmount * (1.f - BlockReduction) : HitContext.StaggerAmount;
+	const bool bTargetSuperArmor = TargetASC->HasMatchingGameplayTag(GYStateTags::State_Combat_SuperArmor);
+
+	const float StaggerAmount = bTargetSuperArmor ? 0.f
+		: (ActiveBlock ? HitContext.StaggerAmount * (1.f - BlockReduction) : HitContext.StaggerAmount);
 	// 무력화 증가(StunDealtPct)는 공격별 Stun에 곱 (예: +10% = ×1.1). 경직(Stagger)은 미적용.
-	const float StunAmount = (ActiveBlock ? HitContext.StunAmount * (1.f - BlockReduction) : HitContext.StunAmount) * StunMultiplier;
+	const float StunAmount = bTargetSuperArmor ? 0.f
+		: (ActiveBlock ? HitContext.StunAmount * (1.f - BlockReduction) : HitContext.StunAmount) * StunMultiplier;
 
 	// HP + 경직/무력을 GE_HitImpact로 적용. HP는 execution(공격자 ATK/Crit/STR/DEX + 대상 DEF, 블록 시 ×(1-BlockReduction)),
 	// 경직/무력은 SetByCaller 모디파이어. 닷지(Ability.State.Dodging)는 GE의 ApplicationRequirement로 차단.
@@ -246,7 +250,7 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	SourceASC->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), TargetASC);
 
 	//넉백
-	if (HitContext.KnockbackStrength > 0.f)
+	if (HitContext.KnockbackStrength > 0.f && !bTargetSuperArmor)
 	{
 		AActor* TargetActor = TargetASC->GetAvatarActor();
 		AActor* SourceActor = SourceASC->GetAvatarActor();
