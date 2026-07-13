@@ -85,7 +85,8 @@ namespace GYGameplayTags
 
 
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Quest_Completed, "Sound.Quest.Completed")
-	UE_DEFINE_GAMEPLAY_TAG(Sound_Time_Reset, "Sound.Time.Reset")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_World_Reset, "Sound.World.Reset")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_World_Clock, "Sound.World.Clock")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Item_Looting, "Sound.Item.Looting")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Level_Up, "Sound.Level.Up")
 

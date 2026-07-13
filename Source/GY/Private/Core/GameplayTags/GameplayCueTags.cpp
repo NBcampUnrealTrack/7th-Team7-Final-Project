@@ -88,4 +88,6 @@ namespace GYGameplayTags
 
 	// 퀘스트
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Quest_Completed, "GameplayCue.Quest.Completed");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_World_Reset, "GameplayCue.World.Reset");
 }

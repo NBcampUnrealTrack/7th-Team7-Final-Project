@@ -89,4 +89,6 @@ namespace GYGameplayTags
 
 	/* 퀘스트 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Quest_Completed);
+
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_World_Reset);
 }
