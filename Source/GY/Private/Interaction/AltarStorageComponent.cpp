@@ -2,6 +2,8 @@
 
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/ItemTags.h"
+#include "Core/GameplayTags/SoundTags.h"
+#include "Core/Sound/GYSoundManager.h"
 #include "Currency/CurrencyComponent.h"
 #include "Disassemble/DisassembleService.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
@@ -246,9 +248,23 @@ void UAltarStorageComponent::Server_RequestDisassemble_Implementation()
 		InstanceIds.Add(Entry.InstanceId);
 	}
 
+	bool bAnySucceeded = false;
 	for (const FGuid& InstanceId : InstanceIds)
 	{
-		Disassemble->TryDisassemble(this, Currency, InstanceId);
+		bAnySucceeded |= Disassemble->TryDisassemble(this, Currency, InstanceId);
+	}
+
+	if (bAnySucceeded)
+	{
+		Client_PlayDisassembleSound(GYGameplayTags::Sound_Interaction_TimeRift_Altar);
+	}
+}
+
+void UAltarStorageComponent::Client_PlayDisassembleSound_Implementation(FGameplayTag SoundTag)
+{
+	if (UGYSoundManager* SoundManager = UGYSoundManager::Get(this))
+	{
+		SoundManager->PlaySound2D(SoundTag);
 	}
 }
 
