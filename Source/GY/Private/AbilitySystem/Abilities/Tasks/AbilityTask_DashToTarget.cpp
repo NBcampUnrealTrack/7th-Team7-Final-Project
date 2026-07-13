@@ -10,7 +10,7 @@
 
 UAbilityTask_DashToTarget* UAbilityTask_DashToTarget::CreateDashToTarget(
     UGameplayAbility* OwningAbility, AActor* Target, TSubclassOf<UGameplayEffect> InMoveSpeedGEClass,
-    float InDashSpeed, float InStopDistance, float InFrontHalfAngleDeg, bool bUseAcc)
+    float InDashSpeed, float InStopDistance, float InFrontHalfAngleDeg, bool bUseAcc, bool bShouldBranchCombo)
 {
     UAbilityTask_DashToTarget* Task = NewAbilityTask<UAbilityTask_DashToTarget>(OwningAbility);
 	Task->OwningAbilityRef = OwningAbility;
@@ -20,6 +20,7 @@ UAbilityTask_DashToTarget* UAbilityTask_DashToTarget::CreateDashToTarget(
     Task->StopDistanceSq = FMath::Square(FMath::Max(InStopDistance, 0.f));
     Task->CosFrontHalfAngle = FMath::Cos(FMath::DegreesToRadians(FMath::Clamp(InFrontHalfAngleDeg, 0.f, 180.f)));
 	Task->bUseAcc = bUseAcc;
+	Task->bShouldBranchCombo = bShouldBranchCombo;
     return Task;
 }
 
@@ -123,7 +124,7 @@ void UAbilityTask_DashToTarget::OnDestroy(bool bInOwnerFinished)
 	}
 
 	AActor* Owner = GetOwnerActor();
-	if (!bInOwnerFinished && Owner)
+	if (bShouldBranchCombo && !bInOwnerFinished && Owner)
 	{
 		FGameplayEventData Payload;
 		Payload.Instigator = Owner;

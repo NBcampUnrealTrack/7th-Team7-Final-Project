@@ -38,6 +38,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Homing")
 	bool bUseAcc = true;
 
+	UPROPERTY(EditAnywhere, Category="Homing")
+	bool bShouldBranchCombo = true;
+
 	UPROPERTY(EditAnywhere, Category="Dash")
 	TSubclassOf<UGameplayEffect> MoveSpeedGEClass;
 
