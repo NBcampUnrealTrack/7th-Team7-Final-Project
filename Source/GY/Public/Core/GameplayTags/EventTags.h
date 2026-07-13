@@ -61,6 +61,9 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_FireBreath_Start)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_FireBreath_End)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Combo_Branch)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_Marker_Arrived)
+	// 궁 시전 몽타주에서 팬텀 스폰 타이밍 알림
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Enemy_SummonPhantom)
 
 	//TimeRift
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_TimeRift_Rest)

@@ -101,10 +101,10 @@ protected:
 	void OnComboBranch(FGameplayEventData Payload);
 
 	UFUNCTION()
-	void OnLaunchProjectile(FGameplayEventData Payload);
+	virtual void OnLaunchProjectile(FGameplayEventData Payload);
 
 	UFUNCTION()
-	void OnComboMontageEnded();
+	virtual void OnComboMontageEnded();
 
 	UFUNCTION()
 	void OnComboMontageInterrupted();
