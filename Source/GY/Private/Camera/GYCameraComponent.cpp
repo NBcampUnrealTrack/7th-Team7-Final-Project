@@ -106,6 +106,13 @@ void UGYCameraComponent::HandleChangeInitState(UGameFrameworkComponentManager* M
 		// 카메라 모드 초기 세팅
 		InitializeCameraModes();
 		RegisterCameraTagEvents();
+
+		// 카메라 모드 태그 초기화~~~~
+		if (UGYAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+		{
+			ASC->RemoveAllCameraModeTags();
+		}
+
 		ResolveCameraMode();
 	}
 }

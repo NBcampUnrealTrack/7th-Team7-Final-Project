@@ -354,6 +354,7 @@ void AGYCharacter::HandleDeath()
 		if (UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(ASC))
 		{
 			GYASC->RemoveCombatTag();
+			GYASC->RemoveAllCameraModeTags();
 		}
 	}
 

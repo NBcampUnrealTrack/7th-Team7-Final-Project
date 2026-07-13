@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Camera/GYCameraComponent.h"
+#include "Character/GYCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Logging/GYLogManager.h"
 
@@ -40,6 +41,11 @@ void ACameraVolumeActor::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedCompo
 {
 	if (!OtherActor)
 	{
+		return;
+	}
+	if (const AGYCharacter* Character = Cast<AGYCharacter>(OtherActor); Character && Character->IsDead())
+	{
+		// 사망 후 래그돌 물리 흔들림으로 볼륨과 재오버랩되어 카메라 태그가 재부착되는 것을 방지
 		return;
 	}
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
