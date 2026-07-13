@@ -1,5 +1,8 @@
 #include "Quest/QuestSubsystem.h"
 #include "Quest/QuestSettings.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
+#include "Core/GameplayTags/GameplayCueTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/QuestTags.h"
 #include "Engine/DataTable.h"
@@ -246,6 +249,22 @@ void UQuestSubsystem::CompleteQuest(FGameplayTag QuestTag)
 	GY_LOG(Content, CYS, "퀘스트 완료: %s", Row ? *Row->QuestName.ToString() : *QuestTag.ToString());
 
 	MarkQuestCompleted(QuestTag);
+
+	// 서버 권위 지점에서 1회만 실행 -> ASC 복제로 전 클라이언트에 자동 동기화
+	if (GameState && GameState->HasAuthority())
+	{
+		for (FConstPlayerControllerIterator It = GameState->GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			APlayerController* PlayerController = Cast<APlayerController>(*It);
+			APawn* Pawn = PlayerController ? PlayerController->GetPawn() : nullptr;
+			IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(Pawn);
+			UAbilitySystemComponent* ASC = ASI ? ASI->GetAbilitySystemComponent() : nullptr;
+			if (ASC)
+			{
+				ASC->ExecuteGameplayCue(GYGameplayTags::GameplayCue_Quest_Completed);
+			}
+		}
+	}
 }
 
 const FQuestRuntimeData* UQuestSubsystem::GetQuestRuntimeData(FGameplayTag QuestTag) const
