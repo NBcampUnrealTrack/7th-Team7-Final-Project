@@ -208,18 +208,14 @@ void UGYDodgeInputLogic::OnGameplayEvent(FGameplayTag EventTag, const FGameplayE
 	{
 		if (CachedAbility.IsValid())
 		{
-			CachedAbility->RequestEnd(false);
+			if (UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo())
+			{
+				ASC->AddLooseGameplayTag(GYStateTags::State_Cancelable);
+			}
+
 		}
 		return;
 
-		// // 추후 종료, 지속 선택 가능하게 하기 위한 코드.. 아직 미완성
-		// if (UAbilitySystemComponent* ASC = CachedAbility->GetAbilitySystemComponentFromActorInfo())
-		// {
-		//
-		// 	ASC->AddLooseGameplayTag(GYStateTags::State_Cancelable);
-		// }
-		//
-		// return;
 	}
 
 	if (EventTag != GYGameplayTags::Event_Anim_TagApplyStart || !CachedAbility.IsValid()) return;
