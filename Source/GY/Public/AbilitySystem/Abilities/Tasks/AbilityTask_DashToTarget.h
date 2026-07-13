@@ -21,7 +21,9 @@ public:
 		float DashSpeed,
 		float StopDistance,
 		float FrontHalfAngleDeg = 45.f,
-		bool bUseAcc = true);
+		bool bUseAcc = true,
+		bool bShouldBranchCombo = true
+		);
 
 	virtual void Activate() override;
 	virtual void TickTask(float DeltaTime) override;
@@ -45,6 +47,7 @@ protected:
 	bool bBroadcasted = false;
 	bool bUseAcc = true;
 	float SavedAcc = 0.f;
+	bool bShouldBranchCombo = true;
 
 	TWeakObjectPtr<UAbilitySystemComponent> CachedASC;
 	UPROPERTY()
