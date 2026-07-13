@@ -4,6 +4,7 @@
 #include "Dom/JsonValue.h"
 #include "GameplayTagsManager.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/SoundTags.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Inventory/InventoryComponent.h"
 #include "Inventory/InventoryEntry.h"
@@ -46,7 +47,10 @@ void UEquipmentLoadoutComponent::Server_RequestEquip_Implementation(const FGuid&
 	const UItemFragment_Equippable* EquippableFragment = Def->FindFragment<UItemFragment_Equippable>();
 	if (EquippableFragment == nullptr) return;
 
-	SetSlot(EquippableFragment->SlotTag, InstanceId);
+	if (SetSlot(EquippableFragment->SlotTag, InstanceId))
+	{
+		PS->Client_PlaySound(GYGameplayTags::Sound_Item_Looting);
+	}
 }
 
 void UEquipmentLoadoutComponent::Server_RequestUnequip_Implementation(FGameplayTag SlotTag)

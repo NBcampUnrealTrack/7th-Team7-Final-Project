@@ -216,6 +216,8 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 	});
 	if (Added <= 0) return; // 가방이 꽉 차 못 넣음 — 상자에 그대로 유지
 
+	PS->Client_PlaySound(GYGameplayTags::Sound_Item_Looting);
+
 	const UItemDefinition* ItemDef = Drop.Definition.LoadSynchronous();
 	if (ItemDef && ItemDef->FindFragment<UItemFragment_Weapon>())
 	{
