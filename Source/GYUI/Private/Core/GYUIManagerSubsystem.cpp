@@ -46,6 +46,7 @@ void UGYUIManagerSubsystem::Deinitialize()
 				MSG->UnregisterListener(EndingNarrativeFinishedHandle);
 				MSG->UnregisterListener(EndingCreditsFinishedHandle);
 				MSG->UnregisterListener(ClockOverlayHandle);
+				MSG->UnregisterListener(BossStateListenerHandle);
 				MSG->UnregisterListener(ToggleSettingsListenerHandle);
 				MSG->UnregisterListener(EnterCinematicHandle);
 				MSG->UnregisterListener(ReviveHoldHandle);
@@ -124,6 +125,7 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		if (EndingNarrativeFinishedHandle.IsValid()) {MSG.UnregisterListener(EndingNarrativeFinishedHandle);}
 		if (EndingCreditsFinishedHandle.IsValid()) { MSG.UnregisterListener(EndingCreditsFinishedHandle); }
 		if (ClockOverlayHandle.IsValid()) { MSG.UnregisterListener(ClockOverlayHandle); }
+		if (BossStateListenerHandle.IsValid()) { MSG.UnregisterListener(BossStateListenerHandle); }
 		if (ToggleSettingsListenerHandle.IsValid()) { MSG.UnregisterListener(ToggleSettingsListenerHandle); }
 		if (EnterCinematicHandle.IsValid()) { MSG.UnregisterListener(EnterCinematicHandle); }
 		if (ReviveHoldHandle.IsValid()) { MSG.UnregisterListener(ReviveHoldHandle); }
@@ -144,6 +146,8 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 			GYGameplayTags::Message_Ending_CreditsFinished, this, &UGYUIManagerSubsystem::HandleEndingCreditsFinished);
 		ClockOverlayHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_UI_ClockOverlay, this, &UGYUIManagerSubsystem::HandleClockOverlay);
+		BossStateListenerHandle = MSG.RegisterListener(
+			GYGameplayTags::Message_Boss_State, this, &UGYUIManagerSubsystem::HandleBossState);
 		ToggleSettingsListenerHandle = MSG.RegisterListener(
 			GYGameplayTags::Message_UI_ToggleSettings, this, &UGYUIManagerSubsystem::HandleToggleSettings);
 		EnterCinematicHandle = MSG.RegisterListener(
@@ -735,18 +739,6 @@ void UGYUIManagerSubsystem::HandleRegionEntered(FGameplayTag, const FGYRegionEnt
 	if (!LocalPawn || Msg.Pawn.Get() != LocalPawn) return;
 
 	ActiveRegionId = Msg.RegionId;
-	if (IsValid(Msg.BossActor))
-	{
-		// 재진입 시 없는 보스의 HP 위젯 다시 뜨는 문제 방지
-		const AGYEnemyCharacterBase* Boss = Cast<AGYEnemyCharacterBase>(Msg.BossActor);
-		if (Boss && Boss->IsDead()) return;
-
-		FGYBossStateMessage State;
-		State.bVisible = true;
-		State.TargetBoss = Msg.BossActor;
-
-		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
-	}
 }
 
 void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegionExitedMessage& Msg)
@@ -759,12 +751,6 @@ void UGYUIManagerSubsystem::HandleRegionExited(FGameplayTag Tag, const FGYRegion
 	if (Msg.RegionId == ActiveRegionId)
 	{
 		ActiveRegionId = FGameplayTag(); // 지역 정보 초기화
-
-		// UI 끄기
-		FGYBossStateMessage State;
-		State.bVisible = false;
-		State.TargetBoss = nullptr;
-		UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Boss_State, State);
 	}
 }
 
@@ -773,8 +759,18 @@ void UGYUIManagerSubsystem::HandleClockOverlay(FGameplayTag, const FGYClockOverl
 	PlayClockOverlay(Msg.HoldDuration, Msg.Reason);
 }
 
-void UGYUIManagerSubsystem::PlayClockOverlay(float HoldDuration, FGameplayTag /*Reason*/)
+void UGYUIManagerSubsystem::HandleBossState(FGameplayTag, const FGYBossStateMessage& Msg)
 {
+	bBossFightActive = Msg.bVisible;
+}
+
+void UGYUIManagerSubsystem::PlayClockOverlay(float HoldDuration, FGameplayTag Reason)
+{
+	if (bBossFightActive && Reason != GYStateTags::State_Life_Dead)
+	{
+		return;
+	}
+
 	const UGYUISettings* Settings = GetDefault<UGYUISettings>();
 	UClass* WidgetClass = Settings ? Settings->WorldResetWidgetClass.LoadSynchronous() : nullptr;
 	if (!WidgetClass) return;

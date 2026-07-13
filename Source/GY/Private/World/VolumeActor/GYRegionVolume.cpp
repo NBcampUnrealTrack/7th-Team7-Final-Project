@@ -1,5 +1,4 @@
 #include "World/VolumeActor/GYRegionVolume.h"
-#include "Components/BoxComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
@@ -7,59 +6,6 @@
 #include "UI/GYUIMessages.h"
 #include "Loot/RegionLootData.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
-#include "GameFramework/PlayerController.h"
-
-AGYRegionVolume::AGYRegionVolume()
-{
-	PrimaryActorTick.bCanEverTick = false;
-
-	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
-	RootComponent = TriggerBox;
-
-	TriggerBox->SetCollisionProfileName(TEXT("Trigger"));
-}
-
-void AGYRegionVolume::BeginPlay()
-{
-	Super::BeginPlay();
-	TriggerBox->OnComponentBeginOverlap.AddUniqueDynamic(this, &AGYRegionVolume::OnOverlapBegin);
-	TriggerBox->OnComponentEndOverlap.AddUniqueDynamic(this, &AGYRegionVolume::OnOverlapEnd);
-
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimerForNextTick(
-			FTimerDelegate::CreateUObject(this, &AGYRegionVolume::ProcessInitialOverlappingPawns));
-	}
-}
-
-bool AGYRegionVolume::IsLocationInside(const FVector& WorldLocation) const
-{
-	if (!IsValid(TriggerBox)) return false;
-
-	const FVector Local = TriggerBox->GetComponentTransform().InverseTransformPosition(WorldLocation);
-	const FVector Extent = TriggerBox->GetUnscaledBoxExtent();
-	return FMath::Abs(Local.X) <= Extent.X
-		&& FMath::Abs(Local.Y) <= Extent.Y
-		&& FMath::Abs(Local.Z) <= Extent.Z;
-}
-
-void AGYRegionVolume::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	HandlePawnEntered(Cast<APawn>(OtherActor));
-}
-
-void AGYRegionVolume::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	APawn* Pawn = Cast<APawn>(OtherActor);
-	if (!Pawn) return;
-	if (TriggerBox->IsOverlappingActor(Pawn)) // 경계 걸친 경우 오작동 방지
-	{
-		return;
-	}
-	HandlePawnExited(Pawn);
-}
 
 void AGYRegionVolume::HandlePawnEntered(APawn* Pawn)
 {
@@ -89,7 +35,6 @@ void AGYRegionVolume::HandlePawnEntered(APawn* Pawn)
 	Msg.RegionDisplayName = Region->RegionDisplayName;
 	Msg.RegionLevel = GetDefault<UGYWorldDataSettings>()->DefaultRegionLevel;
 	Msg.RegionIcon = Region->RegionIcon;
-	Msg.BossActor = TargetBossActor.Get();
 	Msg.Pawn = Pawn;
 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Region_Entered, Msg);
@@ -116,46 +61,4 @@ void AGYRegionVolume::HandlePawnExited(APawn* Pawn)
 	ExitMsg.Pawn = Pawn;
 
 	UGameplayMessageSubsystem::Get(GetWorld()).BroadcastMessage(GYGameplayTags::Message_Region_Exited, ExitMsg);
-}
-
-void AGYRegionVolume::ProcessInitialOverlappingPawns()
-{
-	if (!IsValid(TriggerBox)) return;
-
-	TArray<AActor*> Overlapping;
-	TriggerBox->GetOverlappingActors(Overlapping, APawn::StaticClass());
-	for (AActor* Actor : Overlapping) // 오버랩된 폰 - 지역 진입 처리
-	{
-		HandlePawnEntered(Cast<APawn>(Actor));
-	}
-
-	if (GetNetMode() == NM_Client)
-	{
-		TryNotifyLocalPawn();
-	}
-}
-
-void AGYRegionVolume::TryNotifyLocalPawn()
-{
-	if (!IsValid(TriggerBox)) return;
-
-	UWorld* World = GetWorld();
-	if (!World) return;
-
-	APlayerController* PC = World->GetFirstPlayerController();
-	APawn* LocalPawn = PC ? PC->GetPawn() : nullptr;
-
-	if (LocalPawn && TriggerBox->IsOverlappingActor(LocalPawn))
-	{
-		HandlePawnEntered(LocalPawn);
-		return;
-	}
-
-	// 폰이 아직 없거나 영역 밖이면 잠시 후 재시도
-	if (LocalPawnRetryCount < 10)
-	{
-		++LocalPawnRetryCount;
-		World->GetTimerManager().SetTimer(LocalPawnRetryTimer, FTimerDelegate::CreateUObject(
-			this, &AGYRegionVolume::TryNotifyLocalPawn), 0.5f, false);
-	}
 }

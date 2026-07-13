@@ -236,19 +236,18 @@ void AGYEndingInteractActor::Multicast_PlayCinematic_Implementation(const FSoftO
 
 void AGYEndingInteractActor::HandleCinematicFinished()
 {
-	BroadcastCinematicFinishedLocal();
-
-	if (ActiveSequenceActor)
-	{
-		ActiveSequenceActor->Destroy();
-		ActiveSequenceActor = nullptr;
-	}
-	ActiveSequencePlayer = nullptr;
-
-	// UI 켜줘
 	FGYCinematicMessage Msg;
 	Msg.bIsPlaying = false;
 	UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
+
+	BroadcastCinematicFinishedLocal();
+
+	if (ActiveSequenceActor)
+		{
+		ActiveSequenceActor->Destroy();
+		ActiveSequenceActor = nullptr;
+		}
+	ActiveSequencePlayer = nullptr;
 }
 
 void AGYEndingInteractActor::OnPostCinematicTimerExpired()
