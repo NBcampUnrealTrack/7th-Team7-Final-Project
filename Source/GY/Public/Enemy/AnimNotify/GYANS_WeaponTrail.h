@@ -54,6 +54,21 @@ private:
 		const AGYWeaponActor* Weapon = Enemy->GetWeaponBySlot(WeaponSlotTag);
 		if (!Weapon)
 		{
+			// 클라이언트는 EquippedWeapons가 비어있으므로 부착된 무기 액터에서 직접 탐색
+			TArray<AActor*> Attached;
+			Enemy->GetAttachedActors(Attached);
+			for (AActor* Actor : Attached)
+			{
+				const AGYWeaponActor* Candidate = Cast<AGYWeaponActor>(Actor);
+				if (Candidate && Candidate->GetWeaponTypeTag() == WeaponSlotTag)
+				{
+					Weapon = Candidate;
+					break;
+				}
+			}
+		}
+		if (!Weapon)
+		{
 			return nullptr;
 		}
 

@@ -109,6 +109,21 @@ void AProjectileBase::OnHitTarget(AActor* HitActor, const FHitResult& HitResult)
 void AProjectileBase::OnProjectileMovementStop(const FHitResult& ImpactResult)
 {
 	if (!HasAuthority()) return;
+
+
+	// 벽/바닥 충돌로 소멸할 때도 적중 큐 재생 (발사체엔 ASC가 없어 시전자 ASC로 실행해야 복제됨)
+	if (HitCueTag.IsValid() && InstigatorActor.IsValid())
+	{
+		if (UAbilitySystemComponent* ASC =
+			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InstigatorActor.Get()))
+		{
+			FGameplayCueParameters CueParams;
+			CueParams.Location = ImpactResult.bBlockingHit ? FVector(ImpactResult.ImpactPoint) : GetActorLocation();
+			CueParams.Normal = ImpactResult.ImpactNormal;
+			ASC->ExecuteGameplayCue(HitCueTag, CueParams);
+		}
+	}
+
 	Destroy();
 }
 
