@@ -127,6 +127,13 @@ void UGYChargeInputLogic::ExecuteAttack()
 	bCharging = false;
 	if (MaxChargeTask) { MaxChargeTask->EndTask(); MaxChargeTask = nullptr; }
 
+	if (UAbilitySystemComponent* ChargeEndASC = CachedAbility->GetAbilitySystemComponentFromActorInfo())
+	{
+		FGameplayEventData Payload;
+		Payload.EventTag = GYGameplayTags::Event_Ability_Charge_Execute;
+		ChargeEndASC->HandleGameplayEvent(GYGameplayTags::Event_Ability_Charge_Execute, &Payload);
+	}
+
 	const float ElapsedTime = CachedAbility->GetWorld()->GetTimeSeconds() - ChargeStartTime;
 
 	FGYHitImpact Impact;

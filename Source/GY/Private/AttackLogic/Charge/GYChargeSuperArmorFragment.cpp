@@ -10,3 +10,8 @@ UGYChargeSuperArmorFragment::UGYChargeSuperArmorFragment()
 {
 	FragmentTag = GYGameplayTags::Ability_Fragment_ChargeSuperArmor;
 }
+
+bool UGYChargeSuperArmorFragment::IsActive(const FGameplayTagContainer& OwnedTags) const
+{
+	return RequiredTags.IsEmpty() || OwnedTags.HasAny(RequiredTags);
+}

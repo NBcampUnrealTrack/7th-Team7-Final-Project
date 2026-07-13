@@ -18,6 +18,7 @@ void UGYEnemyAbilitySystemComponent::HandleVitalAccumulation(const FGameplayAttr
 {
 
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	if (HasMatchingGameplayTag(GYStateTags::State_Combat_SuperArmor)) return;
 
 	for (const FGYDisableThreshold& Threshold : DisableThresholds)
 	{

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/Fragment/AbilityFragment.h"
+#include "GameplayTagContainer.h"
 #include "GYChargeSuperArmorFragment.generated.h"
 
 //   ___ _____ _   _ ___
@@ -16,4 +17,9 @@ class GY_API UGYChargeSuperArmorFragment : public UAbilityFragment
 
 public:
 	UGYChargeSuperArmorFragment();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SuperArmor")
+	FGameplayTagContainer RequiredTags;
+
+	bool IsActive(const FGameplayTagContainer& OwnedTags) const;
 };

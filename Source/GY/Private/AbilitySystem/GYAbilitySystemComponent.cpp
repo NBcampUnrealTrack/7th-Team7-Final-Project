@@ -318,6 +318,7 @@ UGameplayAbility* UGYAbilitySystemComponent::GetActiveAbilityByTag(const FGamepl
 void UGYAbilitySystemComponent::HandleVitalAccumulation(const FGameplayAttribute& ChangedAttribute, float CurrentValue)
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	if (HasMatchingGameplayTag(GYStateTags::State_Combat_SuperArmor)) return;
 
 	for (const FGYDisableThreshold& Threshold : DisableThresholds)
 	{
