@@ -31,6 +31,12 @@ public:
 private:
 	FGameplayEffectSpecHandle CachedEffectSpec;
 
+	// 지울 아이템 캐싱, 나중에 물약먹기 완료되면 지움
+	UPROPERTY()
+	TObjectPtr<class UInventoryComponent> CachedInventoryComponent;
+	FGuid CachedItemInstanceId;
+
+
 	UFUNCTION()
 	void OnMontageCompleted();
 

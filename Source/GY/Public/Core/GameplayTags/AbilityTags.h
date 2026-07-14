@@ -16,6 +16,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Block)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Climb)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Ladder_Activate)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Drink)
 
 	// Fragment Type
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Fragment_Charge)
@@ -47,6 +48,7 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Dodging)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Sprint)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Blocking)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_State_Drinking)
 
 	// Enemy
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Attack_Enemy)
