@@ -61,6 +61,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Region")
 	TSoftObjectPtr<UTexture2D> RegionIcon;
 
+	// 이 지역 진입 시 재생할 BGM. 비어 있으면 BGM을 바꾸지 않는다.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Region", meta = (Categories = "Sound.BGM"))
+	FGameplayTag RegionBGM;
+
 	// 풀이 분포를 오버라이드하지 않을 때 쓰는 Region 기본값
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (RowType = "/Script/GY.GradeDistributionRow"))
 	TObjectPtr<UDataTable> GradeDistribution;

@@ -6,6 +6,7 @@
 #include "UI/GYUIMessages.h"
 #include "Loot/RegionLootData.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
+#include "GameStates/GYGameState.h"
 
 void AGYRegionVolume::HandlePawnEntered(APawn* Pawn)
 {
@@ -29,6 +30,15 @@ void AGYRegionVolume::HandlePawnEntered(APawn* Pawn)
 		}
 	}
 	if (GetNetMode() == NM_DedicatedServer) return;
+
+	// 로컬 플레이어 본인이 들어온 경우에만 이 지역 BGM으로 전환
+	if (Pawn->IsLocallyControlled() && Region->RegionBGM.IsValid())
+	{
+		if (AGYGameState* GYGameState = GetWorld()->GetGameState<AGYGameState>())
+		{
+			GYGameState->PlayGameBGMLocal(Region->RegionBGM);
+		}
+	}
 
 	FGYRegionEnteredMessage Msg;
 	Msg.RegionId = Region->RegionId;
