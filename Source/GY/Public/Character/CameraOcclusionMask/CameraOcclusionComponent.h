@@ -53,7 +53,7 @@ public:
 	float TraceRadius = 30.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Trace)
-	TEnumAsByte<ETraceTypeQuery> TraceChannel =  TraceType_HiddenWall;
+	TEnumAsByte<ETraceTypeQuery> TraceChannel = TraceType_HiddenWall();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Trace)
 	TEnumAsByte<EDrawDebugTrace::Type> DrawDebugType = EDrawDebugTrace::ForDuration;
