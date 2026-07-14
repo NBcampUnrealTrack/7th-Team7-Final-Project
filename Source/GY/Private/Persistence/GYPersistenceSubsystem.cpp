@@ -172,13 +172,24 @@ void UGYPersistenceSubsystem::LoadConfig()
 	BaseUrl = Settings->ServerBaseUrl;
 	SecretKey = Settings->SecretKey;
 
+	// 배포용 서버 패키지는 키를 아티팩트에 굽지 않는다(itch 등 유통 시 유출 방지) —
+	// ini 가 비어 있으면 호스트 머신의 환경변수에서 읽는다 (setx GY_HOSTED_SECRET_KEY ...)
+	if (SecretKey.IsEmpty())
+	{
+		SecretKey = FPlatformMisc::GetEnvironmentVariable(TEXT("GY_HOSTED_SECRET_KEY"));
+		if (!SecretKey.IsEmpty())
+		{
+			GY_LOG(Network, KDY, "SecretKey loaded from GY_HOSTED_SECRET_KEY env");
+		}
+	}
+
 	if (BaseUrl.IsEmpty())
 	{
 		GY_WARN(Network, KDY, "ServerBaseUrl not set (GY Persistence settings)");
 	}
 	if (SecretKey.IsEmpty())
 	{
-		GY_WARN(Network, KDY, "SecretKey not set (GY Persistence settings)");
+		GY_WARN(Network, KDY, "SecretKey not set (settings/env) - server save path disabled");
 	}
 }
 

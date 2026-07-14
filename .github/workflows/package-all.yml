@@ -1,0 +1,47 @@
+# 클라 + 서버 짝 배포 — 한 run 의 모든 잡이 같은 커밋(SHA)에 고정되므로
+# 이걸로 돌리면 클라/서버 버전 불일치(월드파티션 셀 불일치, 넷버전 등)가 원천 차단된다.
+# 팀 배포는 이 버튼을 기본으로, 단독 재빌드만 개별 workflow 사용.
+#
+# 서버가 클라 성공 후에 도는 순차 구조 (실패한 짝의 반쪽만 배포되는 것 방지).
+# 같은 머신(pc-kdy)이면 어차피 러너가 한 번에 잡 하나라 자연 직렬화됨.
+name: package-all
+
+on:
+  workflow_dispatch:
+    inputs:
+      client_runner:
+        description: "클라 빌드 머신 (any = 아무 유휴 러너)"
+        type: choice
+        default: any
+        options:
+          - any
+          - pc-kdy
+      server_runner:
+        description: "서버 빌드 머신 (소스 엔진 필요)"
+        type: choice
+        default: pc-kdy
+        options:
+          - pc-kdy
+      config:
+        description: "빌드 구성 (클라/서버 동일 적용)"
+        type: choice
+        default: Development
+        options:
+          - Development
+          - Shipping
+
+jobs:
+  client:
+    uses: ./.github/workflows/package-client.yml
+    with:
+      runner: ${{ inputs.client_runner }}
+      config: ${{ inputs.config }}
+    secrets: inherit
+
+  server:
+    needs: client
+    uses: ./.github/workflows/package-server.yml
+    with:
+      runner: ${{ inputs.server_runner }}
+      config: ${{ inputs.config }}
+    secrets: inherit

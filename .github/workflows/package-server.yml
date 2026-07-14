@@ -1,35 +1,32 @@
-# 클라이언트 패키징 — self-hosted 러너에서 scripts/package_client.ps1 실행 후 itch.io 배포(선택).
+# 데디케이티드 서버 패키징 — 소스 엔진이 있는 self-hosted 러너에서 scripts/package_server.ps1 실행 후
+# 서버 전용 프라이빗 itch 프로젝트로 배포(선택).
 #
-# 실행: Actions 탭 → package-client → Run workflow → 빌드 돌릴 머신 선택.
-# 러너 등록(각자 PC, 1회): 레포 Settings → Actions → Runners → New self-hosted runner (Windows)
-#   config 시 라벨: ue57,pc-<본인이름>   (pc-* 라벨을 아래 runner options에도 추가)
-#   전제: UE 5.7 런처 설치본(C:\Program Files\Epic Games\UE_5.7) + VS2022
-#   머신 env GY_DEV_CLONE = 개발 클론 루트(예: C:\Unreal\GY) — LFS/유료에셋을 로컬에서 시딩 (미설정 시 원격 다운로드)
+# 러너 머신 전제 (클라 러너 전제에 추가):
+#   - 소스 빌드 엔진 (런처 엔진은 Server 타깃 불가) + 머신 env GY_SRC_ENGINE = 엔진 루트
+#   - 현재 소스 엔진 보유 머신: pc-kdy 뿐 — 새 머신 추가 시 아래 runner options 에 등록
 #
-# Secrets (Settings → Secrets and variables → Actions):
-#   GY_HOSTED_URL / GY_HOSTED_PUBLISHABLE_KEY — 산출물이 바라볼 호스티드 Supabase
-#   BUTLER_API_KEY / ITCH_TARGET(예: team/gy-internal) — itch 배포용. 없으면 배포 단계 스킵
-#   DISCORD_PACKAGE_WEBHOOK_URL — 패키징 알림 채널 웹훅 (기존 훅과 별도 채널). 없으면 알림 스킵
+# Secrets:
+#   GY_HOSTED_URL — 호스티드 Supabase URL (클라와 공용)
+#   GY_HOSTED_SECRET_KEY — 서버 저장 경로 키. 산출물에 구워짐 → 서버 itch 프로젝트는 반드시
+#     프라이빗(Restricted + claimed 다운로드 키, 클라 프로젝트와 분리)으로만 배포
+#   BUTLER_API_KEY (클라와 공용) / ITCH_SERVER_TARGET (예: dooyeonk/gy-server) — 없으면 배포 스킵
+#   DISCORD_PACKAGE_WEBHOOK_URL (클라와 공용)
 #
-# ※ run: 블록 안에는 ASCII만 쓸 것 — 러너가 스텝을 UTF-8(BOM 없음) .ps1 로 쓰고
-#   Windows PowerShell 5.1 이 CP949 로 읽어 한글이 깨지며 따옴표를 삼켜 파스 에러가 난다.
-#   한글은 YAML 주석/step name/env 값(여긴 안전)에만.
-name: package-client
+# ※ run: 블록 안에는 ASCII만 (PS5.1 CP949 파싱 함정 — package-client.yml 상단 주석 참고)
+name: package-server
 
-# 주의: 수동 실행(Run workflow) 버튼은 이 파일이 main에 머지된 후에 Actions 탭에 나타난다
 # 단독 실행(dispatch) 또는 package-all 에서 호출(workflow_call) — 클라/서버 짝 배포는 package-all 사용
 on:
   workflow_dispatch:
     inputs:
       runner:
-        description: "빌드 돌릴 머신 (any = 아무 유휴 러너)"
+        description: "빌드 돌릴 머신 (소스 엔진 필요)"
         type: choice
-        default: any
+        default: pc-kdy
         options:
-          - any
           - pc-kdy
       config:
-        description: "빌드 구성 (Development = 콘솔/치트 O, Shipping = 배포용)"
+        description: "빌드 구성"
         type: choice
         default: Development
         options:
@@ -39,35 +36,32 @@ on:
     inputs:
       runner:
         type: string
-        default: any
+        default: pc-kdy
       config:
         type: string
         default: Development
 
 concurrency:
-  group: package-${{ inputs.runner }}
+  group: package-server-${{ inputs.runner }}
   cancel-in-progress: false
 
 jobs:
   package:
     runs-on:
       - self-hosted
-      - ${{ inputs.runner == 'any' && 'ue57' || inputs.runner }}
+      - ${{ inputs.runner }}
     timeout-minutes: 240
     steps:
       - name: Notify start (Discord)
         shell: powershell
         env:
           WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
-          CONTENT: "📦 클라 패키징 시작 — ${{ github.actor }} | ${{ inputs.config }} | 머신: ${{ inputs.runner }} (${{ runner.name }}) | ${{ github.ref_name }} | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CONTENT: "🖥️ 서버 패키징 시작 — ${{ github.actor }} | ${{ inputs.config }} | 머신: ${{ inputs.runner }} | ${{ github.ref_name }} | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |
           if (-not $env:WEBHOOK) { Write-Host "no webhook secret - skip notify"; exit 0 }
           $body = @{ content = $env:CONTENT } | ConvertTo-Json -Compress
           try { Invoke-RestMethod -Uri $env:WEBHOOK -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) } catch { Write-Host "notify failed (build continues): $($_.Exception.Message)" }
 
-      # LFS 객체를 개발 클론에서 미리 시딩 — checkout 의 lfs fetch 가 로컬에 있는 객체는 스킵하고
-      # 개발 클론에도 없는 신규분만 GitHub 에서 받는다 (다운로드/대역폭 절약).
-      # 첫 실행(워크스페이스에 레포 없음)은 스킵 — 그 회차만 전체 다운로드. robocopy 는 0~7 이 성공 코드
       - name: LFS objects (개발 클론에서 시딩)
         shell: powershell
         run: |
@@ -81,23 +75,18 @@ jobs:
           }
           exit 0
 
-      - name: Checkout (증분 — Intermediate/DDC 보존)
+      - name: Checkout (증분 — Intermediate 보존)
         uses: actions/checkout@v4
         with:
           clean: false
           submodules: recursive
 
-      # lfs:true 를 안 쓰는 이유: clean:false 워크스페이스에선 이전 실행이 남긴 포인터 파일이
-      # git 입장에서 "변경 없음"이라 checkout 이 다시 안 써서 포인터가 그대로 남는다.
-      # git lfs pull = 부족분만 fetch(시딩 덕에 대부분 로컬) + 워킹트리 포인터를 실파일로 변환
       - name: LFS pull (포인터 → 실파일)
         shell: powershell
         run: |
           git lfs pull
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      # 유료 에셋은 gitignore — 러너 머신의 개발 클론(소유자가 sync_assets 로 최신 유지)을 원천으로 robocopy.
-      # 로컬 증분 복사라 몇 초. GY_DEV_CLONE 미설정(전용 빌드머신 등)이면 rclone 으로 gdrive 직접 동기화 폴백
       - name: Paid assets (개발 클론에서 복사)
         shell: powershell
         run: |
@@ -113,24 +102,24 @@ jobs:
           rclone copy gdrive:GY_PaidAssets $assetDir --fast-list --stats-one-line --stats 30s
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Package client
+      - name: Package server
         shell: powershell
         env:
           GY_HOSTED_URL: ${{ secrets.GY_HOSTED_URL }}
-          GY_HOSTED_PUBLISHABLE_KEY: ${{ secrets.GY_HOSTED_PUBLISHABLE_KEY }}
+          GY_HOSTED_SECRET_KEY: ${{ secrets.GY_HOSTED_SECRET_KEY }}
         run: |
-          powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package_client.ps1 -AuthMode Steam -Config ${{ inputs.config }}
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package_server.ps1 -Config ${{ inputs.config }}
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      # 채널 분리: Development → win64-dev, Shipping → win64 (테스트/배포 빌드가 itch 에서 안 섞이게)
+      # 채널 분리: Development → win64-dev, Shipping → win64 (서버 전용 프라이빗 프로젝트)
       - name: Push to itch.io (butler)
         shell: powershell
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-          ITCH_TARGET: ${{ secrets.ITCH_TARGET }}
+          ITCH_TARGET: ${{ secrets.ITCH_SERVER_TARGET }}
         run: |
           if (-not $env:BUTLER_API_KEY -or -not $env:ITCH_TARGET) {
-            Write-Host "BUTLER_API_KEY / ITCH_TARGET secret missing - skip itch deploy"
+            Write-Host "BUTLER_API_KEY / ITCH_SERVER_TARGET secret missing - skip itch deploy"
             exit 0
           }
           $butlerDir = "$env:RUNNER_TOOL_CACHE\butler"
@@ -142,9 +131,8 @@ jobs:
           }
           $channel = if ("${{ inputs.config }}" -eq "Shipping") { "win64" } else { "win64-dev" }
           $version = "$($env:GITHUB_RUN_NUMBER)-$($env:GITHUB_SHA.Substring(0,7))"
-          & $butler push "$env:GITHUB_WORKSPACE\Build\Packaged\Windows" "$($env:ITCH_TARGET):$channel" --userversion $version
+          & $butler push "$env:GITHUB_WORKSPACE\Build\PackagedServer\WindowsServer" "$($env:ITCH_TARGET):$channel" --userversion $version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          # itch server-side processing: poll until our version goes live so the Discord OK means downloadable-now
           $state = "processing"
           $deadline = (Get-Date).AddMinutes(15)
           while ((Get-Date) -lt $deadline) {
@@ -159,14 +147,14 @@ jobs:
       - name: Summary
         shell: powershell
         run: |
-          "artifact: $env:GITHUB_WORKSPACE\Build\Packaged\Windows" >> $env:GITHUB_STEP_SUMMARY
+          "artifact: $env:GITHUB_WORKSPACE\Build\PackagedServer\WindowsServer" >> $env:GITHUB_STEP_SUMMARY
 
       - name: Notify success (Discord)
         if: success()
         shell: powershell
         env:
           WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
-          CONTENT: "✅ 클라 패키징 완료 — ${{ inputs.config }} | ${{ github.ref_name }} | itch v$env:ITCH_VERSION | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CONTENT: "✅ 서버 패키징 완료 — ${{ inputs.config }} | ${{ github.ref_name }} | itch v$env:ITCH_VERSION | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |
           if (-not $env:WEBHOOK) { exit 0 }
           $content = $env:CONTENT -replace '\$env:ITCH_VERSION', $(if ($env:ITCH_VERSION) { $env:ITCH_VERSION } else { "(itch skipped)" })
@@ -179,8 +167,8 @@ jobs:
         env:
           WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
           JOB_STATUS: ${{ job.status }}
-          CONTENT_FAIL: "❌ 클라 패키징 실패 — ${{ github.ref_name }} | 머신: ${{ runner.name }} | 로그: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          CONTENT_CANCEL: "⚠️ 클라 패키징 중단(취소) — ${{ github.ref_name }} | 머신: ${{ runner.name }} | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CONTENT_FAIL: "❌ 서버 패키징 실패 — ${{ github.ref_name }} | 머신: ${{ runner.name }} | 로그: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CONTENT_CANCEL: "⚠️ 서버 패키징 중단(취소) — ${{ github.ref_name }} | 머신: ${{ runner.name }} | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |
           if (-not $env:WEBHOOK) { exit 0 }
           $content = if ($env:JOB_STATUS -eq "cancelled") { $env:CONTENT_CANCEL } else { $env:CONTENT_FAIL }

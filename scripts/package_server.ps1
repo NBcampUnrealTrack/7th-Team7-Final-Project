@@ -6,12 +6,16 @@
 #       -EngineRoot "C:\UnrealEngine" `
 #       -ServerBaseUrl "https://ajhrjxbumnicfspdfvna.supabase.co" `
 #       -SecretKey "sb_secret_..."     (Supabase 대시보드 → Settings → API Keys)
-#   서버 산출물에는 SecretKey 가 들어간다(저장 경로 권위) — 산출물을 팀 밖에 공유 금지
+#   -SecretKey 를 주면 산출물에 구움 — 배포는 서버 전용 프라이빗 itch 프로젝트로만
+#     (claimed 다운로드 키, 클라 프로젝트와 분리. 산출물에서 키 추출 가능하므로 공개 금지)
+#   생략하면 빈 값으로 굽고, 서버가 시작 시 GY_HOSTED_SECRET_KEY 환경변수에서 읽는다
 # ============================================================
 param(
     [string]$EngineRoot = $env:GY_SRC_ENGINE,
     [string]$ServerBaseUrl = $env:GY_HOSTED_URL,
     [string]$SecretKey = $env:GY_HOSTED_SECRET_KEY,
+    [ValidateSet("Development", "Shipping")]
+    [string]$Config = "Development",
     [string]$ArchiveDir = ""
 )
 
@@ -25,8 +29,8 @@ if (-not $ArchiveDir) { $ArchiveDir = Join-Path $RepoRoot "Build\PackagedServer"
 if (-not $EngineRoot -or -not (Test-Path "$EngineRoot\Engine\Build\BatchFiles\RunUAT.bat")) {
     throw "source engine not found - pass -EngineRoot or set GY_SRC_ENGINE (launcher engine cannot build Server targets)"
 }
-if (-not $ServerBaseUrl -or -not $SecretKey) {
-    throw "hosted ServerBaseUrl/SecretKey required - pass params or set GY_HOSTED_URL / GY_HOSTED_SECRET_KEY"
+if (-not $ServerBaseUrl) {
+    throw "hosted ServerBaseUrl required - pass param or set GY_HOSTED_URL"
 }
 
 Write-Host "[server] engine=$EngineRoot backend=$ServerBaseUrl archive=$ArchiveDir"
@@ -34,17 +38,19 @@ Write-Host "[server] engine=$EngineRoot backend=$ServerBaseUrl archive=$ArchiveD
 $bHadLocalIni = Test-Path $IniPath
 if ($bHadLocalIni) { Copy-Item $IniPath $IniBackup -Force }
 try {
-    # 서버는 SecretKey 필수(저장 권위), 클라용 필드는 서버에서 안 쓰므로 생략
+    if (-not $SecretKey) { Write-Host "[server] SecretKey not baked - server will read GY_HOSTED_SECRET_KEY env at runtime" -ForegroundColor Yellow }
     $iniText = "[/Script/GY.GYPersistenceSettings]`r`n" +
                "ServerBaseUrl=`"$ServerBaseUrl`"`r`n" +
                "SecretKey=$SecretKey`r`n"
     Set-Content -Path $IniPath -Value $iniText -Encoding ascii
 
+    # MaxParallelActions=2: PCH 컴파일 메모리 피크 제한 — 병렬 3+에서 C1076/C3859(가상 메모리 부족) 발생 이력
     & "$EngineRoot\Engine\Build\BatchFiles\RunUAT.bat" BuildCookRun `
         -project="$RepoRoot\GY.uproject" `
-        -platform=Win64 -serverconfig=Development `
+        -platform=Win64 -serverconfig="$Config" `
         -server -noclient `
         -build -cook -stage -pak -archive -archivedirectory="$ArchiveDir" `
+        -UbtArgs="-MaxParallelActions=2" `
         -noP4 -utf8output -unattended
     if ($LASTEXITCODE -ne 0) { throw "BuildCookRun failed (exit $LASTEXITCODE)" }
 
