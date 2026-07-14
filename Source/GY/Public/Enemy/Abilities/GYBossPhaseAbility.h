@@ -261,10 +261,10 @@ protected:
 			ToolTip = "경고/타격 중심으로 쓸 레벨 액터의 Actor Tag. 해당 태그를 가진 액터가 없으면 보스 위치로 폴백."))
 	FName ArenaCenterTag = TEXT("ArenaCenter");
 
-	/** 경고 액터 스폰 Z 오프셋(cm). 보스 위치 폴백 시 캡슐 중심 높이만큼 음수로 내려 지면에 붙인다. */
+	/** 경고 액터 스폰 Z 오프셋(cm). 스폰 시 바닥으로 스냅되므로 z-fighting 방지용 미세 조정에만 사용. */
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Phase|MinionGate",
 		meta = (EditCondition = "bUseMinionTimeoutPunish",
-			ToolTip = "경고 액터를 스폰할 때 중심 위치에 더할 Z 오프셋(cm). 보스 위치로 폴백하면 캡슐 중심 높이(보통 +90 근처)라 공중에 뜬다. 음수(예: -90)로 지면까지 내리고, 지면 근처에서 z-fighting 나면 +2~5 로 미세 조정."))
+			ToolTip = "바닥 스냅 지점에 더할 Z 오프셋(cm). 스폰 시 아래로 라인트레이스해서 지면에 붙이므로 +2~5 정도의 미세 조정만 필요."))
 	float TimeoutWarningZOffset = 5.f;
 
 	/** 타임아웃 벌칙 발동 후 페이즈 종료까지의 지연(초). 투사체가 착지·데미지 적용할 시간 확보용. */

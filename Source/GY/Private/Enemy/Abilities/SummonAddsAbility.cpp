@@ -69,6 +69,12 @@ void USummonAddsAbility::ExecuteSummonAt(FVector CenterLocation)
 
 	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
 
+	const AActor* BossActor = GetAvatarActorFromActorInfo();
+	const float BaseYawRad = BossActor
+		? FMath::DegreesToRadians(BossActor->GetActorRotation().Yaw)
+		: 0.f;
+	const float HalfAngleRad = FMath::DegreesToRadians(SpawnHalfAngleDeg);
+
 	for (int32 i = 0; i < MinionCount; ++i)
 	{
 		const FSummonEntry* Entry = PickRandomEntry();
@@ -78,7 +84,7 @@ void USummonAddsAbility::ExecuteSummonAt(FVector CenterLocation)
 			continue;
 		}
 
-		const float Angle = FMath::FRandRange(0.f, 2.f * PI);
+		const float Angle = BaseYawRad + FMath::FRandRange(-HalfAngleRad, HalfAngleRad);
 		const float Radius = FMath::FRandRange(SpawnRadiusMin, SpawnRadiusMax);
 		const FVector Offset(FMath::Cos(Angle) * Radius, FMath::Sin(Angle) * Radius, 0.f);
 		const FVector SpawnLoc = CenterLocation + Offset;

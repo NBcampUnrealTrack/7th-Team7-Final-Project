@@ -93,12 +93,24 @@ void UGYBossPhaseAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 					const FVector Center = AAreaWarningActor::ResolveArenaCenter(
 						World, ArenaCenterTag, Avatar->GetActorLocation());
 
+					FVector SpawnLoc = Center + FVector(0.f, 0.f, TimeoutWarningZOffset);
+
+					FHitResult Hit;
+					FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(TimeoutWarningGroundSnap), false, Avatar);
+					if (World->LineTraceSingleByChannel(Hit,
+							Center + FVector(0.f, 0.f, 200.f),
+							Center - FVector(0.f, 0.f, 2000.f),
+							ECC_WorldStatic, QueryParams))
+					{
+						SpawnLoc = Hit.ImpactPoint + FVector(0.f, 0.f, TimeoutWarningZOffset);
+					}
+
 					FActorSpawnParameters SP;
 					SP.Owner = Avatar;
 					SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 					if (AAreaWarningActor* W = World->SpawnActor<AAreaWarningActor>(
-							TimeoutWarningClass, Center + FVector(0.f, 0.f, TimeoutWarningZOffset),
+							TimeoutWarningClass, SpawnLoc,
 							FRotator::ZeroRotator, SP))
 					{
 						W->Initialize(MinionGateTimeoutDuration, TimeoutWarningRadius);

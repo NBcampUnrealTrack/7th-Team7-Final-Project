@@ -57,6 +57,8 @@ public:
 
 	void NotifyGASInitialized();
 
+	void ReapplyInitialStats();
+
 	void RegisterExtraLoadStep();
 	void CompleteExtraLoadStep();
 
