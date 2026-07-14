@@ -1,5 +1,6 @@
 #include "Player/GYPlayerController.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "Account/GYAccountSubsystem.h"
 #include "Character/GYPawnExtensionComponent.h"
 #include "Cheats/GYCheatManager.h"
 #include "Cheats/GYServerCheatProxy.h"
@@ -25,6 +26,19 @@ void AGYPlayerController::ConnectToServer(const FString& Address)
 	if (!Target.Contains(TEXT(":")))
 	{
 		Target += TEXT(":7777");
+	}
+
+	// 로그인된 계정의 캐릭터를 접속 옵션으로 첨부 — 서버(InitNewPlayer)가 파싱해 세이브 대상 지정.
+	// 미로그인(백엔드 다운 등)이면 charId 없이 접속 — 서버 가드가 그 플레이어만 저장 비활성 처리
+	UGameInstance* GameInstance = GetGameInstance();
+	UGYAccountSubsystem* Account = IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYAccountSubsystem>() : nullptr;
+	if (IsValid(Account) && Account->GetPrimaryCharacterId() > 0)
+	{
+		Target += FString::Printf(TEXT("?charId=%lld"), Account->GetPrimaryCharacterId());
+	}
+	else
+	{
+		GY_WARN(Network, KDY, "ConnectToServer without login - progress will not be saved (gy.Account.Login to retry)");
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("ConnectToServer: %s"), *Target);
