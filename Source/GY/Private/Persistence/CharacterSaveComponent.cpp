@@ -223,6 +223,15 @@ void UCharacterSaveComponent::EnsureLoaded()
 		}
 	}
 
+	// 진짜 데디에 charId 없이 붙은 플레이어: stub(char 1)로 로드하면 남의/서로의 진행이 한 행에 섞인다
+	// → 이 플레이어만 저장 비활성 (bLoaded false 유지 = 기존 게이팅이 저장 차단). PIE 데디는 stub 유지 (팀 반복 흐름)
+	if (!bCharacterIdExplicit && IsValid(GetWorld())
+		&& GetWorld()->GetNetMode() == NM_DedicatedServer && GetWorld()->WorldType != EWorldType::PIE)
+	{
+		GY_WARN(Network, KDY, "No charId for %s - persistence disabled (connect via gy.Account.Join)", *GetNameSafe(GetOwner()));
+		return;
+	}
+
 	LoadAndApply();
 }
 
