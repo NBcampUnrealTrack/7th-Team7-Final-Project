@@ -28,6 +28,10 @@ public:
 
 	bool IsLoaded() const { return bLoaded; }
 
+	// 계정-캐릭터 1:1: 접속 옵션(?charId=, GYGameMode가 파싱) 또는 로컬 로그인 계정에서 지정.
+	// 로드 시작 후에는 무시 — 세션 중 캐릭터 교체 없음
+	void SetCharacterId(int64 InCharacterId);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -46,8 +50,9 @@ private:
 	// characters 테이블 level/xp 컬럼용 (data JSON 과 별도 denormalize)
 	void ReadLevelAndXp(int32& OutLevel, int32& OutXp) const;
 
-	// TODO (KDY): 계정/캐릭터 선택 연동 전 stub
+	// 미지정 시 dev stub(1) — gy.Persist 콘솔 흐름용. 저장 경로는 int32 유지 (이 규모에서 충분)
 	int32 CharacterId = 1;
+	bool bCharacterIdExplicit = false;
 
 	int32 CachedSaveVersion = 0;
 	bool bLoaded = false;

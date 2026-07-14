@@ -11,6 +11,8 @@ class GY_API UGYGameInstance : public UGameInstance
 
 public:
 	virtual void Init() override;
+	virtual void OnStart() override;
+
 	static UGYGameInstance* Get(const UObject* WorldContext);
 
 protected:

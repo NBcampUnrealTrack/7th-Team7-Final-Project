@@ -29,6 +29,9 @@ public:
 	// 폰 클래스를 Experience/PawnData에서 해결(데이터드리븐). 폴백은 DefaultPawnClass.
 	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 
+	// 접속 옵션(?charId=, gy.Account.Join이 부여)의 캐릭터를 세이브 컴포넌트에 지정
+	virtual FString InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal = TEXT("")) override;
+
 protected:
 	virtual void Tick(float DeltaSeconds) override;
 	bool AdvanceSecond(float Amount, AGYGameState* GYGameState);

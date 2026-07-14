@@ -184,6 +184,16 @@ void UGYPersistenceSubsystem::LoadConfig()
 
 void UGYPersistenceSubsystem::LoadCharacter(int32 CharacterId, FGYOnLoadComplete OnComplete)
 {
+	// 클라 배포본은 SecretKey가 의도적으로 빈 값 — 401 재시도 루프 대신 NotFound로 즉시 종료 (저장 비활성 경로)
+	if (SecretKey.IsEmpty())
+	{
+		GY_WARN(Network, KDY, "LoadCharacter(%d): no SecretKey (client build) - persistence disabled", CharacterId);
+		FGYLoadResult Result;
+		Result.Result = EGYPersistResult::NotFound;
+		OnComplete.ExecuteIfBound(Result);
+		return;
+	}
+
 	const FString Url = FString::Printf(
 		TEXT("%s/rest/v1/characters?id=eq.%d&select=level,xp,data,save_version"),
 		*BaseUrl, CharacterId);

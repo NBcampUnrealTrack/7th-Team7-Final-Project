@@ -1,0 +1,113 @@
+# 클라이언트 패키징 — self-hosted 러너에서 scripts/package_client.ps1 실행 후 itch.io 배포(선택).
+#
+# 실행: Actions 탭 → package-client → Run workflow → 빌드 돌릴 머신 선택.
+# 러너 등록(각자 PC, 1회): 레포 Settings → Actions → Runners → New self-hosted runner (Windows)
+#   config 시 라벨: ue57,pc-<본인이름>   (pc-* 라벨을 아래 runner options에도 추가)
+#   전제: UE 5.7 런처 설치본(C:\Program Files\Epic Games\UE_5.7) + VS2022
+#
+# Secrets (Settings → Secrets and variables → Actions):
+#   GY_HOSTED_URL / GY_HOSTED_PUBLISHABLE_KEY — 산출물이 바라볼 호스티드 Supabase
+#   BUTLER_API_KEY / ITCH_TARGET(예: team/gy-internal) — itch 배포용. 없으면 배포 단계 스킵
+#   DISCORD_PACKAGE_WEBHOOK_URL — 패키징 알림 채널 웹훅 (기존 훅과 별도 채널). 없으면 알림 스킵
+name: package-client
+
+# 주의: 수동 실행(Run workflow) 버튼은 이 파일이 main에 머지된 후에 Actions 탭에 나타난다
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "빌드 돌릴 머신 (any = 아무 유휴 러너)"
+        type: choice
+        default: any
+        options:
+          - any
+          - pc-kdy
+
+concurrency:
+  group: package-${{ inputs.runner }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on:
+      - self-hosted
+      - ${{ inputs.runner == 'any' && 'ue57' || inputs.runner }}
+    timeout-minutes: 240
+    steps:
+      - name: Notify start (Discord)
+        shell: powershell
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
+          CONTENT: "📦 클라 패키징 시작 — ${{ github.actor }} | 머신: ${{ inputs.runner }} (${{ runner.name }}) | ${{ github.ref_name }} | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          if (-not $env:WEBHOOK) { Write-Host "웹훅 secret 없음 - 알림 스킵"; exit 0 }
+          $body = @{ content = $env:CONTENT } | ConvertTo-Json -Compress
+          try { Invoke-RestMethod -Uri $env:WEBHOOK -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) } catch { Write-Host "알림 실패(빌드는 계속): $($_.Exception.Message)" }
+
+      - name: Checkout (증분 — Intermediate/DDC 보존)
+        uses: actions/checkout@v4
+        with:
+          clean: false
+
+      - name: Package client
+        shell: powershell
+        env:
+          GY_HOSTED_URL: ${{ secrets.GY_HOSTED_URL }}
+          GY_HOSTED_PUBLISHABLE_KEY: ${{ secrets.GY_HOSTED_PUBLISHABLE_KEY }}
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package_client.ps1 -AuthMode Steam
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Push to itch.io (butler)
+        shell: powershell
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_TARGET: ${{ secrets.ITCH_TARGET }}
+        run: |
+          if (-not $env:BUTLER_API_KEY -or -not $env:ITCH_TARGET) {
+            Write-Host "BUTLER_API_KEY / ITCH_TARGET secret 없음 - itch 배포 스킵"
+            exit 0
+          }
+          $butlerDir = "$env:RUNNER_TOOL_CACHE\butler"
+          $butler = "$butlerDir\butler.exe"
+          if (-not (Test-Path $butler)) {
+            New-Item -ItemType Directory -Force -Path $butlerDir | Out-Null
+            Invoke-WebRequest "https://broth.itch.zone/butler/windows-amd64/LATEST/archive/default" -OutFile "$butlerDir\butler.zip"
+            Expand-Archive "$butlerDir\butler.zip" -DestinationPath $butlerDir -Force
+          }
+          $version = "$($env:GITHUB_RUN_NUMBER)-$($env:GITHUB_SHA.Substring(0,7))"
+          & $butler push "$env:GITHUB_WORKSPACE\Build\Packaged\Windows" "$($env:ITCH_TARGET):win64-dev" --userversion $version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "ITCH_VERSION=$version" >> $env:GITHUB_ENV
+          "itch 배포 완료: $env:ITCH_TARGET win64-dev v$version" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Summary
+        shell: powershell
+        run: |
+          "산출물: $env:GITHUB_WORKSPACE\Build\Packaged\Windows" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Notify success (Discord)
+        if: success()
+        shell: powershell
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
+          CONTENT: "✅ 클라 패키징 완료 — ${{ github.ref_name }} | itch: win64-dev v$env:ITCH_VERSION | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          if (-not $env:WEBHOOK) { exit 0 }
+          $content = $env:CONTENT -replace '\$env:ITCH_VERSION', $(if ($env:ITCH_VERSION) { $env:ITCH_VERSION } else { "(itch 스킵)" })
+          $body = @{ content = $content } | ConvertTo-Json -Compress
+          try { Invoke-RestMethod -Uri $env:WEBHOOK -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) } catch { Write-Host "알림 실패: $($_.Exception.Message)" }
+
+      - name: Notify failure/cancel (Discord)
+        if: failure() || cancelled()
+        shell: powershell
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
+          JOB_STATUS: ${{ job.status }}
+          CONTENT_FAIL: "❌ 클라 패키징 실패 — ${{ github.ref_name }} | 머신: ${{ runner.name }} | 로그: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CONTENT_CANCEL: "⚠️ 클라 패키징 중단(취소) — ${{ github.ref_name }} | 머신: ${{ runner.name }} | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          if (-not $env:WEBHOOK) { exit 0 }
+          $content = if ($env:JOB_STATUS -eq "cancelled") { $env:CONTENT_CANCEL } else { $env:CONTENT_FAIL }
+          $body = @{ content = $content } | ConvertTo-Json -Compress
+          try { Invoke-RestMethod -Uri $env:WEBHOOK -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) } catch { Write-Host "알림 실패: $($_.Exception.Message)" }

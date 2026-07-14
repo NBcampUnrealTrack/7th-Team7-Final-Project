@@ -1,6 +1,7 @@
 #include "Persistence/CharacterSaveComponent.h"
 
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
+#include "Account/GYAccountSubsystem.h"
 #include "Currency/CurrencyComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Inventory/InventoryComponent.h"
@@ -191,9 +192,46 @@ void UCharacterSaveComponent::OnSaveDone(const FGYSaveResult& Result)
 	}
 }
 
+void UCharacterSaveComponent::SetCharacterId(int64 InCharacterId)
+{
+	if (InCharacterId <= 0) return;
+
+	if (bLoaded || bLoading)
+	{
+		GY_WARN(Network, KDY, "SetCharacterId(%lld) ignored - load already started (current=%d)", InCharacterId, CharacterId);
+		return;
+	}
+
+	CharacterId = static_cast<int32>(InCharacterId);
+	bCharacterIdExplicit = true;
+}
+
 void UCharacterSaveComponent::EnsureLoaded()
 {
 	if (bLoaded || bLoading) return;
+
+	// listen/standalone 호스트: 접속 옵션이 없으므로 로컬 로그인 계정의 1:1 캐릭터 채택.
+	// 로그인 미완료(레이스)/미로그인이면 dev stub 유지 — gy.Persist 콘솔 흐름 보존
+	if (!bCharacterIdExplicit)
+	{
+		UWorld* World = GetWorld();
+		UGameInstance* GameInstance = IsValid(World) ? World->GetGameInstance() : nullptr;
+		UGYAccountSubsystem* Account = IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYAccountSubsystem>() : nullptr;
+		if (IsValid(Account) && Account->GetPrimaryCharacterId() > 0)
+		{
+			SetCharacterId(Account->GetPrimaryCharacterId());
+		}
+	}
+
+	// 진짜 데디에 charId 없이 붙은 플레이어: stub(char 1)로 로드하면 남의/서로의 진행이 한 행에 섞인다
+	// → 이 플레이어만 저장 비활성 (bLoaded false 유지 = 기존 게이팅이 저장 차단). PIE 데디는 stub 유지 (팀 반복 흐름)
+	if (!bCharacterIdExplicit && IsValid(GetWorld())
+		&& GetWorld()->GetNetMode() == NM_DedicatedServer && GetWorld()->WorldType != EWorldType::PIE)
+	{
+		GY_WARN(Network, KDY, "No charId for %s - persistence disabled (connect via gy.Account.Join)", *GetNameSafe(GetOwner()));
+		return;
+	}
+
 	LoadAndApply();
 }
 

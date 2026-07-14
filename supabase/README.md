@@ -35,6 +35,14 @@ UE 게임의 데이터 영속(세이브)을 처리하는 백엔드. 로컬에선
 - 스키마 바꿀 땐: `supabase\migrations\` SQL 수정 → `db-reset.bat`
 - (초기 단계엔 마이그레이션 새로 안 쌓고 `init.sql` 직접 고쳐 reset 해도 됨)
 
+## Steam 신원확인 (Edge Function `steam-auth`)
+- 클라 로그인: UE `UGYAccountSubsystem` → `POST /functions/v1/steam-auth` → GoTrue 토큰 발급 → PostgREST 캐릭터 CRUD (RLS)
+- 로컬은 **무설정으로 stub 모드** (steam_id 그대로 신뢰). 실검증은 자체 Steam App ID 확보 후 함수 secrets 로 전환:
+  `STEAM_AUTH_MODE=verify` + `STEAM_WEB_API_KEY` + `STEAM_APP_ID`
+- **자동 로그인**: 게임/PIE 시작 시 자동 인증 + 계정당 캐릭터 1개 자동 확보(1:1, persona 이름 — 생성/선택 UI는 추후). 서버 접속은 `gy.Account.Join <ip[:port]>` — 내 캐릭터 id가 접속 옵션으로 붙어 데디가 그 캐릭터로 저장/로드
+- UE 콘솔: `gy.Account.Login [Mock|Steam]`(수동 재시도/모드 전환) / `gy.Account.Chars` / `gy.Account.CreateChar <name>` / `gy.Account.DeleteChar <id>` / `gy.Account.Join <ip[:port]>` / `gy.Account.SmokeTest`(로그인→생성→목록→삭제 왕복, 성공 시 "SmokeTest PASSED" 로그)
+- Steam 모드는 Steam 클라 실행 + 엔진 `Binaries\Win64\steam_appid.txt`(내용 `480`) 필요. 에디터/PIE에서도 동작하나 에디터발 인스턴스는 전부 같은 SteamID — 다계정 테스트는 Mock(PIE 인스턴스별 `dev_test_<n>` 자동 분리)
+
 ## 키 / 보안
 - 로컬의 `ServiceRoleKey` = **로컬 demo 키(비밀 아님, 공개·고정)** → `Config\DefaultGYPersistence.ini` 에 커밋돼 있음
 - **호스티드(실서버) service_role 키는 절대 커밋 금지** — 이 ini 에 넣지 말고 **CI/env 로 주입** (이 파일은 로컬 값으로 커밋됨)
