@@ -135,8 +135,17 @@ jobs:
           $version = "$($env:GITHUB_RUN_NUMBER)-$($env:GITHUB_SHA.Substring(0,7))"
           & $butler push "$env:GITHUB_WORKSPACE\Build\Packaged\Windows" "$($env:ITCH_TARGET):$channel" --userversion $version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          "ITCH_VERSION=$version" >> $env:GITHUB_ENV
-          "itch deployed: $env:ITCH_TARGET $channel v$version" >> $env:GITHUB_STEP_SUMMARY
+          # itch server-side processing: poll until our version goes live so the Discord OK means downloadable-now
+          $state = "processing"
+          $deadline = (Get-Date).AddMinutes(15)
+          while ((Get-Date) -lt $deadline) {
+            Start-Sleep -Seconds 30
+            $status = (& $butler status "$($env:ITCH_TARGET):$channel" 2>&1 | Out-String)
+            if ($status -match [regex]::Escape($version)) { $state = "live"; break }
+            Write-Host "itch still processing... (target version: $version)"
+          }
+          "ITCH_VERSION=$version ($state)" >> $env:GITHUB_ENV
+          "itch deployed: $env:ITCH_TARGET $channel v$version ($state)" >> $env:GITHUB_STEP_SUMMARY
 
       - name: Summary
         shell: powershell
