@@ -28,11 +28,13 @@ void UGA_UseConsumable::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	//가능 불가능 체크만, 기존의 커밋(자원소모,쿨다운)은 뒤로 뺏슴
+	if (!CanActivateAbility(Handle, ActorInfo))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
+
 
 	// 클라이언트: 몽타주만 재생
 	if (!ActorInfo->IsNetAuthority())
@@ -117,7 +119,11 @@ void UGA_UseConsumable::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			Consumable->EffectGE, GetAbilityLevel(), Context);
 		if (!EffectSpecHandle.IsValid()) continue;
 
-		if (!InventoryComponent->TryRemoveItem(Entry.InstanceId, 1)) continue;
+		//삭제할 아이템 캐싱
+		if (Entry.StackCount < 1) continue; //삭제가능 검사를 갯수 검사로 대체
+		CachedInventoryComponent = InventoryComponent;
+		CachedItemInstanceId = Entry.InstanceId;
+		//if (!InventoryComponent->TryRemoveItem(Entry.InstanceId, 1)) continue;
 
 		CachedEffectSpec = EffectSpecHandle;
 
@@ -136,6 +142,12 @@ void UGA_UseConsumable::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		}
 		else
 		{
+			if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+			{
+				EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+				return;
+			}
+
 			ASC->ApplyGameplayEffectSpecToSelf(*CachedEffectSpec.Data);
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		}
@@ -147,13 +159,23 @@ void UGA_UseConsumable::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 void UGA_UseConsumable::OnMontageCompleted()
 {
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	if (ASC && CachedEffectSpec.IsValid())
-		ASC->ApplyGameplayEffectSpecToSelf(*CachedEffectSpec.Data);
+	//다 마셧을때만 쿨 적용, 회복 및 물약삭제
+	if (CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo))
+	{
+		if (CachedInventoryComponent && CachedInventoryComponent->TryRemoveItem(CachedItemInstanceId, 1))
+		{
+			if (ASC && CachedEffectSpec.IsValid())
+			{
+				ASC->ApplyGameplayEffectSpecToSelf(*CachedEffectSpec.Data);
+			}
+		}
+	}
 	GY_LOG(Content, CYS, "물약 몽타쥬");
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void UGA_UseConsumable::OnMontageCancelled()
 {
+	GY_LOG(Content, CYS, "물약 몽타쥬 캔슬됨");
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
