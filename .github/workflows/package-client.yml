@@ -51,12 +51,46 @@ jobs:
           $body = @{ content = $env:CONTENT } | ConvertTo-Json -Compress
           try { Invoke-RestMethod -Uri $env:WEBHOOK -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) } catch { Write-Host "알림 실패(빌드는 계속): $($_.Exception.Message)" }
 
+      # LFS 객체를 개발 클론에서 미리 시딩 — checkout 의 lfs fetch 가 로컬에 있는 객체는 스킵하고
+      # 개발 클론에도 없는 신규분만 GitHub 에서 받는다 (다운로드/대역폭 절약).
+      # 첫 실행(워크스페이스에 레포 없음)은 스킵 — 그 회차만 전체 다운로드
+      - name: LFS objects (개발 클론에서 시딩)
+        shell: powershell
+        run: |
+          $devClone = $env:GY_DEV_CLONE
+          if ($devClone -and (Test-Path "$devClone\.git\lfs\objects") -and (Test-Path "$env:GITHUB_WORKSPACE\.git\HEAD")) {
+            robocopy "$devClone\.git\lfs\objects" "$env:GITHUB_WORKSPACE\.git\lfs\objects" /E /MT:16 /NFL /NDL /NP /NJH
+            if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE }   # robocopy: 0~7 = 성공
+            Write-Host "LFS 시딩 완료 (개발 클론: $devClone)"
+          } else {
+            Write-Host "GY_DEV_CLONE 미설정 또는 첫 실행 - checkout 에서 GitHub LFS 다운로드"
+          }
+          exit 0
+
       - name: Checkout (증분 — Intermediate/DDC 보존)
         uses: actions/checkout@v4
         with:
           clean: false
           submodules: recursive
           lfs: true
+
+      # 유료 에셋은 gitignore — 러너 머신의 개발 클론(소유자가 sync_assets 로 최신 유지)을 원천으로 robocopy.
+      # 로컬 증분 복사라 몇 초. 러너 머신에 env GY_DEV_CLONE(개발 클론 루트, 예: C:\Unreal\GY) 설정 필요 —
+      # 미설정(전용 빌드머신 등)이면 rclone 으로 gdrive 에서 직접 동기화 폴백
+      - name: Paid assets (개발 클론에서 복사)
+        shell: powershell
+        run: |
+          $assetDir = "$env:GITHUB_WORKSPACE\Content\ThirdParty\PaidAssets"
+          $devClone = $env:GY_DEV_CLONE
+          if ($devClone -and (Test-Path "$devClone\Content\ThirdParty\PaidAssets")) {
+            robocopy "$devClone\Content\ThirdParty\PaidAssets" $assetDir /E /MT:16 /NFL /NDL /NP /NJH
+            if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE }   # robocopy: 0~7 = 성공
+            Write-Host "유료 에셋 동기화 완료 (개발 클론: $devClone)"
+            exit 0
+          }
+          Write-Host "GY_DEV_CLONE 미설정/무효 - rclone 으로 gdrive 직접 동기화"
+          rclone copy gdrive:GY_PaidAssets $assetDir --fast-list --stats-one-line --stats 30s
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Package client
         shell: powershell
