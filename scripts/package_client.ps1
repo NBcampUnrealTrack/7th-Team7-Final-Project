@@ -36,12 +36,12 @@ try {
                "MockSteamId=dev_test`r`n"
     Set-Content -Path $IniPath -Value $iniText -Encoding ascii
 
-    # -nocompileeditor: 쿡은 기존 에디터 바이너리 사용 (직전에 빌드돼 있어야 함).
+    # 에디터 타깃도 같이 빌드 — 쿡이 GYEditor.target 을 요구하고, CI(fresh 클론)엔 에디터 바이너리가 없음.
     # MaxParallelActions=2: PCH 컴파일 메모리 피크 제한 — 병렬 3+에서 C3859(가상 메모리 부족) 발생 이력
     & "$Engine\Engine\Build\BatchFiles\RunUAT.bat" BuildCookRun `
         -project="$RepoRoot\GY.uproject" `
         -platform=Win64 -clientconfig=Development `
-        -build -nocompileeditor -cook -stage -pak -archive -archivedirectory="$ArchiveDir" `
+        -build -cook -stage -pak -archive -archivedirectory="$ArchiveDir" `
         -UbtArgs="-MaxParallelActions=2" `
         -noP4 -utf8output -unattended
     if ($LASTEXITCODE -ne 0) { throw "BuildCookRun failed (exit $LASTEXITCODE)" }
