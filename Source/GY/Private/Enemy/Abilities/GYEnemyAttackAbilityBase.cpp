@@ -192,6 +192,8 @@ float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Abi
 	{
 		return -1.f;
 	}
+	float HalfAngle = Ability->AttackAngle * 0.5f;
+	if (HalfAngle > 0.f && AngleDeg > HalfAngle) return -1.f;
 
 	//if (DistToTarget < Ability->MinDistance) return -1.f;
 
@@ -201,7 +203,6 @@ float UGYEnemyAttackAbilityBase::CalcAbilityScore(UGYEnemyAttackAbilityBase* Abi
 	float ExtraMove = FMath::Max(0.f, DistToTarget - Ability->AttackRange);
 	float DistScore = DamageScore / (1.f + ExtraMove * 0.01f);
 
-	float HalfAngle = Ability->AttackAngle * 0.5f;
 	float AngleScore = (HalfAngle > 0.f) ? FMath::Clamp(1.f - (AngleDeg / HalfAngle), 0.f, 1.f) : 1.f;
 
 	float EffectiveScore = DistScore * (0.5f + AngleScore * 0.5f);

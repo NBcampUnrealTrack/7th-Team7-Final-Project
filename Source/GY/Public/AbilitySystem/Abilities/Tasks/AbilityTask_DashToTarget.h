@@ -22,7 +22,8 @@ public:
 		float StopDistance,
 		float FrontHalfAngleDeg = 45.f,
 		bool bUseAcc = true,
-		bool bShouldBranchCombo = true
+		bool bShouldBranchCombo = true,
+		float Duration = 5.f
 		);
 
 	virtual void Activate() override;
@@ -38,6 +39,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FGenericGameplayTaskDelegate OnCancelled;
 
+	UPROPERTY(BlueprintAssignable)
+	FGenericGameplayTaskDelegate OnTimeout;
 protected:
 	TWeakObjectPtr<AActor> TargetActor;
 	TWeakObjectPtr<UGameplayAbility> OwningAbilityRef;
@@ -48,6 +51,8 @@ protected:
 	bool bUseAcc = true;
 	float SavedAcc = 0.f;
 	bool bShouldBranchCombo = true;
+	float Duration;
+	float Elapsed;
 
 	TWeakObjectPtr<UAbilitySystemComponent> CachedASC;
 	UPROPERTY()
