@@ -6,6 +6,8 @@
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/QuestTags.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Enemy/EnemyAnimInstance.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "Enemy/GYEnemyAIController.h"
@@ -13,6 +15,53 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/GYUIMessages.h"
+
+void AGYChapterBossCharacter::Die()
+{
+	if (bIsDead) return;
+	bIsDead = true;
+
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->AddLooseGameplayTag(GYStateTags::State_Life_Dead);
+	}
+
+	DisableGameplay();
+
+	if (HasAuthority())
+	{
+		HandleDeathAuthority();
+	}
+
+	OnEnemyDead.Broadcast(this);
+	// 적 처치 퀘스트 - 003 목표
+	UWorld* World = GetWorld();
+	if (IsValid(World))
+	{
+		{
+			FQuestEventMessage QuestMsg;
+			QuestMsg.EventTag = GYGameplayTags::Quest_Objective_Kill;
+			QuestMsg.TargetId = "Enemy";
+			QuestMsg.Count = 1;
+			UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Quest_Event, QuestMsg);
+		}
+		//최종관문 부품 - 006 목표
+		{
+			FQuestEventMessage QuestMsg;
+			QuestMsg.EventTag = GYGameplayTags::Quest_Objective_CollectParts;
+			QuestMsg.TargetId = "Parts1";
+			QuestMsg.Count = 1;
+			UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Quest_Event, QuestMsg);
+		}
+	}
+
+	// 사운드
+	if (AbilitySystemComponent && DeathCueTag.IsValid())
+	{
+		AbilitySystemComponent->ExecuteGameplayCue(DeathCueTag);
+	}
+
+}
 
 void AGYChapterBossCharacter::BeginPlay()
 {

@@ -46,6 +46,9 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Open)
 	bool bIsOpen = false;
 
+	UPROPERTY(EditAnywhere)
+	FGameplayTag QuestRequiredTag;
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
 	TObjectPtr<UStaticMeshComponent> DoorFrameMesh;
