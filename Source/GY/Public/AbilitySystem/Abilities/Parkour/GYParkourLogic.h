@@ -23,7 +23,7 @@ struct FGYTargetData_Parkour : public FGameplayAbilityTargetData
 	UPROPERTY()
 	FVector TopHitLoc = FVector::ZeroVector;
 	UPROPERTY()
-	float ObstacleHeight;
+	float ObstacleHeight = 0.f;
 	UPROPERTY()
 	EParkourMontageType ParkourType = EParkourMontageType::None;
 
