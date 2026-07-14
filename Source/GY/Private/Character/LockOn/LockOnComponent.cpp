@@ -1,7 +1,9 @@
 #include "Character/LockOn/LockOnComponent.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
+#include "AbilitySystem/GYCombatStatics.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/CameraTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
@@ -295,6 +297,8 @@ AActor* ULockOnComponent::FindBestTarget() const
 	if (!Owner) return nullptr;
 	UWorld* World = Owner->GetWorld();
 	if (!World) return nullptr;
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Owner);
+	if (!ASC) return nullptr;
 
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(LockOnFindBestTarget), false);
 	Params.AddIgnoredActor(Owner);
@@ -321,6 +325,12 @@ AActor* ULockOnComponent::FindBestTarget() const
 		if (!Candidate || Candidate == Owner) continue;
 		if (IsLockOnTargetInvalid(Candidate)) continue;
 
+
+		UAbilitySystemComponent* CadidateASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Candidate);
+		if (UGYCombatStatics::IsSameFaction(ASC,CadidateASC))
+		{
+			return nullptr;
+		}
 		//TODO 팀 판정
 		const float DistSq = FVector::DistSquared(OwnerLoc, Candidate->GetActorLocation());
 		if (DistSq < BestDistSq)
@@ -340,7 +350,7 @@ void ULockOnComponent::UpdateRotationToTarget(float DeltaTime)
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (!OwnerPawn) return;
 	if (!OwnerPawn->HasAuthority() && !OwnerPawn->IsLocallyControlled()) return;
-	
+
 
 	if (!CurrentTarget.IsValid()) return;
 
