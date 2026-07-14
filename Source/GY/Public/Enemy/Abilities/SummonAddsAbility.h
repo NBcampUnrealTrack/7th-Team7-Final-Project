@@ -61,6 +61,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Attack|Summon")
 	float SpawnRadiusMax = 600.f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Boss|Attack|Summon", meta = (ClampMin = "0.0", ClampMax = "180.0"))
+	float SpawnHalfAngleDeg = 60.f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Boss|Attack|Summon")
 	FGameplayTag SummonCueTag;
 
