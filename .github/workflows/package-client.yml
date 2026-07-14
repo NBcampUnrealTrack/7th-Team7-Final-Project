@@ -17,6 +17,7 @@
 name: package-client
 
 # 주의: 수동 실행(Run workflow) 버튼은 이 파일이 main에 머지된 후에 Actions 탭에 나타난다
+# 단독 실행(dispatch) 또는 package-all 에서 호출(workflow_call) — 클라/서버 짝 배포는 package-all 사용
 on:
   workflow_dispatch:
     inputs:
@@ -34,6 +35,14 @@ on:
         options:
           - Development
           - Shipping
+  workflow_call:
+    inputs:
+      runner:
+        type: string
+        default: any
+      config:
+        type: string
+        default: Development
 
 concurrency:
   group: package-${{ inputs.runner }}
