@@ -49,6 +49,7 @@ jobs:
         with:
           clean: false
           submodules: recursive
+          lfs: true
 
       - name: Package client
         shell: powershell
