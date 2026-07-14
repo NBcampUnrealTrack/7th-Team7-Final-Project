@@ -77,7 +77,15 @@ jobs:
         with:
           clean: false
           submodules: recursive
-          lfs: true
+
+      # lfs:true 를 안 쓰는 이유: clean:false 워크스페이스에선 이전 실행이 남긴 포인터 파일이
+      # git 입장에서 "변경 없음"이라 checkout 이 다시 안 써서 포인터가 그대로 남는다.
+      # git lfs pull = 부족분만 fetch(시딩 덕에 대부분 로컬) + 워킹트리 포인터를 실파일로 변환
+      - name: LFS pull (포인터 → 실파일)
+        shell: powershell
+        run: |
+          git lfs pull
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # 유료 에셋은 gitignore — 러너 머신의 개발 클론(소유자가 sync_assets 로 최신 유지)을 원천으로 robocopy.
       # 로컬 증분 복사라 몇 초. GY_DEV_CLONE 미설정(전용 빌드머신 등)이면 rclone 으로 gdrive 직접 동기화 폴백
