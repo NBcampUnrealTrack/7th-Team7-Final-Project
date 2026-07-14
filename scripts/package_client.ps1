@@ -44,7 +44,7 @@ try {
     # MaxParallelActions=2: PCH 컴파일 메모리 피크 제한 — 병렬 3+에서 C3859(가상 메모리 부족) 발생 이력
     & "$Engine\Engine\Build\BatchFiles\RunUAT.bat" BuildCookRun `
         -project="$RepoRoot\GY.uproject" `
-        -platform=Win64 -clientconfig=$Config `
+        -platform=Win64 -clientconfig="$Config" `
         -build -cook -stage -pak -archive -archivedirectory="$ArchiveDir" `
         -UbtArgs="-MaxParallelActions=2" `
         -noP4 -utf8output -unattended
