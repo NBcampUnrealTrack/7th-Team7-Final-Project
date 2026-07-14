@@ -151,10 +151,10 @@ struct FDialogueRow : public FTableRowBase
 	FGameplayTag NarrativeTag;
 
 	UPROPERTY(EditAnywhere)
-	int32 Order;
+	int32 Order = 0;
 
 	UPROPERTY(EditAnywhere)
-	bool bIsPlayer;
+	bool bIsPlayer = false;
 
 	UPROPERTY(EditAnywhere)
 	FText Speaker;
