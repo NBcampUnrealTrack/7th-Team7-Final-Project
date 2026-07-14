@@ -65,4 +65,8 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Enemy_Morigesh_Attack03)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Enemy_Morigesh_Attack04)
 
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Enemy_GreyStone_Attack01)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Enemy_GreyStone_Attack02)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Enemy_GreyStone_Attack03)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Enemy_GreyStone_Attack04)
 }

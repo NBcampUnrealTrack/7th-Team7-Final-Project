@@ -61,4 +61,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Morigesh_Attack03, "Cooldown.Enemy.Morigesh.Attack03")
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_Morigesh_Attack04, "Cooldown.Enemy.Morigesh.Attack04")
 
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_GreyStone_Attack01, "Cooldown.Enemy.GreyStone.Attack01")
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_GreyStone_Attack02, "Cooldown.Enemy.GreyStone.Attack02")
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_GreyStone_Attack03, "Cooldown.Enemy.GreyStone.Attack03")
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Enemy_GreyStone_Attack04, "Cooldown.Enemy.GreyStone.Attack04")
 }

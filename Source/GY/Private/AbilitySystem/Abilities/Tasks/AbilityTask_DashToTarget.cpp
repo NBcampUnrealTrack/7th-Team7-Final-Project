@@ -10,7 +10,7 @@
 
 UAbilityTask_DashToTarget* UAbilityTask_DashToTarget::CreateDashToTarget(
     UGameplayAbility* OwningAbility, AActor* Target, TSubclassOf<UGameplayEffect> InMoveSpeedGEClass,
-    float InDashSpeed, float InStopDistance, float InFrontHalfAngleDeg, bool bUseAcc, bool bShouldBranchCombo)
+    float InDashSpeed, float InStopDistance, float InFrontHalfAngleDeg, bool bUseAcc, bool bShouldBranchCombo, float Duration)
 {
     UAbilityTask_DashToTarget* Task = NewAbilityTask<UAbilityTask_DashToTarget>(OwningAbility);
 	Task->OwningAbilityRef = OwningAbility;
@@ -21,6 +21,7 @@ UAbilityTask_DashToTarget* UAbilityTask_DashToTarget::CreateDashToTarget(
     Task->CosFrontHalfAngle = FMath::Cos(FMath::DegreesToRadians(FMath::Clamp(InFrontHalfAngleDeg, 0.f, 180.f)));
 	Task->bUseAcc = bUseAcc;
 	Task->bShouldBranchCombo = bShouldBranchCombo;
+	Task->Duration = FMath::Max(0.f, Duration);
     return Task;
 }
 
@@ -77,6 +78,17 @@ void UAbilityTask_DashToTarget::TickTask(float DeltaTime)
 		if (!bBroadcasted) { OnCancelled.Broadcast(); bBroadcasted = true; }
 		EndTask();
 		return;
+	}
+
+	if (Duration > 0.f)
+	{
+		Elapsed += DeltaTime;
+		if (Elapsed >= Duration)
+		{
+			if (!bBroadcasted) { OnTimeout.Broadcast(); bBroadcasted = true; }
+			EndTask();
+			return;
+		}
 	}
 
 	FVector ToTarget = Target->GetActorLocation() - Char->GetActorLocation();
