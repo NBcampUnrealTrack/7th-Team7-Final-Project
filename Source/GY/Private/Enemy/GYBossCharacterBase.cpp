@@ -17,6 +17,7 @@
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
+#include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "Logging/GYLogManager.h"
 
@@ -73,6 +74,7 @@ void AGYBossCharacterBase::SetParticipants(const TArray<APlayerState*>& InPartic
 		if (UEnemyBootstrapComponent* BS = GetBootstrap())
 		{
 			BS->NotifyGASInitialized();
+			BS->ReapplyInitialStats();
 		}
 		Activate();
 
@@ -177,7 +179,18 @@ void AGYBossCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProp
 
 float AGYBossCharacterBase::GetStatScaleValue() const
 {
-	return static_cast<float>(FMath::Max(1, Participants.Num()));
+	const AGameStateBase* GS = GetWorld() ? GetWorld()->GetGameState() : nullptr;
+	if (!GS) return 1.f;
+
+	int32 Count = 0;
+	for (const APlayerState* PS : GS->PlayerArray)
+	{
+		if (PS && !PS->IsInactive() && !PS->IsOnlyASpectator())
+		{
+			++Count;
+		}
+	}
+	return static_cast<float>(FMath::Max(1, Count));
 }
 
 void AGYBossCharacterBase::OnRep_Participants()

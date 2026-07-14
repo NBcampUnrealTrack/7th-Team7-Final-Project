@@ -327,6 +327,16 @@ void UEnemyBootstrapComponent::NotifyGASInitialized()
 	TryGrantGASFromDataAsset();
 }
 
+void UEnemyBootstrapComponent::ReapplyInitialStats()
+{
+	AGYEnemyCharacterBase* Owner = GetEnemyOwner();
+	if (!Owner || !Owner->HasAuthority()) return;
+
+	if (!bGASGrantedFromDataAsset || !LoadedDataAsset) return;
+
+	ApplyInitialStats(ComputeInitialStats(Owner->GetStatScaleValue()));
+}
+
 void UEnemyBootstrapComponent::TryGrantGASFromDataAsset()
 {
 	if (bGASGrantedFromDataAsset) return;
