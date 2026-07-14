@@ -52,6 +52,18 @@ struct FGYCameraView
 	float RotationInterpSpeed = 8.f;
 };
 
+USTRUCT()
+struct FGYPostProcessEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> MID = nullptr;
+
+	float Weight = 0.f;
+	bool  bFadeOut = false;
+};
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class GY_API UGYCameraComponent : public UPawnComponent, public IGameFrameworkInitStateInterface
 {
@@ -162,10 +174,15 @@ private:
 	float CurrentWeight = 0.f;
 	bool bFadeOut = false;
 
+	// 포스트 프로세스 머티리얼별로 독립 관리
+	UPROPERTY()
+	TMap<TObjectPtr<UMaterialInterface>, FGYPostProcessEntry> PostProcessEntries;
+
 	UPROPERTY(EditDefaultsOnly, Category="PostProcess")
 	float FadeOutSpeed = 8.f;
 
 public:
 	void ApplyPostProcess(UMaterialInterface* Material);
+	void RemovePostProcess(UMaterialInterface* Material);
 	void RemovePostProcess();
 };

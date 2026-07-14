@@ -10,6 +10,7 @@
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Logging/GYLogManager.h"
+#include "Core/GameplayTags/StateTags.h"
 
 const FName UGYCameraComponent::NAME_ActorFeatureName("CameraComponent");
 
@@ -241,26 +242,23 @@ void UGYCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	ApplyCameraView(CurrentView);
 
 	// 포스트 프로세스
-	if (bFadeOut && ActiveMID)
+	if (CameraComponent)
 	{
-		CurrentWeight = FMath::FInterpTo(
-			CurrentWeight,
-			0.f,
-			RealDelta,
-			FadeOutSpeed);
-
-		CameraComponent->AddOrUpdateBlendable(
-			ActiveMID,
-			CurrentWeight);
-
-		if (CurrentWeight <= 0.01f)
+		for (auto& Pair : PostProcessEntries)
 		{
-			CurrentWeight = 0.f;
-			bFadeOut = false;
+			FGYPostProcessEntry& Entry = Pair.Value;
+			if (!Entry.MID || !Entry.bFadeOut)
+			{
+				continue;
+			}
 
-			CameraComponent->AddOrUpdateBlendable(
-				ActiveMID,
-				0.f);
+			Entry.Weight = FMath::FInterpTo(Entry.Weight, 0.f, RealDelta, FadeOutSpeed);
+			if (Entry.Weight <= 0.01f)
+			{
+				Entry.Weight = 0.f;
+				Entry.bFadeOut = false;
+			}
+			CameraComponent->AddOrUpdateBlendable(Entry.MID, Entry.Weight);
 		}
 	}
 }
@@ -472,25 +470,27 @@ void UGYCameraComponent::ApplyPostProcess(UMaterialInterface* Material)
 		return;
 	}
 
-	if (!ActiveMID || CurrentMaterial != Material)
+	// 머티리얼별 항목 확보
+	FGYPostProcessEntry& Entry = PostProcessEntries.FindOrAdd(Material);
+	if (!Entry.MID)
 	{
-		CurrentMaterial = Material;
-
-		ActiveMID = UMaterialInstanceDynamic::Create(Material, this);
-
-		CameraComponent->AddOrUpdateBlendable(ActiveMID, 0.f);
+		Entry.MID = UMaterialInstanceDynamic::Create(Material, this);
 	}
 
-	// 즉시 적용
-	CurrentWeight = 1.f;
-	bFadeOut = false;
-
-	CameraComponent->AddOrUpdateBlendable(
-		ActiveMID,
-		CurrentWeight);
+	Entry.Weight = 1.f;
+	Entry.bFadeOut = false;
+	CameraComponent->AddOrUpdateBlendable(Entry.MID, Entry.Weight);
 }
 
-void UGYCameraComponent::RemovePostProcess()
+void UGYCameraComponent::RemovePostProcess(UMaterialInterface* Material)
 {
-	bFadeOut = true;
+	if (!Material)
+	{
+		return;
+	}
+
+	if (FGYPostProcessEntry* Entry = PostProcessEntries.Find(Material))
+	{
+		Entry->bFadeOut = true;
+	}
 }

@@ -59,7 +59,7 @@ bool AGYGameplayCueNotify_PostProcess::OnRemove_Implementation(AActor* MyTarget,
 		return false;
 	}
 
-	CameraComp->RemovePostProcess();
+	CameraComp->RemovePostProcess(PostProcessMaterial);
 
 	return true;
 }
