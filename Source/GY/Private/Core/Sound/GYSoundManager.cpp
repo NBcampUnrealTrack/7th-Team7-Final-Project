@@ -70,17 +70,26 @@ void UGYSoundManager::PlayBGM(FGameplayTag SoundTag, float FadeIn)
 	}
 
 	const FGYSoundDataTableRow* SoundRow = FindSoundRow(SoundTag);
-	if (!SoundRow || !SoundRow->Sound)
+	if (!SoundRow)
 	{
+		GY_WARN(Content, CYS, "PlayBGM: SoundDataTable에 태그 row 없음 - %s", *SoundTag.ToString());
+		return;
+	}
+	if (!SoundRow->Sound)
+	{
+		GY_WARN(Content, CYS, "PlayBGM: row는 있으나 Sound 에셋이 비어있음 - %s", *SoundTag.ToString());
 		return;
 	}
 
 	// 기존 BGM 중지
 	StopBGM(SoundRow->FadeOutTime);
 
-	// FadeIn 사용 시 초기 볼륨 0으로 생성해 자동재생과 FadeIn 충돌 방지
 	const float FadeInTime = ResolveFadeTime(FadeIn, SoundRow->FadeInTime);
-	const float SpawnVolume = FadeInTime > 0.f ? 0.f : GetFinalVolume(*SoundRow);
+
+	// VolumeMultiplier는 항상 최종 목표 볼륨으로 고정한다.
+	// 페이드는 AudioComponent 내부 Fader가 0 -> FadeVolumeLevel로 별도 램프하는 방식이라(VolumeMultiplier와는 무관),
+	// 여기서 0으로 스폰하면 Fader가 아무리 올라가도 최종 출력은 0*Fader=0으로 계속 무음이 된다.
+	const float SpawnVolume = GetFinalVolume(*SoundRow);
 
 	CurrentBGM = UGameplayStatics::SpawnSound2D(
 		GetGameInstance(),
@@ -98,8 +107,13 @@ void UGYSoundManager::PlayBGM(FGameplayTag SoundTag, float FadeIn)
 
 		if (FadeInTime > 0.f)
 		{
-			CurrentBGM->FadeIn(FadeInTime, GetFinalVolume(*SoundRow), SoundRow->StartTime);
+			// FadeVolumeLevel은 절대 목표 볼륨이 아니라 Fader가 도달할 상대 배율 - 1.0(무감쇠)까지 램프시킨다.
+			CurrentBGM->FadeIn(FadeInTime, 1.0f, SoundRow->StartTime);
 		}
+	}
+	else
+	{
+		GY_WARN(Content, CYS, "PlayBGM: SpawnSound2D 실패 - %s", *SoundTag.ToString());
 	}
 }
 
