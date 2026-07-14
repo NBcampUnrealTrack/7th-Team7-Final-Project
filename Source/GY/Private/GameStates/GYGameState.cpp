@@ -10,6 +10,9 @@
 #include "Experience/GYExperienceManagerComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
+#include "Core/GameplayTags/SoundTags.h"
+#include "Core/Sound/GYSoundManager.h"
+#include "Logging/GYLogManager.h"
 
 AGYGameState::AGYGameState()
 {
@@ -28,6 +31,7 @@ void AGYGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(AGYGameState, TimeScale);
 	DOREPLIFETIME(AGYGameState, ClearedQuests);
 	DOREPLIFETIME(AGYGameState, ActiveQuestTags);
+	DOREPLIFETIME(AGYGameState, bGameBGMStarted);
 }
 
 void AGYGameState::SetCurrentTime(float InCurrentTime)
@@ -91,6 +95,32 @@ void AGYGameState::OnRep_ClearedQuests()
 		UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Quest_Completed, Msg);
 	}
 	PreviousClearedCount = ClearedQuests.Num();
+}
+
+void AGYGameState::PlayGameBGMLocal(FGameplayTag BGMTag) const
+{
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		return;
+	}
+
+	if (UGYSoundManager* SoundMgr = UGYSoundManager::Get(this))
+	{
+		SoundMgr->PlayBGM(BGMTag, 0.5f);
+	}
+}
+
+void AGYGameState::StartGameBGM()
+{
+	if (!HasAuthority() || bGameBGMStarted) return;
+
+	bGameBGMStarted = true;
+	OnRep_GameBGMStarted(); // 서버 자신(리슨서버 호스트)은 리플리케이션을 안 타므로 직접 호출
+}
+
+void AGYGameState::OnRep_GameBGMStarted()
+{
+	PlayGameBGMLocal(GYGameplayTags::Sound_BGM_Lobby); // 임시, 안전장치, 로비 로직 나오면 다시 수정할듯.
 }
 
 void AGYGameState::BeginPlay()

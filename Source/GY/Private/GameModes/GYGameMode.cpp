@@ -118,6 +118,12 @@ void AGYGameMode::OnExperienceLoaded(const UGYExperienceDefinition* Experience)
 			}
 		}
 	}
+
+	// bGameBGMStarted는 리플리케이트되므로, 이 시점 이후 접속하는 클라이언트도 OnRep으로 자동 재생됨.
+	if (AGYGameState* GYGameState = GetGameState<AGYGameState>())
+	{
+		GYGameState->StartGameBGM();
+	}
 }
 
 const UGYPawnData* AGYGameMode::GetPawnDataForController(AController* InController) const
