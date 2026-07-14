@@ -32,6 +32,6 @@ public class GY : ModuleRules
 			"HTTP",
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "Niagara", "Json", "JsonUtilities" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "Niagara", "Json", "JsonUtilities", "OnlineSubsystem", "OnlineSubsystemUtils" });
 	}
 }
