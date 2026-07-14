@@ -93,7 +93,10 @@
 		},
 		{
 			"Name": "ActorPalette",
-			"Enabled": true
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		},
 		{
 			"Name": "OnlineSubsystemSteam",
