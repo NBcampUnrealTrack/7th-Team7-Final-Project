@@ -26,6 +26,8 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 
+	virtual TOptional<FUIInputConfig> GetDesiredInputConfig() const override;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> CountText;
 	UPROPERTY(EditDefaultsOnly, Category = "Waiting")

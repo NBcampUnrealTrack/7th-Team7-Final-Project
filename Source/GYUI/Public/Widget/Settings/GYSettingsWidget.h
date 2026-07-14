@@ -102,6 +102,10 @@ protected:
 	UPROPERTY(meta = (BindWidget))
     TObjectPtr<UButton> CloseButton;
 
+	/** 게임 종료 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> QuitButton;
+
 	UPROPERTY(EditDefaultsOnly, Category = "GY|Settings|Language")
 	TMap<FString, FText> SupportedLanguages;
 
@@ -145,6 +149,9 @@ private:
 
 	/** 닫기 */
     UFUNCTION() void HandleCloseClicked();
+
+	/** 게임 종료 */
+	UFUNCTION() void HandleQuitClicked();
 
     void InitGraphicsTab();
     void InitSoundTab();

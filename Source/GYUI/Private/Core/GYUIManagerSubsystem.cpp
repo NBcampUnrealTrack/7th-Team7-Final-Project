@@ -360,6 +360,7 @@ void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
 	UpdateRevivalWidget();
 
 	bGameplayInputBlockApplied = false;
+	bGateWaitingBlockApplied = false;
 	RefreshGameplayInputBlock();
 }
 
@@ -550,6 +551,16 @@ void UGYUIManagerSubsystem::RefreshGameplayInputBlock()
 	bGameplayInputBlockApplied = bShouldBlock;
 }
 
+void UGYUIManagerSubsystem::SetGateWaitingBlock(bool bBlock)
+{
+	if (!BoundASC.IsValid()) return;
+	if (bBlock == bGateWaitingBlockApplied) return;
+
+	bBlock ? BoundASC->AddLooseGameplayTag(GYStateTags::State_UI_GateWaiting)
+	: BoundASC->RemoveLooseGameplayTag(GYStateTags::State_UI_GateWaiting);
+	bGateWaitingBlockApplied = bBlock;
+}
+
 bool UGYUIManagerSubsystem::IsSystemUIActive() const
 {
 	if (ActiveRevivalWidget.IsValid() || bReviveHoldActive) return true;
@@ -666,6 +677,11 @@ void UGYUIManagerSubsystem::UnbindASC()
 		{
 			BoundASC->RemoveLooseGameplayTag(GYStateTags::State_UI_MenuOpen);
 			bGameplayInputBlockApplied = false;
+		}
+		if (bGateWaitingBlockApplied)
+		{
+			BoundASC->RemoveLooseGameplayTag(GYStateTags::State_UI_GateWaiting);
+			bGateWaitingBlockApplied = false;
 		}
 	}
 	BoundASC = nullptr;
@@ -853,40 +869,44 @@ void UGYUIManagerSubsystem::HandleEndingWaiting(FGameplayTag, const FGYInteracti
 	APlayerController* LocalPC = GetLocalPlayer() ? GetLocalPlayer()->GetPlayerController(GetWorld()) : nullptr;
 	if (!LocalPC) return;
 
-	APlayerState* LocalPS = LocalPC->PlayerState;
-	const bool bIsMe = (LocalPS && LocalPS == Msg.ChangedPlayer.Get());
-
-	if (bIsMe)
+	// 대기 인원이 1명이라도 있으면 모든 클라이언트에 표시
+	if (Msg.CurrentCount > 0)
 	{
-		if (Msg.bAdded)
+		if (!ActiveWaitingWidget.IsValid())
 		{
-			if (!ActiveWaitingWidget.IsValid()) // 상호작용 시 Waiting 위젯 처리
+			const UGYUISettings* Settings = GetDefault<UGYUISettings>();
+			UClass* WidgetClass = Settings ? Settings->InteractionWaitingWidgetClass.LoadSynchronous() : nullptr;
+			if (WidgetClass)
 			{
-				const UGYUISettings* Settings = GetDefault<UGYUISettings>();
-				UClass* WidgetClass = Settings ? Settings->InteractionWaitingWidgetClass.LoadSynchronous() : nullptr;
-				if (WidgetClass)
-				{
-					UCommonActivatableWidget* W = PushSystemWidget(GYUILayerTags::UI_Layer_Menu, WidgetClass);
-					ActiveWaitingWidget = Cast<UGYInteractionWaitingWidget>(W);
-				}
-			}
-			if (ActiveWaitingWidget.IsValid())
-			{
-				ActiveWaitingWidget->SetCount(Msg.CurrentCount, Msg.RequiredCount);
+				UCommonActivatableWidget* W = PushWidgetRaw(GYUILayerTags::UI_Layer_Menu, WidgetClass);
+				ActiveWaitingWidget = Cast<UGYInteractionWaitingWidget>(W);
 			}
 		}
-		else
+		if (ActiveWaitingWidget.IsValid())
 		{
-			if (ActiveWaitingWidget.IsValid()) // 상호작용 취소 처리
-			{
-				PopWidget(ActiveWaitingWidget.Get());
-				ActiveWaitingWidget = nullptr;
-			}
+			ActiveWaitingWidget->SetCount(Msg.CurrentCount, Msg.RequiredCount);
 		}
 	}
-	else if (ActiveWaitingWidget.IsValid())
+	else
 	{
-		ActiveWaitingWidget->SetCount(Msg.CurrentCount, Msg.RequiredCount); // 다른 사람 상호작용 - 카운트 변경
+		if (ActiveWaitingWidget.IsValid())
+		{
+			PopWidget(ActiveWaitingWidget.Get());
+			ActiveWaitingWidget = nullptr;
+		}
+	}
+
+	// 이동 잠금 - 상호작용을 누른 본인에게만 적용, 취소하면 해제
+	APlayerState* LocalPS = LocalPC->PlayerState;
+	const bool bIsMe = (LocalPS && LocalPS == Msg.ChangedPlayer.Get());
+	if (bIsMe)
+	{
+		SetGateWaitingBlock(Msg.bAdded); // 참여 = 이동잠금, 취소 = 해제
+	}
+
+	if (Msg.CurrentCount <= 0)
+	{
+		SetGateWaitingBlock(false);
 	}
 }
 
@@ -897,6 +917,7 @@ void UGYUIManagerSubsystem::HandleEndingStarted(FGameplayTag, const FGYEndingSta
 		PopWidget(ActiveWaitingWidget.Get());
 		ActiveWaitingWidget = nullptr;
 	}
+	SetGateWaitingBlock(false);
 }
 
 void UGYUIManagerSubsystem::HandleEndingCinematicFinished(FGameplayTag, const FGYEndingCinematicFinishedMessage& Msg)

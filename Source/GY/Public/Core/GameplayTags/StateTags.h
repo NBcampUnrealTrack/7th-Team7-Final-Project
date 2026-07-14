@@ -47,6 +47,5 @@ namespace GYStateTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_ActivityPoints_Used)
 
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_UI_MenuOpen)
-
-
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_UI_GateWaiting)
 }

@@ -91,6 +91,7 @@ void UGYSettingsWidget::NativeOnInitialized()
     if (ControlsTabButton) ControlsTabButton->OnClicked.AddDynamic(this, &UGYSettingsWidget::HandleControlsTabClicked);
     if (LanguageTabButton) LanguageTabButton->OnClicked.AddDynamic(this, &UGYSettingsWidget::HandleLanguageTabClicked);
     if (CloseButton) CloseButton->OnClicked.AddDynamic(this, &UGYSettingsWidget::HandleCloseClicked);
+	if (QuitButton) QuitButton->OnClicked.AddDynamic(this, &UGYSettingsWidget::HandleQuitClicked);
 
     if (ResolutionCombo) ResolutionCombo->OnSelectionChanged.AddDynamic(this, &UGYSettingsWidget::HandleResolutionChanged);
     if (WindowModeCombo) WindowModeCombo->OnSelectionChanged.AddDynamic(this, &UGYSettingsWidget::HandleWindowModeChanged);
@@ -147,6 +148,11 @@ void UGYSettingsWidget::HandleLanguageTabClicked()
 void UGYSettingsWidget::HandleCloseClicked()
 {
     DeactivateWidget();
+}
+
+void UGYSettingsWidget::HandleQuitClicked()
+{
+	UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), EQuitPreference::Quit, false);
 }
 
 void UGYSettingsWidget::InitGraphicsTab()

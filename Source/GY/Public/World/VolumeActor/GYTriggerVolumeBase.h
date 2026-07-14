@@ -22,13 +22,21 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void HandlePawnEntered(APawn* Pawn) {}
 	virtual void HandlePawnExited(APawn* Pawn) {}
 
 	bool IsPawnOverlapping(const APawn* Pawn) const;
 
+	// 로컬 폰의 볼륨 포함 여부를 주기적으로 재검사
+	UPROPERTY(EditAnywhere, Category = "Trigger", meta = (ClampMin = "0.1"))
+	float LocalMembershipCheckInterval = 0.5f;
+
 	UPROPERTY(VisibleAnywhere, Category = "Trigger")
 	TObjectPtr<UBoxComponent> TriggerBox;
+
+	UPROPERTY(Transient)
+	TObjectPtr<APawn> ProcessedLocalPawn = nullptr;
 
 private:
 	UFUNCTION()
@@ -41,8 +49,14 @@ private:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	void ProcessInitialOverlappingPawns();
-	void TryNotifyLocalPawn();
+	void UpdateLocalPawnMembership();
 
-	FTimerHandle LocalPawnRetryTimer;
-	int32 LocalPawnRetryCount = 0;
+	APawn* GetLocalPlayerPawn() const;
+
+	bool TryMarkEntered(APawn* Pawn);
+
+	TSet<TWeakObjectPtr<APawn>> EnteredPawns;
+
+	FTimerHandle InitialOverlapTimer;
+	FTimerHandle LocalMembershipTimer;
 };

@@ -45,3 +45,8 @@ void UGYInteractionWaitingWidget::HandleWaitingMessage(FGameplayTag, const FGYIn
 {
 	SetCount(Msg.CurrentCount, Msg.RequiredCount); // 텍스트 갱신
 }
+
+TOptional<FUIInputConfig> UGYInteractionWaitingWidget::GetDesiredInputConfig() const
+{
+	return TOptional<FUIInputConfig>();
+}
