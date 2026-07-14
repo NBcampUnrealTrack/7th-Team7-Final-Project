@@ -56,6 +56,17 @@ public:
 	void RemoveActiveQuest(FGameplayTag QuestTag);
 
 	FORCEINLINE const TArray<FGameplayTag>& GetCompletedQuests() const { return ClearedQuests; }
+
+	// 클라 로컬에서 즉시 재생(데디 서버는 내부에서 스킵).
+	UFUNCTION()
+	void PlayGameBGMLocal(FGameplayTag BGMTag) const;
+
+	// 게임 시작 시점(GameMode)에서 한 번 호출 - bGameBGMStarted 복제/OnRep을 통해 서버/모든 클라(늦게 접속해도)에서 재생
+	void StartGameBGM();
+
+	UFUNCTION()
+	void OnRep_GameBGMStarted();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -87,4 +98,7 @@ private:
 	TArray<FGameplayTag> ActiveQuestTags;
 
 	TArray<FGameplayTag> PreviousActiveQuestTags;
+
+	UPROPERTY(ReplicatedUsing=OnRep_GameBGMStarted)
+	bool bGameBGMStarted = false;
 };
