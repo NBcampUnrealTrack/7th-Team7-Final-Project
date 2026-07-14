@@ -1,6 +1,8 @@
 # ============================================================
-# GY 클라이언트 패키징 (Win64, Development — 패키징 빌드에서 콘솔 사용 가능)
+# GY 클라이언트 패키징 (Win64)
 #   실행: powershell -ExecutionPolicy Bypass -File scripts\package_client.ps1 [옵션]
+#   -Config Development(기본): 콘솔/치트/로그 살아있음 — 팀 테스트용
+#   -Config Shipping: 콘솔/치트 제거 + 최적화 — 배포용
 #   prod(호스티드) 전용 — 백엔드 값은 파라미터 또는 환경변수(GY_HOSTED_*, CI Secrets) 필수
 #   클라 산출물에는 SecretKey 를 절대 넣지 않는다 (빈 값 강제)
 # ============================================================
@@ -8,6 +10,8 @@ param(
     [string]$ServerBaseUrl = $env:GY_HOSTED_URL,
     [string]$PublishableKey = $env:GY_HOSTED_PUBLISHABLE_KEY,
     [string]$AuthMode = "Steam",
+    [ValidateSet("Development", "Shipping")]
+    [string]$Config = "Development",
     [string]$ArchiveDir = ""
 )
 
@@ -40,7 +44,7 @@ try {
     # MaxParallelActions=2: PCH 컴파일 메모리 피크 제한 — 병렬 3+에서 C3859(가상 메모리 부족) 발생 이력
     & "$Engine\Engine\Build\BatchFiles\RunUAT.bat" BuildCookRun `
         -project="$RepoRoot\GY.uproject" `
-        -platform=Win64 -clientconfig=Development `
+        -platform=Win64 -clientconfig=$Config `
         -build -cook -stage -pak -archive -archivedirectory="$ArchiveDir" `
         -UbtArgs="-MaxParallelActions=2" `
         -noP4 -utf8output -unattended

@@ -365,6 +365,15 @@ void UGYAccountSubsystem::LoginWithMode(EGYAuthMode Mode)
 		return;
 	}
 
+#if UE_BUILD_SHIPPING
+	// 배포 빌드는 Steam 신원만 — Mock은 임의 계정 접근이 가능한 dev 전용 경로 (ini/커맨드라인 값도 무시)
+	if (Mode == EGYAuthMode::Mock)
+	{
+		GY_WARN(Network, KDY, "Mock login is disabled in Shipping - forcing Steam");
+		Mode = EGYAuthMode::Steam;
+	}
+#endif
+
 	FGYResolvedIdentity Identity;
 	if (!ResolveIdentity(Mode, Identity))
 	{

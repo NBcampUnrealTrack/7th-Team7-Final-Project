@@ -32,7 +32,11 @@ AGYGameMode::AGYGameMode()
 
 bool AGYGameMode::AllowCheats(APlayerController* P)
 {
+#if UE_BUILD_SHIPPING
+	return false;
+#else
 	return true;
+#endif
 }
 
 FString AGYGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal)

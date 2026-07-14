@@ -22,6 +22,13 @@ on:
         options:
           - any
           - pc-kdy
+      config:
+        description: "빌드 구성 (Development = 콘솔/치트 O, Shipping = 배포용)"
+        type: choice
+        default: Development
+        options:
+          - Development
+          - Shipping
 
 concurrency:
   group: package-${{ inputs.runner }}
@@ -38,7 +45,7 @@ jobs:
         shell: powershell
         env:
           WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
-          CONTENT: "📦 클라 패키징 시작 — ${{ github.actor }} | 머신: ${{ inputs.runner }} (${{ runner.name }}) | ${{ github.ref_name }} | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CONTENT: "📦 클라 패키징 시작 — ${{ github.actor }} | ${{ inputs.config }} | 머신: ${{ inputs.runner }} (${{ runner.name }}) | ${{ github.ref_name }} | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |
           if (-not $env:WEBHOOK) { Write-Host "웹훅 secret 없음 - 알림 스킵"; exit 0 }
           $body = @{ content = $env:CONTENT } | ConvertTo-Json -Compress
@@ -57,7 +64,7 @@ jobs:
           GY_HOSTED_URL: ${{ secrets.GY_HOSTED_URL }}
           GY_HOSTED_PUBLISHABLE_KEY: ${{ secrets.GY_HOSTED_PUBLISHABLE_KEY }}
         run: |
-          powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package_client.ps1 -AuthMode Steam
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package_client.ps1 -AuthMode Steam -Config ${{ inputs.config }}
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Push to itch.io (butler)
@@ -77,11 +84,13 @@ jobs:
             Invoke-WebRequest "https://broth.itch.zone/butler/windows-amd64/LATEST/archive/default" -OutFile "$butlerDir\butler.zip"
             Expand-Archive "$butlerDir\butler.zip" -DestinationPath $butlerDir -Force
           }
+          # 채널 분리: Development → win64-dev, Shipping → win64 (테스트/배포 빌드가 itch에서 안 섞이게)
+          $channel = if ("${{ inputs.config }}" -eq "Shipping") { "win64" } else { "win64-dev" }
           $version = "$($env:GITHUB_RUN_NUMBER)-$($env:GITHUB_SHA.Substring(0,7))"
-          & $butler push "$env:GITHUB_WORKSPACE\Build\Packaged\Windows" "$($env:ITCH_TARGET):win64-dev" --userversion $version
+          & $butler push "$env:GITHUB_WORKSPACE\Build\Packaged\Windows" "$($env:ITCH_TARGET):$channel" --userversion $version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "ITCH_VERSION=$version" >> $env:GITHUB_ENV
-          "itch 배포 완료: $env:ITCH_TARGET win64-dev v$version" >> $env:GITHUB_STEP_SUMMARY
+          "itch 배포 완료: $env:ITCH_TARGET $channel v$version" >> $env:GITHUB_STEP_SUMMARY
 
       - name: Summary
         shell: powershell
@@ -93,7 +102,7 @@ jobs:
         shell: powershell
         env:
           WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
-          CONTENT: "✅ 클라 패키징 완료 — ${{ github.ref_name }} | itch: win64-dev v$env:ITCH_VERSION | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CONTENT: "✅ 클라 패키징 완료 — ${{ inputs.config }} | ${{ github.ref_name }} | itch v$env:ITCH_VERSION | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |
           if (-not $env:WEBHOOK) { exit 0 }
           $content = $env:CONTENT -replace '\$env:ITCH_VERSION', $(if ($env:ITCH_VERSION) { $env:ITCH_VERSION } else { "(itch 스킵)" })
