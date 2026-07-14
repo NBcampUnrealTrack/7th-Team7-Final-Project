@@ -93,8 +93,13 @@ namespace GYGameplayTags
 
 	/* BGM */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_BGM_Combat, "Sound.BGM.Combat")
-	UE_DEFINE_GAMEPLAY_TAG(Sound_BGM_Boss, "Sound.BGM.Boss")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_BGM_Lobby, "Sound.BGM.Lobby")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_BGM_Area1, "Sound.BGM.Area1")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_BGM_Area2, "Sound.BGM.Area2")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_BGM_FinalBoss, "Sound.BGM.FinalBoss")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_BGM_RegionBoss, "Sound.BGM.RegionBoss")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_BGM_Village, "Sound.BGM.Village")
+
 
 	/* Voice */
 }
