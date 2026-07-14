@@ -14,7 +14,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Block, "Ability.Block");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Climb, "Ability.Climb");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Ladder_Activate, "Ability.Ladder.Activate");
-
+	UE_DEFINE_GAMEPLAY_TAG(Ability_Drink, "Ability.Drink");
 
 	// Fragment Type
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Fragment_Charge, "Ability.Fragment.Charge");
@@ -46,7 +46,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Dodging, "Ability.State.Dodging");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Sprint, "Ability.State.Sprint");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Blocking, "Ability.State.Blocking");
-
+	UE_DEFINE_GAMEPLAY_TAG(Ability_State_Drinking, "Ability.State.Drinking");
 	// Enemy
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Attack_Enemy, "Ability.Attack.Enemy");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Boss_Phase, "Ability.Boss.Phase");
