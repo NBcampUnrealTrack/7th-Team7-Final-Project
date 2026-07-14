@@ -21,11 +21,27 @@ void AGYTriggerVolumeBase::BeginPlay()
 	TriggerBox->OnComponentBeginOverlap.AddUniqueDynamic(this, &AGYTriggerVolumeBase::OnOverlapBegin);
 	TriggerBox->OnComponentEndOverlap.AddUniqueDynamic(this, &AGYTriggerVolumeBase::OnOverlapEnd);
 
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	World->GetTimerManager().SetTimerForNextTick(
+		FTimerDelegate::CreateUObject(this, &AGYTriggerVolumeBase::ProcessInitialOverlappingPawns));
+
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		World->GetTimerManager().SetTimer(LocalMembershipTimer, FTimerDelegate::CreateUObject(
+			this, &AGYTriggerVolumeBase::UpdateLocalPawnMembership), LocalMembershipCheckInterval, true);
+	}
+}
+
+void AGYTriggerVolumeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
 	if (UWorld* World = GetWorld())
 	{
-		World->GetTimerManager().SetTimerForNextTick(
-			FTimerDelegate::CreateUObject(this, &AGYTriggerVolumeBase::ProcessInitialOverlappingPawns));
+		World->GetTimerManager().ClearTimer(InitialOverlapTimer);
+		World->GetTimerManager().ClearTimer(LocalMembershipTimer);
 	}
+	Super::EndPlay(EndPlayReason);
 }
 
 bool AGYTriggerVolumeBase::IsLocationInside(const FVector& WorldLocation) const
@@ -44,10 +60,40 @@ bool AGYTriggerVolumeBase::IsPawnOverlapping(const APawn* Pawn) const
 	return IsValid(TriggerBox) && Pawn && TriggerBox->IsOverlappingActor(Pawn);
 }
 
+APawn* AGYTriggerVolumeBase::GetLocalPlayerPawn() const
+{
+	UWorld* World = GetWorld();
+	if (!World) return nullptr;
+
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APlayerController* PC = Cast<APlayerController>(*It))
+		{
+			if (PC->IsLocalController())
+			{
+				return PC->GetPawn();
+			}
+		}
+	}
+	return nullptr;
+}
+
+bool AGYTriggerVolumeBase::TryMarkEntered(APawn* Pawn)
+{
+	if (!Pawn) return false;
+	if (EnteredPawns.Contains(Pawn)) return false;
+	EnteredPawns.Add(Pawn);
+	return true;
+}
+
 void AGYTriggerVolumeBase::OnOverlapBegin(UPrimitiveComponent*, AActor* OtherActor,
 	UPrimitiveComponent*, int32, bool, const FHitResult&)
 {
-	HandlePawnEntered(Cast<APawn>(OtherActor));
+	APawn* Pawn = Cast<APawn>(OtherActor);
+	if (TryMarkEntered(Pawn))
+	{
+		HandlePawnEntered(Pawn);
+	}
 }
 
 void AGYTriggerVolumeBase::OnOverlapEnd(UPrimitiveComponent*, AActor* OtherActor,
@@ -56,47 +102,67 @@ void AGYTriggerVolumeBase::OnOverlapEnd(UPrimitiveComponent*, AActor* OtherActor
 	APawn* Pawn = Cast<APawn>(OtherActor);
 	if (!Pawn) return;
 	if (TriggerBox->IsOverlappingActor(Pawn)) return;
-	HandlePawnExited(Pawn);
+	if (EnteredPawns.Remove(Pawn) > 0)
+	{
+		HandlePawnExited(Pawn);
+	}
 }
 
 void AGYTriggerVolumeBase::ProcessInitialOverlappingPawns()
 {
 	if (!IsValid(TriggerBox)) return;
 
+	// 물리 오버랩이 이미 등록된 폰들 처리
 	TArray<AActor*> Overlapping;
 	TriggerBox->GetOverlappingActors(Overlapping, APawn::StaticClass());
 	for (AActor* Actor : Overlapping)
 	{
-		HandlePawnEntered(Cast<APawn>(Actor));
-	}
-
-	if (GetNetMode() == NM_Client)
-	{
-		TryNotifyLocalPawn();
+		APawn* Pawn = Cast<APawn>(Actor);
+		if (TryMarkEntered(Pawn))
+		{
+			HandlePawnEntered(Pawn);
+		}
 	}
 }
 
-void AGYTriggerVolumeBase::TryNotifyLocalPawn()
+void AGYTriggerVolumeBase::UpdateLocalPawnMembership()
 {
 	if (!IsValid(TriggerBox)) return;
 
-	UWorld* World = GetWorld();
-	if (!World) return;
+	APawn* LocalPawn = GetLocalPlayerPawn();
+	if (!LocalPawn) return;
 
-	APlayerController* PC = World->GetFirstPlayerController();
-	APawn* LocalPawn = PC ? PC->GetPawn() : nullptr;
+	const bool bInside = IsPawnOverlapping(LocalPawn) || IsLocationInside(LocalPawn->GetActorLocation());
+	const bool bTracked = EnteredPawns.Contains(LocalPawn);
 
-	if (LocalPawn && TriggerBox->IsOverlappingActor(LocalPawn))
+	if (bInside)
 	{
-		HandlePawnEntered(LocalPawn);
-		return;
+		if (!bTracked)
+		{
+			EnteredPawns.Add(LocalPawn);
+			HandlePawnEntered(LocalPawn);
+		}
+
+		if (ProcessedLocalPawn != LocalPawn)
+		{
+			if (bTracked)
+			{
+				HandlePawnEntered(LocalPawn);
+			}
+			ProcessedLocalPawn = LocalPawn;
+		}
 	}
-
-	// 폰이 아직 없거나 영역 밖이면 잠시 후 재시도
-	if (LocalPawnRetryCount < 10)
+	else
 	{
-		++LocalPawnRetryCount;
-		World->GetTimerManager().SetTimer(LocalPawnRetryTimer, FTimerDelegate::CreateUObject(
-			this, &AGYTriggerVolumeBase::TryNotifyLocalPawn), 0.5f, false);
+		if (bTracked)
+		{
+			EnteredPawns.Remove(LocalPawn);
+			HandlePawnExited(LocalPawn);
+		}
+
+		if (ProcessedLocalPawn == LocalPawn)
+		{
+			ProcessedLocalPawn = nullptr;
+		}
 	}
 }
