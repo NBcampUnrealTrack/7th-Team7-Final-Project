@@ -1,6 +1,7 @@
 #include "Persistence/CharacterSaveComponent.h"
 
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
+#include "Account/GYAccountSubsystem.h"
 #include "Currency/CurrencyComponent.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
 #include "Inventory/InventoryComponent.h"
@@ -191,9 +192,37 @@ void UCharacterSaveComponent::OnSaveDone(const FGYSaveResult& Result)
 	}
 }
 
+void UCharacterSaveComponent::SetCharacterId(int64 InCharacterId)
+{
+	if (InCharacterId <= 0) return;
+
+	if (bLoaded || bLoading)
+	{
+		GY_WARN(Network, KDY, "SetCharacterId(%lld) ignored - load already started (current=%d)", InCharacterId, CharacterId);
+		return;
+	}
+
+	CharacterId = static_cast<int32>(InCharacterId);
+	bCharacterIdExplicit = true;
+}
+
 void UCharacterSaveComponent::EnsureLoaded()
 {
 	if (bLoaded || bLoading) return;
+
+	// listen/standalone 호스트: 접속 옵션이 없으므로 로컬 로그인 계정의 1:1 캐릭터 채택.
+	// 로그인 미완료(레이스)/미로그인이면 dev stub 유지 — gy.Persist 콘솔 흐름 보존
+	if (!bCharacterIdExplicit)
+	{
+		UWorld* World = GetWorld();
+		UGameInstance* GameInstance = IsValid(World) ? World->GetGameInstance() : nullptr;
+		UGYAccountSubsystem* Account = IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYAccountSubsystem>() : nullptr;
+		if (IsValid(Account) && Account->GetPrimaryCharacterId() > 0)
+		{
+			SetCharacterId(Account->GetPrimaryCharacterId());
+		}
+	}
+
 	LoadAndApply();
 }
 

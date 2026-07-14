@@ -14,6 +14,7 @@
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 #include "OnlineSubsystem.h"
 #include "OnlineSubsystemNames.h"
 #include "Interfaces/OnlineIdentityInterface.h"
@@ -261,10 +262,43 @@ namespace
 		TEXT("Soft-delete a character: gy.Account.DeleteChar <id>"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&AccountDeleteCharCmd));
 
+	// 서버 접속 시 내 캐릭터 id를 접속 옵션으로 첨부 — GYGameMode::InitNewPlayer가 파싱
+	void AccountJoinCmd(const TArray<FString>& Args, UWorld* World)
+	{
+		UGYAccountSubsystem* Account = ResolveAccountSubsystem(World, TEXT("gy.Account.Join"));
+		if (!IsValid(Account)) return;
+		if (Args.Num() == 0)
+		{
+			GY_WARN(Network, KDY, "usage: gy.Account.Join <ip[:port]>");
+			return;
+		}
+		if (Account->GetPrimaryCharacterId() <= 0)
+		{
+			GY_WARN(Network, KDY, "gy.Account.Join: no character (login not finished?) - try gy.Account.Login");
+			return;
+		}
+
+		APlayerController* PC = IsValid(World) ? World->GetFirstPlayerController() : nullptr;
+		if (!IsValid(PC))
+		{
+			GY_WARN(Network, KDY, "gy.Account.Join: no local PlayerController");
+			return;
+		}
+
+		const FString OpenCommand = FString::Printf(TEXT("open %s?charId=%lld"), *Args[0], Account->GetPrimaryCharacterId());
+		GY_LOG(Network, KDY, "Join: %s", *OpenCommand);
+		PC->ConsoleCommand(OpenCommand);
+	}
+
 	FAutoConsoleCommandWithWorldAndArgs GYAccountSmokeTestCommand(
 		TEXT("gy.Account.SmokeTest"),
 		TEXT("Login + character create/list/delete round-trip. Logs 'SmokeTest PASSED' on success"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&AccountSmokeTestCmd));
+
+	FAutoConsoleCommandWithWorldAndArgs GYAccountJoinCommand(
+		TEXT("gy.Account.Join"),
+		TEXT("Connect to a server with my character id attached: gy.Account.Join <ip[:port]>"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&AccountJoinCmd));
 }
 
 void UGYAccountSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -319,9 +353,10 @@ void UGYAccountSubsystem::Login()
 
 void UGYAccountSubsystem::LoginWithMode(EGYAuthMode Mode)
 {
+	// 데디는 SecretKey 경로 사용 — 자동 로그인 훅이 서버 인스턴스에서도 불리므로 조용히 스킵
 	if (GetGameInstance()->IsDedicatedServerInstance())
 	{
-		GY_WARN(Network, KDY, "Account login is client-only (dedicated server uses SecretKey path)");
+		GY_LOG(Network, KDY, "Account login skipped (dedicated server uses SecretKey path)");
 		return;
 	}
 	if (bLoginInFlight)
@@ -419,12 +454,51 @@ void UGYAccountSubsystem::RequestAuth(const FGYResolvedIdentity& Identity)
 			This->RefreshToken = Parsed.RefreshToken;
 			This->PersonaName = Parsed.PersonaName;
 			This->TokenExpiresAtSeconds = FPlatformTime::Seconds() + Parsed.ExpiresInSeconds;
+			This->PrimaryCharacterId = 0; // 재로그인(Mock↔Steam)일 수 있으니 새 계정 기준으로 재확보
 
 			GY_LOG(Network, KDY, "Login success accountId=%s persona=%s expiresIn=%.0fs",
 				*Parsed.AccountId, *Parsed.PersonaName, Parsed.ExpiresInSeconds);
-			This->OnAccountReady.Broadcast(true);
+			This->EnsurePrimaryCharacter();
 		});
 	Request->ProcessRequest();
+}
+
+void UGYAccountSubsystem::EnsurePrimaryCharacter()
+{
+	ListCharacters(FGYOnCharacterList::CreateWeakLambda(this,
+		[this](bool bListed, const TArray<FGYCharacterSummary>& Characters)
+		{
+			if (!bListed)
+			{
+				GY_WARN(Network, KDY, "Primary character resolve failed (list)");
+				OnAccountReady.Broadcast(false);
+				return;
+			}
+
+			if (Characters.Num() > 0)
+			{
+				PrimaryCharacterId = Characters[0].Id;
+				GY_LOG(Network, KDY, "Primary character id=%lld name=%s", PrimaryCharacterId, *Characters[0].Name);
+				OnAccountReady.Broadcast(true);
+				return;
+			}
+
+			// 첫 로그인 — persona 이름으로 자동 생성 (이름 지정/개명은 추후 캐릭터 선택 UI에서)
+			const FString CharacterName = PersonaName.IsEmpty() ? TEXT("Hero") : PersonaName.Left(20);
+			CreateCharacter(CharacterName, FGYOnCharacterOp::CreateWeakLambda(this,
+				[this](bool bCreated, int64 NewCharacterId)
+				{
+					if (!bCreated)
+					{
+						GY_WARN(Network, KDY, "Primary character resolve failed (create)");
+						OnAccountReady.Broadcast(false);
+						return;
+					}
+					PrimaryCharacterId = NewCharacterId;
+					GY_LOG(Network, KDY, "Primary character created id=%lld", NewCharacterId);
+					OnAccountReady.Broadcast(true);
+				}));
+		}));
 }
 
 void UGYAccountSubsystem::ListCharacters(FGYOnCharacterList OnComplete)
@@ -652,5 +726,6 @@ void UGYAccountSubsystem::ClearSession()
 	AccessToken.Empty();
 	RefreshToken.Empty();
 	PersonaName.Empty();
+	PrimaryCharacterId = 0;
 	TokenExpiresAtSeconds = 0.0;
 }

@@ -11,8 +11,10 @@
 #include "Experience/GYExperienceDefinition.h"
 #include "Experience/GYExperienceManagerComponent.h"
 #include "GameStates/GYGameState.h"
+#include "Kismet/GameplayStatics.h"
 #include "Logging/GYLogManager.h"
 #include "Misc/TrackedActivity.h"
+#include "Persistence/CharacterSaveComponent.h"
 #include "Player/GYPlayerController.h"
 #include "Player/GYPlayerState.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
@@ -31,6 +33,27 @@ AGYGameMode::AGYGameMode()
 bool AGYGameMode::AllowCheats(APlayerController* P)
 {
 	return true;
+}
+
+FString AGYGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal)
+{
+	const FString Result = Super::InitNewPlayer(NewPlayerController, UniqueId, Options, Portal);
+
+	// 폰 init 체인(GameplayReady)의 EnsureLoaded 보다 먼저 도는 지점 — 로드 시작 전에 id 지정.
+	// TODO (KDY): 지금은 클라 신고를 신뢰 — 토큰 게이팅 붙일 때 캐릭터 소유 검증 추가
+	const FString CharIdOption = UGameplayStatics::ParseOption(Options, TEXT("charId"));
+	if (!CharIdOption.IsEmpty())
+	{
+		AGYPlayerState* PS = IsValid(NewPlayerController) ? NewPlayerController->GetPlayerState<AGYPlayerState>() : nullptr;
+		UCharacterSaveComponent* SaveComponent = IsValid(PS) ? PS->GetCharacterSaveComponent() : nullptr;
+		if (IsValid(SaveComponent))
+		{
+			SaveComponent->SetCharacterId(FCString::Atoi64(*CharIdOption));
+			GY_LOG(Network, KDY, "InitNewPlayer: charId=%s assigned to %s", *CharIdOption, *GetNameSafe(PS));
+		}
+	}
+
+	return Result;
 }
 
 void AGYGameMode::InitGameState()

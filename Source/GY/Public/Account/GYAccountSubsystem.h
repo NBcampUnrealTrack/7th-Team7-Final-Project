@@ -36,6 +36,9 @@ public:
 	const FString& GetAccessToken() const { return AccessToken; }
 	const FString& GetPersonaName() const { return PersonaName; }
 
+	// 계정-캐릭터 1:1 운영(캐릭터 선택 UI 전): 로그인 시 자동 확보되는 내 캐릭터. 0 = 미확보
+	int64 GetPrimaryCharacterId() const { return PrimaryCharacterId; }
+
 	// 로그인 완료(성공/실패) 통지. 재로그인 시에도 매번 브로드캐스트
 	FGYOnAccountReady OnAccountReady;
 
@@ -56,6 +59,10 @@ private:
 	bool ResolveIdentity(EGYAuthMode Mode, FGYResolvedIdentity& OutIdentity) const;
 	void RequestAuth(const FGYResolvedIdentity& Identity);
 
+	// 1:1 운영: 첫 캐릭터 채택, 없으면 생성. 완료 후에야 OnAccountReady 브로드캐스트 —
+	// 캐릭터 선택 UI 도입 시 이 자동 채택만 UI 선택으로 교체하면 됨
+	void EnsurePrimaryCharacter();
+
 	// Bearer 토큰 요청 공통 경로 — 401 이면 refresh 후 1회 재시도, refresh 실패 시 세션 클리어.
 	// 재시도를 위해 요청 내용을 람다에 보관하므로 값 전달(sink)
 	void SendAuthedRequest(FString Verb, FString Path, FString ContentJson,
@@ -72,6 +79,7 @@ private:
 	FString AccessToken;
 	FString RefreshToken;
 	FString PersonaName;
+	int64 PrimaryCharacterId = 0;
 	// FPlatformTime::Seconds() 기준 만료 시각 — 갱신 판단용
 	double TokenExpiresAtSeconds = 0.0;
 	bool bLoginInFlight = false;

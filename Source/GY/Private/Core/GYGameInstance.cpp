@@ -1,5 +1,6 @@
 #include "Core/GYGameInstance.h"
 
+#include "Account/GYAccountSubsystem.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Core/DataBridgeSubsystem.h"
 #include "Core/GameplayTags/GameFeaturesInitTags.h"
@@ -31,6 +32,18 @@ void UGYGameInstance::Init()
 	//
 	// DataBridge->OnAllSourcesCompleted.AddDynamic(this, &UGYGameInstance::OnDataBridgeAllSourcesCompleted);
 	// DataBridge->FetchAllSources();
+}
+
+void UGYGameInstance::OnStart()
+{
+	Super::OnStart();
+
+	// 실패해도 게임은 진행 (경고 로그만) — 콘솔 gy.Account.Login 으로 수동 재시도 가능.
+	// 데디 인스턴스는 Login 내부 가드가 스킵
+	if (UGYAccountSubsystem* Account = GetSubsystem<UGYAccountSubsystem>())
+	{
+		Account->Login();
+	}
 }
 
 UGYGameInstance* UGYGameInstance::Get(const UObject* WorldContext)
