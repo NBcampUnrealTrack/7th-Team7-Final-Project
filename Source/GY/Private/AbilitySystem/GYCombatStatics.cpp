@@ -25,17 +25,6 @@
 #include "Logging/GYLogManager.h"
 #include "Perception/AISense_Damage.h"
 
-static bool IsSameFaction(UAbilitySystemComponent* A, UAbilitySystemComponent* B)
-{
-	if (!A || !B) return false;
-
-	const bool AEnemy  = A->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy);
-	const bool BEnemy  = B->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy);
-	const bool APlayer = A->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Player);
-	const bool BPlayer = B->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Player);
-
-	return (AEnemy && BEnemy) || (APlayer && BPlayer);
-}
 
 static void ApplyInstantGEToAttribute(UAbilitySystemComponent* ASC, const FGameplayAttribute& Attribute, float Magnitude)
 {
@@ -323,8 +312,20 @@ bool UGYCombatStatics::IsAlive(const UAbilitySystemComponent* ASC)
 	return GetCurrentHealth(ASC) > 0.f;
 }
 
+bool UGYCombatStatics::IsSameFaction(UAbilitySystemComponent* A, UAbilitySystemComponent* B)
+{
+	if (!A || !B) return false;
+
+	const bool AEnemy  = A->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy);
+	const bool BEnemy  = B->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Enemy);
+	const bool APlayer = A->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Player);
+	const bool BPlayer = B->HasMatchingGameplayTag(GYFactionTags::Character_Faction_Player);
+
+	return (AEnemy && BEnemy) || (APlayer && BPlayer);
+}
+
 void UGYCombatStatics::ReportDamageToPerception(UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC,
-	float Effective)
+                                                float Effective)
 {
 	if (Effective <= 0.f || !TargetASC || !SourceASC) return;
 	if (IsSameFaction(TargetASC, SourceASC)) return;

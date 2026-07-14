@@ -33,6 +33,7 @@ class GY_API UGYCombatStatics : public UBlueprintFunctionLibrary
 
 public:
 
+
 	// 컨텍스트 기반 타격 적용. HP 데미지 + 공격별 poise(경직/무력)를 분리 적용. (플레이어 멜리 경로)
 	static void ApplyHitImpact(const FGYHitContext& HitContext);
 
@@ -47,6 +48,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="GY|Combat")
 	static bool IsAlive(const UAbilitySystemComponent* ASC);
+
+	UFUNCTION(BlueprintPure, Category="GY|Combat")
+	static bool IsSameFaction(UAbilitySystemComponent* A, UAbilitySystemComponent* B);
 
 	static void ReportDamageToPerception(
 		UAbilitySystemComponent* TargetASC,
