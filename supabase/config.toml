@@ -410,8 +410,9 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 
 # pg-delta is the schema diff engine for db diff / db pull / db remote commit.
 # Set enabled = false to fall back to the legacy migra engine.
+# 비활성: db reset --linked 가 pgdelta CA cert 오류(ENOENT pgdelta-target-ca.crt)로 실패 — 레거시 엔진 사용
 [experimental.pgdelta]
-enabled = true
+enabled = false
 # Directory under `supabase/` where declarative files are written.
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
