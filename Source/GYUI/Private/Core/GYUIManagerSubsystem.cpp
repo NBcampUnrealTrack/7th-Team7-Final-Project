@@ -101,6 +101,9 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 	{
 		GYPC->OnPlayerStateInitialized.RemoveAll(this); // 기존 바인딩 해제
 		GYPC->OnPlayerStateInitialized.AddUObject(this, &UGYUIManagerSubsystem::HandlePlayerStateInitialized);
+
+		GYPC->OnLocalControllerReady.RemoveAll(this);
+		GYPC->OnLocalControllerReady.AddDynamic(this, &UGYUIManagerSubsystem::HandleLocalControllerReady);
 	}
 
 	// 플레이어 명단 동기화
@@ -162,11 +165,40 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 void UGYUIManagerSubsystem::HandlePlayerStateInitialized(AGYPlayerController* PC)
 {
 	if (!PC) return;
+	EnsurePrimaryLayoutAndHUD();
 	AGYPlayerState* PS = PC->GetPlayerState<AGYPlayerState>();
 	if (!PS) return;
 	if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
 	{
 		BindASC(ASC);
+	}
+}
+
+void UGYUIManagerSubsystem::HandleLocalControllerReady(AGYPlayerController* PC)
+{
+	EnsurePrimaryLayoutAndHUD();
+}
+
+void UGYUIManagerSubsystem::EnsurePrimaryLayoutAndHUD()
+{
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP) return;
+	APlayerController* PC = LP->GetPlayerController(LP->GetWorld());
+	if (!PC || !PC->IsLocalController()) return;
+
+	const UGYUISettings* Settings = GetDefault<UGYUISettings>();
+	if (!Settings) return;
+
+	if (UClass* LayoutClass = Settings->PrimaryGameLayoutClass.LoadSynchronous())
+	{
+		CreatePrimaryGameLayout(LayoutClass);
+	}
+	if (UClass* HUDClass = Settings->HUDWidgetClass.LoadSynchronous())
+	{
+		if (!HUDWidget.IsValid())
+		{
+			HUDWidget = PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDClass);
+		}
 	}
 }
 
@@ -398,10 +430,10 @@ void UGYUIManagerSubsystem::CreatePrimaryGameLayout(TSubclassOf<UGYPrimaryGameLa
 	if (!PC) return;
 
 	// 현재 PlayerController 소유의 레이아웃이 이미 살아 있으면 재생성x
-	if (PrimaryGameLayout && PrimaryGameLayout->GetOwningPlayer() == PC)
-	{
-		return;
-	}
+	// if (PrimaryGameLayout && PrimaryGameLayout->GetOwningPlayer() == PC)
+	// {
+	// 	return;
+	// }
 	RemovePrimaryGameLayout();
 
 	PrimaryGameLayout = CreateWidget<UGYPrimaryGameLayout>(PC, LayoutClass);

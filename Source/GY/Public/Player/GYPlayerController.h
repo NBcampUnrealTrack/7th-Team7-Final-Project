@@ -4,9 +4,11 @@
 #include "GameFramework/PlayerController.h"
 #include "GYPlayerController.generated.h"
 
+class AGYPlayerController;
 class AGYServerCheatProxy;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FGYPlayerStateInitializedDelegate, AGYPlayerController* /*PC*/);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGYLocalControllerReady, AGYPlayerController*, PC);
 
 UCLASS()
 class GY_API AGYPlayerController : public APlayerController
@@ -17,6 +19,7 @@ public:
 	AGYPlayerController();
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
+	FGYLocalControllerReady OnLocalControllerReady;
 	FGYPlayerStateInitializedDelegate OnPlayerStateInitialized;
 
 	// 메뉴 위젯에서 호출 — 입력한 주소의 데디 서버로 ClientTravel. 포트 생략 시 7777.

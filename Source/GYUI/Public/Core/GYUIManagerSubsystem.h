@@ -184,7 +184,11 @@ private:
 
 	void OnTagChanged(const FGameplayTag Tag, int32 NewCount);
 
+	UFUNCTION()
 	void HandlePlayerStateInitialized(AGYPlayerController* PC);
+	UFUNCTION()
+	void HandleLocalControllerReady(AGYPlayerController* PC);
+	void EnsurePrimaryLayoutAndHUD();
 
 	/** 스탯 브로드캐스트 정보 묶어서 관리 */
 	struct FStatBroadcastEntry

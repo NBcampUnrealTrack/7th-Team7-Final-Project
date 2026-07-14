@@ -88,6 +88,7 @@ void AGYPlayerController::OnRep_PlayerState()
 	if (PlayerState)
 	{
 		OnPlayerStateInitialized.Broadcast(this);
+		OnLocalControllerReady.Broadcast(this);
 	}
 
 	// 폰의 초기화는 "컨트롤러에 PlayerState가 연결됨"을 조건으로 한다.
@@ -120,6 +121,7 @@ void AGYPlayerController::AcknowledgePossession(APawn* P)
 		P->GetRootComponent(),
 		FVector::ZeroVector,
 		FRotator::ZeroRotator);
+	OnLocalControllerReady.Broadcast(this);
 	GY_LOG(Player, CYS, "오디오 리스너 변경: %s", *P->GetName());
 }
 
