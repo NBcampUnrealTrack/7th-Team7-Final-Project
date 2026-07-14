@@ -1,0 +1,167 @@
+# 데디케이티드 서버 패키징 — 소스 엔진이 있는 self-hosted 러너에서 scripts/package_server.ps1 실행 후
+# 서버 전용 프라이빗 itch 프로젝트로 배포(선택).
+#
+# 러너 머신 전제 (클라 러너 전제에 추가):
+#   - 소스 빌드 엔진 (런처 엔진은 Server 타깃 불가) + 머신 env GY_SRC_ENGINE = 엔진 루트
+#   - 현재 소스 엔진 보유 머신: pc-kdy 뿐 — 새 머신 추가 시 아래 runner options 에 등록
+#
+# Secrets:
+#   GY_HOSTED_URL — 호스티드 Supabase URL (클라와 공용)
+#   GY_HOSTED_SECRET_KEY — 서버 저장 경로 키. 산출물에 구워짐 → 서버 itch 프로젝트는 반드시
+#     프라이빗(Restricted + claimed 다운로드 키, 클라 프로젝트와 분리)으로만 배포
+#   BUTLER_API_KEY (클라와 공용) / ITCH_SERVER_TARGET (예: dooyeonk/gy-server) — 없으면 배포 스킵
+#   DISCORD_PACKAGE_WEBHOOK_URL (클라와 공용)
+#
+# ※ run: 블록 안에는 ASCII만 (PS5.1 CP949 파싱 함정 — package-client.yml 상단 주석 참고)
+name: package-server
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "빌드 돌릴 머신 (소스 엔진 필요)"
+        type: choice
+        default: pc-kdy
+        options:
+          - pc-kdy
+      config:
+        description: "빌드 구성"
+        type: choice
+        default: Development
+        options:
+          - Development
+          - Shipping
+
+concurrency:
+  group: package-server-${{ inputs.runner }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on:
+      - self-hosted
+      - ${{ inputs.runner }}
+    timeout-minutes: 240
+    steps:
+      - name: Notify start (Discord)
+        shell: powershell
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
+          CONTENT: "🖥️ 서버 패키징 시작 — ${{ github.actor }} | ${{ inputs.config }} | 머신: ${{ inputs.runner }} | ${{ github.ref_name }} | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          if (-not $env:WEBHOOK) { Write-Host "no webhook secret - skip notify"; exit 0 }
+          $body = @{ content = $env:CONTENT } | ConvertTo-Json -Compress
+          try { Invoke-RestMethod -Uri $env:WEBHOOK -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) } catch { Write-Host "notify failed (build continues): $($_.Exception.Message)" }
+
+      - name: LFS objects (개발 클론에서 시딩)
+        shell: powershell
+        run: |
+          $devClone = $env:GY_DEV_CLONE
+          if ($devClone -and (Test-Path "$devClone\.git\lfs\objects") -and (Test-Path "$env:GITHUB_WORKSPACE\.git\HEAD")) {
+            robocopy "$devClone\.git\lfs\objects" "$env:GITHUB_WORKSPACE\.git\lfs\objects" /E /MT:16 /NFL /NDL /NP /NJH
+            if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE }
+            Write-Host "LFS objects seeded from dev clone: $devClone"
+          } else {
+            Write-Host "GY_DEV_CLONE not set or first run - checkout will download from GitHub LFS"
+          }
+          exit 0
+
+      - name: Checkout (증분 — Intermediate 보존)
+        uses: actions/checkout@v4
+        with:
+          clean: false
+          submodules: recursive
+
+      - name: LFS pull (포인터 → 실파일)
+        shell: powershell
+        run: |
+          git lfs pull
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Paid assets (개발 클론에서 복사)
+        shell: powershell
+        run: |
+          $assetDir = "$env:GITHUB_WORKSPACE\Content\ThirdParty\PaidAssets"
+          $devClone = $env:GY_DEV_CLONE
+          if ($devClone -and (Test-Path "$devClone\Content\ThirdParty\PaidAssets")) {
+            robocopy "$devClone\Content\ThirdParty\PaidAssets" $assetDir /E /MT:16 /NFL /NDL /NP /NJH
+            if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE }
+            Write-Host "paid assets seeded from dev clone: $devClone"
+            exit 0
+          }
+          Write-Host "GY_DEV_CLONE not set - syncing from gdrive via rclone (slow)"
+          rclone copy gdrive:GY_PaidAssets $assetDir --fast-list --stats-one-line --stats 30s
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Package server
+        shell: powershell
+        env:
+          GY_HOSTED_URL: ${{ secrets.GY_HOSTED_URL }}
+          GY_HOSTED_SECRET_KEY: ${{ secrets.GY_HOSTED_SECRET_KEY }}
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package_server.ps1 -Config ${{ inputs.config }}
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # 채널 분리: Development → win64-dev, Shipping → win64 (서버 전용 프라이빗 프로젝트)
+      - name: Push to itch.io (butler)
+        shell: powershell
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_TARGET: ${{ secrets.ITCH_SERVER_TARGET }}
+        run: |
+          if (-not $env:BUTLER_API_KEY -or -not $env:ITCH_TARGET) {
+            Write-Host "BUTLER_API_KEY / ITCH_SERVER_TARGET secret missing - skip itch deploy"
+            exit 0
+          }
+          $butlerDir = "$env:RUNNER_TOOL_CACHE\butler"
+          $butler = "$butlerDir\butler.exe"
+          if (-not (Test-Path $butler)) {
+            New-Item -ItemType Directory -Force -Path $butlerDir | Out-Null
+            Invoke-WebRequest "https://broth.itch.zone/butler/windows-amd64/LATEST/archive/default" -OutFile "$butlerDir\butler.zip"
+            Expand-Archive "$butlerDir\butler.zip" -DestinationPath $butlerDir -Force
+          }
+          $channel = if ("${{ inputs.config }}" -eq "Shipping") { "win64" } else { "win64-dev" }
+          $version = "$($env:GITHUB_RUN_NUMBER)-$($env:GITHUB_SHA.Substring(0,7))"
+          & $butler push "$env:GITHUB_WORKSPACE\Build\PackagedServer\WindowsServer" "$($env:ITCH_TARGET):$channel" --userversion $version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $state = "processing"
+          $deadline = (Get-Date).AddMinutes(15)
+          while ((Get-Date) -lt $deadline) {
+            Start-Sleep -Seconds 30
+            $status = (& $butler status "$($env:ITCH_TARGET):$channel" 2>&1 | Out-String)
+            if ($status -match [regex]::Escape($version)) { $state = "live"; break }
+            Write-Host "itch still processing... (target version: $version)"
+          }
+          "ITCH_VERSION=$version ($state)" >> $env:GITHUB_ENV
+          "itch deployed: $env:ITCH_TARGET $channel v$version ($state)" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Summary
+        shell: powershell
+        run: |
+          "artifact: $env:GITHUB_WORKSPACE\Build\PackagedServer\WindowsServer" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Notify success (Discord)
+        if: success()
+        shell: powershell
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
+          CONTENT: "✅ 서버 패키징 완료 — ${{ inputs.config }} | ${{ github.ref_name }} | itch v$env:ITCH_VERSION | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          if (-not $env:WEBHOOK) { exit 0 }
+          $content = $env:CONTENT -replace '\$env:ITCH_VERSION', $(if ($env:ITCH_VERSION) { $env:ITCH_VERSION } else { "(itch skipped)" })
+          $body = @{ content = $content } | ConvertTo-Json -Compress
+          try { Invoke-RestMethod -Uri $env:WEBHOOK -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) } catch { Write-Host "notify failed: $($_.Exception.Message)" }
+
+      - name: Notify failure/cancel (Discord)
+        if: failure() || cancelled()
+        shell: powershell
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_PACKAGE_WEBHOOK_URL }}
+          JOB_STATUS: ${{ job.status }}
+          CONTENT_FAIL: "❌ 서버 패키징 실패 — ${{ github.ref_name }} | 머신: ${{ runner.name }} | 로그: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CONTENT_CANCEL: "⚠️ 서버 패키징 중단(취소) — ${{ github.ref_name }} | 머신: ${{ runner.name }} | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          if (-not $env:WEBHOOK) { exit 0 }
+          $content = if ($env:JOB_STATUS -eq "cancelled") { $env:CONTENT_CANCEL } else { $env:CONTENT_FAIL }
+          $body = @{ content = $content } | ConvertTo-Json -Compress
+          try { Invoke-RestMethod -Uri $env:WEBHOOK -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) } catch { Write-Host "notify failed: $($_.Exception.Message)" }
