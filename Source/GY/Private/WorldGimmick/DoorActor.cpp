@@ -10,6 +10,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
+#include "GameStates/GYGameState.h"
+#include "Kismet/GameplayStatics.h"
 #include "UI/GYUIMessages.h"
 
 ADoorActor::ADoorActor()
@@ -39,8 +41,7 @@ void ADoorActor::GatherInteractionOptions(APawn* Interactor, TArray<FInteraction
 {
 	FInteractionOption Option;
 	Option.OptionTag = GYGameplayTags::Interaction_Open_Door;
-
-    Option.Text = bIsOpen ? NSLOCTEXT("Door", "Close", "닫기") : NSLOCTEXT("Door", "Open", "열기");
+	Option.Text = bIsOpen ? NSLOCTEXT("Door", "Close", "닫기") : NSLOCTEXT("Door", "Open", "열기");
     Option.SourceObject = const_cast<ADoorActor*>(this);
 	OutOption.Add(Option);
 }
@@ -50,6 +51,17 @@ void ADoorActor::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 	if (HasAuthority() == false)
 	{
 		return;
+	}
+	if (QuestRequiredTag.IsValid())
+	{
+		AGYGameState* GameState = Cast<AGYGameState>(UGameplayStatics::GetGameState(this));
+		if (!GameState) return;
+
+		if (!GameState->IsQuestComplete(QuestRequiredTag))
+		{
+			//TODO Locked UI
+			return;
+		}
 	}
 
 	DoorMove();

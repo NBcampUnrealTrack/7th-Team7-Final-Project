@@ -65,6 +65,7 @@ public:
 
 	bool HasSwappedWeapon() const { return bPhase2Weapon; }
 
+	virtual void Die() override;
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
