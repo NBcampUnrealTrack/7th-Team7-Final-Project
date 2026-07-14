@@ -1,8 +1,11 @@
 #include "Character/Revive/GYReviveGameplayAbility.h"
 
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "Animation/AnimMontage.h"
 #include "Character/GYCharacter.h"
+#include "Character/Revive/GYReviveConfig.h"
 #include "Character/Revive/RevivePoolComponent.h"
 #include "Character/Revive/ReviveProgressComponent.h"
 #include "Interaction/InteractionComponent.h"
@@ -34,6 +37,15 @@ void UGYReviveGameplayAbility::ActivateAbility(
 
 	URevivePoolComponent* Pool = DownedPawn->FindComponentByClass<URevivePoolComponent>();
 	if (!Pool || !Pool->IsPoolActive() || Pool->IsBeingRevived())
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	UAbilitySystemComponent* ReviverASC = GetAbilitySystemComponentFromActorInfo();
+	const UGYReviveConfig* Config = Pool->GetActiveConfig();
+	const float MinReserve = Config ? Config->MinReviverHealthReserve : 1.f;
+	if (!ReviverASC || ReviverASC->GetNumericAttribute(UGYVitalAttributeSet::GetCurrentHealthAttribute()) <= MinReserve)
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
@@ -130,11 +142,12 @@ void UGYReviveGameplayAbility::TickReviveCheck()
 		return;
 	}
 
+	URevivePoolComponent* Pool = DownedTarget->FindComponentByClass<URevivePoolComponent>();
+
 	if (GetCurrentActorInfo() && GetCurrentActorInfo()->IsNetAuthority())
 	{
 		if (ActiveProgress.IsValid() && !ActiveProgress->IsReviving())
 		{
-			URevivePoolComponent* Pool = DownedTarget->FindComponentByClass<URevivePoolComponent>();
 			if (Pool && !Pool->IsPoolActive())
 			{
 				if (GetWorld()) GetWorld()->GetTimerManager().ClearTimer(CheckTimerHandle);
@@ -144,6 +157,17 @@ void UGYReviveGameplayAbility::TickReviveCheck()
 			{
 				BeginCancel();
 			}
+			return;
+		}
+	}
+
+	if (UAbilitySystemComponent* ReviverASC = GetAbilitySystemComponentFromActorInfo())
+	{
+		const UGYReviveConfig* Config = Pool ? Pool->GetActiveConfig() : nullptr;
+		const float MinReserve = Config ? Config->MinReviverHealthReserve : 1.f;
+		if (ReviverASC->GetNumericAttribute(UGYVitalAttributeSet::GetCurrentHealthAttribute()) <= MinReserve)
+		{
+			BeginCancel();
 			return;
 		}
 	}

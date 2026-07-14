@@ -24,6 +24,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Revive", meta=(ClampMin="0.001"))
 	float ReviveCostRatePerSecond = 0.1f;
 
+	UPROPERTY(EditDefaultsOnly, Category="Revive", meta=(ClampMin="0.0"))
+	float MinReviverHealthReserve = 1.f;
+
 	UPROPERTY(EditDefaultsOnly, Category="Revive", meta=(ClampMin="0.1"))
 	float GiveUpHoldTime = 3.f;
 

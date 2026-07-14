@@ -176,11 +176,12 @@ void URevivePoolComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 
 	const float CurrentHP = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetCurrentHealthAttribute());
 	const float MaxHP = ASC->GetNumericAttribute(UGYVitalAttributeSet::GetMaxHealthAttribute());
+	const float MinReserve = ActiveConfig->MinReviverHealthReserve;
 
-	if (CurrentHP <= 1.f || MaxHP <= 0.f) return;
+	if (CurrentHP <= MinReserve || MaxHP <= 0.f) return;
 
 	const float DrainAmount = MaxHP * ActiveConfig->ReviveCostRatePerSecond * DeltaTime;
-	const float ActualDrain = FMath::Min(DrainAmount, CurrentHP - 1.f);
+	const float ActualDrain = FMath::Min(DrainAmount, CurrentHP - MinReserve);
 	const float PercentGained = ActualDrain / MaxHP;
 
 	ASC->SetNumericAttributeBase(UGYVitalAttributeSet::GetCurrentHealthAttribute(), CurrentHP - ActualDrain);
