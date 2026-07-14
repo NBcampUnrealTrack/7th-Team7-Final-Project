@@ -2,6 +2,7 @@
 #include "AttackLogic/Dodge/GYDodgeFragment.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "AttackLogic/Dodge/GYDodgeMontageFragment.h"
+#include "AttackLogic/Direction/GYDirectionLogic.h"
 #include "AttackLogic/Shared/GYAttributeCostHelpers.h"
 #include "AbilitySystem/Abilities/GYPlayerGameplayAbility.h"
 #include "AbilitySystem/Attributes/Player/GYCoreStatAttributeSet.h"
@@ -43,6 +44,11 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 	{
 		Ability->RequestEnd(true);
 		return;
+	}
+
+	if (UGYDirectionLogic* DirectionLogic = Ability->GetLogic<UGYDirectionLogic>())
+	{
+		DirectionLogic->SetDodgeLockOnPolicy(MontageSet->Mode == EGYDodgeMontageMode::FrontOnly);
 	}
 
 	const UGYDodgeFragment* DodgeFragment = Ability->GetFragment<UGYDodgeFragment>();
@@ -131,7 +137,7 @@ void UGYDodgeInputLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
 		);
 
 
-		UAnimMontage* SelectedMontage = MontageSet->GetMontageByAngle(DodgeAngle);
+		UAnimMontage* SelectedMontage = MontageSet->GetSelectedMontage(DodgeAngle);
 		if (!SelectedMontage) { return; }
 
 		// 기존 몽타주 전부 중단
@@ -290,7 +296,7 @@ void UGYDodgeInputLogic::OnTargetDataReceived(const FGameplayAbilityTargetDataHa
 
 				if (const FGYDodgeMontageSet* MontageSet = MF->GetBestMatchingSet(OwnedTags))
 				{
-					UAnimMontage* SelectedMontage = MontageSet->GetMontageByAngle(ReceivedAngle);
+					UAnimMontage* SelectedMontage = MontageSet->GetSelectedMontage(ReceivedAngle);
 					if (SelectedMontage)
 					{
 						//서버측 모션워핑

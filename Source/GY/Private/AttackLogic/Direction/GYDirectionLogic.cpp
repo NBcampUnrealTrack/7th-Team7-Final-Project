@@ -6,6 +6,7 @@
 #include "Character/LockOn/LockOnComponent.h"
 #include "Core/GameplayTags/AbilityTags.h"
 #include "Core/GameplayTags/EventTags.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 
 void UGYDirectionLogic::OnExecute(UGYPlayerGameplayAbility* Ability)
@@ -35,6 +36,11 @@ void UGYDirectionLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWa
 			{
 				LockOn->SetRotationSuppressed(false);
 			}
+			Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
+			if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+			{
+				Movement->bUseControllerDesiredRotation = bSavedUseControllerDesiredRotation;
+			}
 		}
 		bSuppressedLockOn = false;
 	}
@@ -42,6 +48,14 @@ void UGYDirectionLogic::OnAbilityEnd(UGYPlayerGameplayAbility* Ability, bool bWa
 	ActiveRotateTask = nullptr;
 	CachedCharacter.Reset();
 	CachedAbility.Reset();
+	bDodgePolicySet = false;
+	bDodgeForceOverride = false;
+}
+
+void UGYDirectionLogic::SetDodgeLockOnPolicy(bool bForceOverride)
+{
+	bDodgePolicySet = true;
+	bDodgeForceOverride = bForceOverride;
 }
 
 TArray<FGameplayTag> UGYDirectionLogic::GetSubscribedEventTags() const
@@ -60,6 +74,19 @@ TArray<FGameplayTag> UGYDirectionLogic::GetRequiredFragmentTags() const
 	return { GYGameplayTags::Ability_Fragment_Direction };
 }
 
+void UGYDirectionLogic::ResolveEffectivePolicy(bool bLockedOn, EGYDirectionMode& OutMode, bool& OutCanOverride) const
+{
+	OutMode = CachedDirectionMode;
+	OutCanOverride = bCachedCanOverrideLockOn;
+
+	if (bLockedOn && bDodgePolicySet)
+	{
+		OutCanOverride = bDodgeForceOverride;
+		if (bDodgeForceOverride)
+			OutMode = EGYDirectionMode::ByMovementDirection;
+	}
+}
+
 TOptional<float> UGYDirectionLogic::ResolveTargetYaw() const
 {
 	const AGYCharacter* Character = CachedCharacter.Get();
@@ -68,7 +95,11 @@ TOptional<float> UGYDirectionLogic::ResolveTargetYaw() const
 	const ULockOnComponent* LockOn = Character->GetLockOnComponent();
 	const bool bLockedOn = LockOn && LockOn->IsLockedOn();
 
-	if (CachedDirectionMode == EGYDirectionMode::ByLockOnTarget)
+	EGYDirectionMode EffectiveMode;
+	bool bEffectiveCanOverride;
+	ResolveEffectivePolicy(bLockedOn, EffectiveMode, bEffectiveCanOverride);
+
+	if (EffectiveMode == EGYDirectionMode::ByLockOnTarget)
 	{
 		if (!bLockedOn) return {};
 		const AActor* Target = LockOn->GetCurrentTarget();
@@ -78,10 +109,10 @@ TOptional<float> UGYDirectionLogic::ResolveTargetYaw() const
 		return ToTarget.Rotation().Yaw;
 	}
 
-	if (bLockedOn && !bCachedCanOverrideLockOn)
+	if (bLockedOn && !bEffectiveCanOverride)
 		return {};
 
-	switch (CachedDirectionMode)
+	switch (EffectiveMode)
 	{
 	case EGYDirectionMode::ByMouseDirection:
 	{
@@ -127,18 +158,40 @@ void UGYDirectionLogic::BeginRotation()
 	}
 
 	ULockOnComponent* LockOn = Character->GetLockOnComponent();
-	const bool bShouldSuppress = LockOn && LockOn->IsLockedOn()
-		&& bCachedCanOverrideLockOn
-		&& CachedDirectionMode != EGYDirectionMode::ByLockOnTarget;
+	const bool bLockedOn = LockOn && LockOn->IsLockedOn();
+
+	EGYDirectionMode EffectiveMode;
+	bool bEffectiveCanOverride;
+	ResolveEffectivePolicy(bLockedOn, EffectiveMode, bEffectiveCanOverride);
+
+	const bool bShouldSuppress = bLockedOn
+		&& bEffectiveCanOverride
+		&& EffectiveMode != EGYDirectionMode::ByLockOnTarget;
 
 	if (bShouldSuppress && !bSuppressedLockOn)
 	{
-		LockOn->SetRotationSuppressed(true);
+		if (LockOn) LockOn->SetRotationSuppressed(true);
+
+		bSavedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
+		Character->bUseControllerRotationYaw = false;
+		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+		{
+			bSavedUseControllerDesiredRotation = Movement->bUseControllerDesiredRotation;
+			Movement->bUseControllerDesiredRotation = false;
+		}
+
 		bSuppressedLockOn = true;
 	}
 	else if (!bShouldSuppress && bSuppressedLockOn)
 	{
-		LockOn->SetRotationSuppressed(false);
+		if (LockOn) LockOn->SetRotationSuppressed(false);
+
+		Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
+		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+		{
+			Movement->bUseControllerDesiredRotation = bSavedUseControllerDesiredRotation;
+		}
+
 		bSuppressedLockOn = false;
 	}
 
@@ -148,14 +201,14 @@ void UGYDirectionLogic::BeginRotation()
 	const float StartYaw = Character->GetActorRotation().Yaw;
 	if (FMath::IsNearlyZero(FRotator::NormalizeAxis(TargetYaw.GetValue() - StartYaw))) return;
 
-	if (CachedDirectionMode == EGYDirectionMode::ByMouseDirection
+	if (EffectiveMode == EGYDirectionMode::ByMouseDirection
 		&& Character->IsLocallyControlled()
 		&& !Character->HasAuthority())
 	{
 		Character->Server_StartFacingLerp(StartYaw, TargetYaw.GetValue(), CachedLerpTime);
 	}
 
-	if (!Character->IsLocallyControlled() && CachedDirectionMode == EGYDirectionMode::ByMouseDirection)
+	if (!Character->IsLocallyControlled() && EffectiveMode == EGYDirectionMode::ByMouseDirection)
 		return;
 
 	UAbilityTask_RotateTo* Task = UAbilityTask_RotateTo::Create(Ability, Character, StartYaw, TargetYaw.GetValue(), CachedLerpTime);

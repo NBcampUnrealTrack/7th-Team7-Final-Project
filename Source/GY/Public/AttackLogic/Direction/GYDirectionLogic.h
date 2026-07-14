@@ -21,9 +21,12 @@ public:
 	virtual void OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData& Payload) override;
 	virtual TArray<FGameplayTag> GetRequiredFragmentTags() const override;
 
+	void SetDodgeLockOnPolicy(bool bForceOverride);
+
 private:
 	void BeginRotation();
 	TOptional<float> ResolveTargetYaw() const;
+	void ResolveEffectivePolicy(bool bLockedOn, EGYDirectionMode& OutMode, bool& OutCanOverride) const;
 
 	TWeakObjectPtr<AGYCharacter> CachedCharacter;
 	TWeakObjectPtr<UGYPlayerGameplayAbility> CachedAbility;
@@ -32,6 +35,12 @@ private:
 	float CachedLerpTime = 0.f;
 	bool bCachedCanOverrideLockOn = false;
 	bool bSuppressedLockOn = false;
+
+	bool bSavedUseControllerRotationYaw = false;
+	bool bSavedUseControllerDesiredRotation = false;
+
+	bool bDodgePolicySet = false;
+	bool bDodgeForceOverride = false;
 
 	UPROPERTY()
 	TObjectPtr<UAbilityTask_RotateTo> ActiveRotateTask;

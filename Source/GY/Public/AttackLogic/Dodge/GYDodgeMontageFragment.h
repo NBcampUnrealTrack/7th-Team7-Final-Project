@@ -19,19 +19,35 @@ struct FGYDirectionalMontage
 	TObjectPtr<UAnimMontage> Montage;
 };
 
+UENUM(BlueprintType)
+enum class EGYDodgeMontageMode : uint8
+{
+	EightDirection UMETA(DisplayName = "8 Direction"),
+	FrontOnly      UMETA(DisplayName = "Front Only"),
+};
+
 USTRUCT(BlueprintType)
 struct GY_API FGYDodgeMontageSet
 {
 	GENERATED_BODY()
 
-	//방향에 따른 몽타주
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	EGYDodgeMontageMode Mode = EGYDodgeMontageMode::EightDirection;
+
+	//방향에 따른 몽타주
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+		meta = (EditCondition = "Mode == EGYDodgeMontageMode::EightDirection", EditConditionHides))
 	TArray<FGYDirectionalMontage> DirectionalMontages;
 	UAnimMontage* GetMontageByAngle(float Angle) const;
 	//
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+		meta = (EditCondition = "Mode == EGYDodgeMontageMode::FrontOnly", EditConditionHides))
 	TObjectPtr<UAnimMontage> DodgeMontage;
+
+	UAnimMontage* GetSelectedMontage(float Angle) const;
+
+	bool HasValidMontage() const;
 };
 
 UCLASS(EditInlineNew, DefaultToInstanced)

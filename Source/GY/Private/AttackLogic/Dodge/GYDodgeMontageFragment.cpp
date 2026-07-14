@@ -14,17 +14,29 @@ const FGYDodgeMontageSet* UGYDodgeMontageFragment::GetBestMatchingSet(const FGam
 	{
 		if (!Pair.Key.IsValid())
 		{
-			if (!Pair.Value.DirectionalMontages.IsEmpty())
+			if (Pair.Value.HasValidMontage())
 				DefaultResult = &Pair.Value;
 			continue;
 		}
 		if (OwnedTags.HasTag(Pair.Key))
 		{
-			return !Pair.Value.DirectionalMontages.IsEmpty() ? &Pair.Value : nullptr;
+			return Pair.Value.HasValidMontage() ? &Pair.Value : nullptr;
 		}
 	}
 
 	return DefaultResult;
+}
+
+bool FGYDodgeMontageSet::HasValidMontage() const
+{
+	return Mode == EGYDodgeMontageMode::FrontOnly
+		? DodgeMontage != nullptr
+		: !DirectionalMontages.IsEmpty();
+}
+
+UAnimMontage* FGYDodgeMontageSet::GetSelectedMontage(float Angle) const
+{
+	return Mode == EGYDodgeMontageMode::FrontOnly ? DodgeMontage.Get() : GetMontageByAngle(Angle);
 }
 
 UAnimMontage* FGYDodgeMontageSet::GetMontageByAngle(float Angle) const
