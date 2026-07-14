@@ -178,9 +178,11 @@ private:
 
 	/** 현재 UI 상태에 맞춰 이동, 공격 차단 태그를 로컬 ASC에 반영 */
 	void RefreshGameplayInputBlock();
+	void SetGateWaitingBlock(bool bBlock);
 
 	/** State.UI.MenuOpen 태그를 실제로 붙였는지 추적 */
 	bool bGameplayInputBlockApplied = false;
+	bool bGateWaitingBlockApplied = false;
 
 	void OnTagChanged(const FGameplayTag Tag, int32 NewCount);
 

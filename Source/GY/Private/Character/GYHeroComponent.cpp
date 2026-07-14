@@ -38,7 +38,6 @@ UGYHeroComponent::UGYHeroComponent(const FObjectInitializer& ObjectInitializer)
 {
 	SetIsReplicatedByDefault(true);
 	PrimaryComponentTick.bCanEverTick = false;
-	SetIsReplicatedByDefault(true);
 	ChargeThresholdEventTags.AddTag(GYGameplayTags::InputTag_Charge);
 	ChargeAbilityTags.AddTag(GYGameplayTags::Ability_Attack_Charge);
 }
@@ -246,6 +245,18 @@ bool UGYHeroComponent::IsInputBlocked() const
 void UGYHeroComponent::Input_Move(const FInputActionValue& InputActionValue)
 {
 	if (IsInputBlocked()) return;
+
+	// 보스방 대기 참여자 이동만 차단
+	if (AGYPlayerState* PS = GetPlayerState<AGYPlayerState>())
+	{
+		if (UGYAbilitySystemComponent* ASC = PS->GetGYAbilitySystemComponent())
+		{
+			if (ASC->HasMatchingGameplayTag(GYStateTags::State_UI_GateWaiting))
+			{
+				return;
+			}
+		}
+	}
 
 	APawn* Pawn = GetPawn<APawn>();
 	AController* Controller = Pawn ? Pawn->GetController() : nullptr;
