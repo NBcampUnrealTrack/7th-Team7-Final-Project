@@ -16,6 +16,7 @@ class UGYPawnExtensionComponent;
 class UAbilitySystemComponent;
 class UActiveEquipmentComponent;
 class UInteractionComponent;
+class UInteractionHighlightComponent;
 class UAIPerceptionStimuliSourceComponent;
 class UGYOnHitModifierComponent;
 class URevivePoolComponent;
@@ -48,6 +49,8 @@ public:
 	UGYOnHitModifierComponent* GetOnHitModifierComponent() const { return OnHitModifierComponent; }
 
 	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
+
+	UInteractionHighlightComponent* GetInteractionHighlightComponent() const { return InteractionHighlightComponent; }
 
 	ULockOnComponent* GetLockOnComponent() const { return LockOnComponent; }
 	UClimbingComponent* GetClimbingComponent() const { return ClimbingComponent; }
@@ -125,6 +128,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UInteractionComponent> InteractionComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UInteractionHighlightComponent> InteractionHighlightComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<ULockOnComponent> LockOnComponent;
