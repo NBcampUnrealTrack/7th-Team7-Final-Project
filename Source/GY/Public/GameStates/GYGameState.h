@@ -7,6 +7,7 @@
 
 struct FGYWorldResetMessage;
 class UGYExperienceManagerComponent;
+class UWorldSaveComponent;
 
 UCLASS()
 class GY_API AGYGameState : public AGameState
@@ -19,6 +20,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UGYExperienceManagerComponent* GetExperienceManagerComponent() const;
+	UWorldSaveComponent* GetWorldSaveComponent() const;
 
 
 	FORCEINLINE float GetCurrentTime() const { return CurrentTime; }
@@ -56,6 +58,7 @@ public:
 	void RemoveActiveQuest(FGameplayTag QuestTag);
 
 	FORCEINLINE const TArray<FGameplayTag>& GetCompletedQuests() const { return ClearedQuests; }
+	FORCEINLINE const TArray<FGameplayTag>& GetActiveQuests() const { return ActiveQuestTags; }
 
 	// 클라 로컬에서 즉시 재생(데디 서버는 내부에서 스킵).
 	UFUNCTION()
@@ -73,6 +76,9 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<UGYExperienceManagerComponent> ExperienceManagerComponent;
+
+	UPROPERTY()
+	TObjectPtr<UWorldSaveComponent> WorldSaveComponent;
 
 	UPROPERTY(ReplicatedUsing=OnRep_CurrentTime)
 	float CurrentTime;

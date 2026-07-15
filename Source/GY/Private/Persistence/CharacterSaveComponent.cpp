@@ -85,12 +85,36 @@ void UCharacterSaveComponent::OnLevelChanged(const FOnAttributeChangeData& Data)
 	RequestSave();
 }
 
+void UCharacterSaveComponent::FlushForShutdown()
+{
+	if (!bLoaded || bShutdownFlushed || !GetOwner()->HasAuthority()) return;
+	bShutdownFlushed = true;
+
+	if (bSaving)
+	{
+		UGYPersistenceSubsystem* Persistence = ResolvePersistence();
+		if (IsValid(Persistence))
+		{
+			int32 Level = 1;
+			int32 Xp = 0;
+			ReadLevelAndXp(Level, Xp);
+			Persistence->HandoffLogoutSave(CharacterId, Level, Xp, Persistence->CollectSaveData(GetOwner()), CachedSaveVersion);
+		}
+		return;
+	}
+
+	GY_LOG(Network, KDY, "CharacterSave shutdown flush (characterId=%d)", CharacterId);
+	bDirty = true;
+	TrySave();
+}
+
 void UCharacterSaveComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	// 종료 flush (best-effort): dirty 여부와 무관하게 최종 상태 저장 —
 	// XP 처럼 델리게이트 없이 변하는 값은 dirty 를 안 켜므로 무조건 전송이 맞다.
 	// 엔진 종료 시엔 HttpManager 의 shutdown Flush 가 전송 완료를 시도한다.
-	if (bLoaded && GetOwner()->HasAuthority())
+	// OnEnginePreExit 에서 이미 발사했으면 중복 전송(무조건 CAS 충돌) 스킵
+	if (bLoaded && !bShutdownFlushed && GetOwner()->HasAuthority())
 	{
 		GY_LOG(Network, KDY, "EndPlay flush (saving=%d)", bSaving);
 		if (bSaving)

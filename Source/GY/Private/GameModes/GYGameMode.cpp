@@ -15,6 +15,7 @@
 #include "Logging/GYLogManager.h"
 #include "Misc/TrackedActivity.h"
 #include "Persistence/CharacterSaveComponent.h"
+#include "Persistence/WorldSaveComponent.h"
 #include "Player/GYPlayerController.h"
 #include "Player/GYPlayerState.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
@@ -84,8 +85,8 @@ bool AGYGameMode::ShouldSpawnAtStartSpot(AController* Player)
 
 void AGYGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
-	// Experience가 로드되기 전엔 폰 스폰을 보류한다.
-	if (IsExperienceLoaded())
+	// Experience 와 월드 상태가 준비되기 전엔 폰 스폰을 보류한다.
+	if (IsExperienceLoaded() && IsWorldStateReady())
 	{
 		Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	}
@@ -93,7 +94,7 @@ void AGYGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewP
 
 bool AGYGameMode::PlayerCanRestart_Implementation(APlayerController* Player)
 {
-	return IsExperienceLoaded() && Super::PlayerCanRestart_Implementation(Player);
+	return IsExperienceLoaded() && IsWorldStateReady() && Super::PlayerCanRestart_Implementation(Player);
 }
 
 void AGYGameMode::RestartPlayerAtPlayerStart(AController* NewPlayer, AActor* StartSpot)
@@ -117,6 +118,33 @@ bool AGYGameMode::IsExperienceLoaded() const
 	if (!IsValid(ExperienceComponent)) return false;
 
 	return ExperienceComponent->IsExperienceLoaded();
+}
+
+bool AGYGameMode::IsWorldStateReady() const
+{
+	const AGYGameState* GYGameState = GetGameState<AGYGameState>();
+	if (!IsValid(GYGameState)) return true;
+
+	const UWorldSaveComponent* WorldSave = GYGameState->GetWorldSaveComponent();
+	if (!IsValid(WorldSave) || !WorldSave->IsPersistenceEnabled()) return true;
+
+	return WorldSave->IsWorldStateReady();
+}
+
+void AGYGameMode::OnWorldStateReady()
+{
+	// Experience 게이트와 동일한 후처리 — 두 게이트 중 늦게 열리는 쪽이 스폰을 트리거한다
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(*It);
+		if (IsValid(PlayerController) && PlayerController->GetPawn() == nullptr)
+		{
+			if (PlayerCanRestart(PlayerController))
+			{
+				RestartPlayer(PlayerController);
+			}
+		}
+	}
 }
 
 void AGYGameMode::OnExperienceLoaded(const UGYExperienceDefinition* Experience)
