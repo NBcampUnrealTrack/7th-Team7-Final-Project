@@ -10,7 +10,7 @@ class GY_API AArcProjectile : public AProjectileBase
 	GENERATED_BODY()
 
 public:
-	AArcProjectile();
+	virtual void PostInitializeComponents() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	float GravityScale = 1.f;

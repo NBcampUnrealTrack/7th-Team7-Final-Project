@@ -13,7 +13,9 @@
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Enemy/Component/EnemyAggroComponent.h"
+#include "Enemy/Projectile/ArcProjectile.h"
 #include "Enemy/Projectile/ProjectileBase.h"
+#include "Kismet/GameplayStatics.h"
 #include "Logging/GYLogManager.h"
 
 namespace
@@ -249,7 +251,29 @@ void URangedAttackBase::SpawnProjectile()
 
 		const float YawOffset = Ratio * SpreadAngle;
 		const FRotator OffsetRot(0.f, YawOffset, 0.f);
-		const FVector ShotDir = OffsetRot.RotateVector(BaseDir);
+
+		FVector ShotDir = OffsetRot.RotateVector(BaseDir);
+		float ShotSpeed = ProjectileSpeed;
+
+		// 포물선 모드: 타겟 지점에 떨어지는 발사 속도를 역산 (ProjectileSpeed 무시)
+		if (bUseArcTrajectory && Target)
+		{
+			const FVector ShotTargetPos = LaunchPos + OffsetRot.RotateVector(TargetPos - LaunchPos);
+
+			float GravityZ = GetWorld()->GetGravityZ();
+			if (const AArcProjectile* ArcCDO = Cast<AArcProjectile>(ProjectileClass->GetDefaultObject()))
+			{
+				GravityZ *= ArcCDO->GravityScale;
+			}
+
+			FVector ArcVelocity;
+			if (UGameplayStatics::SuggestProjectileVelocity_CustomArc(
+					this, ArcVelocity, LaunchPos, ShotTargetPos, GravityZ, ArcParam))
+			{
+				ShotDir = ArcVelocity.GetSafeNormal();
+				ShotSpeed = ArcVelocity.Size();
+			}
+		}
 
 		FActorSpawnParameters Params;
 		Params.Owner = Pawn;
@@ -259,6 +283,6 @@ void URangedAttackBase::SpawnProjectile()
 			ProjectileClass, LaunchPos, ShotDir.Rotation(), Params);
 
 		if (Projectile)
-			Projectile->Launch(Pawn, ShotDir, ProjectileSpeed);
+			Projectile->Launch(Pawn, ShotDir, ShotSpeed);
 	}
 }

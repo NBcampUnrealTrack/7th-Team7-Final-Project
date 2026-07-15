@@ -52,6 +52,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat|Projectile|Spread", meta=(ClampMin="0"))
 	float TargetLocationSpread = 0.f;
 
+	/**
+	 * true면 직선 발사 대신 타겟 지점에 정확히 떨어지는 포물선 궤적으로 발사.
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Projectile|Arc")
+	bool bUseArcTrajectory = false;
+
+	/** 포물선 높이. 낮을수록 높이 솟는 로브*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Projectile|Arc", meta = (ClampMin = "0.05", ClampMax = "0.95", EditCondition = "bUseArcTrajectory"))
+	float ArcParam = 0.4f;
+
 	// true면 각 탄 데미지를 1/ProjectileCount로 분산
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Projectile|Damage")
 	bool bDistributeDamage = true;
