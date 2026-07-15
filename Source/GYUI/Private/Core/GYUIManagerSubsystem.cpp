@@ -431,10 +431,10 @@ void UGYUIManagerSubsystem::CreatePrimaryGameLayout(TSubclassOf<UGYPrimaryGameLa
 	if (!PC) return;
 
 	// 현재 PlayerController 소유의 레이아웃이 이미 살아 있으면 재생성x
-	if (IsValid(PrimaryGameLayout) && PrimaryGameLayout->GetOwningPlayer() == PC)
-	{
-		return;
-	}
+	//if (IsValid(PrimaryGameLayout) && PrimaryGameLayout->GetOwningPlayer() == PC)
+	//{
+	//	return;
+	//}
 	RemovePrimaryGameLayout();
 
 	PrimaryGameLayout = CreateWidget<UGYPrimaryGameLayout>(PC, LayoutClass);
