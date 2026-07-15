@@ -11049,6 +11049,11 @@
                                                                                                       "by":  "rhkrd",
                                                                                                       "at":  "2026-07-13 18:10:44",
                                                                                                       "note":  ""
+                                                                                                  },
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-15 17:58:03",
+                                                                                                      "note":  ""
                                                                                                   }
                                                                                               ]
                                                                               },
@@ -25406,6 +25411,729 @@
                                                                                                                 }
                                                                                                             ]
                                                                                             },
+                   "Movement_VFX/Demo/Demo_Materials/M_ProcGrid.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-15 15:54:56",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Movement_VFX/Demo/Demo_Materials/MI_ProcGrid.uasset":  {
+                                                                               "history":  [
+                                                                                               {
+                                                                                                   "by":  "rhkrd",
+                                                                                                   "at":  "2026-07-15 15:54:56",
+                                                                                                   "note":  ""
+                                                                                               }
+                                                                                           ]
+                                                                           },
+                   "Movement_VFX/Demo/Demo_Models/SM_DemoFloor.uasset":  {
+                                                                             "history":  [
+                                                                                             {
+                                                                                                 "by":  "rhkrd",
+                                                                                                 "at":  "2026-07-15 15:54:56",
+                                                                                                 "note":  ""
+                                                                                             }
+                                                                                         ]
+                                                                         },
+                   "Movement_VFX/Demo/Demo_Sequence/Demonstration.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-15 15:54:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Movement_VFX/Materials/M_MasterVFX.uasset":  {
+                                                                     "history":  [
+                                                                                     {
+                                                                                         "by":  "rhkrd",
+                                                                                         "at":  "2026-07-15 15:54:56",
+                                                                                         "note":  ""
+                                                                                     }
+                                                                                 ]
+                                                                 },
+                   "Movement_VFX/Materials/Mesh-Based_Materials/M_CloudErode.uasset":  {
+                                                                                           "history":  [
+                                                                                                           {
+                                                                                                               "by":  "rhkrd",
+                                                                                                               "at":  "2026-07-15 15:54:56",
+                                                                                                               "note":  ""
+                                                                                                           }
+                                                                                                       ]
+                                                                                       },
+                   "Movement_VFX/Materials/Mesh-Based_Materials/M_DashWake.uasset":  {
+                                                                                         "history":  [
+                                                                                                         {
+                                                                                                             "by":  "rhkrd",
+                                                                                                             "at":  "2026-07-15 15:54:56",
+                                                                                                             "note":  ""
+                                                                                                         }
+                                                                                                     ]
+                                                                                     },
+                   "Movement_VFX/Materials/Mesh-Based_Materials/MI_ImpactErode.uasset":  {
+                                                                                             "history":  [
+                                                                                                             {
+                                                                                                                 "by":  "rhkrd",
+                                                                                                                 "at":  "2026-07-15 15:54:56",
+                                                                                                                 "note":  ""
+                                                                                                             }
+                                                                                                         ]
+                                                                                         },
+                   "Movement_VFX/Materials/MI_BasicTrail.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-15 15:54:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Movement_VFX/Materials/MI_Cloudtrail.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-15 15:54:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Movement_VFX/Materials/MI_DustSubUV.uasset":  {
+                                                                      "history":  [
+                                                                                      {
+                                                                                          "by":  "rhkrd",
+                                                                                          "at":  "2026-07-15 15:54:56",
+                                                                                          "note":  ""
+                                                                                      }
+                                                                                  ]
+                                                                  },
+                   "Movement_VFX/Materials/MI_Shockwave.uasset":  {
+                                                                      "history":  [
+                                                                                      {
+                                                                                          "by":  "rhkrd",
+                                                                                          "at":  "2026-07-15 15:54:56",
+                                                                                          "note":  ""
+                                                                                      }
+                                                                                  ]
+                                                                  },
+                   "Movement_VFX/Materials/MI_Shockwave02.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-15 15:54:56",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "Movement_VFX/Materials/MI_Speedtrail.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-15 15:54:56",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Movement_VFX/Materials/Textures/SeamlessTextures/T_SpeedStripes.uasset":  {
+                                                                                                  "history":  [
+                                                                                                                  {
+                                                                                                                      "by":  "rhkrd",
+                                                                                                                      "at":  "2026-07-15 15:54:56",
+                                                                                                                      "note":  ""
+                                                                                                                  }
+                                                                                                              ]
+                                                                                              },
+                   "Movement_VFX/Materials/Textures/SeamlessTextures/T_StripeNoise.uasset":  {
+                                                                                                 "history":  [
+                                                                                                                 {
+                                                                                                                     "by":  "rhkrd",
+                                                                                                                     "at":  "2026-07-15 15:54:56",
+                                                                                                                     "note":  ""
+                                                                                                                 }
+                                                                                                             ]
+                                                                                             },
+                   "Movement_VFX/Materials/Textures/SeamlessTextures/T_VFXChunknoise.uasset":  {
+                                                                                                   "history":  [
+                                                                                                                   {
+                                                                                                                       "by":  "rhkrd",
+                                                                                                                       "at":  "2026-07-15 15:54:56",
+                                                                                                                       "note":  ""
+                                                                                                                   }
+                                                                                                               ]
+                                                                                               },
+                   "Movement_VFX/Materials/Textures/SeamlessTextures/T_Voronoi.uasset":  {
+                                                                                             "history":  [
+                                                                                                             {
+                                                                                                                 "by":  "rhkrd",
+                                                                                                                 "at":  "2026-07-15 15:54:56",
+                                                                                                                 "note":  ""
+                                                                                                             }
+                                                                                                         ]
+                                                                                         },
+                   "Movement_VFX/Materials/Textures/T_Circle.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-15 15:54:56",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
+                   "Movement_VFX/Materials/Textures/T_MovementRibbon.uasset":  {
+                                                                                   "history":  [
+                                                                                                   {
+                                                                                                       "by":  "rhkrd",
+                                                                                                       "at":  "2026-07-15 15:54:56",
+                                                                                                       "note":  ""
+                                                                                                   }
+                                                                                               ]
+                                                                               },
+                   "Movement_VFX/Materials/Textures/T_Shockwave_01.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-15 15:54:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Movement_VFX/Materials/Textures/T_SmokeRibbon.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-15 15:54:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Movement_VFX/Materials/Textures/T_Smudge_SubUV.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-15 15:54:56",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Movement_VFX/Materials/Textures/T_SoftShockwave.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-15 15:54:56",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Movement_VFX/Materials/Textures/T_Wake_Ribbon.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-15 15:54:56",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Movement_VFX/Models/SM_VFXBullet.uasset":  {
+                                                                   "history":  [
+                                                                                   {
+                                                                                       "by":  "rhkrd",
+                                                                                       "at":  "2026-07-15 15:54:56",
+                                                                                       "note":  ""
+                                                                                   }
+                                                                               ]
+                                                               },
+                   "Movement_VFX/Models/SM_VFXExplode.uasset":  {
+                                                                    "history":  [
+                                                                                    {
+                                                                                        "by":  "rhkrd",
+                                                                                        "at":  "2026-07-15 15:54:56",
+                                                                                        "note":  ""
+                                                                                    }
+                                                                                ]
+                                                                },
+                   "Movement_VFX/Models/SM_VFXRing.uasset":  {
+                                                                 "history":  [
+                                                                                 {
+                                                                                     "by":  "rhkrd",
+                                                                                     "at":  "2026-07-15 15:54:56",
+                                                                                     "note":  ""
+                                                                                 }
+                                                                             ]
+                                                             },
+                   "Movement_VFX/Models/SM_VFXTube.uasset":  {
+                                                                 "history":  [
+                                                                                 {
+                                                                                     "by":  "rhkrd",
+                                                                                     "at":  "2026-07-15 15:54:56",
+                                                                                     "note":  ""
+                                                                                 }
+                                                                             ]
+                                                             },
+                   "Movement_VFX/Models/SM_VFXWake.uasset":  {
+                                                                 "history":  [
+                                                                                 {
+                                                                                     "by":  "rhkrd",
+                                                                                     "at":  "2026-07-15 15:54:56",
+                                                                                     "note":  ""
+                                                                                 }
+                                                                             ]
+                                                             },
+                   "Movement_VFX/Models/SM_VFXWarpBowl.uasset":  {
+                                                                     "history":  [
+                                                                                     {
+                                                                                         "by":  "rhkrd",
+                                                                                         "at":  "2026-07-15 15:54:56",
+                                                                                         "note":  ""
+                                                                                     }
+                                                                                 ]
+                                                                 },
+                   "Movement_VFX/Movement_VFX/Materials/M_MasterVFX.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-15 17:58:03",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Movement_VFX/Movement_VFX/Materials/Mesh-Based_Materials/M_CloudErode.uasset":  {
+                                                                                                        "history":  [
+                                                                                                                        {
+                                                                                                                            "by":  "rhkrd",
+                                                                                                                            "at":  "2026-07-15 17:58:03",
+                                                                                                                            "note":  ""
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                    },
+                   "Movement_VFX/Movement_VFX/Materials/Mesh-Based_Materials/M_DashWake.uasset":  {
+                                                                                                      "history":  [
+                                                                                                                      {
+                                                                                                                          "by":  "rhkrd",
+                                                                                                                          "at":  "2026-07-15 17:58:03",
+                                                                                                                          "note":  ""
+                                                                                                                      }
+                                                                                                                  ]
+                                                                                                  },
+                   "Movement_VFX/Movement_VFX/Materials/Mesh-Based_Materials/MI_ImpactErode.uasset":  {
+                                                                                                          "history":  [
+                                                                                                                          {
+                                                                                                                              "by":  "rhkrd",
+                                                                                                                              "at":  "2026-07-15 17:58:03",
+                                                                                                                              "note":  ""
+                                                                                                                          }
+                                                                                                                      ]
+                                                                                                      },
+                   "Movement_VFX/Movement_VFX/Materials/MI_BasicTrail.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-15 17:58:03",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "Movement_VFX/Movement_VFX/Materials/MI_Cloudtrail.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-15 17:58:03",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "Movement_VFX/Movement_VFX/Materials/MI_DustSubUV.uasset":  {
+                                                                                   "history":  [
+                                                                                                   {
+                                                                                                       "by":  "rhkrd",
+                                                                                                       "at":  "2026-07-15 17:58:03",
+                                                                                                       "note":  ""
+                                                                                                   }
+                                                                                               ]
+                                                                               },
+                   "Movement_VFX/Movement_VFX/Materials/MI_Shockwave.uasset":  {
+                                                                                   "history":  [
+                                                                                                   {
+                                                                                                       "by":  "rhkrd",
+                                                                                                       "at":  "2026-07-15 17:58:03",
+                                                                                                       "note":  ""
+                                                                                                   }
+                                                                                               ]
+                                                                               },
+                   "Movement_VFX/Movement_VFX/Materials/MI_Shockwave02.uasset":  {
+                                                                                     "history":  [
+                                                                                                     {
+                                                                                                         "by":  "rhkrd",
+                                                                                                         "at":  "2026-07-15 17:58:03",
+                                                                                                         "note":  ""
+                                                                                                     }
+                                                                                                 ]
+                                                                                 },
+                   "Movement_VFX/Movement_VFX/Materials/MI_Speedtrail.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-15 17:58:03",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/SeamlessTextures/T_SpeedStripes.uasset":  {
+                                                                                                               "history":  [
+                                                                                                                               {
+                                                                                                                                   "by":  "rhkrd",
+                                                                                                                                   "at":  "2026-07-15 17:58:03",
+                                                                                                                                   "note":  ""
+                                                                                                                               }
+                                                                                                                           ]
+                                                                                                           },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/SeamlessTextures/T_StripeNoise.uasset":  {
+                                                                                                              "history":  [
+                                                                                                                              {
+                                                                                                                                  "by":  "rhkrd",
+                                                                                                                                  "at":  "2026-07-15 17:58:03",
+                                                                                                                                  "note":  ""
+                                                                                                                              }
+                                                                                                                          ]
+                                                                                                          },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/SeamlessTextures/T_VFXChunknoise.uasset":  {
+                                                                                                                "history":  [
+                                                                                                                                {
+                                                                                                                                    "by":  "rhkrd",
+                                                                                                                                    "at":  "2026-07-15 17:58:03",
+                                                                                                                                    "note":  ""
+                                                                                                                                }
+                                                                                                                            ]
+                                                                                                            },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/SeamlessTextures/T_Voronoi.uasset":  {
+                                                                                                          "history":  [
+                                                                                                                          {
+                                                                                                                              "by":  "rhkrd",
+                                                                                                                              "at":  "2026-07-15 17:58:03",
+                                                                                                                              "note":  ""
+                                                                                                                          }
+                                                                                                                      ]
+                                                                                                      },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_Circle.uasset":  {
+                                                                                        "history":  [
+                                                                                                        {
+                                                                                                            "by":  "rhkrd",
+                                                                                                            "at":  "2026-07-15 17:58:03",
+                                                                                                            "note":  ""
+                                                                                                        }
+                                                                                                    ]
+                                                                                    },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_MovementRibbon.uasset":  {
+                                                                                                "history":  [
+                                                                                                                {
+                                                                                                                    "by":  "rhkrd",
+                                                                                                                    "at":  "2026-07-15 17:58:03",
+                                                                                                                    "note":  ""
+                                                                                                                }
+                                                                                                            ]
+                                                                                            },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_Shockwave_01.uasset":  {
+                                                                                              "history":  [
+                                                                                                              {
+                                                                                                                  "by":  "rhkrd",
+                                                                                                                  "at":  "2026-07-15 17:58:03",
+                                                                                                                  "note":  ""
+                                                                                                              }
+                                                                                                          ]
+                                                                                          },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_SmokeRibbon.uasset":  {
+                                                                                             "history":  [
+                                                                                                             {
+                                                                                                                 "by":  "rhkrd",
+                                                                                                                 "at":  "2026-07-15 17:58:03",
+                                                                                                                 "note":  ""
+                                                                                                             }
+                                                                                                         ]
+                                                                                         },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_SoftShockwave.uasset":  {
+                                                                                               "history":  [
+                                                                                                               {
+                                                                                                                   "by":  "rhkrd",
+                                                                                                                   "at":  "2026-07-15 17:58:03",
+                                                                                                                   "note":  ""
+                                                                                                               }
+                                                                                                           ]
+                                                                                           },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_Wake_Ribbon.uasset":  {
+                                                                                             "history":  [
+                                                                                                             {
+                                                                                                                 "by":  "rhkrd",
+                                                                                                                 "at":  "2026-07-15 17:58:03",
+                                                                                                                 "note":  ""
+                                                                                                             }
+                                                                                                         ]
+                                                                                         },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXBullet.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-15 17:58:03",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXExplode.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-15 17:58:03",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXRing.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-15 17:58:03",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXTube.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-15 17:58:03",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXWake.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-15 17:58:03",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXWarpBowl.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-15 17:58:03",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Movement_VFX/VFX/Dashes/NS_DashDust.uasset":  {
+                                                                      "history":  [
+                                                                                      {
+                                                                                          "by":  "rhkrd",
+                                                                                          "at":  "2026-07-15 15:54:56",
+                                                                                          "note":  ""
+                                                                                      },
+                                                                                      {
+                                                                                          "by":  "rhkrd",
+                                                                                          "at":  "2026-07-15 17:58:03",
+                                                                                          "note":  ""
+                                                                                      }
+                                                                                  ]
+                                                                  },
+                   "Movement_VFX/VFX/Dashes/NS_DashRing.uasset":  {
+                                                                      "history":  [
+                                                                                      {
+                                                                                          "by":  "rhkrd",
+                                                                                          "at":  "2026-07-15 15:54:56",
+                                                                                          "note":  ""
+                                                                                      },
+                                                                                      {
+                                                                                          "by":  "rhkrd",
+                                                                                          "at":  "2026-07-15 17:58:03",
+                                                                                          "note":  ""
+                                                                                      }
+                                                                                  ]
+                                                                  },
+                   "Movement_VFX/VFX/Dashes/NS_DashWake_Solid.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-15 15:54:56",
+                                                                                                "note":  ""
+                                                                                            },
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-15 17:58:03",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "Movement_VFX/VFX/Dashes/NS_Rolling.uasset":  {
+                                                                     "history":  [
+                                                                                     {
+                                                                                         "by":  "rhkrd",
+                                                                                         "at":  "2026-07-15 15:54:56",
+                                                                                         "note":  ""
+                                                                                     },
+                                                                                     {
+                                                                                         "by":  "rhkrd",
+                                                                                         "at":  "2026-07-15 17:58:03",
+                                                                                         "note":  ""
+                                                                                     }
+                                                                                 ]
+                                                                 },
+                   "Movement_VFX/VFX/Dashes/NS_Speedwaves.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-15 15:54:56",
+                                                                                            "note":  ""
+                                                                                        },
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-15 17:58:03",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "Movement_VFX/VFX/Jumping/NS_DoubleJump.uasset":  {
+                                                                         "history":  [
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-15 15:54:56",
+                                                                                             "note":  ""
+                                                                                         },
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-15 17:58:03",
+                                                                                             "note":  ""
+                                                                                         }
+                                                                                     ]
+                                                                     },
+                   "Movement_VFX/VFX/Jumping/NS_Jump_Ring.uasset":  {
+                                                                        "history":  [
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-15 15:54:56",
+                                                                                            "note":  ""
+                                                                                        },
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-15 17:58:03",
+                                                                                            "note":  ""
+                                                                                        }
+                                                                                    ]
+                                                                    },
+                   "Movement_VFX/VFX/Landing/NS_Impact_MESH.uasset":  {
+                                                                          "history":  [
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-15 15:54:56",
+                                                                                              "note":  ""
+                                                                                          },
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-15 17:58:03",
+                                                                                              "note":  ""
+                                                                                          }
+                                                                                      ]
+                                                                      },
+                   "Movement_VFX/VFX/Landing/NS_Impact_Ring.uasset":  {
+                                                                          "history":  [
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-15 15:54:56",
+                                                                                              "note":  ""
+                                                                                          },
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-15 17:58:03",
+                                                                                              "note":  ""
+                                                                                          }
+                                                                                      ]
+                                                                      },
+                   "Movement_VFX/VFX/Landing/NS_Impact_Ring02.uasset":  {
+                                                                            "history":  [
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-15 15:54:56",
+                                                                                                "note":  ""
+                                                                                            },
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-15 17:58:03",
+                                                                                                "note":  ""
+                                                                                            }
+                                                                                        ]
+                                                                        },
+                   "Movement_VFX/VFX/Landing/NS_Impact_SMALL.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-15 15:54:56",
+                                                                                               "note":  ""
+                                                                                           },
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-15 17:58:03",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
+                   "Movement_VFX/VFX/Trails/NS_DashTrail.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-15 15:54:56",
+                                                                                           "note":  ""
+                                                                                       },
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-15 17:58:03",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Movement_VFX/VFX/Trails/NS_DustTrail.uasset":  {
+                                                                       "history":  [
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-15 15:54:56",
+                                                                                           "note":  ""
+                                                                                       },
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-15 17:58:03",
+                                                                                           "note":  ""
+                                                                                       }
+                                                                                   ]
+                                                                   },
+                   "Movement_VFX/VFX/Trails/NS_MovementTrail.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-15 15:54:56",
+                                                                                               "note":  ""
+                                                                                           },
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-15 17:58:03",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
+                   "Movement_VFX/VFX/Trails/NS_RunTrail_MESH.uasset":  {
+                                                                           "history":  [
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-15 15:54:56",
+                                                                                               "note":  ""
+                                                                                           },
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-15 17:58:03",
+                                                                                               "note":  ""
+                                                                                           }
+                                                                                       ]
+                                                                       },
                    "Necropolis/Audio/Attenuations/ATT_attenuation_close.uasset":  {
                                                                                       "history":  [
                                                                                                       {
@@ -42284,6 +43012,15 @@
                                                                                                                                                       "note":  null
                                                                                                                                                   }
                                                                                                                                               ]
-                                                                                                                              }
+                                                                                                                              },
+                   "Sword_Animations/Demo/Mannequins/Character/Meshes/SK_Mannequin.uasset":  {
+                                                                                                 "history":  [
+                                                                                                                 {
+                                                                                                                     "by":  "rhkrd",
+                                                                                                                     "at":  "2026-07-15 17:58:03",
+                                                                                                                     "note":  ""
+                                                                                                                 }
+                                                                                                             ]
+                                                                                             }
                }
 }

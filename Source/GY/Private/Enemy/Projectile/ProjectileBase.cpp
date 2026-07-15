@@ -2,11 +2,10 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystemGlobals.h"
-#include "GameplayCueManager.h"
 #include "GenericTeamAgentInterface.h"
 #include "Components/SphereComponent.h"
 #include "Core/GYCollisionChannels.h"
+#include "Core/Sound/GYSoundManager.h"
 #include "Core/GameplayTags/EventTags.h"
 #include "Core/GameplayTags/FactionTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
@@ -133,11 +132,9 @@ void AProjectileBase::BeginPlay()
 
 	if (SoundCueTag.IsValid())
 	{
-		if (UGameplayCueManager* CueManager = UAbilitySystemGlobals::Get().GetGameplayCueManager())
+		if (UGYSoundManager* SoundManager = UGYSoundManager::Get(this))
 		{
-			FGameplayCueParameters CueParams;
-			CueParams.Location = GetActorLocation();
-			CueManager->HandleGameplayCue(this, SoundCueTag, EGameplayCueEvent::Executed, CueParams);
+			SoundManager->PlaySoundAttached(SoundCueTag, GetRootComponent());
 		}
 	}
 }

@@ -51,7 +51,7 @@ protected:
 	FGameplayTag HitCueTag;
 
 	/** Projectile 효과음 */
-	UPROPERTY(EditDefaultsOnly, Category = "Cue")
+	UPROPERTY(EditDefaultsOnly, Category = "Cue", meta = (Categories = "Sound"))
 	FGameplayTag SoundCueTag;
 
 	UPROPERTY()
