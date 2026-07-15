@@ -21,7 +21,7 @@ struct GY_API FGYSoundDataTableRow : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SoundData")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SoundData", meta = (Categories = "Sound"))
 	FGameplayTag Tag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SoundData")

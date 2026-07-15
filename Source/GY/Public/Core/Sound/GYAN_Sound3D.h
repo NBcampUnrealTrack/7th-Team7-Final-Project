@@ -10,7 +10,7 @@ class GY_API UGYAN_Sound3D : public UAnimNotify
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, Category = "Sound")
+	UPROPERTY(EditAnywhere, Category = "Sound", meta = (Categories = "Sound"))
 	FGameplayTag SoundTag;
 
 	UPROPERTY(EditAnywhere, Category = "Socket")

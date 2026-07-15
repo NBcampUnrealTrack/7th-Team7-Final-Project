@@ -69,6 +69,27 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Pawn_Death, "Sound.Boss.Pawn.Death")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Boss_Pawn_Attack, "Sound.Boss.Pawn.Attack")
 
+	//챕터보스
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_GreatSword_1, "Sound.ChapterBoss.GreatSword.1")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_GreatSword_2, "Sound.ChapterBoss.GreatSword.2")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_GreatSword_3, "Sound.ChapterBoss.GreatSword.3")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_GreatSword_4, "Sound.ChapterBoss.GreatSword.4")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_GreatSword_5, "Sound.ChapterBoss.GreatSword.5")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_Sword_1, "Sound.ChapterBoss.Sword.1")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_Sword_2, "Sound.ChapterBoss.Sword.2")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_Sword_3, "Sound.ChapterBoss.Sword.3")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_Sword_4, "Sound.ChapterBoss.Sword.4")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_Blade, "Sound.ChapterBoss.Blade")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_LongDash, "Sound.ChapterBoss.LongDash")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_Dash, "Sound.ChapterBoss.Dash")
+
+	//모리게시
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Morigesh_ElectricMark, "Sound.Morigesh.ElectricMark")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Morigesh_Lightning, "Sound.Morigesh.Lightning")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Morigesh_Orb, "Sound.Morigesh.Orb")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Morigesh_Knife, "Sound.Morigesh.Knife")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Morigesh_Ultimate, "Sound.Morigesh.Ultimate")
+
 	//중간보스
 
 	/* 상호 작용 */
@@ -90,6 +111,8 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Item_Looting, "Sound.Item.Looting")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Level_Up, "Sound.Level.Up")
 
+	/* 환경 */
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Ambient_Machine, "Sound.Ambient.Machine")
 
 	/* BGM */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_BGM_Combat, "Sound.BGM.Combat")
