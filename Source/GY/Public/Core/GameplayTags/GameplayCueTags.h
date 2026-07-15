@@ -69,6 +69,10 @@ namespace GYGameplayTags
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Boss_Impact);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Boss_Bloom);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Boss_Poison);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_GreyStone_Death);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Scorch_Death);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Morigesh_Death);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_ChapterBoss_Death);
 
 	/* 상태 이상 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Status_Stun);

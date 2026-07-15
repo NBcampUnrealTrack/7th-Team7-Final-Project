@@ -68,6 +68,10 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Boss_Impact, "GameplayCue.Boss.Impact");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Boss_Bloom, "GameplayCue.Boss.Bloom");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Boss_Poison, "GameplayCue.Boss.Poison");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_GreyStone_Death, "GameplayCue.GreyStone.Death");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Scorch_Death, "GameplayCue.Scorch.Death");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Morigesh_Death, "GameplayCue.Morigesh.Death");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_ChapterBoss_Death, "GameplayCue.ChapterBoss.Death");
 
 	// 상태 이상 - 포스트 프로세스
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Status_Stun, "GameplayCue.Status.Stun");
