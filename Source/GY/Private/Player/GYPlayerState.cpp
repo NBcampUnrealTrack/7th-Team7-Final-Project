@@ -84,6 +84,13 @@ void AGYPlayerState::SetLastCheckpointId(const FGuid& Id)
 	ForceNetUpdate();
 }
 
+void AGYPlayerState::SetInitialSpawnTransform(const FTransform& Transform)
+{
+	if (!HasAuthority() || bHasInitialSpawnTransform) return;
+	InitialSpawnTransform = Transform;
+	bHasInitialSpawnTransform = true;
+}
+
 void AGYPlayerState::Client_PlaySound_Implementation(FGameplayTag SoundTag)
 {
 	if (UGYSoundManager* SoundManager = UGYSoundManager::Get(this))

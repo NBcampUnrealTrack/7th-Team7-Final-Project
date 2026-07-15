@@ -96,6 +96,18 @@ bool AGYGameMode::PlayerCanRestart_Implementation(APlayerController* Player)
 	return IsExperienceLoaded() && Super::PlayerCanRestart_Implementation(Player);
 }
 
+void AGYGameMode::RestartPlayerAtPlayerStart(AController* NewPlayer, AActor* StartSpot)
+{
+	Super::RestartPlayerAtPlayerStart(NewPlayer, StartSpot);
+
+	AGYPlayerState* PS = NewPlayer ? NewPlayer->GetPlayerState<AGYPlayerState>() : nullptr;
+	APawn* Pawn = NewPlayer ? NewPlayer->GetPawn() : nullptr;
+	if (PS && Pawn && !PS->HasInitialSpawnTransform())
+	{
+		PS->SetInitialSpawnTransform(Pawn->GetActorTransform());
+	}
+}
+
 bool AGYGameMode::IsExperienceLoaded() const
 {
 	const AGYGameState* GYGameState = GetGameState<AGYGameState>();
@@ -261,7 +273,7 @@ void AGYGameMode::PerformRespawn(APlayerController* PC)
 
 	ASC->RevokeGrantSource(GYStateTags::State_Life_Dead);
 
-	FTransform SpawnTransform = FTransform::Identity;
+	FTransform SpawnTransform = PS->GetInitialSpawnTransform();
 
 	if (UTimeRiftSubsystem* TimeRiftSubsystem = GetGameInstance()->GetSubsystem<UTimeRiftSubsystem>())
 	{

@@ -73,6 +73,10 @@ public:
 	FORCEINLINE FGuid GetLastCheckpointId() const { return LastCheckpointId; }
 	void SetLastCheckpointId(const FGuid& Id);
 
+	FORCEINLINE FTransform GetInitialSpawnTransform() const { return InitialSpawnTransform; }
+	FORCEINLINE bool HasInitialSpawnTransform() const { return bHasInitialSpawnTransform; }
+	void SetInitialSpawnTransform(const FTransform& Transform);
+
 	// [SERVER→OWNER CLIENT] 아이템/인벤토리 관련 액션 결과 사운드 재생 공용 채널
 	UFUNCTION(Client, Reliable)
 	void Client_PlaySound(FGameplayTag SoundTag);
@@ -134,4 +138,10 @@ private:
 	//TODO: 저장해야함
 	UPROPERTY(Replicated)
 	FGuid LastCheckpointId;
+
+	UPROPERTY()
+	FTransform InitialSpawnTransform = FTransform::Identity;
+
+	UPROPERTY()
+	bool bHasInitialSpawnTransform = false;
 };
