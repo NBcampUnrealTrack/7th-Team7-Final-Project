@@ -24,7 +24,8 @@ public:
 
 
 	FORCEINLINE float GetCurrentTime() const { return CurrentTime; }
-	FORCEINLINE void SetCurrentTime(float InCurrentTime);
+	// 본문이 cpp 에 있으므로 inline 선언 금지 — 서버 타깃 유니티 빌드에서 LNK2019
+	void SetCurrentTime(float InCurrentTime);
 	FORCEINLINE float GetTimeScale() const { return TimeScale; }
 	FORCEINLINE void SetTimeScale(float InTimeScale) { TimeScale = InTimeScale; }
 	FORCEINLINE float GetMidnight() const { return Midnight; }

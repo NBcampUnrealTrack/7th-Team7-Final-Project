@@ -109,7 +109,8 @@ while ($true) {
         Log "world $($w.id): spawning on port $port"
         $spawnArgs = @()
         if ($ServerArgsPrefix) { $spawnArgs += ($ServerArgsPrefix -split " ") }
-        $spawnArgs += @("L_Expanse_WP", "-log", "-port=$port", "-WorldId=$($w.id)", "-PublicAddr=${PublicIp}:$port")
+        # -nosteam: 패키징 서버는 Steam 이 타깃에서 제외돼 무의미(무해) — 에디터 exe 로 돌릴 때(ServerArgsPrefix)만 유효
+        $spawnArgs += @("L_Expanse_WP", "-log", "-nosteam", "-port=$port", "-WorldId=$($w.id)", "-PublicAddr=${PublicIp}:$port")
         $proc = Start-Process -FilePath $ServerExe -ArgumentList $spawnArgs -PassThru -WindowStyle Minimized
         $Running[[long]$w.id] = @{ Process = $proc; Port = $port; IdleSince = $null }
     }
