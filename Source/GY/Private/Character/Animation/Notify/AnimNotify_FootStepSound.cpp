@@ -4,11 +4,12 @@
 #include "Character/Animation/Notify/AnimNotify_FootStepSound.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Logging/GYLogManager.h"
 
 UAnimNotify_FootStepSound::UAnimNotify_FootStepSound()
 {
 	FootBoneName = TEXT("foot_l");
-	TraceDistance = 5.f;
+	TraceDistance = 50.f;
 }
 
 void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
@@ -36,12 +37,12 @@ void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSe
 		UPhysicalMaterial* PhysMat = HitResult.PhysMaterial.Get();
 
 		USoundBase* SoundToPlay = DefaultSound;
-		if (PhysMat)
-		{
+
 			if (SoundToPlay)
 			{
+				GY_LOG(Game,KHB,"발소리재생");
 				UGameplayStatics::PlaySoundAtLocation(World, SoundToPlay, HitResult.ImpactPoint);
 			}
-		}
+
 	}
 }
