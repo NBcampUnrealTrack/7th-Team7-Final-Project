@@ -25,6 +25,7 @@ public:
 	virtual bool ShouldSpawnAtStartSpot(AController* Player) override;
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	virtual bool PlayerCanRestart_Implementation(APlayerController* Player) override;
+	virtual void RestartPlayerAtPlayerStart(AController* NewPlayer, AActor* StartSpot) override;
 
 	// 폰 클래스를 Experience/PawnData에서 해결(데이터드리븐). 폴백은 DefaultPawnClass.
 	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
