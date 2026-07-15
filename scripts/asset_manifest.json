@@ -11049,6 +11049,11 @@
                                                                                                       "by":  "rhkrd",
                                                                                                       "at":  "2026-07-13 18:10:44",
                                                                                                       "note":  ""
+                                                                                                  },
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-15 17:58:03",
+                                                                                                      "note":  ""
                                                                                                   }
                                                                                               ]
                                                                               },
@@ -25685,11 +25690,250 @@
                                                                                      }
                                                                                  ]
                                                                  },
+                   "Movement_VFX/Movement_VFX/Materials/M_MasterVFX.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-15 17:58:03",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Movement_VFX/Movement_VFX/Materials/Mesh-Based_Materials/M_CloudErode.uasset":  {
+                                                                                                        "history":  [
+                                                                                                                        {
+                                                                                                                            "by":  "rhkrd",
+                                                                                                                            "at":  "2026-07-15 17:58:03",
+                                                                                                                            "note":  ""
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                    },
+                   "Movement_VFX/Movement_VFX/Materials/Mesh-Based_Materials/M_DashWake.uasset":  {
+                                                                                                      "history":  [
+                                                                                                                      {
+                                                                                                                          "by":  "rhkrd",
+                                                                                                                          "at":  "2026-07-15 17:58:03",
+                                                                                                                          "note":  ""
+                                                                                                                      }
+                                                                                                                  ]
+                                                                                                  },
+                   "Movement_VFX/Movement_VFX/Materials/Mesh-Based_Materials/MI_ImpactErode.uasset":  {
+                                                                                                          "history":  [
+                                                                                                                          {
+                                                                                                                              "by":  "rhkrd",
+                                                                                                                              "at":  "2026-07-15 17:58:03",
+                                                                                                                              "note":  ""
+                                                                                                                          }
+                                                                                                                      ]
+                                                                                                      },
+                   "Movement_VFX/Movement_VFX/Materials/MI_BasicTrail.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-15 17:58:03",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "Movement_VFX/Movement_VFX/Materials/MI_Cloudtrail.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-15 17:58:03",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "Movement_VFX/Movement_VFX/Materials/MI_DustSubUV.uasset":  {
+                                                                                   "history":  [
+                                                                                                   {
+                                                                                                       "by":  "rhkrd",
+                                                                                                       "at":  "2026-07-15 17:58:03",
+                                                                                                       "note":  ""
+                                                                                                   }
+                                                                                               ]
+                                                                               },
+                   "Movement_VFX/Movement_VFX/Materials/MI_Shockwave.uasset":  {
+                                                                                   "history":  [
+                                                                                                   {
+                                                                                                       "by":  "rhkrd",
+                                                                                                       "at":  "2026-07-15 17:58:03",
+                                                                                                       "note":  ""
+                                                                                                   }
+                                                                                               ]
+                                                                               },
+                   "Movement_VFX/Movement_VFX/Materials/MI_Shockwave02.uasset":  {
+                                                                                     "history":  [
+                                                                                                     {
+                                                                                                         "by":  "rhkrd",
+                                                                                                         "at":  "2026-07-15 17:58:03",
+                                                                                                         "note":  ""
+                                                                                                     }
+                                                                                                 ]
+                                                                                 },
+                   "Movement_VFX/Movement_VFX/Materials/MI_Speedtrail.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "rhkrd",
+                                                                                                        "at":  "2026-07-15 17:58:03",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/SeamlessTextures/T_SpeedStripes.uasset":  {
+                                                                                                               "history":  [
+                                                                                                                               {
+                                                                                                                                   "by":  "rhkrd",
+                                                                                                                                   "at":  "2026-07-15 17:58:03",
+                                                                                                                                   "note":  ""
+                                                                                                                               }
+                                                                                                                           ]
+                                                                                                           },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/SeamlessTextures/T_StripeNoise.uasset":  {
+                                                                                                              "history":  [
+                                                                                                                              {
+                                                                                                                                  "by":  "rhkrd",
+                                                                                                                                  "at":  "2026-07-15 17:58:03",
+                                                                                                                                  "note":  ""
+                                                                                                                              }
+                                                                                                                          ]
+                                                                                                          },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/SeamlessTextures/T_VFXChunknoise.uasset":  {
+                                                                                                                "history":  [
+                                                                                                                                {
+                                                                                                                                    "by":  "rhkrd",
+                                                                                                                                    "at":  "2026-07-15 17:58:03",
+                                                                                                                                    "note":  ""
+                                                                                                                                }
+                                                                                                                            ]
+                                                                                                            },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/SeamlessTextures/T_Voronoi.uasset":  {
+                                                                                                          "history":  [
+                                                                                                                          {
+                                                                                                                              "by":  "rhkrd",
+                                                                                                                              "at":  "2026-07-15 17:58:03",
+                                                                                                                              "note":  ""
+                                                                                                                          }
+                                                                                                                      ]
+                                                                                                      },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_Circle.uasset":  {
+                                                                                        "history":  [
+                                                                                                        {
+                                                                                                            "by":  "rhkrd",
+                                                                                                            "at":  "2026-07-15 17:58:03",
+                                                                                                            "note":  ""
+                                                                                                        }
+                                                                                                    ]
+                                                                                    },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_MovementRibbon.uasset":  {
+                                                                                                "history":  [
+                                                                                                                {
+                                                                                                                    "by":  "rhkrd",
+                                                                                                                    "at":  "2026-07-15 17:58:03",
+                                                                                                                    "note":  ""
+                                                                                                                }
+                                                                                                            ]
+                                                                                            },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_Shockwave_01.uasset":  {
+                                                                                              "history":  [
+                                                                                                              {
+                                                                                                                  "by":  "rhkrd",
+                                                                                                                  "at":  "2026-07-15 17:58:03",
+                                                                                                                  "note":  ""
+                                                                                                              }
+                                                                                                          ]
+                                                                                          },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_SmokeRibbon.uasset":  {
+                                                                                             "history":  [
+                                                                                                             {
+                                                                                                                 "by":  "rhkrd",
+                                                                                                                 "at":  "2026-07-15 17:58:03",
+                                                                                                                 "note":  ""
+                                                                                                             }
+                                                                                                         ]
+                                                                                         },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_SoftShockwave.uasset":  {
+                                                                                               "history":  [
+                                                                                                               {
+                                                                                                                   "by":  "rhkrd",
+                                                                                                                   "at":  "2026-07-15 17:58:03",
+                                                                                                                   "note":  ""
+                                                                                                               }
+                                                                                                           ]
+                                                                                           },
+                   "Movement_VFX/Movement_VFX/Materials/Textures/T_Wake_Ribbon.uasset":  {
+                                                                                             "history":  [
+                                                                                                             {
+                                                                                                                 "by":  "rhkrd",
+                                                                                                                 "at":  "2026-07-15 17:58:03",
+                                                                                                                 "note":  ""
+                                                                                                             }
+                                                                                                         ]
+                                                                                         },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXBullet.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "rhkrd",
+                                                                                                    "at":  "2026-07-15 17:58:03",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXExplode.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "rhkrd",
+                                                                                                     "at":  "2026-07-15 17:58:03",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXRing.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-15 17:58:03",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXTube.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-15 17:58:03",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXWake.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "rhkrd",
+                                                                                                  "at":  "2026-07-15 17:58:03",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Movement_VFX/Movement_VFX/Models/SM_VFXWarpBowl.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "rhkrd",
+                                                                                                      "at":  "2026-07-15 17:58:03",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
                    "Movement_VFX/VFX/Dashes/NS_DashDust.uasset":  {
                                                                       "history":  [
                                                                                       {
                                                                                           "by":  "rhkrd",
                                                                                           "at":  "2026-07-15 15:54:56",
+                                                                                          "note":  ""
+                                                                                      },
+                                                                                      {
+                                                                                          "by":  "rhkrd",
+                                                                                          "at":  "2026-07-15 17:58:03",
                                                                                           "note":  ""
                                                                                       }
                                                                                   ]
@@ -25700,6 +25944,11 @@
                                                                                           "by":  "rhkrd",
                                                                                           "at":  "2026-07-15 15:54:56",
                                                                                           "note":  ""
+                                                                                      },
+                                                                                      {
+                                                                                          "by":  "rhkrd",
+                                                                                          "at":  "2026-07-15 17:58:03",
+                                                                                          "note":  ""
                                                                                       }
                                                                                   ]
                                                                   },
@@ -25708,6 +25957,11 @@
                                                                                             {
                                                                                                 "by":  "rhkrd",
                                                                                                 "at":  "2026-07-15 15:54:56",
+                                                                                                "note":  ""
+                                                                                            },
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-15 17:58:03",
                                                                                                 "note":  ""
                                                                                             }
                                                                                         ]
@@ -25718,6 +25972,11 @@
                                                                                          "by":  "rhkrd",
                                                                                          "at":  "2026-07-15 15:54:56",
                                                                                          "note":  ""
+                                                                                     },
+                                                                                     {
+                                                                                         "by":  "rhkrd",
+                                                                                         "at":  "2026-07-15 17:58:03",
+                                                                                         "note":  ""
                                                                                      }
                                                                                  ]
                                                                  },
@@ -25726,6 +25985,11 @@
                                                                                         {
                                                                                             "by":  "rhkrd",
                                                                                             "at":  "2026-07-15 15:54:56",
+                                                                                            "note":  ""
+                                                                                        },
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-15 17:58:03",
                                                                                             "note":  ""
                                                                                         }
                                                                                     ]
@@ -25736,6 +26000,11 @@
                                                                                              "by":  "rhkrd",
                                                                                              "at":  "2026-07-15 15:54:56",
                                                                                              "note":  ""
+                                                                                         },
+                                                                                         {
+                                                                                             "by":  "rhkrd",
+                                                                                             "at":  "2026-07-15 17:58:03",
+                                                                                             "note":  ""
                                                                                          }
                                                                                      ]
                                                                      },
@@ -25744,6 +26013,11 @@
                                                                                         {
                                                                                             "by":  "rhkrd",
                                                                                             "at":  "2026-07-15 15:54:56",
+                                                                                            "note":  ""
+                                                                                        },
+                                                                                        {
+                                                                                            "by":  "rhkrd",
+                                                                                            "at":  "2026-07-15 17:58:03",
                                                                                             "note":  ""
                                                                                         }
                                                                                     ]
@@ -25754,6 +26028,11 @@
                                                                                               "by":  "rhkrd",
                                                                                               "at":  "2026-07-15 15:54:56",
                                                                                               "note":  ""
+                                                                                          },
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-15 17:58:03",
+                                                                                              "note":  ""
                                                                                           }
                                                                                       ]
                                                                       },
@@ -25762,6 +26041,11 @@
                                                                                           {
                                                                                               "by":  "rhkrd",
                                                                                               "at":  "2026-07-15 15:54:56",
+                                                                                              "note":  ""
+                                                                                          },
+                                                                                          {
+                                                                                              "by":  "rhkrd",
+                                                                                              "at":  "2026-07-15 17:58:03",
                                                                                               "note":  ""
                                                                                           }
                                                                                       ]
@@ -25772,6 +26056,11 @@
                                                                                                 "by":  "rhkrd",
                                                                                                 "at":  "2026-07-15 15:54:56",
                                                                                                 "note":  ""
+                                                                                            },
+                                                                                            {
+                                                                                                "by":  "rhkrd",
+                                                                                                "at":  "2026-07-15 17:58:03",
+                                                                                                "note":  ""
                                                                                             }
                                                                                         ]
                                                                         },
@@ -25780,6 +26069,11 @@
                                                                                            {
                                                                                                "by":  "rhkrd",
                                                                                                "at":  "2026-07-15 15:54:56",
+                                                                                               "note":  ""
+                                                                                           },
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-15 17:58:03",
                                                                                                "note":  ""
                                                                                            }
                                                                                        ]
@@ -25790,6 +26084,11 @@
                                                                                            "by":  "rhkrd",
                                                                                            "at":  "2026-07-15 15:54:56",
                                                                                            "note":  ""
+                                                                                       },
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-15 17:58:03",
+                                                                                           "note":  ""
                                                                                        }
                                                                                    ]
                                                                    },
@@ -25798,6 +26097,11 @@
                                                                                        {
                                                                                            "by":  "rhkrd",
                                                                                            "at":  "2026-07-15 15:54:56",
+                                                                                           "note":  ""
+                                                                                       },
+                                                                                       {
+                                                                                           "by":  "rhkrd",
+                                                                                           "at":  "2026-07-15 17:58:03",
                                                                                            "note":  ""
                                                                                        }
                                                                                    ]
@@ -25808,6 +26112,11 @@
                                                                                                "by":  "rhkrd",
                                                                                                "at":  "2026-07-15 15:54:56",
                                                                                                "note":  ""
+                                                                                           },
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-15 17:58:03",
+                                                                                               "note":  ""
                                                                                            }
                                                                                        ]
                                                                        },
@@ -25816,6 +26125,11 @@
                                                                                            {
                                                                                                "by":  "rhkrd",
                                                                                                "at":  "2026-07-15 15:54:56",
+                                                                                               "note":  ""
+                                                                                           },
+                                                                                           {
+                                                                                               "by":  "rhkrd",
+                                                                                               "at":  "2026-07-15 17:58:03",
                                                                                                "note":  ""
                                                                                            }
                                                                                        ]
@@ -42698,6 +43012,15 @@
                                                                                                                                                       "note":  null
                                                                                                                                                   }
                                                                                                                                               ]
-                                                                                                                              }
+                                                                                                                              },
+                   "Sword_Animations/Demo/Mannequins/Character/Meshes/SK_Mannequin.uasset":  {
+                                                                                                 "history":  [
+                                                                                                                 {
+                                                                                                                     "by":  "rhkrd",
+                                                                                                                     "at":  "2026-07-15 17:58:03",
+                                                                                                                     "note":  ""
+                                                                                                                 }
+                                                                                                             ]
+                                                                                             }
                }
 }
