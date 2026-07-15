@@ -90,6 +90,7 @@ namespace GYGameplayTags
 
 	/* 폭탄 폭발 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Enemy_Bomb_Explosion);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Enemy_Scorch_Bomb);
 
 	/** Morigesh */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Enemy_Morigesh_OrbImpact);

@@ -89,6 +89,7 @@ namespace GYGameplayTags
 
 	// 폭탄 폭발
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Bomb_Explosion, "GameplayCue.Enemy.Bomb.Explosion");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Scorch_Bomb, "GameplayCue.Enemy.Scorch.Bomb");
 
 	// Morigesh
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Enemy_Morigesh_OrbImpact, "GameplayCue.Enemy.Morigesh.OrbImpact");
