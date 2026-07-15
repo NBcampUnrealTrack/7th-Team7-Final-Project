@@ -275,22 +275,13 @@ void UGYAbilitySystemComponent::TryActivateAbilitiesOnSpawn()
 void UGYAbilitySystemComponent::ApplyCombatTag()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-	if (!CombatStateEffect) return;
-	if (CombatStateEffectHandle.IsValid()) return;
-
-	FGameplayEffectContextHandle Context = MakeEffectContext();
-	FGameplayEffectSpecHandle Spec = MakeOutgoingSpec(CombatStateEffect, 1.f, Context);
-	if (!Spec.IsValid()) return;
-
-	CombatStateEffectHandle = ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
-
+	AddLooseGameplayTag(GYStateTags::State_Combat_InCombat);
 }
 
 void UGYAbilitySystemComponent::RemoveCombatTag()
 {
-	RemoveActiveGameplayEffect(CombatStateEffectHandle, 1);
-	CombatStateEffectHandle = FActiveGameplayEffectHandle();
-
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	RemoveLooseGameplayTag(GYStateTags::State_Combat_InCombat);
 }
 
 void UGYAbilitySystemComponent::RemoveAllCameraModeTags()
