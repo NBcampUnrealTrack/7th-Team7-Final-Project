@@ -9,6 +9,7 @@
 #include "Perception/AISense_Hearing.h"
 #include "Perception/AISense_Sight.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
+#include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "Logging/GYLogManager.h"
 
@@ -38,6 +39,17 @@ void UEnemyAggroComponent::BeginPlay()
 
 void UEnemyAggroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (AActor* Cur = CurrentTarget.Get())
+	{
+		if (auto* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Cur))
+		{
+			ASC->GetGameplayAttributeValueChangeDelegate(
+				UGYVitalAttributeSet::GetCurrentHealthAttribute())
+				.Remove(TargetHealthHandle);
+		}
+	}
+	TargetHealthHandle.Reset();
+
 	OnTargetChanged.RemoveDynamic(this, &UEnemyAggroComponent::HandleTargetChanged);
 
 	UnbindFromPerception();
@@ -96,12 +108,7 @@ void UEnemyAggroComponent::ClearAllThreat()
 
 	AActor* Old = CurrentTarget.Get();
 	ThreatList.Reset();
-	CurrentTarget.Reset();
-
-	if (Old != nullptr)
-	{
-		OnTargetChanged.Broadcast(Old, nullptr);
-	}
+	SetCurrentTarget(nullptr);
 }
 
 void UEnemyAggroComponent::RemoveTargetCombatTag(AActor* Actor)
@@ -120,13 +127,7 @@ void UEnemyAggroComponent::ForceTarget(AActor* Actor, float ForcedThreatBonus)
 	if (!Actor || !GetOwner() || !GetOwner()->HasAuthority()) return;
 
 	InternalAddThreat(Actor, ForcedThreatBonus);
-
-	AActor* Old = CurrentTarget.Get();
-	CurrentTarget = Actor;
-	if (Old != Actor)
-	{
-		OnTargetChanged.Broadcast(Old, Actor);
-	}
+	SetCurrentTarget(Actor);
 }
 
 void UEnemyAggroComponent::BindToPerception()
@@ -221,6 +222,59 @@ void UEnemyAggroComponent::HandleTargetChanged(AActor* OldTarget, AActor* NewTar
 	}
 }
 
+void UEnemyAggroComponent::SetCurrentTarget(AActor* NewTarget)
+{
+	AActor* Old = CurrentTarget.Get();
+	if (Old == NewTarget) return;
+
+	if (Old)
+	{
+		if (auto* OldASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Old))
+		{
+			OldASC->GetGameplayAttributeValueChangeDelegate(
+				UGYVitalAttributeSet::GetCurrentHealthAttribute())
+				.Remove(TargetHealthHandle);
+		}
+	}
+	TargetHealthHandle.Reset();
+
+	if (NewTarget)
+	{
+		if (auto* NewASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(NewTarget))
+		{
+			TargetHealthHandle = NewASC->GetGameplayAttributeValueChangeDelegate(
+				UGYVitalAttributeSet::GetCurrentHealthAttribute())
+				.AddUObject(this, &UEnemyAggroComponent::OnTargetHealthChanged);
+		}
+	}
+
+	CurrentTarget = NewTarget;
+	OnTargetChanged.Broadcast(Old, NewTarget);
+}
+
+void UEnemyAggroComponent::OnTargetHealthChanged(const FOnAttributeChangeData& Data)
+{
+	if (Data.NewValue > 0.f) return;
+
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	AActor* Target = CurrentTarget.Get();
+	if (!Target) return;
+
+	for (int32 i = ThreatList.Num() - 1; i >= 0; --i)
+	{
+		if (ThreatList[i].Actor.Get() == Target)
+		{
+			RemoveTargetCombatTag(Target);
+			ThreatList.RemoveAt(i);
+			break;
+		}
+	}
+
+	SetCurrentTarget(nullptr);
+}
+
+
 void UEnemyAggroComponent::TickAggro()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
@@ -284,14 +338,12 @@ void UEnemyAggroComponent::TickAggro()
 		const float CurrentThreat = GetThreatFor(OldTarget);
 		if (OldTarget == nullptr || TopThreat > CurrentThreat + Weights.SwitchHysteresis)
 		{
-			CurrentTarget = TopActor;
-			OnTargetChanged.Broadcast(OldTarget, TopActor);
+			SetCurrentTarget(TopActor);
 		}
 	}
 	else if (TopActor == nullptr && OldTarget != nullptr)
 	{
-		CurrentTarget.Reset();
-		OnTargetChanged.Broadcast(OldTarget, nullptr);
+		SetCurrentTarget(nullptr);
 	}
 }
 
