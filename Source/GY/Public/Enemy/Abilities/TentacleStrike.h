@@ -81,6 +81,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Tentacle|Spawn", meta = (ClampMin = "0.0"))
 	float SpawnInterval = 0.3f;
 
+	/**
+	 * 지정 시 보스 트랜스폼 대신 이 태그를 가진 레벨 액터의 트랜스폼을 스폰 기준으로 사용.
+	 * 액터의 forward(X+)가 패턴의 정면 기준이 된다. 못 찾으면 보스 기준으로 폴백.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Tentacle|Spawn")
+	FName AnchorActorTag = NAME_None;
+
 	/** 몽타주 종료 후 Destroy 까지의 페이드아웃 시간(초). 0 이면 즉시 Destroy */
 	UPROPERTY(EditDefaultsOnly, Category = "Tentacle", meta = (ClampMin = "0.0"))
 	float FadeOutDuration = 0.3f;
@@ -92,4 +99,7 @@ private:
 	int32 SpawnIndex = 0;
 	int32 CompletedCount = 0;
 	FTimerHandle SpawnTimerHandle;
+
+	/** 활성화 시점에 1회 캐싱한 스폰 기준 트랜스폼. 패턴 도중 보스 이동/회전에 영향받지 않도록 함 */
+	FTransform CachedSpawnTM;
 };

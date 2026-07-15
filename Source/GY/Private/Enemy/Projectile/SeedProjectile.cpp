@@ -17,6 +17,12 @@ void ASeedProjectile::OnProjectileMovementStop(const FHitResult& ImpactResult)
 	}
 
 	AGYBossCharacterBase* Boss = Cast<AGYBossCharacterBase>(InstigatorActor.Get());
+	if (Boss && Boss->IsDead())
+	{
+		// 보스 사망 후 착지한 씨앗은 몹을 스폰하지 않음
+		Destroy();
+		return;
+	}
 	if (!Boss || TentacleEnemyType == EEnemyType::None)
 	{
 		GY_WARN(AI, ESK,

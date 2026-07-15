@@ -233,6 +233,11 @@ void AGYBossCharacterBase::HandleStunBegin()
 
 void AGYBossCharacterBase::Die()
 {
+	if (HasAuthority())
+	{
+		KillAllMinions();
+	}
+
 	if (AAIController* AI = Cast<AAIController>(GetController()))
 	{
 		if (UStateTreeAIComponent* ST = AI->FindComponentByClass<UStateTreeAIComponent>())
@@ -287,6 +292,24 @@ void AGYBossCharacterBase::RegisterMinion(AGYEnemyCharacterBase* Minion)
 	Minion->OnEnemyDead.AddDynamic(this, &AGYBossCharacterBase::HandleMinionDead);
 
 	OnMinionCountChanged.Broadcast(ActiveMinions.Num());
+}
+
+void AGYBossCharacterBase::KillAllMinions()
+{
+	if (!HasAuthority() || ActiveMinions.IsEmpty()) return;
+
+	TArray<TObjectPtr<AGYEnemyCharacterBase>> Minions = ActiveMinions.Array();
+	ActiveMinions.Reset();
+
+	for (AGYEnemyCharacterBase* Minion : Minions)
+	{
+		if (!IsValid(Minion)) continue;
+
+		Minion->OnEnemyDead.RemoveDynamic(this, &AGYBossCharacterBase::HandleMinionDead);
+		Minion->Destroy();
+	}
+
+	OnMinionCountChanged.Broadcast(0);
 }
 
 void AGYBossCharacterBase::HandleMinionDead(AGYEnemyCharacterBase* Minion)
