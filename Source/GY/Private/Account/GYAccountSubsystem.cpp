@@ -337,10 +337,34 @@ namespace
 		Account->JoinWorld(FCString::Atoi64(*Args[0]));
 	}
 
+	void WorldCreateCmd(const TArray<FString>& Args, UWorld* World)
+	{
+		UGYAccountSubsystem* Account = ResolveAccountSubsystem(World, TEXT("gy.World.Create"));
+		if (!IsValid(Account)) return;
+		if (Args.Num() == 0)
+		{
+			GY_WARN(Network, KDY, "usage: gy.World.Create <name>");
+			return;
+		}
+		Account->CreateWorld(Args[0], FGYOnWorldOp::CreateLambda(
+			[](bool bSuccess, int64 WorldId)
+			{
+				if (!bSuccess)
+				{
+					GY_WARN(Network, KDY, "gy.World.Create failed");
+				}
+			}));
+	}
+
 	FAutoConsoleCommandWithWorldAndArgs GYWorldListCommand(
 		TEXT("gy.World.List"),
 		TEXT("List worlds (id/name/level/status/players/addr)"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&WorldListCmd));
+
+	FAutoConsoleCommandWithWorldAndArgs GYWorldCreateCommand(
+		TEXT("gy.World.Create"),
+		TEXT("Create a world owned by my account: gy.World.Create <name>"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&WorldCreateCmd));
 
 	FAutoConsoleCommandWithWorldAndArgs GYWorldJoinCommand(
 		TEXT("gy.World.Join"),
@@ -975,4 +999,38 @@ void UGYAccountSubsystem::FailJoin(const TCHAR* Reason)
 
 	GY_WARN(Network, KDY, "JoinWorld(%lld) failed: %s", WorldId, Reason);
 	OnJoinWorldPhase.Broadcast(WorldId, EGYJoinWorldPhase::Failed);
+}
+
+void UGYAccountSubsystem::CreateWorld(const FString& WorldName, FGYOnWorldOp OnComplete)
+{
+	const TSharedRef<FJsonObject> Body = MakeShared<FJsonObject>();
+	Body->SetStringField(TEXT("name"), WorldName);
+	Body->SetStringField(TEXT("owner_account_id"), AccountId);
+
+	FString BodyString;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&BodyString);
+	FJsonSerializer::Serialize(Body, Writer);
+
+	SendAuthedRequest(TEXT("POST"), TEXT("/rest/v1/worlds?select=id"), BodyString, TEXT("return=representation"),
+		[OnComplete = MoveTemp(OnComplete)](int32 Code, const FString& Content)
+		{
+			if (Code != 201)
+			{
+				GY_WARN(Network, KDY, "CreateWorld failed code=%d body=%s", Code, *Content);
+				OnComplete.ExecuteIfBound(false, 0);
+				return;
+			}
+
+			int64 NewId = 0;
+			TArray<TSharedPtr<FJsonValue>> Rows;
+			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
+			if (FJsonSerializer::Deserialize(Reader, Rows) && Rows.Num() > 0 && Rows[0]->AsObject().IsValid())
+			{
+				double IdValue = 0.0;
+				Rows[0]->AsObject()->TryGetNumberField(TEXT("id"), IdValue);
+				NewId = static_cast<int64>(IdValue);
+			}
+			GY_LOG(Network, KDY, "World created id=%lld", NewId);
+			OnComplete.ExecuteIfBound(true, NewId);
+		});
 }

@@ -28,6 +28,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FGYOnAccountReady, bool /*bSuccess*/);
 DECLARE_DELEGATE_TwoParams(FGYOnCharacterList, bool /*bSuccess*/, const TArray<FGYCharacterSummary>&);
 DECLARE_DELEGATE_TwoParams(FGYOnCharacterOp, bool /*bSuccess*/, int64 /*CharacterId*/);
 DECLARE_DELEGATE_TwoParams(FGYOnWorldList, bool /*bSuccess*/, const TArray<FGYWorldSummary>&);
+DECLARE_DELEGATE_TwoParams(FGYOnWorldOp, bool /*bSuccess*/, int64 /*WorldId*/);
 // Phase: 진행 단계 통지 (UI 표시용). Requested → Starting → Online(접속 개시) / Failed
 enum class EGYJoinWorldPhase : uint8 { Requested, Starting, Online, Failed };
 DECLARE_MULTICAST_DELEGATE_TwoParams(FGYOnJoinWorldPhase, int64 /*WorldId*/, EGYJoinWorldPhase);
@@ -63,8 +64,11 @@ public:
 	void CreateCharacter(const FString& CharacterName, FGYOnCharacterOp OnComplete);
 	void DeleteCharacter(int64 CharacterId, FGYOnCharacterOp OnComplete);
 
-	// ── 월드 목록 조회/입장 (같은 Bearer 경로) ──
+	// ── 월드 목록 조회/생성/입장 (같은 Bearer 경로) ──
 	void ListWorlds(FGYOnWorldList OnComplete);
+
+	// 내 소유 월드 생성 (이름만 — 레벨/상태는 기본값, 계정당 상한은 DB 백스톱)
+	void CreateWorld(const FString& WorldName, FGYOnWorldOp OnComplete);
 
 	// 목록의 월드에 입장하는 단일 진입점: online 이면 즉시 접속, offline 이면
 	// 시작 요청(request_world_start) → online 폴링 → 접속. 진행 단계는 OnJoinWorldPhase 로 통지
