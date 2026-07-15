@@ -388,6 +388,7 @@ void AGYEnemyCharacterBase::HandleDeathAuthority()
 	}
 
 	GrantRewards();
+	SpawnDeathChest();
 }
 
 void AGYEnemyCharacterBase::GrantRewards()
@@ -423,6 +424,20 @@ void AGYEnemyCharacterBase::GrantRewards()
 		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
 		ASC->ApplyGameplayEffectToSelf(XPEffect, 1.f, Context);
 	}
+}
+
+void AGYEnemyCharacterBase::SpawnDeathChest()
+{
+	const UEnemyDataAsset* Data = GetEnemyData();
+	if (!Data || !Data->RewardConfig.DeathChestClass) return;
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	const FRotator SpawnRot(0.f, GetActorRotation().Yaw, 0.f);
+	GetWorld()->SpawnActor<AActor>(
+		Data->RewardConfig.DeathChestClass, GetActorLocation(), SpawnRot, Params);
 }
 
 void AGYEnemyCharacterBase::DisableRagdoll()
