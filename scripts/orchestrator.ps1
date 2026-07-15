@@ -32,14 +32,21 @@ if (-not $BaseUrl -or -not $SecretKey -or -not $ServerExe -or -not $PublicIp) {
 }
 if (-not (Test-Path $ServerExe)) { throw "server exe not found: $ServerExe" }
 
+# 패키징 산출물 루트의 GYServer.exe 는 런처 스텁(실서버를 자식으로 스폰) — 스텁을 추적하면
+# 램 측정/graceful 종료가 전부 헛돈다. 실제 바이너리가 있으면 그걸 직접 스폰
+$realExe = Join-Path (Split-Path $ServerExe) "GY\Binaries\Win64\GYServer.exe"
+if (Test-Path $realExe) { $ServerExe = $realExe }
+
 $Headers = @{ "apikey" = $SecretKey; "Authorization" = "Bearer $SecretKey"; "Content-Type" = "application/json" }
+# PowerShell 기본 UA 가 Mozilla/5.0 이라 호스티드 Supabase 가 브라우저로 오인 → secret key 요청을 403 차단. 명시 UA 필수
+$UserAgent = "gy-orchestrator/1.0"
 
 function Invoke-Rpc([string]$Name, [hashtable]$RpcParams) {
     $body = [System.Text.Encoding]::UTF8.GetBytes(($RpcParams | ConvertTo-Json -Compress))
-    return Invoke-RestMethod -Uri "$BaseUrl/rest/v1/rpc/$Name" -Method Post -Headers $Headers -Body $body -TimeoutSec 10
+    return Invoke-RestMethod -Uri "$BaseUrl/rest/v1/rpc/$Name" -Method Post -Headers $Headers -Body $body -TimeoutSec 10 -UserAgent $UserAgent
 }
 function Get-Worlds([string]$Filter) {
-    return Invoke-RestMethod -Uri "$BaseUrl/rest/v1/worlds?$Filter" -Method Get -Headers $Headers -TimeoutSec 10
+    return Invoke-RestMethod -Uri "$BaseUrl/rest/v1/worlds?$Filter" -Method Get -Headers $Headers -TimeoutSec 10 -UserAgent $UserAgent
 }
 function Log([string]$Message) {
     Write-Host ("[{0}] {1}" -f (Get-Date -Format "HH:mm:ss"), $Message)
@@ -59,9 +66,10 @@ function Stop-World([long]$WorldId, [string]$Reason) {
     if (-not $entry) { return }
     Log "world ${WorldId}: stopping ($Reason)"
     if (-not $entry.Process.HasExited) {
-        # taskkill (F 없이) = ConsoleCtrl → 서버의 종료 flush(월드+캐릭터 저장)가 돈다. 강제 킬 금지
-        taskkill /PID $entry.Process.Id 2>$null | Out-Null
-        $entry.Process.WaitForExit(15000) | Out-Null
+        # taskkill (F 없이) = ConsoleCtrl → 서버의 종료 flush(월드+캐릭터 저장)가 돈다. 강제 킬 금지.
+        # cmd /c 경유: PS5.1 은 네이티브 stderr 를 ErrorRecord 로 감싸 ErrorActionPreference=Stop 에서 스크립트를 죽인다
+        cmd /c "taskkill /PID $($entry.Process.Id) >nul 2>&1"
+        $entry.Process.WaitForExit(20000) | Out-Null
         if (-not $entry.Process.HasExited) { Stop-Process -Id $entry.Process.Id -Force -ErrorAction SilentlyContinue }
     }
     $Running.Remove($WorldId)
