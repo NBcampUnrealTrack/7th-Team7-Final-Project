@@ -51,7 +51,7 @@ void UBTService_SelectAbility::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 
 	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
 	{
-		UGYEnemyAttackAbilityBase* AttackAbility = Cast<UGYEnemyAttackAbilityBase>(Spec.Ability);
+		UGYEnemyAttackAbilityBase* AttackAbility = Cast<UGYEnemyAttackAbilityBase>(Spec.GetPrimaryInstance());
 		if (!AttackAbility) continue;
 
 		float Score = UGYEnemyAttackAbilityBase::CalcAbilityScore(
@@ -59,7 +59,7 @@ void UBTService_SelectAbility::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 
 		if (Score < 0.f) continue;;
 
-		Candidates.Add({AttackAbility, Score});
+		Candidates.Add({Cast<UGYEnemyAttackAbilityBase>(Spec.Ability), Score});
 		AccScores += Score;
 	}
 
