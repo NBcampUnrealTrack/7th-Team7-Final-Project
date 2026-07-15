@@ -532,6 +532,54 @@ void UGYPersistenceSubsystem::OnWorldSaveCompletedInternal(int64 WorldId, const 
 	SaveWorld(WorldId, Pending.WorldLevel, Pending.DataJson, ExpectedVersion, FGYOnSaveComplete());
 }
 
+void UGYPersistenceSubsystem::HeartbeatWorld(int64 WorldId, const FString& PublicAddr, int32 PlayerCount)
+{
+	if (SecretKey.IsEmpty()) return;
+
+	const TSharedRef<FJsonObject> Body = MakeShared<FJsonObject>();
+	Body->SetNumberField(TEXT("p_id"), static_cast<double>(WorldId));
+	Body->SetStringField(TEXT("p_addr"), PublicAddr);
+	Body->SetNumberField(TEXT("p_players"), PlayerCount);
+
+	FString BodyString;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&BodyString);
+	FJsonSerializer::Serialize(Body, Writer);
+
+	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	Request->SetVerb(TEXT("POST"));
+	Request->SetURL(FString::Printf(TEXT("%s/rest/v1/rpc/heartbeat_world"), *BaseUrl));
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->SetContentAsString(BodyString);
+	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->ProcessRequest();
+}
+
+void UGYPersistenceSubsystem::SetWorldOffline(int64 WorldId)
+{
+	if (SecretKey.IsEmpty()) return;
+
+	const TSharedRef<FJsonObject> Body = MakeShared<FJsonObject>();
+	Body->SetNumberField(TEXT("p_id"), static_cast<double>(WorldId));
+
+	FString BodyString;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&BodyString);
+	FJsonSerializer::Serialize(Body, Writer);
+
+	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	Request->SetVerb(TEXT("POST"));
+	Request->SetURL(FString::Printf(TEXT("%s/rest/v1/rpc/set_world_offline"), *BaseUrl));
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->SetContentAsString(BodyString);
+	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->ProcessRequest();
+
+	GY_LOG(Network, KDY, "SetWorldOffline(%lld) requested", WorldId);
+}
+
 FString UGYPersistenceSubsystem::CollectSaveData(AActor* Owner) const
 {
 	const TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();

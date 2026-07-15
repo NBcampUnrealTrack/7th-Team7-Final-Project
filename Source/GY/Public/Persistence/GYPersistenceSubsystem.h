@@ -61,6 +61,10 @@ public:
 	// 월드 셧다운 인계 (HandoffLogoutSave 의 월드판)
 	void HandoffWorldSave(int64 WorldId, int32 WorldLevel, const FString& DataJson, int32 FallbackExpectedVersion);
 
+	// ── 월드 목록 세션 등록 (fire-and-forget — 실패해도 다음 하트비트/오케스트레이터 리핑이 수습) ──
+	void HeartbeatWorld(int64 WorldId, const FString& PublicAddr, int32 PlayerCount);
+	void SetWorldOffline(int64 WorldId);
+
 	// 강제 종료(콘솔 닫기 등): 월드+캐릭터 스냅샷을 전부 발사하고 HTTP 를 동기 flush.
 	// 콘솔 핸들러(게임 스레드 마샬링)와 OnEnginePreExit 양쪽에서 호출 — 컴포넌트 플래그가 중복 전송을 막는다
 	void FlushAllForExit();

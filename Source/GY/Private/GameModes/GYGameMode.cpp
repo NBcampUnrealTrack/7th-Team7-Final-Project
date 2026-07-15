@@ -40,6 +40,21 @@ bool AGYGameMode::AllowCheats(APlayerController* P)
 #endif
 }
 
+void AGYGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage)
+{
+	constexpr int32 MaxPlayersPerWorld = 4;
+
+	const AGameStateBase* CurrentGameState = GetGameState<AGameStateBase>();
+	if (IsValid(CurrentGameState) && CurrentGameState->PlayerArray.Num() >= MaxPlayersPerWorld)
+	{
+		GY_WARN(Network, KDY, "PreLogin rejected from %s - world full (%d/%d)", *Address, CurrentGameState->PlayerArray.Num(), MaxPlayersPerWorld);
+		ErrorMessage = TEXT("world_full");
+		return;
+	}
+
+	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+}
+
 FString AGYGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal)
 {
 	const FString Result = Super::InitNewPlayer(NewPlayerController, UniqueId, Options, Portal);

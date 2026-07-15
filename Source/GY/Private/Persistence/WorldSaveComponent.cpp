@@ -20,10 +20,10 @@
 
 namespace
 {
-	constexpr float RetryDelaySeconds = 10.f;
+	constexpr float WorldRetryDelaySeconds = 10.f;
 
 	// 월드 시간처럼 트리거 없이 매 틱 변하는 값의 유실 허용 창 상한
-	constexpr float PeriodicSaveSeconds = 180.f;
+	constexpr float WorldPeriodicSaveSeconds = 180.f;
 
 	UWorldSaveComponent* ResolveWorldSaveComponent(UWorld* World)
 	{
@@ -103,7 +103,7 @@ void UWorldSaveComponent::BeginPlay()
 		PeriodicTimerHandle,
 		this,
 		&UWorldSaveComponent::OnPeriodicTimer,
-		PeriodicSaveSeconds,
+		WorldPeriodicSaveSeconds,
 		true
 	);
 
@@ -317,12 +317,12 @@ void UWorldSaveComponent::ScheduleRetry()
 	UWorld* World = GetWorld();
 	if (!IsValid(World)) return;
 
-	GY_WARN(Network, KDY, "World persistence retry in %.0fs (worldId=%lld)", RetryDelaySeconds, WorldId);
+	GY_WARN(Network, KDY, "World persistence retry in %.0fs (worldId=%lld)", WorldRetryDelaySeconds, WorldId);
 	World->GetTimerManager().SetTimer(
 		RetryTimerHandle,
 		this,
 		&UWorldSaveComponent::OnRetryTimer,
-		RetryDelaySeconds
+		WorldRetryDelaySeconds
 	);
 }
 

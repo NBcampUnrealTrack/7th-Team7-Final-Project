@@ -1,6 +1,8 @@
 #include "Account/GYAccountSubsystem.h"
 
 #include "Logging/GYLogManager.h"
+#include "Player/GYPlayerController.h"
+#include "TimerManager.h"
 
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
@@ -299,12 +301,76 @@ namespace
 		TEXT("gy.Account.Join"),
 		TEXT("Connect to a server with my character id attached: gy.Account.Join <ip[:port]>"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&AccountJoinCmd));
+
+	void WorldListCmd(const TArray<FString>& Args, UWorld* World)
+	{
+		UGYAccountSubsystem* Account = ResolveAccountSubsystem(World, TEXT("gy.World.List"));
+		if (!IsValid(Account)) return;
+
+		Account->ListWorlds(FGYOnWorldList::CreateLambda(
+			[](bool bSuccess, const TArray<FGYWorldSummary>& Worlds)
+			{
+				if (!bSuccess)
+				{
+					GY_WARN(Network, KDY, "gy.World.List failed");
+					return;
+				}
+				GY_LOG(Network, KDY, "Worlds (%d):", Worlds.Num());
+				for (const FGYWorldSummary& Entry : Worlds)
+				{
+					GY_LOG(Network, KDY, "  [%lld] %s lv%d %s %d/%d %s",
+						Entry.Id, *Entry.Name, Entry.WorldLevel, *Entry.Status,
+						Entry.PlayerCount, Entry.MaxPlayers, *Entry.HostAddr);
+				}
+			}));
+	}
+
+	void WorldJoinCmd(const TArray<FString>& Args, UWorld* World)
+	{
+		UGYAccountSubsystem* Account = ResolveAccountSubsystem(World, TEXT("gy.World.Join"));
+		if (!IsValid(Account)) return;
+		if (Args.Num() == 0)
+		{
+			GY_WARN(Network, KDY, "usage: gy.World.Join <worldId>");
+			return;
+		}
+		Account->JoinWorld(FCString::Atoi64(*Args[0]));
+	}
+
+	FAutoConsoleCommandWithWorldAndArgs GYWorldListCommand(
+		TEXT("gy.World.List"),
+		TEXT("List worlds (id/name/level/status/players/addr)"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&WorldListCmd));
+
+	FAutoConsoleCommandWithWorldAndArgs GYWorldJoinCommand(
+		TEXT("gy.World.Join"),
+		TEXT("Join a world by id - requests on-demand start if offline: gy.World.Join <worldId>"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&WorldJoinCmd));
 }
 
 void UGYAccountSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	LoadSettings();
+
+	// -JoinWorld=N: 로그인 완료 직후 해당 월드로 자동 입장 (부팅 자동화/테스트용)
+	int64 AutoJoinWorldId = 0;
+	if (FParse::Value(FCommandLine::Get(), TEXT("JoinWorld="), AutoJoinWorldId) && AutoJoinWorldId > 0)
+	{
+		TSharedRef<FDelegateHandle> Handle = MakeShared<FDelegateHandle>();
+		*Handle = OnAccountReady.AddLambda(
+			[WeakThis = TWeakObjectPtr<UGYAccountSubsystem>(this), Handle, AutoJoinWorldId](bool bSuccess)
+			{
+				UGYAccountSubsystem* This = WeakThis.Get();
+				if (!IsValid(This)) return;
+				This->OnAccountReady.Remove(*Handle);
+				if (bSuccess)
+				{
+					This->JoinWorld(AutoJoinWorldId);
+				}
+			});
+	}
+
 	GY_LOG(Network, KDY, "AccountSubsystem initialized (mode=%s)",
 		DefaultAuthMode == EGYAuthMode::Steam ? TEXT("Steam") : TEXT("Mock"));
 }
@@ -737,4 +803,176 @@ void UGYAccountSubsystem::ClearSession()
 	PersonaName.Empty();
 	PrimaryCharacterId = 0;
 	TokenExpiresAtSeconds = 0.0;
+}
+
+void UGYAccountSubsystem::ListWorlds(FGYOnWorldList OnComplete)
+{
+	SendAuthedRequest(TEXT("GET"),
+		TEXT("/rest/v1/worlds?select=id,name,world_level,status,host_addr,player_count,max_players&order=id"),
+		FString(), FString(),
+		[OnComplete = MoveTemp(OnComplete)](int32 Code, const FString& Content)
+		{
+			TArray<FGYWorldSummary> Worlds;
+			if (Code != 200)
+			{
+				GY_WARN(Network, KDY, "ListWorlds failed code=%d body=%s", Code, *Content);
+				OnComplete.ExecuteIfBound(false, Worlds);
+				return;
+			}
+
+			TArray<TSharedPtr<FJsonValue>> Rows;
+			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
+			if (!FJsonSerializer::Deserialize(Reader, Rows))
+			{
+				GY_WARN(Network, KDY, "ListWorlds JSON parse failed body=%s", *Content);
+				OnComplete.ExecuteIfBound(false, Worlds);
+				return;
+			}
+
+			for (const TSharedPtr<FJsonValue>& RowValue : Rows)
+			{
+				const TSharedPtr<FJsonObject> Row = RowValue->AsObject();
+				if (!Row.IsValid()) continue;
+
+				FGYWorldSummary& Entry = Worlds.AddDefaulted_GetRef();
+				double IdValue = 0.0;
+				double LevelValue = 1.0;
+				double PlayerCountValue = 0.0;
+				double MaxPlayersValue = 4.0;
+				Row->TryGetNumberField(TEXT("id"), IdValue);
+				Row->TryGetNumberField(TEXT("world_level"), LevelValue);
+				Row->TryGetNumberField(TEXT("player_count"), PlayerCountValue);
+				Row->TryGetNumberField(TEXT("max_players"), MaxPlayersValue);
+				Row->TryGetStringField(TEXT("name"), Entry.Name);
+				Row->TryGetStringField(TEXT("status"), Entry.Status);
+				Row->TryGetStringField(TEXT("host_addr"), Entry.HostAddr);
+				Entry.Id = static_cast<int64>(IdValue);
+				Entry.WorldLevel = static_cast<int32>(LevelValue);
+				Entry.PlayerCount = static_cast<int32>(PlayerCountValue);
+				Entry.MaxPlayers = static_cast<int32>(MaxPlayersValue);
+			}
+			OnComplete.ExecuteIfBound(true, Worlds);
+		});
+}
+
+void UGYAccountSubsystem::JoinWorld(int64 WorldId)
+{
+	if (WorldId <= 0) return;
+	if (!IsLoggedIn())
+	{
+		GY_WARN(Network, KDY, "JoinWorld(%lld): not logged in", WorldId);
+		OnJoinWorldPhase.Broadcast(WorldId, EGYJoinWorldPhase::Failed);
+		return;
+	}
+	if (JoinTargetWorldId != 0)
+	{
+		GY_WARN(Network, KDY, "JoinWorld(%lld): already joining world %lld", WorldId, JoinTargetWorldId);
+		return;
+	}
+
+	// 온디맨드 스폰(오케스트레이터 폴링 5s + 서버 부팅 수십 초 + 월드 로드) 여유
+	constexpr double JoinTimeoutSeconds = 180.0;
+
+	JoinTargetWorldId = WorldId;
+	JoinDeadlineSeconds = FPlatformTime::Seconds() + JoinTimeoutSeconds;
+
+	const FString Body = FString::Printf(TEXT("{\"p_id\":%lld}"), WorldId);
+	SendAuthedRequest(TEXT("POST"), TEXT("/rest/v1/rpc/request_world_start"), Body, FString(),
+		[WeakThis = TWeakObjectPtr<UGYAccountSubsystem>(this), WorldId](int32 Code, const FString& Content)
+		{
+			UGYAccountSubsystem* This = WeakThis.Get();
+			if (!IsValid(This)) return;
+
+			if (Code != 200)
+			{
+				GY_WARN(Network, KDY, "JoinWorld(%lld): start request failed code=%d", WorldId, Code);
+				This->FailJoin(TEXT("start request"));
+				return;
+			}
+
+			// online 이었으면 RPC 가 false 를 반환할 뿐 — 폴링이 즉시 접속으로 처리
+			GY_LOG(Network, KDY, "JoinWorld(%lld): requested (rpc=%s) - polling", WorldId, *Content);
+			This->OnJoinWorldPhase.Broadcast(WorldId, EGYJoinWorldPhase::Requested);
+			This->PollJoinTarget();
+		});
+}
+
+void UGYAccountSubsystem::PollJoinTarget()
+{
+	if (JoinTargetWorldId == 0) return;
+
+	if (FPlatformTime::Seconds() > JoinDeadlineSeconds)
+	{
+		FailJoin(TEXT("timeout"));
+		return;
+	}
+
+	ListWorlds(FGYOnWorldList::CreateLambda(
+		[WeakThis = TWeakObjectPtr<UGYAccountSubsystem>(this)](bool bSuccess, const TArray<FGYWorldSummary>& Worlds)
+		{
+			UGYAccountSubsystem* This = WeakThis.Get();
+			if (!IsValid(This) || This->JoinTargetWorldId == 0) return;
+
+			if (bSuccess)
+			{
+				const FGYWorldSummary* Target = Worlds.FindByPredicate(
+					[This](const FGYWorldSummary& Entry) { return Entry.Id == This->JoinTargetWorldId; });
+
+				if (Target == nullptr)
+				{
+					This->FailJoin(TEXT("world not in list"));
+					return;
+				}
+				if (Target->Status == TEXT("online") && Target->PlayerCount >= Target->MaxPlayers)
+				{
+					This->FailJoin(TEXT("world full"));
+					return;
+				}
+				if (Target->IsJoinable())
+				{
+					This->FinishJoin(*Target);
+					return;
+				}
+				if (Target->Status == TEXT("starting"))
+				{
+					This->OnJoinWorldPhase.Broadcast(This->JoinTargetWorldId, EGYJoinWorldPhase::Starting);
+				}
+			}
+
+			// 조회 실패는 일시 장애로 보고 데드라인까지 계속 폴링
+			This->GetGameInstance()->GetTimerManager().SetTimer(
+				This->JoinPollTimerHandle,
+				FTimerDelegate::CreateUObject(This, &UGYAccountSubsystem::PollJoinTarget),
+				2.f, false);
+		}));
+}
+
+void UGYAccountSubsystem::FinishJoin(const FGYWorldSummary& World)
+{
+	const int64 WorldId = JoinTargetWorldId;
+	JoinTargetWorldId = 0;
+	GetGameInstance()->GetTimerManager().ClearTimer(JoinPollTimerHandle);
+
+	UWorld* GameWorld = GetGameInstance()->GetWorld();
+	AGYPlayerController* PC = IsValid(GameWorld) ? Cast<AGYPlayerController>(GameWorld->GetFirstPlayerController()) : nullptr;
+	if (!IsValid(PC))
+	{
+		GY_WARN(Network, KDY, "JoinWorld(%lld): no local GYPlayerController", WorldId);
+		OnJoinWorldPhase.Broadcast(WorldId, EGYJoinWorldPhase::Failed);
+		return;
+	}
+
+	GY_LOG(Network, KDY, "JoinWorld(%lld): online at %s - connecting", WorldId, *World.HostAddr);
+	OnJoinWorldPhase.Broadcast(WorldId, EGYJoinWorldPhase::Online);
+	PC->ConnectToServer(World.HostAddr);
+}
+
+void UGYAccountSubsystem::FailJoin(const TCHAR* Reason)
+{
+	const int64 WorldId = JoinTargetWorldId;
+	JoinTargetWorldId = 0;
+	GetGameInstance()->GetTimerManager().ClearTimer(JoinPollTimerHandle);
+
+	GY_WARN(Network, KDY, "JoinWorld(%lld) failed: %s", WorldId, Reason);
+	OnJoinWorldPhase.Broadcast(WorldId, EGYJoinWorldPhase::Failed);
 }
