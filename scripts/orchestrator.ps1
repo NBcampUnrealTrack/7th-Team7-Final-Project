@@ -22,8 +22,10 @@ param(
     [int]$PortMin = 7777,
     [int]$PortMax = 7786,             # 포트 수 = 동시 월드 상한 (박스 램과 함께 packing 한도)
     [int]$PollSeconds = 5,
-    [int]$IdleMinutes = 10,           # 인원 0 지속 시 회수
-    [int]$StaleSeconds = 90           # 하트비트 무응답 = 죽은 세션
+    [int]$IdleMinutes = 10,           # 인원 0 지속 시 회수 — 짧게 유지해 슬롯 회전 (콜드 스타트 해법은 웜 풀)
+    [int]$StaleSeconds = 90,          # 하트비트 무응답 = 죽은 세션
+    # 상시 가동 월드 (쉼표 구분 id) — 부팅 시 자동 스폰 + 유휴 회수 제외. 팀 메인 월드의 콜드 스타트 대기 제거
+    [string]$AlwaysOnWorlds = "1"
 )
 
 $ErrorActionPreference = "Stop"
@@ -54,6 +56,8 @@ function Log([string]$Message) {
 
 # worldId → @{ Process; Port; IdleSince }
 $Running = @{}
+$PinnedWorlds = @()
+if ($AlwaysOnWorlds) { $PinnedWorlds = @($AlwaysOnWorlds -split "," | ForEach-Object { [long]$_.Trim() }) }
 
 function Get-FreePort {
     $used = @($Running.Values | ForEach-Object { $_.Port })
@@ -85,7 +89,12 @@ try {
     }
 } catch { Log "boot cleanup failed (continuing): $($_.Exception.Message)" }
 
-Log "orchestrator up - exe=$ServerExe ip=$PublicIp ports=$PortMin-$PortMax poll=${PollSeconds}s"
+Log "orchestrator up - exe=$ServerExe ip=$PublicIp ports=$PortMin-$PortMax poll=${PollSeconds}s pinned=[$($PinnedWorlds -join ',')]"
+
+# 상시 가동 월드는 부팅하자마자 시작 요청을 스스로 큐잉 (다음 폴에서 스폰)
+foreach ($pinnedId in $PinnedWorlds) {
+    try { Invoke-Rpc "request_world_start" @{ p_id = $pinnedId } | Out-Null } catch { Log "pinned world $pinnedId request failed: $($_.Exception.Message)" }
+}
 
 while ($true) {
     Start-Sleep -Seconds $PollSeconds
@@ -100,6 +109,13 @@ while ($true) {
     }
 
     # ── 2. 시작 요청 처리 ──
+    # 상시 가동 월드 자가 회복: 안 돌고 있으면 재요청 (RPC 가 offline 일 때만 큐잉하므로 무해)
+    foreach ($pinnedId in $PinnedWorlds) {
+        if (-not $Running.ContainsKey($pinnedId)) {
+            try { Invoke-Rpc "request_world_start" @{ p_id = $pinnedId } | Out-Null } catch {}
+        }
+    }
+
     try {
         $requested = Get-Worlds "status=eq.offline&start_requested_at=not.is.null&select=id,name"
     } catch { Log "poll failed: $($_.Exception.Message)"; continue }
@@ -138,6 +154,9 @@ while ($true) {
             if (((Get-Date) - $entry.Process.StartTime).TotalSeconds -gt 300) { Stop-World $worldId "no heartbeat after spawn" }
             continue
         }
+
+        # 상시 가동 월드는 유휴 회수 제외
+        if ($PinnedWorlds -contains $worldId) { continue }
 
         # 인원 0 지속 → 회수 (종료 flush 가 마지막 저장을 보장)
         if ($row.player_count -eq 0) {
