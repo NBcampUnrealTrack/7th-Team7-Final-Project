@@ -31,7 +31,7 @@ void UGYPhantomStrikeAbility::OnMontageFinished()
 {
 	if (SpawnedPhantom.IsValid())
 	{
-		SpawnedPhantom->OnDestroyed.AddDynamic(this, &UGYPhantomStrikeAbility::OnPhantomDestroyed);
+		SpawnedPhantom->OnDestroyed.AddUniqueDynamic(this, &UGYPhantomStrikeAbility::OnPhantomDestroyed);
 		return;
 	}
 
