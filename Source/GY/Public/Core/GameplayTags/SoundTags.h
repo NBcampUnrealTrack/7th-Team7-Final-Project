@@ -98,6 +98,10 @@ namespace GYGameplayTags
 
 	// 그래이스톤
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_GreyStone_Death)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_GreyStone_Attack_1)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_GreyStone_Attack_2)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_GreyStone_Dash)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_GreyStone_Voice)
 
 	/* 상호 작용*/
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Interaction_LootBox_Close)

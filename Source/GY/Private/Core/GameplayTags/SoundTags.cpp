@@ -105,6 +105,10 @@ namespace GYGameplayTags
 
 	//그래이스톤
 	UE_DEFINE_GAMEPLAY_TAG(Sound_GreyStone_Death, "Sound.GreyStone.Death")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_GreyStone_Attack_1, "Sound.GreyStone.Attack.1")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_GreyStone_Attack_2, "Sound.GreyStone.Attack.2")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_GreyStone_Dash, "Sound.GreyStone.Dash")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_GreyStone_Voice, "Sound.GreyStone.Voice")
 
 	/* 상호 작용 */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_LootBox_Open, "Sound.Interaction.LootBox.Open")
