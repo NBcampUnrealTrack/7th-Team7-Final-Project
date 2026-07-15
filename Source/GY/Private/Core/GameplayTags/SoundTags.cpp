@@ -82,6 +82,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_Blade, "Sound.ChapterBoss.Blade")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_LongDash, "Sound.ChapterBoss.LongDash")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_Dash, "Sound.ChapterBoss.Dash")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_ChapterBoss_Death, "Sound.ChapterBoss.Death")
 
 	//모리게시
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Morigesh_ElectricMark, "Sound.Morigesh.ElectricMark")
@@ -89,8 +90,21 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Morigesh_Orb, "Sound.Morigesh.Orb")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Morigesh_Knife, "Sound.Morigesh.Knife")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Morigesh_Ultimate, "Sound.Morigesh.Ultimate")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Morigesh_Death, "Sound.Morigesh.Death")
 
-	//중간보스
+
+	//스코치 Scorch
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Scorch_Run, "Sound.Scorch.Run")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Scorch_Eat, "Sound.Scorch.Eat")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Scorch_Jump, "Sound.Scorch.Jump")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Scorch_Bomb, "Sound.Scorch.Bomb")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Scorch_Pop, "Sound.Scorch.Pop")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Scorch_Fire, "Sound.Scorch.Fire")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Scorch_Death, "Sound.Scorch.Death")
+
+
+	//그래이스톤
+	UE_DEFINE_GAMEPLAY_TAG(Sound_GreyStone_Death, "Sound.GreyStone.Death")
 
 	/* 상호 작용 */
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Interaction_LootBox_Open, "Sound.Interaction.LootBox.Open")
