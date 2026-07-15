@@ -27,6 +27,7 @@
 #include "Core/GameplayTeams/GYTeams.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interaction/InteractionComponent.h"
+#include "Interaction/InteractionHighlightComponent.h"
 #include "Interaction/InteractionOption.h"
 #include "Player/GYPlayerState.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
@@ -47,6 +48,7 @@ AGYCharacter::AGYCharacter(const FObjectInitializer& ObjectInitializer)
 	OnHitModifierComponent = CreateDefaultSubobject<UGYOnHitModifierComponent>(TEXT("OnHitModifierComponent"));
 	PawnExtComponent = CreateDefaultSubobject<UGYPawnExtensionComponent>(TEXT("PawnExtensionComponent"));
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
+	InteractionHighlightComponent = CreateDefaultSubobject<UInteractionHighlightComponent>(TEXT("InteractionHighlightComponent"));
 	LockOnComponent = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));
 	ClimbingComponent = CreateDefaultSubobject<UClimbingComponent>(TEXT("ClimbingComponent"));
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));

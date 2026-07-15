@@ -6,6 +6,7 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Interaction/Interactable.h"
 #include "Interaction/InteractionComponent.h"
+#include "Interaction/InteractionHighlightComponent.h"
 #include "Interaction/Tasks/AbilityTask_WaitForInteractableTargets_SphereOverlap.h"
 #include "Interaction/Tasks/GYAbilityTask_GrantNearbyInteraction.h"
 #include "UI/GYUIMessages.h"
@@ -17,6 +18,13 @@ namespace
 		if (ActorInfo == nullptr) return nullptr;
 		AGYCharacter* Character = Cast<AGYCharacter>(ActorInfo->AvatarActor.Get());
 		return Character != nullptr ? Character->GetInteractionComponent() : nullptr;
+	}
+
+	UInteractionHighlightComponent* GetInteractionHighlightComponent(const FGameplayAbilityActorInfo* ActorInfo)
+	{
+		if (ActorInfo == nullptr) return nullptr;
+		AGYCharacter* Character = Cast<AGYCharacter>(ActorInfo->AvatarActor.Get());
+		return Character != nullptr ? Character->GetInteractionHighlightComponent() : nullptr;
 	}
 }
 
@@ -70,6 +78,11 @@ void UGA_TraceInteraction::OnOptionsUpdated(const TScriptInterface<IInteractable
 	{
 		Component->SetCurrentInteractable(Interactable);
 		Component->SetCurrentOptions(Options);
+	}
+
+	if (UInteractionHighlightComponent* HighlightComponent = GetInteractionHighlightComponent(GetCurrentActorInfo()))
+	{
+		HighlightComponent->SetHighlightedActor(Interactable ? Cast<AActor>(Interactable.GetObject()) : nullptr);
 	}
 
 	FGYInteractionOptionsMessage Message;
