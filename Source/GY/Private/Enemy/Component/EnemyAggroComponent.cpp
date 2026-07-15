@@ -46,6 +46,13 @@ void UEnemyAggroComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		World->GetTimerManager().ClearTimer(UpdateTimerHandle);
 	}
+
+	for (const FAggroEntry& E : ThreatList)
+	{
+		RemoveTargetCombatTag(E.Actor.Get());
+	}
+	ThreatList.Reset();
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -162,15 +169,6 @@ void UEnemyAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimul
 		return;
 	}
 
-	if (Stimulus.WasSuccessfullySensed())
-	{
-		UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC);
-		if (GYASC)
-		{
-			GYASC->ApplyCombatTag();
-		}
-	}
-
 	const FAISenseID SightId = UAISense::GetSenseID<UAISense_Sight>();
 	const FAISenseID DamageId = UAISense::GetSenseID<UAISense_Damage>();
 	const FAISenseID HearId = UAISense::GetSenseID<UAISense_Hearing>();
@@ -191,12 +189,7 @@ void UEnemyAggroComponent::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimul
 	{
 		if (Stimulus.WasSuccessfullySensed())
 		{
-			if (FAggroEntry* Entry = ThreatList.FindByPredicate(
-				[Actor](const FAggroEntry& E) { return E.Actor.Get() == Actor; }))
-			{
-				Entry->Threat += Weights.NoiseOnHeard;
-				Entry->LastUpdateTime = GetWorld()->GetTimeSeconds();
-			}
+			InternalAddThreat(Actor, Weights.NoiseOnHeard);
 		}
 	}
 }
@@ -326,5 +319,12 @@ void UEnemyAggroComponent::InternalAddThreat(AActor* Actor, float Amount)
 		NewEntry.Threat = Amount;
 		NewEntry.LastUpdateTime = Now;
 		ThreatList.Add(NewEntry);
+
+		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
+		UGYAbilitySystemComponent* GYASC = Cast<UGYAbilitySystemComponent>(TargetASC);
+		if (GYASC)
+		{
+			GYASC->ApplyCombatTag();
+		}
 	}
 }
