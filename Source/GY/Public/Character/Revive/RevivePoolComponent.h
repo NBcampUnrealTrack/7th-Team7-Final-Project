@@ -37,6 +37,8 @@ public:
 	UFUNCTION(BlueprintPure)
 	float GetRequiredPercent() const;
 
+	const UGYReviveConfig* GetActiveConfig() const { return ActiveConfig; }
+
 	void AppendInteractionOptions(APawn* Interactor, TArray<FInteractionOption>& OutOptions) const;
 	void HandleInteract(FGameplayTag OptionTag, APawn* Interactor);
 
