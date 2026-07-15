@@ -6,6 +6,7 @@
 #include "EnemyAggroComponent.generated.h"
 
 
+struct FOnAttributeChangeData;
 class UAIPerceptionComponent;
 class AAIController;
 
@@ -139,6 +140,9 @@ protected:
 	UFUNCTION()
 	void HandleTargetChanged(AActor* OldTarget, AActor* NewTarget);
 
+	void SetCurrentTarget(AActor* NewTarget);
+	void OnTargetHealthChanged(const FOnAttributeChangeData& Data);
+
 	void TickAggro();
 	void InternalAddThreat(AActor* Actor, float Amount);
 	void RemoveTargetCombatTag(AActor* Actor);
@@ -159,4 +163,6 @@ protected:
 	TWeakObjectPtr<UAIPerceptionComponent> CachedPerception;
 
 	FTimerHandle UpdateTimerHandle;
+
+	FDelegateHandle TargetHealthHandle;
 };
