@@ -11,4 +11,7 @@ class GY_API AGYMenuGameMode : public AGameModeBase
 
 public:
 	AGYMenuGameMode();
+
+protected:
+	virtual void BeginPlay() override;
 };

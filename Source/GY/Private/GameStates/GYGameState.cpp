@@ -106,7 +106,7 @@ void AGYGameState::PlayGameBGMLocal(FGameplayTag BGMTag) const
 
 	if (UGYSoundManager* SoundMgr = UGYSoundManager::Get(this))
 	{
-		SoundMgr->PlayBGM(BGMTag, 0.5f);
+		SoundMgr->PlayBGM(BGMTag, 1.f);
 	}
 }
 
