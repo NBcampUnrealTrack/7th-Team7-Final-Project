@@ -81,6 +81,13 @@ protected:
 	/** 서버·클라 공통 적용: BlendSpace/몽타주맵/무기 토글/트레이스 소켓 */
 	void ApplySecondPhaseWeapon();
 
+	/** 시퀀스 재생 중 실보스+부착 무기 숨김/복원. 복원 시 페이즈 상태 기준으로 무기 가시성 재적용 */
+	void SetCinematicHidden(bool bNewHidden);
+
+	/** WeaponsToSpawn 초기 정의 + bPhase2Weapon 기준으로 무기 가시성 재적용.
+	 *  시퀀스 종료 시 Sequencer Restore State가 되돌린 상태를 교정한다. 서버·클라 공통 실행 가능 */
+	void RefreshWeaponVisibility();
+
 	void OnPhaseHealthChanged(const FOnAttributeChangeData& Data);
 
 	UFUNCTION()

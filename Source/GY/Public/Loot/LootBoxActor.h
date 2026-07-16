@@ -33,6 +33,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Loot", meta = (ClampMin = 0, ClampMax = 1))
 	float SpawnChance = 1.f;
 
+	// 0보다 크면: 상자가 비고 점유자가 닫은 뒤 N초 후 자동 소멸 (몬스터 드랍 상자용).
+	// 0이면 영구 유지 (월드 배치 기본). 소멸 대기 중 다시 상호작용하면 타이머 취소.
+	UPROPERTY(EditAnywhere, Category = "Loot", meta = (ClampMin = 0))
+	float DespawnDelayWhenEmpty = 0.f;
+
 	void OpenBox(APawn* Opener);
 
 	void TakeItem(int32 DropIndex, APawn* Taker);
@@ -80,4 +85,9 @@ private:
 	void PlayOpenEffect(APawn* Opener);
 	void PlayCloseEffect(APawn* Opener);
 	void PlayFirstEffect(APawn* Opener);
+
+	// 비었고(bOpened + PendingDrops 없음) 아무도 점유하지 않으면 DespawnDelayWhenEmpty 후 파괴 예약
+	void TryScheduleDespawn();
+
+	FTimerHandle DespawnTimerHandle;
 };

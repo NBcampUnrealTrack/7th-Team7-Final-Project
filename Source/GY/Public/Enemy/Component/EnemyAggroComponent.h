@@ -146,6 +146,9 @@ protected:
 	void TickAggro();
 	void InternalAddThreat(AActor* Actor, float Amount);
 	void RemoveTargetCombatTag(AActor* Actor);
+
+	/** 사망(State.Life.Dead)·다운(State.Life.Downed) 상태는 어그로 대상에서 제외 */
+	static bool IsTargetTargetable(AActor* Actor);
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Aggro", meta = (ClampMin = "0.05"))
 	float UpdateInterval = 0.2f;
