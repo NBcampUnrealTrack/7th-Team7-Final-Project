@@ -20,7 +20,7 @@
 
 namespace
 {
-	constexpr float RequestTimeoutSeconds = 10.f;
+	constexpr float SessionRequestTimeoutSeconds = 10.f;
 
 	UGYWorldSessionSubsystem* ResolveWorldSessionSubsystem(UWorld* World, const TCHAR* CommandName)
 	{
@@ -485,7 +485,7 @@ void UGYWorldSessionSubsystem::SendServiceRequest(const FString& Path, const FSt
 	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	Request->SetContentAsString(BodyJson);
-	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->SetTimeout(SessionRequestTimeoutSeconds);
 	if (OnDone)
 	{
 		Request->OnProcessRequestComplete().BindLambda(
@@ -550,7 +550,7 @@ void UGYWorldSessionSubsystem::PollStandbyAssignment(int64 StandbyId, FGYOnSessi
 	Request->SetURL(Url);
 	Request->SetHeader(TEXT("apikey"), SecretKey);
 	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
-	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->SetTimeout(SessionRequestTimeoutSeconds);
 	Request->OnProcessRequestComplete().BindLambda(
 		[OnComplete = MoveTemp(OnComplete)](FHttpRequestPtr, FHttpResponsePtr Response, bool bSuccess)
 		{
