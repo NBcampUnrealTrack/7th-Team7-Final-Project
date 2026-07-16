@@ -34,6 +34,8 @@ AGYBossCharacterBase::AGYBossCharacterBase(const FObjectInitializer& ObjectIniti
 	AIControllerClass = AGYBossAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
+	bAlwaysRelevant = true;
+
 	if (HitReactionComponent)
 	{
 		HitReactionComponent->SetKnockbackScale(0.f);

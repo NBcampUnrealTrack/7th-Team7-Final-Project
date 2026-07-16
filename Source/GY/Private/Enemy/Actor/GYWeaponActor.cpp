@@ -7,6 +7,7 @@ AGYWeaponActor::AGYWeaponActor()
 	PrimaryActorTick.bCanEverTick = false;
 
 	bReplicates = true;
+	bNetUseOwnerRelevancy = true;
 
 	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(WeaponMesh);

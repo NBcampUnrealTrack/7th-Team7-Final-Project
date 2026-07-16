@@ -20,6 +20,8 @@
 AGYChapterBossCharacter::AGYChapterBossCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	bAlwaysRelevant = true;
+
 	if (HitReactionComponent)
 	{
 		HitReactionComponent->SetKnockbackScale(0.f);
@@ -109,7 +111,19 @@ void AGYChapterBossCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 AGYWeaponActor* AGYChapterBossCharacter::GetWeaponBySlot(FGameplayTag SlotTag) const
 {
 	const TObjectPtr<AGYWeaponActor>* Found = EquippedWeapons.Find(SlotTag);
-	return Found ? *Found : nullptr;
+	if (Found && *Found) return *Found;
+
+	TArray<AActor*> Attached;
+	GetAttachedActors(Attached);
+	for (AActor* Actor : Attached)
+	{
+		AGYWeaponActor* Weapon = Cast<AGYWeaponActor>(Actor);
+		if (Weapon && Weapon->GetWeaponTypeTag() == SlotTag)
+		{
+			return Weapon;
+		}
+	}
+	return nullptr;
 }
 
 void AGYChapterBossCharacter::Multicast_PlayCinematic_Implementation(const FSoftObjectPath& SequencePath)
@@ -133,6 +147,8 @@ void AGYChapterBossCharacter::Multicast_PlayCinematic_Implementation(const FSoft
 	ActiveSequencePlayer = Player;
 	ActiveSequenceActor = OutActor;
 	Player->OnFinished.AddDynamic(this, &AGYChapterBossCharacter::HandleCinematicFinished);
+
+	SetCinematicHidden(true);
 
 	FGYCinematicMessage Msg;
 	Msg.bIsPlaying = true;
@@ -201,7 +217,53 @@ void AGYChapterBossCharacter::ApplySecondPhaseWeapon()
 		}
 	}
 
+	RefreshWeaponVisibility();
+
 	if (HasAuthority())
+	{
+		if (SecondPhaseWeapon.NewWeaponTraceSockets.Num() > 0)
+		{
+			WeaponTraceSockets = SecondPhaseWeapon.NewWeaponTraceSockets;
+		}
+	}
+}
+
+void AGYChapterBossCharacter::SetCinematicHidden(bool bNewHidden)
+{
+	SetActorHiddenInGame(bNewHidden);
+
+	TArray<AActor*> Attached;
+	GetAttachedActors(Attached);
+	for (AActor* Actor : Attached)
+	{
+		if (Cast<AGYWeaponActor>(Actor))
+		{
+			Actor->SetActorHiddenInGame(bNewHidden);
+		}
+	}
+
+	if (!bNewHidden)
+	{
+		RefreshWeaponVisibility();
+	}
+}
+
+void AGYChapterBossCharacter::RefreshWeaponVisibility()
+{
+	for (const FEnemyWeaponSpawn& Def : WeaponsToSpawn)
+	{
+		if (!Def.WeaponClass) continue;
+
+		const AGYWeaponActor* CDO = Def.WeaponClass->GetDefaultObject<AGYWeaponActor>();
+		if (!CDO) continue;
+
+		if (AGYWeaponActor* Weapon = GetWeaponBySlot(CDO->GetWeaponTypeTag()))
+		{
+			Weapon->SetActorHiddenInGame(Def.bInitiallyHidden);
+		}
+	}
+
+	if (bPhase2Weapon)
 	{
 		if (AGYWeaponActor* Old = GetWeaponBySlot(SecondPhaseWeapon.HideWeaponSlot))
 		{
@@ -210,10 +272,6 @@ void AGYChapterBossCharacter::ApplySecondPhaseWeapon()
 		if (AGYWeaponActor* New = GetWeaponBySlot(SecondPhaseWeapon.ShowWeaponSlot))
 		{
 			New->SetActorHiddenInGame(false);
-		}
-		if (SecondPhaseWeapon.NewWeaponTraceSockets.Num() > 0)
-		{
-			WeaponTraceSockets = SecondPhaseWeapon.NewWeaponTraceSockets;
 		}
 	}
 }
@@ -239,6 +297,15 @@ void AGYChapterBossCharacter::OnPhaseHealthChanged(const FOnAttributeChangeData&
 
 void AGYChapterBossCharacter::HandleCinematicFinished()
 {
+	if (!ActiveSequencePlayer && !ActiveSequenceActor) return;
+
+	if (ActiveSequencePlayer)
+	{
+		ActiveSequencePlayer->OnFinished.RemoveDynamic(this, &AGYChapterBossCharacter::HandleCinematicFinished);
+	}
+
+	SetCinematicHidden(false);
+
 	if (ActiveSequenceActor)
 	{
 		ActiveSequenceActor->Destroy();
