@@ -16,4 +16,6 @@ namespace GYGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Part_Body, "Weapon.Part.Body");
 	UE_DEFINE_GAMEPLAY_TAG(Weapon_Part_Foot, "Weapon.Part.Foot");
+	UE_DEFINE_GAMEPLAY_TAG(Weapon_Part_Blade, "Weapon.Part.Blade");
+
 }

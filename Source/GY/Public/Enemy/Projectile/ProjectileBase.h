@@ -46,6 +46,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	float MaxLifeTime = 3.f;
 
+	/** false면 폰 적중 시 파괴되지 않고 관통한다 (같은 대상은 1회만 타격) */
+	UPROPERTY(EditAnywhere, Category = "Projectile")
+	bool bDestroyOnPawnHit = true;
+
+	/** 관통 모드에서 같은 대상 중복 타격 방지 */
+	TSet<TWeakObjectPtr<AActor>> HitActors;
+
 	/** Projectile 적중시 Tag */
 	UPROPERTY(EditDefaultsOnly, Category = "Cue")
 	FGameplayTag HitCueTag;
