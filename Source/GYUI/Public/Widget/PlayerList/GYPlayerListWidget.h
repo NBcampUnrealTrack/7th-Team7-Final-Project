@@ -36,7 +36,11 @@ private:
 	TMap<TWeakObjectPtr<APlayerState>, TObjectPtr<UGYPlayerListEntryWidget>> EntryMap;
 
 	void AddPlayerEntry(APlayerState* PS);
-	void RemovePlayerEntry(APlayerState* PS);
+	/** 약참조 키로 항목 제거 */
+	void RemovePlayerEntry(const TWeakObjectPtr<APlayerState>& PSKey);
+
+	/** PlayerState가 파괴됐지만 남아 있는 유령 항목 정리 */
+	void PruneStaleEntries();
 
 	void HandleMemberJoined(FGameplayTag Channel, const FGYPartyMemberMessage& Message);
 	void HandleMemberLeft(FGameplayTag Channel, const FGYPartyMemberMessage& Message);

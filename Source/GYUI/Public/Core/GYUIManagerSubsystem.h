@@ -40,8 +40,10 @@ public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 
-	//PlayerState의 태그 구독
+	/** PlayerState의 태그 구독 */
 	void BindASC(UAbilitySystemComponent* InASC);
+	/** HUD 상태 다시 방송 */
+	void RefreshHUDState();
 
 	void RegisterTagDrivenWidget(
 		FGameplayTag StateTag,

@@ -178,7 +178,11 @@ bool UEquipmentLoadoutComponent::GetSlot(FGameplayTag SlotTag, FGuid& OutInstanc
 void UEquipmentLoadoutComponent::BroadcastSlotChanged(FGameplayTag SlotTag, const FGuid& InstanceId)
 {
 	OnLoadoutSlotChanged.Broadcast(SlotTag, InstanceId);
+	BroadcastSlotUIMessage(SlotTag, InstanceId);
+}
 
+void UEquipmentLoadoutComponent::BroadcastSlotUIMessage(FGameplayTag SlotTag, const FGuid& InstanceId)
+{
 	UWorld* World = GetWorld();
 	if (World == nullptr || World->IsNetMode(NM_DedicatedServer)) return;
 
@@ -203,6 +207,14 @@ void UEquipmentLoadoutComponent::BroadcastSlotChanged(FGameplayTag SlotTag, cons
 	}
 
 	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Equipment_LoadoutSlotChanged, Msg);
+}
+
+void UEquipmentLoadoutComponent::BroadcastAllSlots()
+{
+	for (const FEquipmentLoadoutEntry& Entry : LoadoutEntries)
+	{
+		BroadcastSlotUIMessage(Entry.SlotTag, Entry.InstanceId);
+	}
 }
 
 void UEquipmentLoadoutComponent::OnRep_LoadoutEntries(const TArray<FEquipmentLoadoutEntry>& OldEntries)
