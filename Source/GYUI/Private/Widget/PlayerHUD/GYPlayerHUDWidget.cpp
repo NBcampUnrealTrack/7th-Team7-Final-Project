@@ -5,6 +5,8 @@
 #include "UI/GYUIMessages.h"
 #include "Components/ProgressBar.h"
 #include "Core/GYUIManagerSubsystem.h"
+#include "TimerManager.h"
+#include "Engine/World.h"
 
 void UGYPlayerHUDWidget::NativeConstruct()
 {
@@ -38,6 +40,16 @@ void UGYPlayerHUDWidget::NativeConstruct()
 				Text_PlayerName->SetText(FText::FromString(Snap));
 			}
 		}
+	}
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			if (UGYUIManagerSubsystem* UI = UGYUIManagerSubsystem::Get(this))
+			{
+				UI->RefreshHUDState();
+			}
+		}));
 	}
 }
 
