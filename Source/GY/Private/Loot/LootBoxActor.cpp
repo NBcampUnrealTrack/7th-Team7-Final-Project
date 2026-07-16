@@ -96,6 +96,8 @@ void ALootBoxActor::OnInteract(FGameplayTag OptionTag, APawn* Interactor)
 	if (OptionTag != GYGameplayTags::Interaction_Open_LootBox) return;
 	if (!IsValid(Interactor)) return;
 
+	GetWorldTimerManager().ClearTimer(DespawnTimerHandle);
+
 	// 점유 잠금 — 타인이 보고 있는 박스는 무시
 	if (IsOccupiedByOther(Interactor)) return;
 
@@ -156,6 +158,8 @@ void ALootBoxActor::ReleaseViewer(APlayerState* Viewer)
 
 	CurrentViewer = nullptr;
 	// 빈 상자도 파괴하지 않고 월드에 유지 — 다른 플레이어가 열면 빈 그리드를 봄
+	// (단, DespawnDelayWhenEmpty가 설정된 드랍 상자는 예외)
+	TryScheduleDespawn();
 }
 
 void ALootBoxActor::OpenBox(APawn* Opener)
@@ -246,6 +250,8 @@ void ALootBoxActor::TakeItem(int32 DropIndex, APawn* Taker)
 	// 빈 상자라도 파괴하지 않음 — 직접 닫기 전까지 유지, 다른 플레이어가 빈 것을 확인 가능
 	// authority(리슨서버/호스트/데디 서버 모두)는 OnRep이 안 뜨므로 직접 통지
 	BroadcastStateChanged();
+
+	TryScheduleDespawn();
 }
 
 void ALootBoxActor::TakeAll(APawn* Taker)
@@ -294,6 +300,17 @@ void ALootBoxActor::BroadcastStateChanged()
 	Msg.bOpened = bOpened;
 	Msg.RemainingDrops = PendingDrops.Num();
 	UGameplayMessageSubsystem::Get(World).BroadcastMessage(GYGameplayTags::Message_Loot_BoxStateChanged, Msg);
+}
+
+void ALootBoxActor::TryScheduleDespawn()
+{
+	if (!HasAuthority() || DespawnDelayWhenEmpty <= 0.f) return;
+	if (!bOpened || !PendingDrops.IsEmpty()) return;
+	if (IsValid(CurrentViewer)) return;
+
+	GetWorldTimerManager().SetTimer(DespawnTimerHandle,
+		FTimerDelegate::CreateWeakLambda(this, [this]() { Destroy(); }),
+		DespawnDelayWhenEmpty, false);
 }
 
 void ALootBoxActor::PlayOpenEffect(APawn* Opener)
