@@ -15,7 +15,7 @@ UAnimNotify_FootStepSound::UAnimNotify_FootStepSound()
 
 void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	Super::Notify(MeshComp, Animation);
+	Super::Notify(MeshComp, Animation, EventReference);
 
 	if (!MeshComp) return;
 
