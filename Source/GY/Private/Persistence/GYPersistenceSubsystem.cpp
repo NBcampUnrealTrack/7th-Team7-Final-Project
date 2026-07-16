@@ -679,3 +679,105 @@ void UGYPersistenceSubsystem::ApplySaveData(AActor* Owner, const TSharedPtr<FJso
 		}
 	}
 }
+
+void UGYPersistenceSubsystem::RegisterStandby(const FString& PublicAddr, FGYOnSaveComplete OnComplete)
+{
+	if (SecretKey.IsEmpty())
+	{
+		OnComplete.ExecuteIfBound(FGYSaveResult());
+		return;
+	}
+
+	const FString BodyString = FString::Printf(TEXT("{\"p_addr\":\"%s\"}"), *PublicAddr);
+
+	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	Request->SetVerb(TEXT("POST"));
+	Request->SetURL(FString::Printf(TEXT("%s/rest/v1/rpc/register_standby"), *BaseUrl));
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->SetContentAsString(BodyString);
+	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->OnProcessRequestComplete().BindLambda(
+		[OnComplete = MoveTemp(OnComplete)](FHttpRequestPtr, FHttpResponsePtr Response, bool bSuccess)
+		{
+			OnComplete.ExecuteIfBound(ParseSaveResponse(Response, bSuccess));
+		});
+	Request->ProcessRequest();
+
+	GY_LOG(Network, KDY, "RegisterStandby(%s) requested", *PublicAddr);
+}
+
+void UGYPersistenceSubsystem::PollStandbyAssignment(int64 StandbyId, FGYOnSaveComplete OnComplete)
+{
+	const FString Url = FString::Printf(
+		TEXT("%s/rest/v1/standby_servers?id=eq.%lld&select=assigned_world_id"), *BaseUrl, StandbyId);
+
+	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	Request->SetVerb(TEXT("GET"));
+	Request->SetURL(Url);
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
+	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->OnProcessRequestComplete().BindLambda(
+		[OnComplete = MoveTemp(OnComplete)](FHttpRequestPtr, FHttpResponsePtr Response, bool bSuccess)
+		{
+			FGYSaveResult Result;
+			if (!bSuccess || !Response.IsValid() || Response->GetResponseCode() != 200)
+			{
+				OnComplete.ExecuteIfBound(Result);
+				return;
+			}
+
+			TArray<TSharedPtr<FJsonValue>> Rows;
+			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+			if (!FJsonSerializer::Deserialize(Reader, Rows) || Rows.Num() == 0 || !Rows[0]->AsObject().IsValid())
+			{
+				OnComplete.ExecuteIfBound(Result);
+				return;
+			}
+
+			Result.Result = EGYPersistResult::Success;
+			double AssignedValue = 0.0;
+			Rows[0]->AsObject()->TryGetNumberField(TEXT("assigned_world_id"), AssignedValue);
+			Result.NewVersion = static_cast<int32>(AssignedValue); // 0 = 미배정
+			OnComplete.ExecuteIfBound(Result);
+		});
+	Request->ProcessRequest();
+}
+
+void UGYPersistenceSubsystem::StandbyHeartbeat(int64 StandbyId)
+{
+	if (SecretKey.IsEmpty()) return;
+
+	const FString BodyString = FString::Printf(TEXT("{\"p_id\":%lld}"), StandbyId);
+
+	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	Request->SetVerb(TEXT("POST"));
+	Request->SetURL(FString::Printf(TEXT("%s/rest/v1/rpc/standby_heartbeat"), *BaseUrl));
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->SetContentAsString(BodyString);
+	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->ProcessRequest();
+}
+
+void UGYPersistenceSubsystem::ConsumeStandby(int64 StandbyId)
+{
+	if (SecretKey.IsEmpty()) return;
+
+	const FString BodyString = FString::Printf(TEXT("{\"p_id\":%lld}"), StandbyId);
+
+	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	Request->SetVerb(TEXT("POST"));
+	Request->SetURL(FString::Printf(TEXT("%s/rest/v1/rpc/consume_standby"), *BaseUrl));
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->SetContentAsString(BodyString);
+	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->ProcessRequest();
+
+	GY_LOG(Network, KDY, "ConsumeStandby(%lld) requested", StandbyId);
+}

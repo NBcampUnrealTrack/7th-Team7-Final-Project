@@ -25,7 +25,10 @@ param(
     [int]$IdleMinutes = 10,           # 인원 0 지속 시 회수 — 짧게 유지해 슬롯 회전 (콜드 스타트 해법은 웜 풀)
     [int]$StaleSeconds = 90,          # 하트비트 무응답 = 죽은 세션
     # 상시 가동 월드 (쉼표 구분 id) — 부팅 시 자동 스폰 + 유휴 회수 제외. 팀 메인 월드의 콜드 스타트 대기 제거
-    [string]$AlwaysOnWorlds = "1"
+    [string]$AlwaysOnWorlds = "1",
+    # 웜 스탠바이 수 — 맵까지 부팅한 채 월드 배정을 기다리는 예비 서버 (배정 소비 시 자동 보충).
+    # 0 = 비활성(콜드 스폰만). 배정 시 입장 대기가 분 단위 → 초 단위로 준다
+    [int]$StandbyCount = 1
 )
 
 $ErrorActionPreference = "Stop"
@@ -56,13 +59,31 @@ function Log([string]$Message) {
 
 # worldId → @{ Process; Port; IdleSince }
 $Running = @{}
+# 스탠바이 프로세스 목록: @{ Process; Port; SpawnedAt } — 배정 소비 시 $Running 으로 이동
+$StandbyProcs = New-Object System.Collections.ArrayList
 $PinnedWorlds = @()
 if ($AlwaysOnWorlds) { $PinnedWorlds = @($AlwaysOnWorlds -split "," | ForEach-Object { [long]$_.Trim() }) }
 
+function Get-Standbys {
+    return Invoke-RestMethod -Uri "$BaseUrl/rest/v1/standby_servers?select=id,host_addr,assigned_world_id,heartbeat_at" -Method Get -Headers $Headers -TimeoutSec 10 -UserAgent $UserAgent
+}
+
 function Get-FreePort {
-    $used = @($Running.Values | ForEach-Object { $_.Port })
+    $used = @($Running.Values | ForEach-Object { $_.Port }) + @($StandbyProcs | ForEach-Object { $_.Port })
     for ($p = $PortMin; $p -le $PortMax; $p++) { if ($used -notcontains $p) { return $p } }
     return $null
+}
+
+function Start-StandbyServer {
+    $port = Get-FreePort
+    if ($null -eq $port) { return }
+
+    Log "standby: spawning on port $port"
+    $spawnArgs = @()
+    if ($ServerArgsPrefix) { $spawnArgs += ($ServerArgsPrefix -split " ") }
+    $spawnArgs += @("L_Expanse_WP", "-log", "-nosteam", "-Standby", "-port=$port", "-PublicAddr=${PublicIp}:$port")
+    $proc = Start-Process -FilePath $ServerExe -ArgumentList $spawnArgs -PassThru -WindowStyle Minimized
+    [void]$StandbyProcs.Add(@{ Process = $proc; Port = $port; SpawnedAt = Get-Date })
 }
 
 function Stop-World([long]$WorldId, [string]$Reason) {
@@ -80,12 +101,16 @@ function Stop-World([long]$WorldId, [string]$Reason) {
     try { Invoke-Rpc "set_world_offline" @{ p_id = $WorldId } | Out-Null } catch { Log "set_world_offline($WorldId) failed: $($_.Exception.Message)" }
 }
 
-# ── 부팅 정리: 이전 에이전트 세대의 잔재(내가 모르는 online/starting 행) 오프라인 처리 ──
+# ── 부팅 정리: 이전 에이전트 세대의 잔재(내가 모르는 online/starting 행 + 스탠바이 행) 정리 ──
 try {
     $stale = Get-Worlds "status=neq.offline&select=id,status"
     foreach ($w in $stale) {
         Log "boot cleanup: world $($w.id) was '$($w.status)' - marking offline"
         Invoke-Rpc "set_world_offline" @{ p_id = $w.id } | Out-Null
+    }
+    foreach ($s in @(Get-Standbys)) {
+        Log "boot cleanup: standby $($s.id) - removing"
+        Invoke-Rpc "consume_standby" @{ p_id = $s.id } | Out-Null
     }
 } catch { Log "boot cleanup failed (continuing): $($_.Exception.Message)" }
 
@@ -122,21 +147,56 @@ while ($true) {
 
     foreach ($w in $requested) {
         if ($Running.ContainsKey([long]$w.id)) { continue }
+
+        # 웜 스탠바이 우선 배정 (원자 RPC: worlds starting 전환 + standby 행에 월드 기록) —
+        # 배정되면 스탠바이 서버가 폴링으로 감지해 세이브만 로드하고 online 전환 (수 초)
+        $assignedStandby = $null
+        try { $assignedStandby = Invoke-Rpc "assign_standby_to_world" @{ p_world_id = $w.id } } catch { Log "assign($($w.id)) failed: $($_.Exception.Message)"; continue }
+
+        if ($assignedStandby) {
+            # 스탠바이 프로세스를 월드 소유로 이관 (유휴 회수/램 로깅 대상이 되도록)
+            $standbyRow = @(Get-Standbys) | Where-Object { [long]$_.id -eq [long]$assignedStandby } | Select-Object -First 1
+            $standbyPort = if ($standbyRow) { [int]($standbyRow.host_addr -split ":")[-1] } else { 0 }
+            $procEntry = @($StandbyProcs) | Where-Object { $_.Port -eq $standbyPort } | Select-Object -First 1
+            if ($procEntry) {
+                $StandbyProcs.Remove($procEntry)
+                $Running[[long]$w.id] = @{ Process = $procEntry.Process; Port = $procEntry.Port; IdleSince = $null }
+            }
+            Log "world $($w.id): assigned to standby $assignedStandby (port $standbyPort)"
+            continue
+        }
+
+        # 스탠바이 없음 — RPC 가 이미 starting 으로 클레임했으므로 바로 콜드 스폰
         $port = Get-FreePort
-        if ($null -eq $port) { Log "world $($w.id): no free port - request deferred"; continue }
+        if ($null -eq $port) { Log "world $($w.id): no free port - request deferred"; try { Invoke-Rpc "set_world_offline" @{ p_id = $w.id } | Out-Null } catch {}; continue }
 
-        # 원자 클레임 — 에이전트가 여럿이어도 한쪽만 스폰
-        $claimed = $false
-        try { $claimed = Invoke-Rpc "claim_world_start" @{ p_id = $w.id } } catch { Log "claim($($w.id)) failed: $($_.Exception.Message)" }
-        if (-not $claimed) { continue }
-
-        Log "world $($w.id): spawning on port $port"
+        Log "world $($w.id): cold spawning on port $port"
         $spawnArgs = @()
         if ($ServerArgsPrefix) { $spawnArgs += ($ServerArgsPrefix -split " ") }
         # -nosteam: 패키징 서버는 Steam 이 타깃에서 제외돼 무의미(무해) — 에디터 exe 로 돌릴 때(ServerArgsPrefix)만 유효
         $spawnArgs += @("L_Expanse_WP", "-log", "-nosteam", "-port=$port", "-WorldId=$($w.id)", "-PublicAddr=${PublicIp}:$port")
         $proc = Start-Process -FilePath $ServerExe -ArgumentList $spawnArgs -PassThru -WindowStyle Minimized
         $Running[[long]$w.id] = @{ Process = $proc; Port = $port; IdleSince = $null }
+    }
+
+    # ── 2.5 스탠바이 풀 유지 ──
+    # 죽은 스탠바이 프로세스 정리
+    foreach ($entry in @($StandbyProcs)) {
+        if ($entry.Process.HasExited) {
+            Log "standby (port $($entry.Port)): process exited"
+            $StandbyProcs.Remove($entry)
+        }
+    }
+    # stale 스탠바이 행 리핑 (프로세스 급사로 행만 남은 경우)
+    try {
+        $staleIso = [DateTime]::UtcNow.AddSeconds(-$StaleSeconds).ToString("yyyy-MM-ddTHH:mm:ssZ")
+        Invoke-RestMethod -Uri "$BaseUrl/rest/v1/standby_servers?heartbeat_at=lt.$staleIso&assigned_world_id=is.null" -Method Delete -Headers $Headers -TimeoutSec 10 -UserAgent $UserAgent | Out-Null
+    } catch {}
+    # 부족분 보충 (포트/램이 허락하는 한)
+    while ($StandbyProcs.Count -lt $StandbyCount) {
+        $before = $StandbyProcs.Count
+        Start-StandbyServer
+        if ($StandbyProcs.Count -eq $before) { break } # 포트 소진 등 — 다음 폴에서 재시도
     }
 
     # ── 3. 유휴/좀비 리핑 + 램 실측 로깅 ──

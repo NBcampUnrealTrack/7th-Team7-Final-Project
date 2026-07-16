@@ -86,7 +86,16 @@ void UWorldSaveComponent::BeginPlay()
 	}
 
 	bEnabled = true;
-	FParse::Value(FCommandLine::Get(), TEXT("WorldId="), WorldId);
+
+	// 웜 스탠바이: 월드 미정으로 대기 (WorldId=0) — WorldSessionComponent 가 배정을 감지해 AssignWorld 호출
+	if (FParse::Param(FCommandLine::Get(), TEXT("Standby")))
+	{
+		WorldId = 0;
+	}
+	else
+	{
+		FParse::Value(FCommandLine::Get(), TEXT("WorldId="), WorldId);
+	}
 
 	// 퀘스트 변경 = 저장 트리거. 도메인(QuestSubsystem)은 저장을 모르게 유지 — 구독은 여기서만
 	UGameInstance* GameInstance = World->GetGameInstance();
@@ -107,7 +116,26 @@ void UWorldSaveComponent::BeginPlay()
 		true
 	);
 
+	if (WorldId == 0)
+	{
+		GY_LOG(Network, KDY, "WorldSave standby - awaiting world assignment");
+		return; // 로드 안 함 — 게이트 닫힌 채 대기, AssignWorld 가 이어받는다
+	}
+
 	GY_LOG(Network, KDY, "WorldSave enabled (worldId=%lld) - loading", WorldId);
+	LoadAndApply();
+}
+
+void UWorldSaveComponent::AssignWorld(int64 InWorldId)
+{
+	if (!IsAwaitingAssignment() || InWorldId <= 0)
+	{
+		GY_WARN(Network, KDY, "AssignWorld(%lld) ignored (awaiting=%d current=%lld)", InWorldId, IsAwaitingAssignment(), WorldId);
+		return;
+	}
+
+	WorldId = InWorldId;
+	GY_LOG(Network, KDY, "WorldSave assigned worldId=%lld - loading", WorldId);
 	LoadAndApply();
 }
 
@@ -224,7 +252,7 @@ void UWorldSaveComponent::OnSaveDone(const FGYSaveResult& Result)
 
 void UWorldSaveComponent::LoadAndApply()
 {
-	if (!bEnabled || !GetOwner()->HasAuthority()) return;
+	if (!bEnabled || WorldId == 0 || !GetOwner()->HasAuthority()) return;
 	if (bLoading) return;
 
 	UGYPersistenceSubsystem* Persistence = ResolvePersistence();

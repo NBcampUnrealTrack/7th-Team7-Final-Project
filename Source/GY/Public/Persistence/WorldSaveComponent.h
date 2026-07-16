@@ -31,6 +31,11 @@ public:
 	// PersistenceSubsystem 이 OnEnginePreExit 에서 호출 — EndPlay 는 이후 중복 전송을 스킵한다
 	void FlushForShutdown();
 
+	// 웜 스탠바이(-Standby): 맵까지 부팅해두고 월드 미정 대기 — 배정되면 그때 세이브 로드.
+	// WorldSessionComponent 가 배정 감지 시 호출. 입장 게이팅은 로드 완료 전까지 그대로 닫혀 있다
+	void AssignWorld(int64 InWorldId);
+	bool IsAwaitingAssignment() const { return bEnabled && WorldId == 0; }
+
 	// 이 월드에서 영속이 성립하는지 (WP 맵 + 서버 권위). 게이팅 판단에서 비활성 월드는 항상 통과
 	bool IsPersistenceEnabled() const { return bEnabled; }
 
