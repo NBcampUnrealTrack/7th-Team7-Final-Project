@@ -9,10 +9,12 @@ namespace GYGameplayTags
 	// 약공격
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Light, "Sound.Player.Attack.Light")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Stab, "Sound.Player.Attack.Stab")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Light_Great, "Sound.Player.Attack.Light_Great")
 
 	// 강공격
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Heavy_Charge, "Sound.Player.Attack.Heavy.Charge")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Heavy_Release, "Sound.Player.Attack.Heavy.Release")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Heavy_Release_Great, "Sound.Player.Attack.Heavy.Release_Great")
 
 	// 패링
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Parry_Attempt, "Sound.Player.Parry.Attempt")

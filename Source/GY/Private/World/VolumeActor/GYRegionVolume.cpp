@@ -7,6 +7,7 @@
 #include "Loot/RegionLootData.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
 #include "GameStates/GYGameState.h"
+#include "Logging/GYLogManager.h"
 
 void AGYRegionVolume::HandlePawnEntered(APawn* Pawn)
 {
@@ -32,11 +33,13 @@ void AGYRegionVolume::HandlePawnEntered(APawn* Pawn)
 	if (GetNetMode() == NM_DedicatedServer) return;
 
 	// 로컬 플레이어 본인이 들어온 경우에만 이 지역 BGM으로 전환
-	if (Pawn->IsLocallyControlled() && Region->RegionBGM.IsValid())
+	// (AI는 스탠드얼론/리슨서버 호스트에서 IsLocallyControlled()가 true로 나올 수 있어 IsPlayerControlled()로 제외)
+	if (Pawn->IsPlayerControlled() && Pawn->IsLocallyControlled() && Region->RegionBGM.IsValid())
 	{
 		if (AGYGameState* GYGameState = GetWorld()->GetGameState<AGYGameState>())
 		{
 			GYGameState->PlayGameBGMLocal(Region->RegionBGM);
+			GY_LOG(Content,CYS,"지역 바뀜/소리바뀜.,%s", *Region->RegionBGM.ToString());
 		}
 	}
 

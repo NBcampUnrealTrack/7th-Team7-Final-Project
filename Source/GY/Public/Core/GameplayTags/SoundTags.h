@@ -10,11 +10,13 @@ namespace GYGameplayTags
 
 	// 약공격
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Attack_Light);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Attack_Light_Great);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Attack_Stab);
 
 	// 강공격
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Attack_Heavy_Charge);
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Attack_Heavy_Release);
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Attack_Heavy_Release_Great);
 
 	// 패링
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Parry_Attempt);
