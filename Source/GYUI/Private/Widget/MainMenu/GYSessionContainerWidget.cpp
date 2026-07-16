@@ -1,6 +1,7 @@
 #include "Widget/MainMenu/GYSessionContainerWidget.h"
 
 #include "Account/GYAccountSubsystem.h"
+#include "Menu/GYConfirmPopupWidget.h"
 #include "Menu/GYJoinStatusWidget.h"
 #include "Menu/GYSessionCardWidget.h"
 #include "Widget/MainMenu/GYSessionCreateWidget.h"
@@ -164,13 +165,14 @@ void UGYSessionContainerWidget::OnWorldList(bool bSuccess, const TArray<FGYWorld
 	AddSectionHeader(TEXT("참가 중인 월드"));
 	for (const FGYWorldSummary* World : Mine)
 	{
-		AddCard(*World);
+		// 삭제는 참여가 아니라 "소유" 기준 — 남의 월드에 참가만 한 카드엔 안 보인다
+		AddCard(*World, !World->OwnerAccountId.IsEmpty() && World->OwnerAccountId == MyAccountId);
 	}
 
 	AddSectionHeader(TEXT("모든 월드"));
 	for (const FGYWorldSummary* World : Others)
 	{
-		AddCard(*World);
+		AddCard(*World, false);
 	}
 }
 
@@ -187,7 +189,7 @@ void UGYSessionContainerWidget::AddSectionHeader(const FString& Label)
 	}
 }
 
-void UGYSessionContainerWidget::AddCard(const FGYWorldSummary& World)
+void UGYSessionContainerWidget::AddCard(const FGYWorldSummary& World, bool bMine)
 {
 	UGYSessionCardWidget* Card = CreateWidget<UGYSessionCardWidget>(this,
 		SessionCardClass != nullptr ? *SessionCardClass : UGYSessionCardWidget::StaticClass());
@@ -195,9 +197,45 @@ void UGYSessionContainerWidget::AddCard(const FGYWorldSummary& World)
 
 	Card->Setup(World);
 	Card->OnJoinRequested.BindUObject(this, &UGYSessionContainerWidget::JoinWorld);
+	Card->OnDeleteRequested.BindUObject(this, &UGYSessionContainerWidget::RequestDeleteWorld);
 	Card->SetJoinEnabled(!bJoinInProgress);
+	Card->SetDeleteVisible(bMine);
 	SessionScrollBox->AddChild(Card);
 	Cards.Add(Card);
+}
+
+void UGYSessionContainerWidget::RequestDeleteWorld(int64 WorldId)
+{
+	if (bJoinInProgress) return;
+
+	const TObjectPtr<UGYSessionCardWidget>* Found = Cards.FindByPredicate(
+		[WorldId](const TObjectPtr<UGYSessionCardWidget>& Card) { return IsValid(Card) && Card->GetWorldId() == WorldId; });
+	const FString WorldName = Found != nullptr ? (*Found)->GetWorldName() : FString();
+
+	UGYConfirmPopupWidget* Popup = CreateWidget<UGYConfirmPopupWidget>(GetOwningPlayer(),
+		ConfirmPopupClass != nullptr ? *ConfirmPopupClass : UGYConfirmPopupWidget::StaticClass());
+	if (Popup == nullptr) return;
+
+	Popup->SetupConfirm(
+		FText::FromString(TEXT("월드 삭제")),
+		FText::FromString(FString::Printf(TEXT("'%s' 월드를 정말 삭제하시겠습니까?"), *WorldName)),
+		FGYOnConfirmed::CreateUObject(this, &UGYSessionContainerWidget::ConfirmDeleteWorld, WorldId));
+	Popup->AddToViewport(20);
+}
+
+void UGYSessionContainerWidget::ConfirmDeleteWorld(int64 WorldId)
+{
+	UGYWorldSessionSubsystem* Session = ResolveSession();
+	if (Session == nullptr) return;
+
+	Session->DeleteWorld(WorldId, FGYOnWorldOp::CreateWeakLambda(this,
+		[this](bool bSuccess, int64 /*WorldId*/)
+		{
+			if (bSuccess)
+			{
+				RefreshSessions();
+			}
+		}));
 }
 
 void UGYSessionContainerWidget::JoinWorld(int64 WorldId)

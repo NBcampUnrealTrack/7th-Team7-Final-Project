@@ -7,6 +7,7 @@
 
 class UButton;
 class UGYAccountSubsystem;
+class UGYConfirmPopupWidget;
 class UGYJoinStatusWidget;
 class UGYSessionCardWidget;
 class UGYSessionCreateWidget;
@@ -56,6 +57,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "GY|Session")
 	TSubclassOf<UGYJoinStatusWidget> JoinStatusClass;
 
+	// 삭제 확인 모달 (내 소유 월드 삭제 버튼)
+	UPROPERTY(EditAnywhere, Category = "GY|Session")
+	TSubclassOf<UGYConfirmPopupWidget> ConfirmPopupClass;
+
 private:
 	UFUNCTION() void HandleCreateSessionClicked();
 	UFUNCTION() void HandleBackClicked();
@@ -64,9 +69,11 @@ private:
 	void OnJoinPhase(int64 WorldId, EGYJoinWorldPhase Phase);
 	void OnAccountReady(bool bSuccess);
 	void JoinWorld(int64 WorldId);
+	void RequestDeleteWorld(int64 WorldId);
+	void ConfirmDeleteWorld(int64 WorldId);
 	void SetCardsEnabled(bool bEnabled);
 	void AddSectionHeader(const FString& Label);
-	void AddCard(const FGYWorldSummary& World);
+	void AddCard(const FGYWorldSummary& World, bool bMine);
 
 	UGYAccountSubsystem* ResolveAccount() const;
 	UGYWorldSessionSubsystem* ResolveSession() const;

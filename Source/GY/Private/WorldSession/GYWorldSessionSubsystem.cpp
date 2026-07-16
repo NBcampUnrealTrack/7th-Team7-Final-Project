@@ -294,6 +294,33 @@ void UGYWorldSessionSubsystem::CreateWorld(const FString& WorldName, FGYOnWorldO
 		});
 }
 
+void UGYWorldSessionSubsystem::DeleteWorld(int64 WorldId, FGYOnWorldOp OnComplete)
+{
+	UGYAccountSubsystem* Account = ResolveAccount();
+	if (WorldId <= 0 || !IsValid(Account) || !Account->IsLoggedIn())
+	{
+		OnComplete.ExecuteIfBound(false, WorldId);
+		return;
+	}
+
+	const FString Body = FString::Printf(TEXT("{\"p_id\":%lld}"), WorldId);
+	Account->SendAuthedRequest(TEXT("POST"), TEXT("/rest/v1/rpc/delete_world"), Body, FString(),
+		[OnComplete = MoveTemp(OnComplete), WorldId](int32 Code, const FString& Content)
+		{
+			// RPC 반환 false = 소유자 아님/이미 삭제/가동 중 — 전부 실패로 취급
+			const bool bDeleted = Code == 200 && Content.TrimStartAndEnd() == TEXT("true");
+			if (!bDeleted)
+			{
+				GY_WARN(Network, KDY, "DeleteWorld(%lld) failed code=%d body=%s", WorldId, Code, *Content);
+			}
+			else
+			{
+				GY_LOG(Network, KDY, "World deleted id=%lld", WorldId);
+			}
+			OnComplete.ExecuteIfBound(bDeleted, WorldId);
+		});
+}
+
 void UGYWorldSessionSubsystem::JoinWorld(int64 WorldId)
 {
 	if (WorldId <= 0) return;

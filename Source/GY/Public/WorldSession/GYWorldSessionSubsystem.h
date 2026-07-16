@@ -47,6 +47,9 @@ public:
 	// 내 소유 월드 생성 (이름만 — 레벨/상태는 기본값, 계정당 상한은 DB 백스톱)
 	void CreateWorld(const FString& WorldName, FGYOnWorldOp OnComplete);
 
+	// 내 소유 월드 삭제 (soft delete) — offline 상태만. 성공 시 목록/생성 슬롯에서 즉시 제외
+	void DeleteWorld(int64 WorldId, FGYOnWorldOp OnComplete);
+
 	// 목록의 월드에 입장하는 단일 진입점: online 이면 즉시 접속, offline 이면
 	// 시작 요청(request_world_start) → online 폴링 → 접속. 진행 단계는 OnJoinWorldPhase 로 통지
 	void JoinWorld(int64 WorldId);
