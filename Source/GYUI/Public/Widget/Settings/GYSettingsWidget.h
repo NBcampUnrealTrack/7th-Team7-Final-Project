@@ -15,6 +15,7 @@ class UWidgetSwitcher;
 class UInputMappingContext;
 class UGYInputConfig;
 class UGYInputComponent;
+class UWidgetAnimation;
 
 UENUM(BlueprintType)
 enum class EGYSettingsTab : uint8
@@ -47,6 +48,13 @@ protected:
 	virtual void NativeDestruct() override;
 	virtual void NativeOnInitialized() override;
     virtual UWidget* NativeGetDesiredFocusTarget() const override;
+
+	virtual void NativeOnActivated() override;
+	virtual bool NativeOnHandleBackAction() override;
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+
+	UPROPERTY(Transient, meta = (BindWidgetAnimOptional))
+	TObjectPtr<UWidgetAnimation> FadeAnim;
 
 	UPROPERTY(meta = (BindWidget))
     TObjectPtr<UWidgetSwitcher> TabSwitcher;
@@ -168,4 +176,10 @@ private:
 
 	UFUNCTION() void HandleNextTabInput();
 	UFUNCTION() void HandlePrevTabInput();
+
+	void RequestClose();
+	UFUNCTION() void HandleFadeClosed();
+
+	bool bClosing = false;
+	FWidgetAnimationDynamicEvent FadeClosedDelegate;
 };

@@ -15,6 +15,7 @@
 #include "Core/GameplayTags/InputTag.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
+#include "Animation/WidgetAnimation.h"
 
 #define LOCTEXT_NAMESPACE "GYUI"
 
@@ -66,6 +67,8 @@ void UGYSettingsWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	SetIsFocusable(true);
+
+	FadeClosedDelegate.BindDynamic(this, &UGYSettingsWidget::HandleFadeClosed);
 
 	InitGraphicsTab();
 	InitSoundTab();
@@ -147,7 +150,7 @@ void UGYSettingsWidget::HandleLanguageTabClicked()
 
 void UGYSettingsWidget::HandleCloseClicked()
 {
-    DeactivateWidget();
+	RequestClose();   // 기존: DeactivateWidget();
 }
 
 void UGYSettingsWidget::HandleQuitClicked()
@@ -494,6 +497,58 @@ void UGYSettingsWidget::HandlePrevTabInput()
     if (!TabSwitcher) return;
     const int32 Idx = TabSwitcher->GetActiveWidgetIndex();
     ShowTab(static_cast<EGYSettingsTab>((Idx + 3) % 4));
+}
+
+void UGYSettingsWidget::NativeOnActivated()
+{
+	Super::NativeOnActivated();
+
+	bClosing = false;
+	if (FadeAnim)
+	{
+		UnbindAllFromAnimationFinished(FadeAnim);
+		PlayAnimationForward(FadeAnim);
+	}
+}
+
+bool UGYSettingsWidget::NativeOnHandleBackAction()
+{
+	RequestClose();
+	return true;
+}
+
+FReply UGYSettingsWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	if (InKeyEvent.GetKey() == EKeys::Escape)
+	{
+		RequestClose(); // ESC -> 페이드 아웃
+		return FReply::Handled();
+	}
+	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+void UGYSettingsWidget::RequestClose()
+{
+	if (bClosing) return; // 중복 방지
+
+	if (FadeAnim)
+	{
+		bClosing = true;
+		UnbindAllFromAnimationFinished(FadeAnim);
+		BindToAnimationFinished(FadeAnim, FadeClosedDelegate);
+		PlayAnimationReverse(FadeAnim);
+	}
+	else
+	{
+		DeactivateWidget(); // 애니 없으면 기존처럼 즉시 닫힘
+	}
+}
+
+void UGYSettingsWidget::HandleFadeClosed()
+{
+	if (!bClosing) return;
+	bClosing = false;
+	DeactivateWidget(); // 페이드 끝난 뒤 실제로 닫힘
 }
 
 #undef LOCTEXT_NAMESPACE
