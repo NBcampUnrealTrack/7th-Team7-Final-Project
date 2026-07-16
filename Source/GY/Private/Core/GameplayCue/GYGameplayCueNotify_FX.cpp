@@ -90,9 +90,15 @@ void UGYGameplayCueNotify_FX::PlaySound(AActor* TargetActor,
 	{
 		return;
 	}
-	// 2D 사운드
+	// 2D 사운드: 로컬 클라이언트에서만 재생
 	if (b2DSound)
 	{
+		const APawn* TargetPawn = Cast<APawn>(TargetActor);
+		if (!TargetPawn || !TargetPawn->IsLocallyControlled())
+		{
+			return;
+		}
+
 		GY_LOG(Content, CYS, "GC: 2D SFX");
 		SoundManager->PlaySound2D(SoundTag);
 		return;
