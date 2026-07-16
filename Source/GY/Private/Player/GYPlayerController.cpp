@@ -115,21 +115,7 @@ void AGYPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	if (PlayerState)
-	{
-		OnPlayerStateInitialized.Broadcast(this);
-	}
-
 	UGYPawnExtensionComponent::RequestInitStateRecheck(GetPawn());
-}
-
-void AGYPlayerController::AcknowledgePossession(APawn* P)
-{
-	Super::AcknowledgePossession(P);
-
-	if (!P) return;
-
-	OnLocalControllerReady.Broadcast(this);
 }
 
 void AGYPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
