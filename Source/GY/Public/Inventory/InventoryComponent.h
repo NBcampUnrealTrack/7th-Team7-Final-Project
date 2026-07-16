@@ -69,8 +69,9 @@ protected:
 	FInventoryList Inventory;
 	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Inventory")
 	int32 Capacity;
-private:
-	/** 인벤 전체 스캔 후 ChargePool 별 스택 집계 → GMS publish. 빈슬롯 전환 위해 이전 publish 셋 캐시 */
+public:
+	/** 인벤 전체 스캔 후 ChargePool 별 스택 집계 → GMS publish. 빈슬롯 전환 위해 이전 publish 셋 캐시,
+	 *  HUD가 늦게 생성, 재생성돼 초기 방송을 놓쳤을 때 현재 포션 상태를 다시 채우는 용도로도 호출 */
 	void BroadcastPotionSnapshots();
 
 private:

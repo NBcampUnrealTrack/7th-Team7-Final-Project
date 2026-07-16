@@ -49,6 +49,9 @@ public:
 
 	const TArray<FEquipmentLoadoutEntry>& GetEntries() const { return LoadoutEntries; }
 
+	/** 현재 장착된 모든 슬롯의 위젯용 GMS 메시지를 다시 방 */
+	void BroadcastAllSlots();
+
 	FOnLoadoutSlotChanged OnLoadoutSlotChanged;
 
 protected:
@@ -63,4 +66,7 @@ protected:
 private:
 	/** 게임플레이 델리게이트(ActiveEquipment용) + GMS 메시지(위젯용) 동시 발화 */
 	void BroadcastSlotChanged(FGameplayTag SlotTag, const FGuid& InstanceId);
+
+	/** 위젯용 GMS 메시지만 발화 */
+	void BroadcastSlotUIMessage(FGameplayTag SlotTag, const FGuid& InstanceId);
 };
