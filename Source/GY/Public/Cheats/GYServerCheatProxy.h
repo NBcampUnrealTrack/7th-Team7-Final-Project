@@ -51,6 +51,10 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_Suicide();
+
+	UFUNCTION(Server, Reliable)
+	void Server_Invulnerable_Toggle();
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Debug")
 	TMap<EEnemyType, TSoftClassPtr<AGYEnemyCharacterBase>> EnemyClassMap;

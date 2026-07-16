@@ -89,4 +89,7 @@ public:
 
 	UFUNCTION(Exec)
 	void GY_Suicide();
+
+	UFUNCTION(Exec)
+	void GY_Invulnerable_Toggle();
 };
