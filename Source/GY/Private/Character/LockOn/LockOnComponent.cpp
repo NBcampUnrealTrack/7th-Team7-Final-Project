@@ -329,7 +329,7 @@ AActor* ULockOnComponent::FindBestTarget() const
 		UAbilitySystemComponent* CadidateASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Candidate);
 		if (UGYCombatStatics::IsSameFaction(ASC,CadidateASC))
 		{
-			return nullptr;
+			continue;
 		}
 		//TODO 팀 판정
 		const float DistSq = FVector::DistSquared(OwnerLoc, Candidate->GetActorLocation());
