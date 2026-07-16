@@ -5,6 +5,7 @@
 
 #include "GameFramework/Character.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
+#include "Logging/GYLogManager.h"
 
 UHitReactionComponent::UHitReactionComponent()
 {
@@ -95,6 +96,9 @@ void UHitReactionComponent::ApplyKnockBack(const FVector& HitDirection, float St
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
 	if (!OwnerCharacter || !OwnerCharacter->HasAuthority()) return;
 	const FVector Launch = HitDirection * Strength*KnockbackScale + FVector(0.f, 0.f, 0.f);
+
+	if (Launch.IsNearlyZero()) return;
+
 	OwnerCharacter->LaunchCharacter(Launch, true, false);
 }
 

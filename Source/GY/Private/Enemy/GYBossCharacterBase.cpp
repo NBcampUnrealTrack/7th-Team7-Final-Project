@@ -20,6 +20,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "Logging/GYLogManager.h"
+#include "Character/HitReactionComponent.h"
 
 #include "Net/UnrealNetwork.h"
 #include "UI/GYUIMessages.h"
@@ -32,6 +33,11 @@ AGYBossCharacterBase::AGYBossCharacterBase(const FObjectInitializer& ObjectIniti
 
 	AIControllerClass = AGYBossAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	if (HitReactionComponent)
+	{
+		HitReactionComponent->SetKnockbackScale(0.f);
+	}
 
 	bIsActivate = false;
 }
