@@ -13,10 +13,16 @@ UCLASS()
 class GY_API UUAMod_SeachFootLocation : public UAnimationModifier
 {
 	GENERATED_BODY()
+
 public:
 	virtual void OnApply_Implementation(UAnimSequence* AnimationSequence) override;
 	virtual void OnRevert_Implementation(UAnimSequence* AnimationSequence) override;
-	protected:
+
+protected:
+	FTransform GetComponentSpaceTransform(UAnimSequence* AnimationSequence,
+	                                      const FReferenceSkeleton& RefSkeleton,
+	                                      FName BoneName,
+	                                      int32 Frame) const;
 
 	//노티파이 넣을 곳 이름
 	UPROPERTY(EditAnywhere, Category = "Settings")
