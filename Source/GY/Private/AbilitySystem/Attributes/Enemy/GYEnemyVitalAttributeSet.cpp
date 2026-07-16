@@ -5,6 +5,7 @@
 #include "Character/GYCharacterMovementComponent.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "GameFramework/Character.h"
+#include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 
 void UGYEnemyVitalAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -52,7 +53,19 @@ void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 
 	if (Data.EvaluatedData.Attribute == GetActivityPointsAttribute())
 	{
-		SetActivityPoints(FMath::Clamp(GetActivityPoints(), 0.f, GetMaxActivityPoints()));
+		GY_LOG(Combat, JCM, "[AP Execute] Mag=%.2f Current=%.2f Base=%.2f Max=%.2f ASC=%s",
+			Data.EvaluatedData.Magnitude,
+			GetActivityPoints(),
+			GetActivityPointsAttribute().GetNumericValueChecked(this),
+			GetMaxActivityPoints(),
+			*GetNameSafe(GetOwningAbilitySystemComponent()) );
+		UE_LOG(LogTemp, Warning,
+			TEXT("[AP Execute] Mag=%.2f Current=%.2f Base=%.2f Max=%.2f ASC=%s"),
+			Data.EvaluatedData.Magnitude,
+			GetActivityPoints(),
+			GetActivityPointsAttribute().GetNumericValueChecked(this),
+			GetMaxActivityPoints(),
+			*GetNameSafe(GetOwningAbilitySystemComponent()));
 
 		if (Data.EvaluatedData.Magnitude < 0.f)
 		{
