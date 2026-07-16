@@ -12,9 +12,29 @@ struct FGYCharacterSummary
 	int32 Level = 1;
 };
 
+struct FGYWorldSummary
+{
+	int64 Id = 0;
+	FString Name;
+	int32 WorldLevel = 1;
+	FString Status; // offline | starting | online
+	FString HostAddr;
+	int32 PlayerCount = 0;
+	int32 MaxPlayers = 4;
+	FString OwnerAccountId; // 소유 계정 (시스템 월드는 빈 값) — 캐릭터는 계정 안에서 교체 가능하므로 소유/참여 주체는 계정
+	FString OwnerName; // 생성 시점 persona (denorm)
+	bool bParticipant = false; // 내 계정의 참여 기록 존재 (world_participants)
+	bool IsJoinable() const { return Status == TEXT("online") && PlayerCount < MaxPlayers && !HostAddr.IsEmpty(); }
+};
+
 DECLARE_MULTICAST_DELEGATE_OneParam(FGYOnAccountReady, bool /*bSuccess*/);
 DECLARE_DELEGATE_TwoParams(FGYOnCharacterList, bool /*bSuccess*/, const TArray<FGYCharacterSummary>&);
 DECLARE_DELEGATE_TwoParams(FGYOnCharacterOp, bool /*bSuccess*/, int64 /*CharacterId*/);
+DECLARE_DELEGATE_TwoParams(FGYOnWorldList, bool /*bSuccess*/, const TArray<FGYWorldSummary>&);
+DECLARE_DELEGATE_TwoParams(FGYOnWorldOp, bool /*bSuccess*/, int64 /*WorldId*/);
+// Phase: 진행 단계 통지 (UI 표시용). Requested → Starting → Online(접속 개시) / Failed
+enum class EGYJoinWorldPhase : uint8 { Requested, Starting, Online, Failed };
+DECLARE_MULTICAST_DELEGATE_TwoParams(FGYOnJoinWorldPhase, int64 /*WorldId*/, EGYJoinWorldPhase);
 
 // 클라이언트 신원 주체 — Mock/Steam 신원 해석 → steam-auth Edge Function → GoTrue 토큰 보유.
 // 캐릭터 CRUD 는 이 토큰(Bearer) + PublishableKey 로 PostgREST 직접 호출.
@@ -47,6 +67,18 @@ public:
 	void CreateCharacter(const FString& CharacterName, FGYOnCharacterOp OnComplete);
 	void DeleteCharacter(int64 CharacterId, FGYOnCharacterOp OnComplete);
 
+	// ── 월드 목록 조회/생성/입장 (같은 Bearer 경로) ──
+	void ListWorlds(FGYOnWorldList OnComplete);
+
+	// 내 소유 월드 생성 (이름만 — 레벨/상태는 기본값, 계정당 상한은 DB 백스톱)
+	void CreateWorld(const FString& WorldName, FGYOnWorldOp OnComplete);
+
+	// 목록의 월드에 입장하는 단일 진입점: online 이면 즉시 접속, offline 이면
+	// 시작 요청(request_world_start) → online 폴링 → 접속. 진행 단계는 OnJoinWorldPhase 로 통지
+	void JoinWorld(int64 WorldId);
+
+	FGYOnJoinWorldPhase OnJoinWorldPhase;
+
 private:
 	struct FGYResolvedIdentity
 	{
@@ -75,6 +107,11 @@ private:
 	EGYAuthMode DefaultAuthMode = EGYAuthMode::Mock;
 	FString MockSteamIdPrefix;
 
+	// JoinWorld 폴링 루프 — 시작 요청 후 online 전환 감시 (스폰 실패 대비 타임아웃)
+	void PollJoinTarget();
+	void FinishJoin(const FGYWorldSummary& World);
+	void FailJoin(const TCHAR* Reason);
+
 	FString AccountId;
 	FString AccessToken;
 	FString RefreshToken;
@@ -84,4 +121,8 @@ private:
 	double TokenExpiresAtSeconds = 0.0;
 	bool bLoginInFlight = false;
 	bool bRefreshInFlight = false;
+
+	int64 JoinTargetWorldId = 0;
+	double JoinDeadlineSeconds = 0.0;
+	FTimerHandle JoinPollTimerHandle;
 };

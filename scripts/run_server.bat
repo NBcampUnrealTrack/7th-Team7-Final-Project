@@ -31,6 +31,7 @@ echo  Map : %MAP%
 echo  Port: %PORT%
 echo ============================================
 
-"%UE%" "%UPROJECT%" %MAP% -server -log -port=%PORT%
+rem -nosteam: 데디는 Steam 불필요 - Shipping에서 Steam SDK DLL 로드 assert 방지
+"%UE%" "%UPROJECT%" %MAP% -server -log -nosteam -port=%PORT%
 
 pause

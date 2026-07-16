@@ -42,6 +42,9 @@ public:
 	// 진행 중인 전체 퀘스트 조회
 	const TMap<FGameplayTag, FQuestRuntimeData>& GetActiveQuests() const { return ActiveQuests; }
 
+	// 월드 저장 복원용 — 브로드캐스트 없이 런타임 상태만 재구성 (서버 부팅, 플레이어 입장 전)
+	void RestoreActiveQuests(const TMap<FGameplayTag, FQuestRuntimeData>& InActiveQuests) { ActiveQuests = InActiveQuests; }
+
 	// DataTable에 등록된 전체 퀘스트 조회
 	const TMap<FGameplayTag, const FQuestTableRow*>& GetAllQuestRows() const { return QuestCache; }
 

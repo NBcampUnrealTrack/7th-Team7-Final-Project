@@ -100,7 +100,8 @@
 		},
 		{
 			"Name": "OnlineSubsystemSteam",
-			"Enabled": true
+			"Enabled": true,
+			"TargetDenyList": [ "Server" ]
 		}
 	]
 }

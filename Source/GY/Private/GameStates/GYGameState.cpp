@@ -8,6 +8,8 @@
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Experience/GYExperienceManagerComponent.h"
+#include "Persistence/WorldSaveComponent.h"
+#include "Persistence/WorldSessionComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Core/GameplayTags/SoundTags.h"
@@ -17,11 +19,18 @@
 AGYGameState::AGYGameState()
 {
 	ExperienceManagerComponent = CreateDefaultSubobject<UGYExperienceManagerComponent>(TEXT("ExperienceManagerComponent"));
+	WorldSaveComponent = CreateDefaultSubobject<UWorldSaveComponent>(TEXT("WorldSaveComponent"));
+	CreateDefaultSubobject<UWorldSessionComponent>(TEXT("WorldSessionComponent"));
 }
 
 UGYExperienceManagerComponent* AGYGameState::GetExperienceManagerComponent() const
 {
 	return ExperienceManagerComponent;
+}
+
+UWorldSaveComponent* AGYGameState::GetWorldSaveComponent() const
+{
+	return WorldSaveComponent;
 }
 
 void AGYGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

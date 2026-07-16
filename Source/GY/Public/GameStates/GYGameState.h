@@ -7,6 +7,7 @@
 
 struct FGYWorldResetMessage;
 class UGYExperienceManagerComponent;
+class UWorldSaveComponent;
 
 UCLASS()
 class GY_API AGYGameState : public AGameState
@@ -19,10 +20,12 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UGYExperienceManagerComponent* GetExperienceManagerComponent() const;
+	UWorldSaveComponent* GetWorldSaveComponent() const;
 
 
 	FORCEINLINE float GetCurrentTime() const { return CurrentTime; }
-	FORCEINLINE void SetCurrentTime(float InCurrentTime);
+	// 본문이 cpp 에 있으므로 inline 선언 금지 — 서버 타깃 유니티 빌드에서 LNK2019
+	void SetCurrentTime(float InCurrentTime);
 	FORCEINLINE float GetTimeScale() const { return TimeScale; }
 	FORCEINLINE void SetTimeScale(float InTimeScale) { TimeScale = InTimeScale; }
 	FORCEINLINE float GetMidnight() const { return Midnight; }
@@ -56,6 +59,7 @@ public:
 	void RemoveActiveQuest(FGameplayTag QuestTag);
 
 	FORCEINLINE const TArray<FGameplayTag>& GetCompletedQuests() const { return ClearedQuests; }
+	FORCEINLINE const TArray<FGameplayTag>& GetActiveQuests() const { return ActiveQuestTags; }
 
 	// 클라 로컬에서 즉시 재생(데디 서버는 내부에서 스킵).
 	UFUNCTION()
@@ -73,6 +77,9 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<UGYExperienceManagerComponent> ExperienceManagerComponent;
+
+	UPROPERTY()
+	TObjectPtr<UWorldSaveComponent> WorldSaveComponent;
 
 	UPROPERTY(ReplicatedUsing=OnRep_CurrentTime)
 	float CurrentTime;

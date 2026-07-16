@@ -15,6 +15,8 @@
 #include "Logging/GYLogManager.h"
 #include "Misc/TrackedActivity.h"
 #include "Persistence/CharacterSaveComponent.h"
+#include "Persistence/GYPersistenceSubsystem.h"
+#include "Persistence/WorldSaveComponent.h"
 #include "Player/GYPlayerController.h"
 #include "Player/GYPlayerState.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
@@ -39,6 +41,21 @@ bool AGYGameMode::AllowCheats(APlayerController* P)
 #endif
 }
 
+void AGYGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage)
+{
+	constexpr int32 MaxPlayersPerWorld = 4;
+
+	const AGameStateBase* CurrentGameState = GetGameState<AGameStateBase>();
+	if (IsValid(CurrentGameState) && CurrentGameState->PlayerArray.Num() >= MaxPlayersPerWorld)
+	{
+		GY_WARN(Network, KDY, "PreLogin rejected from %s - world full (%d/%d)", *Address, CurrentGameState->PlayerArray.Num(), MaxPlayersPerWorld);
+		ErrorMessage = TEXT("world_full");
+		return;
+	}
+
+	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+}
+
 FString AGYGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal)
 {
 	const FString Result = Super::InitNewPlayer(NewPlayerController, UniqueId, Options, Portal);
@@ -54,6 +71,18 @@ FString AGYGameMode::InitNewPlayer(APlayerController* NewPlayerController, const
 		{
 			SaveComponent->SetCharacterId(FCString::Atoi64(*CharIdOption));
 			GY_LOG(Network, KDY, "InitNewPlayer: charId=%s assigned to %s", *CharIdOption, *GetNameSafe(PS));
+		}
+
+		// 참여자 기록 — 클라 "참가 중인 월드" 분류의 근거 (월드 영속이 있는 서버만)
+		const AGYGameState* GYGameState = GetGameState<AGYGameState>();
+		const UWorldSaveComponent* WorldSave = IsValid(GYGameState) ? GYGameState->GetWorldSaveComponent() : nullptr;
+		if (IsValid(WorldSave) && WorldSave->IsPersistenceEnabled())
+		{
+			UGYPersistenceSubsystem* Persistence = GetGameInstance()->GetSubsystem<UGYPersistenceSubsystem>();
+			if (IsValid(Persistence))
+			{
+				Persistence->RecordWorldParticipant(WorldSave->GetWorldId(), FCString::Atoi64(*CharIdOption));
+			}
 		}
 	}
 
@@ -84,8 +113,8 @@ bool AGYGameMode::ShouldSpawnAtStartSpot(AController* Player)
 
 void AGYGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
-	// Experience가 로드되기 전엔 폰 스폰을 보류한다.
-	if (IsExperienceLoaded())
+	// Experience 와 월드 상태가 준비되기 전엔 폰 스폰을 보류한다.
+	if (IsExperienceLoaded() && IsWorldStateReady())
 	{
 		Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	}
@@ -93,7 +122,7 @@ void AGYGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewP
 
 bool AGYGameMode::PlayerCanRestart_Implementation(APlayerController* Player)
 {
-	return IsExperienceLoaded() && Super::PlayerCanRestart_Implementation(Player);
+	return IsExperienceLoaded() && IsWorldStateReady() && Super::PlayerCanRestart_Implementation(Player);
 }
 
 void AGYGameMode::RestartPlayerAtPlayerStart(AController* NewPlayer, AActor* StartSpot)
@@ -117,6 +146,33 @@ bool AGYGameMode::IsExperienceLoaded() const
 	if (!IsValid(ExperienceComponent)) return false;
 
 	return ExperienceComponent->IsExperienceLoaded();
+}
+
+bool AGYGameMode::IsWorldStateReady() const
+{
+	const AGYGameState* GYGameState = GetGameState<AGYGameState>();
+	if (!IsValid(GYGameState)) return true;
+
+	const UWorldSaveComponent* WorldSave = GYGameState->GetWorldSaveComponent();
+	if (!IsValid(WorldSave) || !WorldSave->IsPersistenceEnabled()) return true;
+
+	return WorldSave->IsWorldStateReady();
+}
+
+void AGYGameMode::OnWorldStateReady()
+{
+	// Experience 게이트와 동일한 후처리 — 두 게이트 중 늦게 열리는 쪽이 스폰을 트리거한다
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(*It);
+		if (IsValid(PlayerController) && PlayerController->GetPawn() == nullptr)
+		{
+			if (PlayerCanRestart(PlayerController))
+			{
+				RestartPlayer(PlayerController);
+			}
+		}
+	}
 }
 
 void AGYGameMode::OnExperienceLoaded(const UGYExperienceDefinition* Experience)

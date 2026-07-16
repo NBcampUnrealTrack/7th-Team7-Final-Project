@@ -55,7 +55,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "BuildCookRun failed (exit $LASTEXITCODE)" }
 
     Write-Host "[server] Done: $ArchiveDir\WindowsServer" -ForegroundColor Green
-    Write-Host "[server] run: GYServer.exe L_TestMap -log -port=7777" -ForegroundColor Green
+    Write-Host "[server] run: GYServer.exe -log  (ServerDefaultMap=L_Expanse_WP, Steam은 서버 타깃에서 제외됨)" -ForegroundColor Green
 }
 finally {
     if ($bHadLocalIni) { Move-Item $IniBackup $IniPath -Force }

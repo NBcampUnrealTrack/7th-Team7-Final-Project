@@ -32,6 +32,9 @@ public:
 	// 로드 시작 후에는 무시 — 세션 중 캐릭터 교체 없음
 	void SetCharacterId(int64 InCharacterId);
 
+	// 강제 종료 경로에서 티어다운 전에 마지막 스냅샷 발사 (PersistenceSubsystem 이 OnEnginePreExit 에서 호출)
+	void FlushForShutdown();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -60,6 +63,7 @@ private:
 	bool bSaving = false;
 	bool bDirty = false;
 	bool bApplying = false;
+	bool bShutdownFlushed = false;
 
 	FTimerHandle RetryTimerHandle;
 	FTimerHandle PeriodicTimerHandle;
