@@ -38,6 +38,11 @@ protected:
 	virtual void AcknowledgePossession(APawn* P) override;
 	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 
+	virtual void GetAudioListenerPosition(
+		FVector& OutLocation,
+		FVector& OutFrontDir,
+		FVector& OutRightDir) const override;
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Cheat")
 	TSubclassOf<AGYServerCheatProxy> ServerCheatProxyClass;

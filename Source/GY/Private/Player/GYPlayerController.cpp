@@ -127,16 +127,9 @@ void AGYPlayerController::AcknowledgePossession(APawn* P)
 {
 	Super::AcknowledgePossession(P);
 
-	// OnPossess는 서버 권한 로직이라 소유 클라이언트에서 호출되지 않는다.
-	// 오디오 리스너는 로컬 폰 기준으로 맞춰야 하므로, 클라이언트 로컬 셋업 시점인 여기서 처리한다.
 	if (!P) return;
 
-	SetAudioListenerOverride(
-		P->GetRootComponent(),
-		FVector::ZeroVector,
-		FRotator::ZeroRotator);
 	OnLocalControllerReady.Broadcast(this);
-	GY_LOG(Player, CYS, "오디오 리스너 변경: %s", *P->GetName());
 }
 
 void AGYPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
@@ -150,6 +143,30 @@ void AGYPlayerController::PostProcessInput(const float DeltaTime, const bool bGa
 	}
 
 	Super::PostProcessInput(DeltaTime, bGamePaused);
+}
+
+void AGYPlayerController::GetAudioListenerPosition(FVector& OutLocation, FVector& OutFrontDir,
+	FVector& OutRightDir) const
+{
+	// Pawn이 없으면 기본 동작 사용
+	const APawn* GYPawn = GetPawn();
+	if (!GYPawn)
+	{
+		Super::GetAudioListenerPosition(
+			OutLocation,
+			OutFrontDir,
+			OutRightDir);
+		return;
+	}
+
+	// 리스너 위치는 플레이어
+	OutLocation = GYPawn->GetActorLocation();
+
+	// 리스너 방향은 항상 월드 기준 (0,0,0)
+	const FRotator ListenerRotation = FRotator::ZeroRotator;
+
+	OutFrontDir = ListenerRotation.Vector();
+	OutRightDir = FRotationMatrix(ListenerRotation).GetUnitAxis(EAxis::Y);
 }
 
 void AGYPlayerController::OnRep_ServerCheatProxy()
