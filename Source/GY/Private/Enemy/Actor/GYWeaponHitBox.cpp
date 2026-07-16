@@ -25,7 +25,13 @@ UGYWeaponHitBox::UGYWeaponHitBox()
 void UGYWeaponHitBox::BeginPlay()
 {
 	Super::BeginPlay();
-	OnComponentBeginOverlap.AddDynamic(this, &UGYWeaponHitBox::OnBeginOverlap);
+	OnComponentBeginOverlap.AddUniqueDynamic(this, &UGYWeaponHitBox::OnBeginOverlap);
+}
+
+void UGYWeaponHitBox::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	OnComponentBeginOverlap.RemoveDynamic(this, &UGYWeaponHitBox::OnBeginOverlap);
+	Super::EndPlay(EndPlayReason);
 }
 
 void UGYWeaponHitBox::BeginHitDetection(AActor* InSource)
