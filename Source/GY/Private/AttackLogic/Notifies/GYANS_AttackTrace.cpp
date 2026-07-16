@@ -13,6 +13,7 @@
 #include "DrawDebugHelpers.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Logging/GYLogManager.h"
 
 static const FGYCollisionShapeData* GetCurrentCollisionData(AActor* Owner)
 {
@@ -72,7 +73,7 @@ static UStaticMeshComponent* GetOrCreateMeshProxy(FGYHitActorList& Entry, USkele
 		UStaticMeshComponent* Proxy = NewObject<UStaticMeshComponent>(Owner, NAME_None, RF_Transient);
 		Proxy->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		Proxy->SetCollisionResponseToAllChannels(ECR_Ignore);
-		Proxy->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+		Proxy->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 		Proxy->SetGenerateOverlapEvents(false);
 		Proxy->SetHiddenInGame(true);
 		Proxy->SetVisibility(false);
