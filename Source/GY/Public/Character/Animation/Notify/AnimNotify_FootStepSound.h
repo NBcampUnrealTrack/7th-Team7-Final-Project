@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
 #include "AnimNotify_FootStepSound.generated.h"
 
@@ -23,12 +24,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Footstep")
 	FName FootBoneName;
 
-	UPROPERTY(EditAnywhere, Category = "Footstep")
-	TObjectPtr<USoundBase> DefaultSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FootStep")
+	FGameplayTag SoundTag;
+
 	//레이캐스트 거리
 	UPROPERTY(EditAnywhere, Category = "Footstep")
 	float TraceDistance;
 
-	UPROPERTY(EditAnywhere, Category = "Footstep")
-	TMap<TEnumAsByte<EPhysicalSurface>, USoundBase*> FootstepSoundMap;
 };

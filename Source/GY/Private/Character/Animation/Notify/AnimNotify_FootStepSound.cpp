@@ -3,6 +3,7 @@
 
 #include "Character/Animation/Notify/AnimNotify_FootStepSound.h"
 
+#include "Core/Sound/GYSoundManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Logging/GYLogManager.h"
 
@@ -36,13 +37,14 @@ void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSe
 	{
 		UPhysicalMaterial* PhysMat = HitResult.PhysMaterial.Get();
 
-		USoundBase* SoundToPlay = DefaultSound;
+		UGYSoundManager* SoundManager = UGYSoundManager::Get(Owner);
+		if (SoundManager)
+		{
+			GY_LOG(Game, KHB, "발소리재생: %s", *SoundTag.ToString());
 
-			if (SoundToPlay)
-			{
-				GY_LOG(Game,KHB,"발소리재생");
-				UGameplayStatics::PlaySoundAtLocation(World, SoundToPlay, HitResult.ImpactPoint);
-			}
+			// 태그를 기반으로 ImpactPoint에서 3D 사운드 재생
+			SoundManager->PlaySoundAtLocation(SoundTag, HitResult.ImpactPoint);
+		}
 
 	}
 }
