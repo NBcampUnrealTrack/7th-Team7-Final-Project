@@ -3,8 +3,8 @@
 namespace GYGameplayTags
 {
 	/* 플레이어 사운드 */
-	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Walk, "Sound.Player.Walk")
-	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Run, "Sound.Player.Run")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Walk, "Sound.Player.Walk.Drit")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Run, "Sound.Player.Run.Drit")
 
 	// 약공격
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Attack_Light, "Sound.Player.Attack.Light")

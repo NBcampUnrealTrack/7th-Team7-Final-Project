@@ -19,8 +19,6 @@ void UGYLinkedAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
 
-	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
-
 	if (UGYCharacterAnimInstance* MainBP = GetMainAnimBPThreadSafe())
 	{
 		// 메인 BP에서 계산해둔 방향과 달리기 상태를 Thread-Safe하게 읽어옴
