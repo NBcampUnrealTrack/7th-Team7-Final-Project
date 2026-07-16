@@ -29,6 +29,7 @@
 #include "Widget/Interaction/GYInteractionWaitingWidget.h"
 #include "Widget/WorldReset/GYWorldResetWidget.h"
 #include "Enemy/GYEnemyCharacterBase.h"
+#include "GameModes/GYMenuGameMode.h"
 
 void UGYUIManagerSubsystem::Deinitialize()
 {
@@ -79,12 +80,15 @@ void UGYUIManagerSubsystem::PlayerControllerChanged(APlayerController* NewPlayer
 		{
 			CreatePrimaryGameLayout(LayoutClass);
 		}
-		if (UClass* HUDClass = Settings->HUDWidgetClass.LoadSynchronous())
+		// 메뉴에서는 게임플레이 HUD 띄우지 않음
+		if (ShouldShowGameHUD())
 		{
-			// 레이아웃이 생성되면 새로 push, 같은 레이아웃에 이미 떠 있으면 건너뜀
-			if (!HUDWidget.IsValid())
+			if (UClass* HUDClass = Settings->HUDWidgetClass.LoadSynchronous())
 			{
-				HUDWidget = PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDClass);
+				if (!HUDWidget.IsValid())
+				{
+					HUDWidget = PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDClass);
+				}
 			}
 		}
 	}
@@ -193,13 +197,33 @@ void UGYUIManagerSubsystem::EnsurePrimaryLayoutAndHUD()
 	{
 		CreatePrimaryGameLayout(LayoutClass);
 	}
-	if (UClass* HUDClass = Settings->HUDWidgetClass.LoadSynchronous())
+	// 메뉴 레벨에서는 게임플레이 HUD를 띄우지 않음
+	if (ShouldShowGameHUD())
 	{
-		if (!HUDWidget.IsValid())
+		if (UClass* HUDClass = Settings->HUDWidgetClass.LoadSynchronous())
 		{
-			HUDWidget = PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDClass);
+			if (!HUDWidget.IsValid())
+			{
+				HUDWidget = PushWidgetToLayer(GYUILayerTags::UI_Layer_Game, HUDClass);
+			}
 		}
 	}
+}
+
+bool UGYUIManagerSubsystem::ShouldShowGameHUD() const
+{
+	const UWorld* World = GetWorld();
+	if (!World) return false;
+	if (World->GetAuthGameMode<AGYMenuGameMode>() != nullptr)
+	{
+		return false;
+	}
+	if (World->GetMapName().Contains(TEXT("MainMenu")))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 void UGYUIManagerSubsystem::RegisterStatBroadcast(UAbilitySystemComponent* ASC)

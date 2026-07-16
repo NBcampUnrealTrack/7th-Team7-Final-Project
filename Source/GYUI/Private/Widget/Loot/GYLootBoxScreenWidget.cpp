@@ -10,10 +10,22 @@
 #include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
 #include "Widget/Loot/GYLootDropSlotWidget.h"
+#include "InputCoreTypes.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+
+UGYLootBoxScreenWidget::UGYLootBoxScreenWidget(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	// 슬롯 마우스 클릭 + 위젯이 키 포커스를 받도록 메뉴 입력 모드 고정
+	InputMode = EGYWidgetInputMode::Menu;
+}
 
 void UGYLootBoxScreenWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	// F/ESC 키 입력을 NativeOnKeyDown에서 받기 위해 포커스 가능하도록
+	SetIsFocusable(true);
 
 	// 갱신은 BindToBox 이후의 메시지/콜백에서만. 여기서 Refresh 하면 미바인딩 상태로 자동 닫힘
 	// 프리뷰/썸네일 등 GameInstance 없는 월드에서는 서브시스템이 없으므로 Get() 어설션 회피
@@ -164,4 +176,57 @@ void UGYLootBoxScreenWidget::HandleBoxDestroyed(AActor*)
 void UGYLootBoxScreenWidget::HandleCloseClicked()
 {
 	DeactivateWidget();
+}
+
+void UGYLootBoxScreenWidget::NativeOnActivated()
+{
+	Super::NativeOnActivated();
+
+	FocusRetryCount = 0;
+	ScheduleFocusAttempt();
+}
+
+void UGYLootBoxScreenWidget::ScheduleFocusAttempt()
+{
+	UWorld* World = GetWorld();
+	if (World == nullptr) return;
+
+	TWeakObjectPtr<UGYLootBoxScreenWidget> WeakThis(this);
+	World->GetTimerManager().SetTimerForNextTick([WeakThis]()
+	{
+		if (UGYLootBoxScreenWidget* Widget = WeakThis.Get())
+		{
+			Widget->EnsureKeyboardFocus();
+		}
+	});
+}
+
+void UGYLootBoxScreenWidget::EnsureKeyboardFocus()
+{
+	if (!IsActivated()) return;
+
+	if (!HasAnyUserFocus() && !HasFocusedDescendants())
+	{
+		SetFocus();
+	}
+
+	if (++FocusRetryCount < MaxFocusRetries)
+	{
+		ScheduleFocusAttempt();
+	}
+}
+
+FReply UGYLootBoxScreenWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	if (InKeyEvent.GetKey() == EKeys::F)
+	{
+		DeactivateWidget();
+		return FReply::Handled();
+	}
+	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+UWidget* UGYLootBoxScreenWidget::NativeGetDesiredFocusTarget() const
+{
+	return const_cast<UGYLootBoxScreenWidget*>(this);
 }
