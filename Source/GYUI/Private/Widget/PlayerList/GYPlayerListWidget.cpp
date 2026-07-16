@@ -44,15 +44,29 @@ void UGYPlayerListWidget::AddPlayerEntry(APlayerState* PS)
 	EntryMap.Add(PS, Entry);
 }
 
-void UGYPlayerListWidget::RemovePlayerEntry(APlayerState* PS)
+void UGYPlayerListWidget::RemovePlayerEntry(const TWeakObjectPtr<APlayerState>& PSKey)
 {
-	if (TObjectPtr<UGYPlayerListEntryWidget>* Found = EntryMap.Find(PS))
+	if (TObjectPtr<UGYPlayerListEntryWidget>* Found = EntryMap.Find(PSKey))
 	{
 		if (UGYPlayerListEntryWidget* Entry = *Found)
 		{
 			Entry->RemoveFromParent();
 		}
-		EntryMap.Remove(PS);
+		EntryMap.Remove(PSKey);
+	}
+}
+
+void UGYPlayerListWidget::PruneStaleEntries()
+{
+	for (auto It = EntryMap.CreateIterator(); It; ++It)
+	{
+		if (It.Key().IsValid()) continue; // PlayerState가 아직 살아 있으면 유지
+
+		if (UGYPlayerListEntryWidget* Entry = It.Value())
+		{
+			Entry->RemoveFromParent();
+		}
+		It.RemoveCurrent();
 	}
 }
 
@@ -72,8 +86,6 @@ void UGYPlayerListWidget::HandleMemberJoined(FGameplayTag, const FGYPartyMemberM
 
 void UGYPlayerListWidget::HandleMemberLeft(FGameplayTag, const FGYPartyMemberMessage& Message)
 {
-	if (APlayerState* PS = Message.Member.Get())
-	{
-		RemovePlayerEntry(PS);
-	}
+	RemovePlayerEntry(Message.Member);
+	PruneStaleEntries();
 }
