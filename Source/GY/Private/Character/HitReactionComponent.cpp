@@ -118,14 +118,17 @@ void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, f
 
 
 	const float Impulse = FMath::Min((Strength > 0.f) ? Strength : DefaultHitImpulse, MaxHitImpulse);
-	MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, true, true);
 
+	PhysicalAnimation->ApplyPhysicalAnimationProfileBelow(
+	HitReactStartBone, HitReactProfileName, true);
+
+	MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, true, true);
 	MeshComp->bBlendPhysics = true;
+
 	CurrentBlendWeight = HitReactBlendInWeight;
 	MeshComp->SetAllBodiesBelowPhysicsBlendWeight(HitReactStartBone, CurrentBlendWeight);
 
-	PhysicalAnimation->ApplyPhysicalAnimationProfileBelow(
-		HitReactStartBone, HitReactProfileName, true);
+
 
 	const FVector ImpulseVec = HitDirection.GetSafeNormal() * Impulse;
 	if (HitBone.IsNone())
@@ -144,6 +147,19 @@ void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, f
 	World->GetTimerManager().SetTimer(HitReactTimerHandle,
 	                                  this, &UHitReactionComponent::EndHitReaction,
 	                                  Duration, false);
+
+	GetWorld()->GetTimerManager().SetTimerForNextTick([Mesh = this->MeshComp]()
+{
+	if (Mesh.IsValid())
+	{
+		const FTransform HeadT = Mesh->GetBoneTransform(FName("head"));
+		const FBox Bounds = Mesh->Bounds.GetBox();
+		UE_LOG(LogTemp, Warning, TEXT("[HitReact] HeadLoc=%s BoundsMin=%s BoundsMax=%s"),
+			*HeadT.GetLocation().ToString(),
+			*Bounds.Min.ToString(),
+			*Bounds.Max.ToString());
+	}
+});
 }
 
 void UHitReactionComponent::EndHitReaction()
