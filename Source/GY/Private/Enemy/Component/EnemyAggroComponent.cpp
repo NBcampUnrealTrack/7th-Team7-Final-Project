@@ -4,6 +4,7 @@
 #include "AbilitySystemComponent.h"
 #include "AIController.h"
 #include "Core/GameplayTags/FactionTags.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Damage.h"
 #include "Perception/AISense_Hearing.h"
@@ -311,6 +312,13 @@ void UEnemyAggroComponent::TickAggro()
 			continue;
 		}
 
+		if (!IsTargetTargetable(E.Actor.Get()))
+		{
+			RemoveTargetCombatTag(E.Actor.Get());
+			ThreatList.RemoveAt(i);
+			continue;
+		}
+
 		E.Threat = FMath::Max(0.f, E.Threat - DecayAmount);
 
 		const bool bExpired = (Now - E.LastUpdateTime) > Weights.ForgetTime;
@@ -347,9 +355,21 @@ void UEnemyAggroComponent::TickAggro()
 	}
 }
 
+bool UEnemyAggroComponent::IsTargetTargetable(AActor* Actor)
+{
+	if (!Actor) return false;
+
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
+	if (!ASC) return true;
+
+	return !ASC->HasMatchingGameplayTag(GYStateTags::State_Life_Dead)
+		&& !ASC->HasMatchingGameplayTag(GYStateTags::State_Life_Downed);
+}
+
 void UEnemyAggroComponent::InternalAddThreat(AActor* Actor, float Amount)
 {
 	if (!Actor || Amount <= 0.f) return;
+	if (!IsTargetTargetable(Actor)) return;
 
 	const float Now = GetWorld()->GetTimeSeconds();
 
