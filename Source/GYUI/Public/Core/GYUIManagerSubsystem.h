@@ -192,6 +192,9 @@ private:
 	void HandleLocalControllerReady(AGYPlayerController* PC);
 	void EnsurePrimaryLayoutAndHUD();
 
+	/** 현재 월드에서 게임플레이 HUD를 띄워야 하는지 */
+	bool ShouldShowGameHUD() const;
+
 	/** 스탯 브로드캐스트 정보 묶어서 관리 */
 	struct FStatBroadcastEntry
 	{
