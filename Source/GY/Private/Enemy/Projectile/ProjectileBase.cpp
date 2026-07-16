@@ -10,6 +10,7 @@
 #include "Core/GameplayTags/FactionTags.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Logging/GYLogManager.h"
 
 
 AProjectileBase::AProjectileBase()
@@ -46,6 +47,10 @@ void AProjectileBase::Launch(AActor* InInstigator, const FVector& InDirection, f
 	InstigatorActor = InInstigator;
 	ProjectileMovement->Velocity = InDirection.GetSafeNormal() * InSpeed;
 
+	GY_LOG(Combat, ESK, "[ProjectileDebug] Launch: %s at %s Velocity=%s LifeSpan=%.1f",
+		*GetNameSafe(this), *GetActorLocation().ToCompactString(),
+		*ProjectileMovement->Velocity.ToCompactString(), GetLifeSpan());
+
 	if (CollisionComponent)
 	{
 		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -60,6 +65,7 @@ void AProjectileBase::OnProjectileOverlap(UPrimitiveComponent* OverlappedCompone
 	if (!InstigatorActor.IsValid()) return;
 	if (OtherActor == InstigatorActor.Get()) return;
 	if (OtherActor == this) return;
+	if (HitActors.Contains(OtherActor)) return;
 
 	const IGenericTeamAgentInterface* InstigatorTeamAgent = Cast<IGenericTeamAgentInterface>(InstigatorActor.Get());
 	if (!InstigatorTeamAgent) return;
@@ -70,7 +76,18 @@ void AProjectileBase::OnProjectileOverlap(UPrimitiveComponent* OverlappedCompone
 	if (!TargetASC) return;
 
 	OnHitTarget(OtherActor, SweepResult);
-	Destroy();
+
+	GY_LOG(Combat, ESK, "[ProjectileDebug] Overlap hit: %s -> %s DestroyOnHit=%d",
+		*GetNameSafe(this), *GetNameSafe(OtherActor), bDestroyOnPawnHit ? 1 : 0);
+
+	if (bDestroyOnPawnHit)
+	{
+		Destroy();
+	}
+	else
+	{
+		HitActors.Add(OtherActor);
+	}
 }
 
 void AProjectileBase::OnHitTarget(AActor* HitActor, const FHitResult& HitResult)
@@ -108,6 +125,10 @@ void AProjectileBase::OnHitTarget(AActor* HitActor, const FHitResult& HitResult)
 void AProjectileBase::OnProjectileMovementStop(const FHitResult& ImpactResult)
 {
 	if (!HasAuthority()) return;
+
+	GY_LOG(Combat, ESK, "[ProjectileDebug] MovementStop -> Destroy: %s at %s BlockedBy=%s (Comp=%s)",
+		*GetNameSafe(this), *GetActorLocation().ToCompactString(),
+		*GetNameSafe(ImpactResult.GetActor()), *GetNameSafe(ImpactResult.GetComponent()));
 
 
 	// 벽/바닥 충돌로 소멸할 때도 적중 큐 재생 (발사체엔 ASC가 없어 시전자 ASC로 실행해야 복제됨)

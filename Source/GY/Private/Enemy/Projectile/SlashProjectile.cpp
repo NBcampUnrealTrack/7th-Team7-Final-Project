@@ -18,6 +18,9 @@ ASlashProjectile::ASlashProjectile()
 
 	CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 
+	// 검기는 플레이어를 맞혀도 사라지지 않고 관통
+	bDestroyOnPawnHit = false;
+
 	ProjectileMovement->bRotationFollowsVelocity = false;
 }
 
