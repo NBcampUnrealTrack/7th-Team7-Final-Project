@@ -318,16 +318,11 @@ bool UGYParkourLogic::DoForwardTrace(FHitResult& OutHit)
 		{
 			OutHit = Hit;
 
-#if ENABLE_DRAW_DEBUG
-			DrawDebugLine(World, Start, End, FColor::Blue, false, 2.f, 0, 2.f);
-			DrawDebugSphere(World, Hit.ImpactPoint, 8.f, 8, FColor::Blue, false, 2.f);
-#endif
+
 			return true; // 가장 낮은곳에 맞는 순간 리턴
 		}
 
-#if ENABLE_DRAW_DEBUG
-		DrawDebugLine(World, Start, End, FColor::Orange, false, 2.f, 0, 2.f);
-#endif
+
 	}
 
 	// 디버그
@@ -355,11 +350,7 @@ bool UGYParkourLogic::DoTopTrace(FVector& WallLoc, FHitResult& OutHit)
 	Params.AddIgnoredActor(Character);
 	bool bHit = World->LineTraceSingleByChannel(OutHit, Start, End, ECC_Traversable, Params);
 
-#if ENABLE_DRAW_DEBUG
-	DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 2.f, 0, 2.f);
-	if (bHit)
-		DrawDebugSphere(World, OutHit.ImpactPoint, 8.f, 8, FColor::Green, false, 2.f);
-#endif
+
 
 	return bHit;
 }
