@@ -28,7 +28,10 @@ param(
     [string]$AlwaysOnWorlds = "1",
     # 웜 스탠바이 수 — 맵까지 부팅한 채 월드 배정을 기다리는 예비 서버 (배정 소비 시 자동 보충).
     # 0 = 비활성(콜드 스폰만). 배정 시 입장 대기가 분 단위 → 초 단위로 준다
-    [int]$StandbyCount = 1
+    [int]$StandbyCount = 0,
+    # 동시 활성 월드 상한 — 박스 CPU 보호 (m7i-flex 2vCPU 실측: 활성 1개가 안전).
+    # 초과 요청은 스폰하지 않고 대기 — 클라는 "대기열" 표시, 슬롯이 비면(유휴 회수) 자동 처리
+    [int]$MaxWorlds = 1
 )
 
 $ErrorActionPreference = "Stop"
@@ -148,10 +151,18 @@ while ($true) {
     foreach ($w in $requested) {
         if ($Running.ContainsKey([long]$w.id)) { continue }
 
+        # 활성 월드 상한 — 초과분은 스폰하지 않음 (요청 타임스탬프가 남아 슬롯이 비면 다음 폴에서 처리)
+        if ($Running.Count -ge $MaxWorlds) {
+            Log "world $($w.id): queued (active $($Running.Count)/$MaxWorlds)"
+            break
+        }
+
         # 웜 스탠바이 우선 배정 (원자 RPC: worlds starting 전환 + standby 행에 월드 기록) —
         # 배정되면 스탠바이 서버가 폴링으로 감지해 세이브만 로드하고 online 전환 (수 초)
         $assignedStandby = $null
         try { $assignedStandby = Invoke-Rpc "assign_standby_to_world" @{ p_world_id = $w.id } } catch { Log "assign($($w.id)) failed: $($_.Exception.Message)"; continue }
+        # JSON null 은 PS 에서 문자열 "null" 로 들어온다 — 숫자만 배정 성공으로
+        if ("$assignedStandby" -notmatch '^\d+$') { $assignedStandby = $null }
 
         if ($assignedStandby) {
             # 스탠바이 프로세스를 월드 소유로 이관 (유휴 회수/램 로깅 대상이 되도록)

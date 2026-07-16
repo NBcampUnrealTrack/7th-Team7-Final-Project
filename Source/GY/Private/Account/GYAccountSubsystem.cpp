@@ -958,6 +958,18 @@ void UGYAccountSubsystem::JoinWorld(int64 WorldId)
 		});
 }
 
+void UGYAccountSubsystem::CancelJoin()
+{
+	if (JoinTargetWorldId == 0) return;
+
+	const int64 WorldId = JoinTargetWorldId;
+	JoinTargetWorldId = 0;
+	GetGameInstance()->GetTimerManager().ClearTimer(JoinPollTimerHandle);
+
+	GY_LOG(Network, KDY, "JoinWorld(%lld) cancelled by user", WorldId);
+	OnJoinWorldPhase.Broadcast(WorldId, EGYJoinWorldPhase::Failed);
+}
+
 void UGYAccountSubsystem::PollJoinTarget()
 {
 	if (JoinTargetWorldId == 0) return;
@@ -997,6 +1009,13 @@ void UGYAccountSubsystem::PollJoinTarget()
 				if (Target->Status == TEXT("starting"))
 				{
 					This->OnJoinWorldPhase.Broadcast(This->JoinTargetWorldId, EGYJoinWorldPhase::Starting);
+				}
+				else if (Target->Status == TEXT("offline"))
+				{
+					// 요청은 넣었는데 offline 유지 = 다른 월드가 활성이라 슬롯 대기 중 (오케스트레이터 MaxWorlds).
+					// 대기는 무기한일 수 있으니 타임아웃을 계속 뒤로 민다 — 카운트다운은 실제 부팅(starting)부터
+					This->JoinDeadlineSeconds = FPlatformTime::Seconds() + 300.0;
+					This->OnJoinWorldPhase.Broadcast(This->JoinTargetWorldId, EGYJoinWorldPhase::Queued);
 				}
 			}
 

@@ -32,8 +32,9 @@ DECLARE_DELEGATE_TwoParams(FGYOnCharacterList, bool /*bSuccess*/, const TArray<F
 DECLARE_DELEGATE_TwoParams(FGYOnCharacterOp, bool /*bSuccess*/, int64 /*CharacterId*/);
 DECLARE_DELEGATE_TwoParams(FGYOnWorldList, bool /*bSuccess*/, const TArray<FGYWorldSummary>&);
 DECLARE_DELEGATE_TwoParams(FGYOnWorldOp, bool /*bSuccess*/, int64 /*WorldId*/);
-// Phase: 진행 단계 통지 (UI 표시용). Requested → Starting → Online(접속 개시) / Failed
-enum class EGYJoinWorldPhase : uint8 { Requested, Starting, Online, Failed };
+// Phase: 진행 단계 통지 (UI 표시용). Requested → (Queued) → Starting → Online(접속 개시) / Failed
+// Queued = 다른 월드가 활성이라 서버 슬롯 대기 중 (오케스트레이터 MaxWorlds) — 슬롯이 비면 자동 진행
+enum class EGYJoinWorldPhase : uint8 { Requested, Queued, Starting, Online, Failed };
 DECLARE_MULTICAST_DELEGATE_TwoParams(FGYOnJoinWorldPhase, int64 /*WorldId*/, EGYJoinWorldPhase);
 
 // 클라이언트 신원 주체 — Mock/Steam 신원 해석 → steam-auth Edge Function → GoTrue 토큰 보유.
@@ -76,6 +77,12 @@ public:
 	// 목록의 월드에 입장하는 단일 진입점: online 이면 즉시 접속, offline 이면
 	// 시작 요청(request_world_start) → online 폴링 → 접속. 진행 단계는 OnJoinWorldPhase 로 통지
 	void JoinWorld(int64 WorldId);
+
+	// 진행 중인 입장 취소 (대기열/준비 중 UI 의 취소 버튼). 서버 쪽 철회는 불필요 —
+	// 스폰돼 버린 서버는 유휴 회수가 정리한다. Failed 페이즈로 통지되어 UI 가 원상복구된다
+	void CancelJoin();
+
+	bool IsJoinInProgress() const { return JoinTargetWorldId != 0; }
 
 	FGYOnJoinWorldPhase OnJoinWorldPhase;
 
