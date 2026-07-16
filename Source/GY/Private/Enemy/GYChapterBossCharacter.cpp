@@ -15,6 +15,16 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/GYUIMessages.h"
+#include "Character/HitReactionComponent.h"
+
+AGYChapterBossCharacter::AGYChapterBossCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	if (HitReactionComponent)
+	{
+		HitReactionComponent->SetKnockbackScale(0.f);
+	}
+}
 
 void AGYChapterBossCharacter::Die()
 {

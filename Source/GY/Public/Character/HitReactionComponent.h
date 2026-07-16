@@ -26,6 +26,8 @@ public:
 
 	void SetHitReactStartBone(FName BoneName);
 
+	void SetKnockbackScale(float Scale) { KnockbackScale = Scale; }
+
 	void ApplyMaterialOverlay(UMaterialInterface* OverlayMaterial, float Duration);
 
 	void ApplyKnockBack(const FVector& HitDirection, float Strength = -1.f);

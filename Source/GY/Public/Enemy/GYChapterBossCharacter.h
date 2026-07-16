@@ -54,6 +54,8 @@ class GY_API AGYChapterBossCharacter : public AGYEnemyCharacterBase
 	GENERATED_BODY()
 
 public:
+	AGYChapterBossCharacter(const FObjectInitializer& ObjectInitializer);
+
 	virtual AGYWeaponActor* GetWeaponBySlot(FGameplayTag SlotTag) const override;
 
 	/** 모든 클라에서 레벨 시퀀스 재생 */
