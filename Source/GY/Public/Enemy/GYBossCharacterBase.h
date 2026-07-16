@@ -53,6 +53,9 @@ public:
 
 	void RegisterMinion(AGYEnemyCharacterBase* Minion);
 
+	/** 보스가 소환한 모든 미니언 즉시 제거. 사망 연출/퀘스트 킬 카운트 없이 Destroy (보스 사망 시 호출) */
+	void KillAllMinions();
+
 	UFUNCTION(BlueprintPure, Category = "Boss|Minion")
 	int32 GetActiveMinionCount() const { return ActiveMinions.Num(); }
 

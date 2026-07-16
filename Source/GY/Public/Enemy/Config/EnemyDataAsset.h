@@ -169,6 +169,10 @@ struct FEnemyRewardConfig
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reward")
 	TSoftObjectPtr<UDataTable> DropTable;
+
+	/** 사망 시 스폰할 상자 액터 클래스. 비워두면 스폰 안 함 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reward")
+	TSubclassOf<AActor> DeathChestClass;
 };
 
 UCLASS()

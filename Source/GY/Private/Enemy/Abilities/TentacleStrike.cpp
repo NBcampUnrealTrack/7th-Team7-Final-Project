@@ -5,6 +5,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 
 #include "AbilitySystem/GYCombatStatics.h"
@@ -67,6 +68,8 @@ void UTentacleStrike::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	HitTask->EventReceived.AddDynamic(this, &ThisClass::OnTentacleHit);
 	HitTask->ReadyForActivation();
 
+	CachedSpawnTM = ResolveSpawnTransform();
+
 	SpawnNextTentacle();
 }
 
@@ -119,8 +122,8 @@ void UTentacleStrike::SpawnNextTentacle()
 	const FVector LocalDir = FRotator(0.f, LocalYawDeg, 0.f).Vector();
 	const FVector LocalOffset(LocalDir.X * Radius, LocalDir.Y * Radius, FirstLocalOffset.Z);
 
-	// 보스 트랜스폼을 기준으로 월드 좌표계로 변환
-	const FTransform BossTM = Avatar->GetActorTransform();
+	// 활성화 시점에 캐싱한 기준 트랜스폼으로 월드 좌표계 변환 (앵커 액터 또는 보스)
+	const FTransform& BossTM = CachedSpawnTM;
 	const FVector WorldLoc = BossTM.TransformPosition(LocalOffset);
 
 	// 촉수 정면(X+) 이 보스 중심을 향하도록 회전
@@ -291,6 +294,19 @@ void UTentacleStrike::EndAbility(const FGameplayAbilitySpecHandle Handle, const 
 
 FTransform UTentacleStrike::ResolveSpawnTransform_Implementation() const
 {
+	if (!AnchorActorTag.IsNone())
+	{
+		TArray<AActor*> Anchors;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), AnchorActorTag, Anchors);
+		if (Anchors.Num() > 0)
+		{
+			return Anchors[0]->GetActorTransform();
+		}
+		UE_LOG(LogTemp, Warning,
+			TEXT("[TentacleStrike] AnchorActorTag '%s' 액터를 찾지 못해 보스 트랜스폼으로 폴백"),
+			*AnchorActorTag.ToString());
+	}
+
 	const AActor* Avatar = GetAvatarActorFromActorInfo();
 	if (!Avatar)
 	{

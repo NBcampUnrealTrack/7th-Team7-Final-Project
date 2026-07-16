@@ -128,6 +128,7 @@ protected:
 	void EnableRagdoll();
 	void HandleDeathAuthority();
 	void GrantRewards();
+	void SpawnDeathChest();
 	void DisableRagdoll();
 	void EnableGameplay();
 

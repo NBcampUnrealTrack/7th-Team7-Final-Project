@@ -2,7 +2,9 @@
 
 #include "GameFramework/ProjectileMovementComponent.h"
 
-AArcProjectile::AArcProjectile()
+void AArcProjectile::PostInitializeComponents()
 {
+	Super::PostInitializeComponents();
+
 	ProjectileMovement->ProjectileGravityScale = GravityScale;
 }
