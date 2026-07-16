@@ -1,15 +1,17 @@
 -- ============================================================
--- 클라이언트 월드 생성 — 이름만 지정, 나머지(레벨/상태/세이브)는 기본값.
--- 캐릭터 생성과 같은 모델: authenticated 가 자기 소유로만 insert.
+-- 클라이언트 월드 생성 — 소유/참여 주체는 "계정" (캐릭터는 계정 안에서 교체 가능).
+-- 이름/호스트표기만 지정, 나머지(레벨/상태/세이브)는 기본값.
 -- ============================================================
 
-grant insert (name, owner_account_id) on table worlds to authenticated;
+alter table worlds add column owner_name varchar(50);   -- 카드 "호스트: 이름" (생성 시점 persona denorm)
+
+grant insert (name, owner_account_id, owner_name) on table worlds to authenticated;
 
 create policy worlds_insert on worlds
   for insert with check (owner_account_id = auth.uid());
 
 -- 계정당 "생성(소유)" 개수 제한 — 입장은 무제한 (입장 제한은 월드당 4인, 서버 PreLogin 담당).
--- 목적: 행 무한 생성으로 인한 목록 오염/스폰 요청 남발 방지 백스톱. 시드 월드(owner null)는 카운트 제외
+-- 목적: 행 무한 생성으로 인한 목록 오염/스폰 요청 남발 방지 백스톱. 시스템 월드(owner null)는 카운트 제외
 create or replace function enforce_world_limit()
 returns trigger language plpgsql as $$
 declare v_count int;

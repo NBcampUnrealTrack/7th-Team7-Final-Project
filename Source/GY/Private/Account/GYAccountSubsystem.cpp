@@ -832,9 +832,9 @@ void UGYAccountSubsystem::ClearSession()
 void UGYAccountSubsystem::ListWorlds(FGYOnWorldList OnComplete)
 {
 	SendAuthedRequest(TEXT("GET"),
-		TEXT("/rest/v1/worlds?select=id,name,world_level,status,host_addr,player_count,max_players&order=id"),
+		TEXT("/rest/v1/worlds?select=id,name,world_level,status,host_addr,player_count,max_players,owner_account_id,owner_name&owner_account_id=not.is.null&order=id"),
 		FString(), FString(),
-		[OnComplete = MoveTemp(OnComplete)](int32 Code, const FString& Content)
+		[WeakThis = TWeakObjectPtr<UGYAccountSubsystem>(this), OnComplete = MoveTemp(OnComplete)](int32 Code, const FString& Content) mutable
 		{
 			TArray<FGYWorldSummary> Worlds;
 			if (Code != 200)
@@ -870,12 +870,49 @@ void UGYAccountSubsystem::ListWorlds(FGYOnWorldList OnComplete)
 				Row->TryGetStringField(TEXT("name"), Entry.Name);
 				Row->TryGetStringField(TEXT("status"), Entry.Status);
 				Row->TryGetStringField(TEXT("host_addr"), Entry.HostAddr);
+				Row->TryGetStringField(TEXT("owner_account_id"), Entry.OwnerAccountId);
+				Row->TryGetStringField(TEXT("owner_name"), Entry.OwnerName);
 				Entry.Id = static_cast<int64>(IdValue);
 				Entry.WorldLevel = static_cast<int32>(LevelValue);
 				Entry.PlayerCount = static_cast<int32>(PlayerCountValue);
 				Entry.MaxPlayers = static_cast<int32>(MaxPlayersValue);
 			}
-			OnComplete.ExecuteIfBound(true, Worlds);
+
+			// 2차 조회: 내 방문 기록 (RLS 가 내 캐릭터 행만 반환) — bParticipant 채워서 완성
+			UGYAccountSubsystem* This = WeakThis.Get();
+			if (!IsValid(This))
+			{
+				OnComplete.ExecuteIfBound(true, Worlds);
+				return;
+			}
+			This->SendAuthedRequest(TEXT("GET"), TEXT("/rest/v1/world_participants?select=world_id"), FString(), FString(),
+				[OnComplete = MoveTemp(OnComplete), Worlds = MoveTemp(Worlds)](int32 VisitCode, const FString& VisitContent) mutable
+				{
+					if (VisitCode == 200)
+					{
+						TSet<int64> VisitedIds;
+						TArray<TSharedPtr<FJsonValue>> VisitRows;
+						const TSharedRef<TJsonReader<>> VisitReader = TJsonReaderFactory<>::Create(VisitContent);
+						if (FJsonSerializer::Deserialize(VisitReader, VisitRows))
+						{
+							for (const TSharedPtr<FJsonValue>& VisitValue : VisitRows)
+							{
+								const TSharedPtr<FJsonObject> VisitRow = VisitValue->AsObject();
+								double WorldIdValue = 0.0;
+								if (VisitRow.IsValid() && VisitRow->TryGetNumberField(TEXT("world_id"), WorldIdValue))
+								{
+									VisitedIds.Add(static_cast<int64>(WorldIdValue));
+								}
+							}
+						}
+						for (FGYWorldSummary& Entry : Worlds)
+						{
+							Entry.bParticipant = VisitedIds.Contains(Entry.Id);
+						}
+					}
+					// 방문 조회 실패는 치명 아님 — 목록은 그대로, 소유 기준 분류만 남는다
+					OnComplete.ExecuteIfBound(true, Worlds);
+				});
 		});
 }
 
@@ -895,7 +932,7 @@ void UGYAccountSubsystem::JoinWorld(int64 WorldId)
 	}
 
 	// 온디맨드 스폰(오케스트레이터 폴링 5s + 서버 부팅 수십 초 + 월드 로드) 여유
-	constexpr double JoinTimeoutSeconds = 180.0;
+	constexpr double JoinTimeoutSeconds = 300.0;
 
 	JoinTargetWorldId = WorldId;
 	JoinDeadlineSeconds = FPlatformTime::Seconds() + JoinTimeoutSeconds;
@@ -1003,9 +1040,17 @@ void UGYAccountSubsystem::FailJoin(const TCHAR* Reason)
 
 void UGYAccountSubsystem::CreateWorld(const FString& WorldName, FGYOnWorldOp OnComplete)
 {
+	if (!IsLoggedIn())
+	{
+		GY_WARN(Network, KDY, "CreateWorld: not logged in");
+		OnComplete.ExecuteIfBound(false, 0);
+		return;
+	}
+
 	const TSharedRef<FJsonObject> Body = MakeShared<FJsonObject>();
 	Body->SetStringField(TEXT("name"), WorldName);
 	Body->SetStringField(TEXT("owner_account_id"), AccountId);
+	Body->SetStringField(TEXT("owner_name"), PersonaName);
 
 	FString BodyString;
 	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&BodyString);

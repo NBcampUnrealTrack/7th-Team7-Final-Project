@@ -15,6 +15,7 @@
 #include "Logging/GYLogManager.h"
 #include "Misc/TrackedActivity.h"
 #include "Persistence/CharacterSaveComponent.h"
+#include "Persistence/GYPersistenceSubsystem.h"
 #include "Persistence/WorldSaveComponent.h"
 #include "Player/GYPlayerController.h"
 #include "Player/GYPlayerState.h"
@@ -70,6 +71,18 @@ FString AGYGameMode::InitNewPlayer(APlayerController* NewPlayerController, const
 		{
 			SaveComponent->SetCharacterId(FCString::Atoi64(*CharIdOption));
 			GY_LOG(Network, KDY, "InitNewPlayer: charId=%s assigned to %s", *CharIdOption, *GetNameSafe(PS));
+		}
+
+		// 참여자 기록 — 클라 "참가 중인 월드" 분류의 근거 (월드 영속이 있는 서버만)
+		const AGYGameState* GYGameState = GetGameState<AGYGameState>();
+		const UWorldSaveComponent* WorldSave = IsValid(GYGameState) ? GYGameState->GetWorldSaveComponent() : nullptr;
+		if (IsValid(WorldSave) && WorldSave->IsPersistenceEnabled())
+		{
+			UGYPersistenceSubsystem* Persistence = GetGameInstance()->GetSubsystem<UGYPersistenceSubsystem>();
+			if (IsValid(Persistence))
+			{
+				Persistence->RecordWorldParticipant(WorldSave->GetWorldId(), FCString::Atoi64(*CharIdOption));
+			}
 		}
 	}
 

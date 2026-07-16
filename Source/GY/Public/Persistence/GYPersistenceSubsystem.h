@@ -65,6 +65,9 @@ public:
 	void HeartbeatWorld(int64 WorldId, const FString& PublicAddr, int32 PlayerCount);
 	void SetWorldOffline(int64 WorldId);
 
+	// 월드 참여자 기록 (fire-and-forget) — 클라 "참가 중인 월드" 분류의 근거 (권한 아님, 노출용)
+	void RecordWorldParticipant(int64 WorldId, int64 CharacterId);
+
 	// 강제 종료(콘솔 닫기 등): 월드+캐릭터 스냅샷을 전부 발사하고 HTTP 를 동기 flush.
 	// 콘솔 핸들러(게임 스레드 마샬링)와 OnEnginePreExit 양쪽에서 호출 — 컴포넌트 플래그가 중복 전송을 막는다
 	void FlushAllForExit();

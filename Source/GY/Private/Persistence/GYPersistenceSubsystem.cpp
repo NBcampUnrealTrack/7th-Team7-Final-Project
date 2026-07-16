@@ -580,6 +580,25 @@ void UGYPersistenceSubsystem::SetWorldOffline(int64 WorldId)
 	GY_LOG(Network, KDY, "SetWorldOffline(%lld) requested", WorldId);
 }
 
+void UGYPersistenceSubsystem::RecordWorldParticipant(int64 WorldId, int64 CharacterId)
+{
+	if (SecretKey.IsEmpty() || WorldId <= 0 || CharacterId <= 0) return;
+
+	const FString BodyString = FString::Printf(TEXT("{\"p_world_id\":%lld,\"p_character_id\":%lld}"), WorldId, CharacterId);
+
+	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+	Request->SetVerb(TEXT("POST"));
+	Request->SetURL(FString::Printf(TEXT("%s/rest/v1/rpc/record_world_participant"), *BaseUrl));
+	Request->SetHeader(TEXT("apikey"), SecretKey);
+	Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *SecretKey));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->SetContentAsString(BodyString);
+	Request->SetTimeout(RequestTimeoutSeconds);
+	Request->ProcessRequest();
+
+	GY_LOG(Network, KDY, "RecordWorldParticipant(world=%lld char=%lld) requested", WorldId, CharacterId);
+}
+
 FString UGYPersistenceSubsystem::CollectSaveData(AActor* Owner) const
 {
 	const TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();

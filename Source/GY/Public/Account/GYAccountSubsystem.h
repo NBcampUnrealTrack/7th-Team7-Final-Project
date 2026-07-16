@@ -21,6 +21,9 @@ struct FGYWorldSummary
 	FString HostAddr;
 	int32 PlayerCount = 0;
 	int32 MaxPlayers = 4;
+	FString OwnerAccountId; // 소유 계정 (시스템 월드는 빈 값) — 캐릭터는 계정 안에서 교체 가능하므로 소유/참여 주체는 계정
+	FString OwnerName; // 생성 시점 persona (denorm)
+	bool bParticipant = false; // 내 계정의 참여 기록 존재 (world_participants)
 	bool IsJoinable() const { return Status == TEXT("online") && PlayerCount < MaxPlayers && !HostAddr.IsEmpty(); }
 };
 
