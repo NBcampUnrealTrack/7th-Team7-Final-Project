@@ -11,6 +11,8 @@
 #include "Blueprint/UserWidget.h"
 #include "GY/Public/Player/GYPlayerController.h"
 #include "GY/Public/Player/GYPlayerState.h"
+#include "Inventory/InventoryComponent.h"
+#include "Equipment/EquipmentLoadoutComponent.h"
 #include "AbilitySystem/Attributes/GYVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYPlayerVitalAttributeSet.h"
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
@@ -22,13 +24,10 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Curves/CurveFloat.h"
 #include "GameFramework/GameStateBase.h"
-#include "Character/GYPawnData.h"
-#include "Character/GYPlayerActionConfig.h"
 #include "Widget/EndingCredits/GYEndingCreditsWidget.h"
 #include "Widget/EndingCredits/GYEndingNarrativeWidget.h"
 #include "Widget/Interaction/GYInteractionWaitingWidget.h"
 #include "Widget/WorldReset/GYWorldResetWidget.h"
-#include "Enemy/GYEnemyCharacterBase.h"
 #include "GameModes/GYMenuGameMode.h"
 
 void UGYUIManagerSubsystem::Deinitialize()
@@ -330,6 +329,32 @@ void UGYUIManagerSubsystem::BroadcastXP()
 void UGYUIManagerSubsystem::OnXPRelatedChanged(const FOnAttributeChangeData& Data)
 {
 	BroadcastXP();
+}
+
+void UGYUIManagerSubsystem::RefreshHUDState()
+{
+	// 스탯, 경험치 재방송 - ASC가 이미 바인딩돼 있을 때만
+	if (BoundASC.IsValid())
+	{
+		for (const FStatBroadcastEntry& Entry : StatBroadcastEntries)
+		{
+			BroadcastStat(BoundASC.Get(), Entry);
+		}
+		BroadcastXP();
+	}
+
+	// 포션, 장비 슬롯 스냅샷 재방송 - 로컬 플레이어 컴포넌트에서 현재 상태를 다시 publish
+	if (AGYPlayerState* PS = Cast<AGYPlayerState>(GetLocalPlayerState()))
+	{
+		if (UInventoryComponent* Inv = PS->GetInventoryComponent())
+		{
+			Inv->BroadcastPotionSnapshots();
+		}
+		if (UEquipmentLoadoutComponent* Loadout = PS->GetEquipmentLoadoutComponent())
+		{
+			Loadout->BroadcastAllSlots();
+		}
+	}
 }
 
 void UGYUIManagerSubsystem::BindASC(UAbilitySystemComponent* InASC)
