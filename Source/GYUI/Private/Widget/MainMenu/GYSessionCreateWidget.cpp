@@ -1,6 +1,6 @@
 #include "Widget/MainMenu/GYSessionCreateWidget.h"
 
-#include "Account/GYAccountSubsystem.h"
+#include "WorldSession/GYWorldSessionSubsystem.h"
 
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
@@ -25,13 +25,13 @@ void UGYSessionCreateWidget::HandleCreateClicked()
 	if (WorldName.IsEmpty()) return;
 
 	UGameInstance* GameInstance = GetGameInstance();
-	UGYAccountSubsystem* Account = IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYAccountSubsystem>() : nullptr;
-	if (Account == nullptr || !Account->IsLoggedIn()) return;
+	UGYWorldSessionSubsystem* Session = IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYWorldSessionSubsystem>() : nullptr;
+	if (Session == nullptr) return;
 
 	// 중복 클릭 방지 — 응답이 오면 다시 푼다
 	Button_Create->SetIsEnabled(false);
 	SessionTextBox->SetError(FText::GetEmpty());
-	Account->CreateWorld(WorldName, FGYOnWorldOp::CreateUObject(this, &UGYSessionCreateWidget::OnCreateComplete));
+	Session->CreateWorld(WorldName, FGYOnWorldOp::CreateUObject(this, &UGYSessionCreateWidget::OnCreateComplete));
 }
 
 void UGYSessionCreateWidget::OnCreateComplete(bool bSuccess, int64 WorldId)

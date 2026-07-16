@@ -130,9 +130,9 @@ void UGYJoinStatusWidget::SetPhase(int64 WorldId, EGYJoinWorldPhase Phase)
 void UGYJoinStatusWidget::HandleCancelClicked()
 {
 	UGameInstance* GameInstance = GetGameInstance();
-	UGYAccountSubsystem* Account = IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYAccountSubsystem>() : nullptr;
-	if (Account != nullptr)
+	UGYWorldSessionSubsystem* Session = IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYWorldSessionSubsystem>() : nullptr;
+	if (Session != nullptr)
 	{
-		Account->CancelJoin(); // Failed 페이즈 통지 → 세션 메뉴가 모달 제거 + 카드 잠금 해제
+		Session->CancelJoin(); // Failed 페이즈 통지 → 세션 메뉴가 모달 제거 + 카드 잠금 해제
 	}
 }

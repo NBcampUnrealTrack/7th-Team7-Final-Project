@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Blueprint/UserWidget.h"
-#include "Account/GYAccountSubsystem.h"
+#include "WorldSession/GYWorldSessionSubsystem.h"
 #include "GYJoinStatusWidget.generated.h"
 
 class UButton;

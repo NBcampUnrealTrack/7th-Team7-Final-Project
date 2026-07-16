@@ -1,11 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Account/GYAccountSubsystem.h"
+#include "WorldSession/GYWorldSessionSubsystem.h"
 #include "Widget/MainMenu/GYSlidePanelWidget.h"
 #include "GYSessionContainerWidget.generated.h"
 
 class UButton;
+class UGYAccountSubsystem;
 class UGYJoinStatusWidget;
 class UGYSessionCardWidget;
 class UGYSessionCreateWidget;
@@ -47,7 +48,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "GY|Session")
 	TSubclassOf<UGYSessionCardWidget> SessionCardClass;
 
-	// 생성 패널 — 지정 시 생성 버튼이 이 패널을 직접 연다 (미지정이면 델리게이트만 브로드캐스트)
+	// 생성 패널 — 콘솔 단독 실행 폴백용 (메뉴 플로우에선 OnCreateSessionRequested 구독자가 소유)
 	UPROPERTY(EditAnywhere, Category = "GY|Session")
 	TSubclassOf<UGYSessionCreateWidget> CreatePanelClass;
 
@@ -68,6 +69,7 @@ private:
 	void AddCard(const FGYWorldSummary& World);
 
 	UGYAccountSubsystem* ResolveAccount() const;
+	UGYWorldSessionSubsystem* ResolveSession() const;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UGYSessionCardWidget>> Cards;

@@ -1,5 +1,6 @@
 #include "Widget/MainMenu/GYSessionContainerWidget.h"
 
+#include "Account/GYAccountSubsystem.h"
 #include "Menu/GYJoinStatusWidget.h"
 #include "Menu/GYSessionCardWidget.h"
 #include "Widget/MainMenu/GYSessionCreateWidget.h"
@@ -67,11 +68,14 @@ void UGYSessionContainerWidget::NativeConstruct()
 		SessionScrollBox->ClearChildren();
 	}
 
+	if (UGYWorldSessionSubsystem* Session = ResolveSession())
+	{
+		JoinPhaseHandle = Session->OnJoinWorldPhase.AddUObject(this, &UGYSessionContainerWidget::OnJoinPhase);
+	}
+
 	UGYAccountSubsystem* Account = ResolveAccount();
 	if (Account != nullptr)
 	{
-		JoinPhaseHandle = Account->OnJoinWorldPhase.AddUObject(this, &UGYSessionContainerWidget::OnJoinPhase);
-
 		if (Account->IsLoggedIn())
 		{
 			RefreshSessions();
@@ -88,7 +92,10 @@ void UGYSessionContainerWidget::NativeDestruct()
 	if (UGYAccountSubsystem* Account = ResolveAccount())
 	{
 		Account->OnAccountReady.Remove(AccountReadyHandle);
-		Account->OnJoinWorldPhase.Remove(JoinPhaseHandle);
+	}
+	if (UGYWorldSessionSubsystem* Session = ResolveSession())
+	{
+		Session->OnJoinWorldPhase.Remove(JoinPhaseHandle);
 	}
 	Super::NativeDestruct();
 }
@@ -130,10 +137,10 @@ void UGYSessionContainerWidget::HandleBackClicked()
 
 void UGYSessionContainerWidget::RefreshSessions()
 {
-	UGYAccountSubsystem* Account = ResolveAccount();
-	if (Account == nullptr || !Account->IsLoggedIn()) return;
+	UGYWorldSessionSubsystem* Session = ResolveSession();
+	if (Session == nullptr) return;
 
-	Account->ListWorlds(FGYOnWorldList::CreateUObject(this, &UGYSessionContainerWidget::OnWorldList));
+	Session->ListWorlds(FGYOnWorldList::CreateUObject(this, &UGYSessionContainerWidget::OnWorldList));
 }
 
 void UGYSessionContainerWidget::OnWorldList(bool bSuccess, const TArray<FGYWorldSummary>& Worlds)
@@ -195,10 +202,10 @@ void UGYSessionContainerWidget::AddCard(const FGYWorldSummary& World)
 
 void UGYSessionContainerWidget::JoinWorld(int64 WorldId)
 {
-	UGYAccountSubsystem* Account = ResolveAccount();
-	if (Account == nullptr || bJoinInProgress) return;
+	UGYWorldSessionSubsystem* Session = ResolveSession();
+	if (Session == nullptr || bJoinInProgress) return;
 
-	Account->JoinWorld(WorldId);
+	Session->JoinWorld(WorldId);
 }
 
 void UGYSessionContainerWidget::OnJoinPhase(int64 WorldId, EGYJoinWorldPhase Phase)
@@ -261,4 +268,10 @@ UGYAccountSubsystem* UGYSessionContainerWidget::ResolveAccount() const
 {
 	UGameInstance* GameInstance = GetGameInstance();
 	return IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYAccountSubsystem>() : nullptr;
+}
+
+UGYWorldSessionSubsystem* UGYSessionContainerWidget::ResolveSession() const
+{
+	UGameInstance* GameInstance = GetGameInstance();
+	return IsValid(GameInstance) ? GameInstance->GetSubsystem<UGYWorldSessionSubsystem>() : nullptr;
 }
