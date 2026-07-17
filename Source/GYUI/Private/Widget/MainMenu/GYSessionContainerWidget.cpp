@@ -4,6 +4,7 @@
 #include "Menu/GYConfirmPopupWidget.h"
 #include "Menu/GYJoinStatusWidget.h"
 #include "Menu/GYSessionCardWidget.h"
+#include "Widget/Common/GYMessagePopupWidget.h"
 #include "Widget/MainMenu/GYSessionCreateWidget.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
@@ -248,8 +249,8 @@ void UGYSessionContainerWidget::JoinWorld(int64 WorldId)
 
 void UGYSessionContainerWidget::OnJoinPhase(int64 WorldId, EGYJoinWorldPhase Phase)
 {
-	// 종료 페이즈: 모달 제거 + 카드 잠금 해제 (Failed = 실패/취소 공용)
-	if (Phase == EGYJoinWorldPhase::Failed)
+	// 종료 페이즈: 모달 제거 + 카드 잠금 해제. 실패 안내는 진짜 실패만 (사용자 취소엔 생략)
+	if (Phase == EGYJoinWorldPhase::Failed || Phase == EGYJoinWorldPhase::Cancelled)
 	{
 		bJoinInProgress = false;
 		SetCardsEnabled(true);
@@ -257,6 +258,14 @@ void UGYSessionContainerWidget::OnJoinPhase(int64 WorldId, EGYJoinWorldPhase Pha
 		{
 			JoinStatusModal->RemoveFromParent();
 			JoinStatusModal = nullptr;
+		}
+		if (Phase == EGYJoinWorldPhase::Failed)
+		{
+			UGYMessagePopupWidget::ShowNotice(
+				this,
+				NSLOCTEXT("GYUI", "Join_Failed_Title", "입장 실패"),
+				NSLOCTEXT("GYUI", "Join_Failed_Message",
+						  "세션에 입장하지 못했습니다.\n잠시 후 다시 시도해주세요."));
 		}
 		return;
 	}

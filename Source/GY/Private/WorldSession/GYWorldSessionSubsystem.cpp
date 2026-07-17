@@ -374,7 +374,7 @@ void UGYWorldSessionSubsystem::CancelJoin()
 	GetGameInstance()->GetTimerManager().ClearTimer(JoinPollTimerHandle);
 
 	GY_LOG(Network, KDY, "JoinWorld(%lld) cancelled by user", WorldId);
-	OnJoinWorldPhase.Broadcast(WorldId, EGYJoinWorldPhase::Failed);
+	OnJoinWorldPhase.Broadcast(WorldId, EGYJoinWorldPhase::Cancelled);
 }
 
 void UGYWorldSessionSubsystem::PollJoinTarget()

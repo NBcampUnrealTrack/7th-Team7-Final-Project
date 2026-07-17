@@ -24,9 +24,10 @@ DECLARE_DELEGATE_TwoParams(FGYOnWorldOp, bool /*bSuccess*/, int64 /*WorldId*/);
 // 스탠바이 등록(id)/배정 폴링(world id, 0 = 대기) 응답
 DECLARE_DELEGATE_TwoParams(FGYOnSessionId, bool /*bSuccess*/, int64 /*Id*/);
 
-// Phase: 진행 단계 통지 (UI 표시용). Requested → (Queued) → Starting → Online(접속 개시) / Failed
+// Phase: 진행 단계 통지 (UI 표시용). Requested → (Queued) → Starting → Online(접속 개시) / Failed / Cancelled
 // Queued = 다른 월드가 활성이라 서버 슬롯 대기 중 (오케스트레이터 MaxWorlds) — 슬롯이 비면 자동 진행
-enum class EGYJoinWorldPhase : uint8 { Requested, Queued, Starting, Online, Failed };
+// Cancelled = 사용자 취소 (Failed 와 같은 종료 처리, 실패 안내는 생략)
+enum class EGYJoinWorldPhase : uint8 { Requested, Queued, Starting, Online, Failed, Cancelled };
 DECLARE_MULTICAST_DELEGATE_TwoParams(FGYOnJoinWorldPhase, int64 /*WorldId*/, EGYJoinWorldPhase);
 
 // 월드 세션(worlds/standby_servers 테이블) 도메인 — 목록/생성/입장(클라)과 하트비트/스탠바이(서버)를 한곳에.
