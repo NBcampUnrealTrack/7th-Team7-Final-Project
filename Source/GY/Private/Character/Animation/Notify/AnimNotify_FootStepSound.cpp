@@ -39,14 +39,34 @@ void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSe
 	if (World->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility, CollisionParams))
 	{
 		UPhysicalMaterial* PhysMat = HitResult.PhysMaterial.Get();
+		FGameplayTag FinalSoundTag = SoundTag;
+
+		if (PhysMat)
+		{
+			EPhysicalSurface SurfaceType = PhysMat->SurfaceType;
+			switch (SurfaceType)
+			{
+			case SurfaceType1:
+				FinalSoundTag = GYGameplayTags::Sound_Player_Walk_Dirt.GetTag();
+				break;
+			case SurfaceType2:
+				FinalSoundTag = GYGameplayTags::Sound_Player_Walk_Stone.GetTag();
+				break;
+			case SurfaceType3:
+				FinalSoundTag = GYGameplayTags::Sound_Player_Walk_Wood.GetTag();
+				break;
+			default:
+				break;
+			}
+		}
 
 		UGYSoundManager* SoundManager = UGYSoundManager::Get(Owner);
 		if (SoundManager)
 		{
-			GY_LOG(Game, KHB, "발소리재생: %s", *SoundTag.ToString());
+			GY_LOG(Game, KHB, "발소리재생: %s", *FinalSoundTag.ToString());
 
 			// 태그를 기반으로 ImpactPoint에서 3D 사운드 재생
-			SoundManager->PlaySoundAtLocation(SoundTag, HitResult.ImpactPoint);
+			SoundManager->PlaySoundAtLocation(FinalSoundTag, HitResult.ImpactPoint);
 		}
 
 	}
