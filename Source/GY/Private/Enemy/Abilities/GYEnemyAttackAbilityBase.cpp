@@ -111,6 +111,16 @@ const FGameplayTagContainer* UGYEnemyAttackAbilityBase::GetCooldownTags() const
 	return Mutable;
 }
 
+bool UGYEnemyAttackAbilityBase::CheckCooldown(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (!bHasCooldown || !CooldownTag.IsValid())
+	{
+		return true;
+	}
+	return Super::CheckCooldown(Handle, ActorInfo, OptionalRelevantTags);
+}
+
 void UGYEnemyAttackAbilityBase::ApplyCooldown(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo) const
