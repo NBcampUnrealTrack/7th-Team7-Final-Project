@@ -6,8 +6,10 @@ namespace GYGameplayTags
 {
 	/* 플레이어 사운드 */
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Walk_Dirt)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Walk_Wood)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Walk_Grass)
+	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Walk_Stone)
 	GY_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sound_Player_Run_Dirt)
-
 
 
 	// 약공격

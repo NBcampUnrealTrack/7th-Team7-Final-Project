@@ -18,15 +18,16 @@ class GY_API UAnimNotify_FootStepSound : public UAnimNotify
 public:
 	UAnimNotify_FootStepSound();
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
-
-protected:
 	//왼발 오른발 이름
 	UPROPERTY(EditAnywhere, Category = "Footstep")
 	FName FootBoneName;
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FootStep")
 	FGameplayTag SoundTag;
+
+protected:
+
+
+
 
 	//레이캐스트 거리
 	UPROPERTY(EditAnywhere, Category = "Footstep")
