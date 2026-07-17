@@ -149,12 +149,16 @@ private:
 
 	void ApplyEffect(TSubclassOf<UGYPeriodicAttributeEffect> EffectClass, FActiveGameplayEffectHandle& Handle);
 
-	void RefreshRegenDelay(const FGameplayTag& DelayTag, float Duration);
+	void RefreshRegenDelay(FActiveGameplayEffectHandle& DelayHandle, const FGameplayTag& DelayTag, float Duration);
 	void ResetRegenDelays();
 
 	FActiveGameplayEffectHandle StaminaRegenGEHandle;
 	FActiveGameplayEffectHandle StaggerRegenGEHandle;
 	FActiveGameplayEffectHandle StunRegenGEHandle;
+
+	FActiveGameplayEffectHandle StaminaRegenDelayHandle;
+	FActiveGameplayEffectHandle StaggerRegenDelayHandle;
+	FActiveGameplayEffectHandle StunRegenDelayHandle;
 
 	FActiveGameplayEffectHandle CombatStateEffectHandle;
 

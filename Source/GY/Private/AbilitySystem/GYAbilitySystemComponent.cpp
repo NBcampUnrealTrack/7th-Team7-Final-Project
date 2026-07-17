@@ -309,9 +309,12 @@ void UGYAbilitySystemComponent::RemoveAllCameraModeTags()
 
 void UGYAbilitySystemComponent::NotifyAttributeChanged(const FGameplayAttribute& Attribute)
 {
-	// 경직/무력은 전투 중 회복 정지(regen GE의 InCombat 게이팅)로 처리하므로 delay는 스태미나 전용.
 	if (Attribute == UGYPlayerVitalAttributeSet::GetCurrentStaminaAttribute())
-		RefreshRegenDelay(GYStateTags::State_Regen_Delay_Stamina, StaminaRegenDelayDuration);
+		RefreshRegenDelay(StaminaRegenDelayHandle, GYStateTags::State_Regen_Delay_Stamina, StaminaRegenDelayDuration);
+	else if (Attribute == UGYVitalAttributeSet::GetCurrentStaggerAttribute())
+		RefreshRegenDelay(StaggerRegenDelayHandle, GYStateTags::State_Regen_Delay_Stagger, StaggerRegenDelayDuration);
+	else if (Attribute == UGYVitalAttributeSet::GetCurrentStunAttribute())
+		RefreshRegenDelay(StunRegenDelayHandle, GYStateTags::State_Regen_Delay_Stun, StunRegenDelayDuration);
 }
 
 UGameplayAbility* UGYAbilitySystemComponent::GetActiveAbilityByTag(const FGameplayTag& AbilityTag) const
@@ -375,11 +378,18 @@ void UGYAbilitySystemComponent::ApplyEffect(TSubclassOf<UGYPeriodicAttributeEffe
 	Handle = ApplyGameplayEffectSpecToSelf(Spec);
 }
 
-void UGYAbilitySystemComponent::RefreshRegenDelay(const FGameplayTag& DelayTag, float Duration)
+void UGYAbilitySystemComponent::RefreshRegenDelay(FActiveGameplayEffectHandle& DelayHandle, const FGameplayTag& DelayTag, float Duration)
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	if (!HasMatchingGameplayTag(GYStateTags::State_Combat_InCombat)) return;
 	if (!RegenDelayEffect || Duration <= 0.f || !DelayTag.IsValid()) return;
+
+	// 같은 종류(스태미나/경직/무력)의 delay GE가 이미 있으면 지우고 새로 적용 — 다수 적용 시 GE가 계속 쌓이는 것을 방지.
+	if (DelayHandle.IsValid())
+	{
+		RemoveActiveGameplayEffect(DelayHandle);
+		DelayHandle.Invalidate();
+	}
 
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	FGameplayEffectSpecHandle Spec = MakeOutgoingSpec(RegenDelayEffect, 1.f, Context);
@@ -388,7 +398,7 @@ void UGYAbilitySystemComponent::RefreshRegenDelay(const FGameplayTag& DelayTag, 
 	Spec.Data->SetDuration(Duration, true);
 	Spec.Data->DynamicGrantedTags.AddTag(DelayTag);
 
-	ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+	DelayHandle = ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
 }
 
 void UGYAbilitySystemComponent::ResetRegenDelays()
@@ -398,4 +408,8 @@ void UGYAbilitySystemComponent::ResetRegenDelays()
 	DelayTags.AddTag(GYStateTags::State_Regen_Delay_Stagger);
 	DelayTags.AddTag(GYStateTags::State_Regen_Delay_Stun);
 	RemoveActiveEffectsWithGrantedTags(DelayTags);
+
+	StaminaRegenDelayHandle.Invalidate();
+	StaggerRegenDelayHandle.Invalidate();
+	StunRegenDelayHandle.Invalidate();
 }
