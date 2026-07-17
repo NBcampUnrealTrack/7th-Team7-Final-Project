@@ -24,8 +24,10 @@ param(
     [int]$PollSeconds = 5,
     [int]$IdleMinutes = 10,           # 인원 0 지속 시 회수 — 짧게 유지해 슬롯 회전 (콜드 스타트 해법은 웜 풀)
     [int]$StaleSeconds = 90,          # 하트비트 무응답 = 죽은 세션
-    # 상시 가동 월드 (쉼표 구분 id) — 부팅 시 자동 스폰 + 유휴 회수 제외. 팀 메인 월드의 콜드 스타트 대기 제거
-    [string]$AlwaysOnWorlds = "1",
+    # 상시 가동 월드 (쉼표 구분 id) — 부팅 시 자동 스폰 + 유휴 회수 제외.
+    # 주의: MaxWorlds=1 운영에선 핀 월드가 유일한 슬롯을 영구 점유해 다른 월드가 영원히 대기 —
+    # 기본 비움. 박스를 키우거나 MaxWorlds 를 올릴 때만 팀 메인 월드를 핀할 것
+    [string]$AlwaysOnWorlds = "",
     # 웜 스탠바이 수 — 맵까지 부팅한 채 월드 배정을 기다리는 예비 서버 (배정 소비 시 자동 보충).
     # 0 = 비활성(콜드 스폰만). 배정 시 입장 대기가 분 단위 → 초 단위로 준다
     [int]$StandbyCount = 0,
@@ -59,7 +61,10 @@ function Get-Worlds([string]$Filter) {
     return Invoke-RestMethod -Uri "$BaseUrl/rest/v1/worlds?$Filter" -Method Get -Headers $Headers -TimeoutSec 10 -UserAgent $UserAgent
 }
 function Log([string]$Message) {
-    Write-Host ("[{0}] {1}" -f (Get-Date -Format "HH:mm:ss"), $Message)
+    $line = "[{0}] {1}" -f (Get-Date -Format "HH:mm:ss"), $Message
+    Write-Host $line
+    # 예약 작업(SYSTEM, 콘솔 없음) 실행 대비 파일 로그 — 스크립트 옆에 쌓인다 (EC2 = C:\GY\)
+    try { Add-Content -Path (Join-Path $PSScriptRoot "orchestrator.log") -Value $line } catch {}
 }
 
 # worldId → @{ Process; Port; IdleSince }

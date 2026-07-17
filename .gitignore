@@ -103,3 +103,4 @@ Config/DefaultGYPersistence.ini
 Docs
 Content/UsdAssets
 Content/UsdAssetCache.uasset
+scripts/orchestrator.log
