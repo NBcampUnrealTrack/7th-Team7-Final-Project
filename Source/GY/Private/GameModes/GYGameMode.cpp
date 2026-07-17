@@ -100,6 +100,11 @@ FString AGYGameMode::InitNewPlayer(APlayerController* NewPlayerController, const
 	return Result;
 }
 
+bool AGYGameMode::FindInactivePlayer(APlayerController* PC)
+{
+	return false;
+}
+
 void AGYGameMode::InitGameState()
 {
 	Super::InitGameState();

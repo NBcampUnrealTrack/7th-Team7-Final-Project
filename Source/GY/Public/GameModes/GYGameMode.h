@@ -36,6 +36,10 @@ public:
 	// 월드당 최대 인원 — 초과 접속은 핸드셰이크 단계에서 거절 (월드 목록의 n/4 표시는 UX, 강제는 여기)
 	virtual void PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
 
+	// 재접속 시 엔진의 옛 PlayerState 재사용 금지 — 캐릭터 상태는 세이브(DB)가 단일 소유.
+	// 재사용되면 InitNewPlayer 가 지정한 charId 가 버려진 PS 에 남아 세이브가 조용히 비활성화된다
+	virtual bool FindInactivePlayer(APlayerController* PC) override;
+
 	virtual void Logout(AController* Exiting) override;
 	// 월드 상태 로드 완료 시 WorldSaveComponent 가 호출 — 게이트에 막혀 있던 컨트롤러들 일괄 스폰
 	void OnWorldStateReady();
