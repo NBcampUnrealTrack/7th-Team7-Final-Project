@@ -31,9 +31,8 @@ public class GY : ModuleRules
 			"MovieScene",
 			"HTTP",
 			"PhysicsCore",
-			"AnimationModifiers",
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "Niagara", "Json", "JsonUtilities", "OnlineSubsystem", "OnlineSubsystemUtils", "AnimationBlueprintLibrary" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "Niagara", "Json", "JsonUtilities", "OnlineSubsystem", "OnlineSubsystemUtils" });
 	}
 }

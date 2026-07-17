@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/Animation/UAMod_SeachFootLocation.h"
+#include "Animation/UAMod_SeachFootLocation.h"
+
 #include "AnimationBlueprintLibrary.h"
 #include "Animation/AnimSequence.h"
 #include "Character/Animation/Notify/AnimNotify_FootStepSound.h"
-#include "Editor/AnimationBlueprintLibrary/Public/AnimationBlueprintLibrary.h"
 
 void UUAMod_SeachFootLocation::OnApply_Implementation(UAnimSequence* AnimationSequence)
 {

@@ -1,16 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Editor/AnimationModifiers/Public/AnimationModifier.h"
+#include "AnimationModifier.h"
 #include "UAMod_SeachFootLocation.generated.h"
 
-/**
- *
- */
+// 애니메이션 시퀀스에 발소리 노티파이/싱크마커 트랙을 굽는 에디터 도구 — 런타임 모듈 금지 (UnrealEd 의존)
 UCLASS()
-class GY_API UUAMod_SeachFootLocation : public UAnimationModifier
+class GYEDITOR_API UUAMod_SeachFootLocation : public UAnimationModifier
 {
 	GENERATED_BODY()
 
