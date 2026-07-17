@@ -41,7 +41,7 @@ function Select-Files
 
 Write-Host '드라이브와 비교 중...'
 
-$outgoingDryRun = cmd /c "rclone copy `"$AssetDir`" gdrive:GY_PaidAssets --dry-run 2>&1"
+$outgoingDryRun = cmd /c "rclone copy `"$AssetDir`" gdrive:GY_PaidAssets --dry-run --fast-list 2>&1"
 $outgoingFiles = @($outgoingDryRun |
     ForEach-Object {
         if ($_ -match 'NOTICE:\s+(.+?):\s+Skipped copy')
@@ -97,7 +97,7 @@ $tmpFile = [System.IO.Path]::GetTempFileName()
 
 Write-Host ''
 Write-Host '업로드 중...'
-rclone copy $AssetDir gdrive:GY_PaidAssets --files-from $tmpFile --progress
+rclone copy $AssetDir gdrive:GY_PaidAssets --files-from $tmpFile --fast-list --progress
 
 Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
 

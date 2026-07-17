@@ -32,6 +32,10 @@ on:
         options:
           - Development
           - Shipping
+      sync_assets:
+        description: "gdrive 유료 에셋 보충 (러너 개발 클론이 최신이면 꺼서 시간 절약)"
+        type: boolean
+        default: true
   workflow_call:
     inputs:
       runner:
@@ -40,6 +44,9 @@ on:
       config:
         type: string
         default: Development
+      sync_assets:
+        type: boolean
+        default: true
 
 concurrency:
   group: package-server-${{ inputs.runner }}
@@ -87,8 +94,10 @@ jobs:
           git lfs pull
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Paid assets (개발 클론에서 복사)
+      - name: Paid assets (개발 클론 시딩 + gdrive 보충)
         shell: powershell
+        env:
+          SYNC_ASSETS: ${{ inputs.sync_assets }}
         run: |
           $assetDir = "$env:GITHUB_WORKSPACE\Content\ThirdParty\PaidAssets"
           $devClone = $env:GY_DEV_CLONE
@@ -96,9 +105,11 @@ jobs:
             robocopy "$devClone\Content\ThirdParty\PaidAssets" $assetDir /E /MT:16 /NFL /NDL /NP /NJH
             if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE }
             Write-Host "paid assets seeded from dev clone: $devClone"
+          }
+          if ($env:SYNC_ASSETS -ne "true") {
+            Write-Host "sync_assets off - skipping gdrive top-up"
             exit 0
           }
-          Write-Host "GY_DEV_CLONE not set - syncing from gdrive via rclone (slow)"
           rclone copy gdrive:GY_PaidAssets $assetDir --fast-list --stats-one-line --stats 30s
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

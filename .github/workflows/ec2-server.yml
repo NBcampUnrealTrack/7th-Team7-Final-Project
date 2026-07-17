@@ -1,0 +1,89 @@
+# EC2 게임서버 박스 전원 제어 — 부재중에도 팀원이 Actions 버튼으로 재시작/기동/정지.
+# 부팅 시 예약 작업(GYOrchestrator ONSTART, GYDeployWatcher MINUTE)이 서버 스택을 자동 복구한다.
+#
+# Secrets:
+#   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY — gy-ci-deploy (S3 배포와 공용)
+#   GY_EC2_INSTANCE_ID — 게임서버 인스턴스 id (예: i-04e08f7ac0f2626b4)
+#   DISCORD_EC2_WEBHOOK_URL — 서버 운영 알림 채널 훅 (패키징 훅과 분리) — 없으면 알림 스킵
+# gy-ci-deploy 인라인 정책에 ec2:Start/Stop/RebootInstances(해당 인스턴스) + ec2:DescribeInstances 필요
+#
+# ※ run: 블록 안에는 ASCII만 (PS5.1 CP949 파싱 함정 — package-client.yml 상단 주석 참고)
+name: ec2-server
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "수행할 작업"
+        type: choice
+        default: status
+        options:
+          - status
+          - reboot
+          - start
+          - stop
+
+jobs:
+  control:
+    runs-on:
+      - self-hosted
+      - pc-kdy
+    timeout-minutes: 15
+    steps:
+      - name: EC2 control
+        shell: powershell
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ap-northeast-2
+          INSTANCE_ID: ${{ secrets.GY_EC2_INSTANCE_ID }}
+          ACTION: ${{ inputs.action }}
+        run: |
+          if (-not $env:INSTANCE_ID) { Write-Host "::error::GY_EC2_INSTANCE_ID secret missing"; exit 1 }
+
+          function Get-State {
+            aws ec2 describe-instances --instance-ids $env:INSTANCE_ID `
+              --query "Reservations[0].Instances[0].State.Name" --output text
+          }
+
+          $state = Get-State
+          Write-Host "current state: $state"
+
+          switch ($env:ACTION) {
+            "status" { }
+            "reboot" {
+              if ($state -ne "running") { Write-Host "::error::instance is '$state' - reboot needs running (use start)"; exit 1 }
+              aws ec2 reboot-instances --instance-ids $env:INSTANCE_ID
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            }
+            "start" {
+              aws ec2 start-instances --instance-ids $env:INSTANCE_ID | Out-Null
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+              aws ec2 wait instance-running --instance-ids $env:INSTANCE_ID
+            }
+            "stop" {
+              aws ec2 stop-instances --instance-ids $env:INSTANCE_ID | Out-Null
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+              aws ec2 wait instance-stopped --instance-ids $env:INSTANCE_ID
+            }
+          }
+
+          $state = Get-State
+          "action: $($env:ACTION)" >> $env:GITHUB_STEP_SUMMARY
+          "state: $state" >> $env:GITHUB_STEP_SUMMARY
+          "FINAL_STATE=$state" >> $env:GITHUB_ENV
+          Write-Host "final state: $state"
+
+      - name: Notify (Discord)
+        if: always()
+        shell: powershell
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_EC2_WEBHOOK_URL }}
+          JOB_STATUS: ${{ job.status }}
+          CONTENT_OK: "🖥️ EC2 ${{ inputs.action }} 완료 — ${{ github.actor }} | 상태: $env:FINAL_STATE"
+          CONTENT_FAIL: "❌ EC2 ${{ inputs.action }} 실패 — ${{ github.actor }} | 로그: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          if (-not $env:WEBHOOK) { Write-Host "no webhook secret - skip notify"; exit 0 }
+          $content = if ($env:JOB_STATUS -eq "success") { $env:CONTENT_OK -replace '\$env:FINAL_STATE', $env:FINAL_STATE } else { $env:CONTENT_FAIL }
+          $body = @{ content = $content } | ConvertTo-Json -Compress
+          try { Invoke-RestMethod -Uri $env:WEBHOOK -Method Post -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) } catch { Write-Host "notify failed: $($_.Exception.Message)" }

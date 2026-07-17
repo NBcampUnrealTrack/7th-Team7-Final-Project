@@ -7,7 +7,7 @@ $AssetDir = Join-Path $PSScriptRoot '..\..\Content\ThirdParty\PaidAssets'
 
 Write-Host '동기화 상태 확인 중...'
 
-$dryRun = cmd /c "rclone copy `"$AssetDir`" gdrive:GY_PaidAssets --dry-run 2>&1"
+$dryRun = cmd /c "rclone copy `"$AssetDir`" gdrive:GY_PaidAssets --dry-run --fast-list 2>&1"
 $changedFiles = $dryRun |
     ForEach-Object {
         if ($_ -match 'NOTICE:\s+(.+?):\s+Skipped copy')

@@ -37,6 +37,10 @@ on:
         options:
           - Development
           - Shipping
+      sync_assets:
+        description: "gdrive 유료 에셋 보충 (러너 개발 클론이 최신이면 꺼서 시간 절약)"
+        type: boolean
+        default: true
 
 jobs:
   server:
@@ -44,12 +48,16 @@ jobs:
     with:
       runner: ${{ inputs.server_runner }}
       config: ${{ inputs.server_config }}
+      sync_assets: ${{ inputs.sync_assets }}
     secrets: inherit
 
+  # 같은 러너 워크스페이스를 공유하므로 서버 잡의 gdrive 보충이 남아 있다 — 클라는 생략.
+  # 클라를 다른 머신에서 돌리게 되면(runner: any 가 실제 분산될 때) 이 가정은 깨지니 그때 되살릴 것
   client:
     needs: server
     uses: ./.github/workflows/package-client.yml
     with:
       runner: ${{ inputs.client_runner }}
       config: ${{ inputs.client_config }}
+      sync_assets: false
     secrets: inherit
