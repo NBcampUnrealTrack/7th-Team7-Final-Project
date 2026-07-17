@@ -3,6 +3,8 @@
 
 #include "Character/Animation/Notify/AnimNotify_FootStepSound.h"
 
+#include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/SoundTags.h"
 #include "Core/Sound/GYSoundManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Logging/GYLogManager.h"
@@ -11,6 +13,7 @@ UAnimNotify_FootStepSound::UAnimNotify_FootStepSound()
 {
 	FootBoneName = TEXT("foot_l");
 	TraceDistance = 50.f;
+	SoundTag = GYGameplayTags::Sound_Player_Walk_Dirt.GetTag();
 }
 
 void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
