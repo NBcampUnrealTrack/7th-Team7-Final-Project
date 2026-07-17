@@ -2,8 +2,12 @@
 
 #include "CommonTextBlock.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/Image.h"
 #include "Core/GYItemDragDropOperation.h"
+#include "Core/GameplayTags/ItemTags.h"
 #include "Inventory/InventoryEntry.h"
+#include "Items/ItemDefinition.h"
 #include "Widget/Inventory/GYInventoryScreenWidget.h"
 
 void UGYItemSlotWidget::NativeConstruct()
@@ -25,7 +29,11 @@ void UGYItemSlotWidget::SetEntry(const FInventoryEntry& Entry)
 		return;
 	}
 
+	// 슬롯 재사용 시 드래그/히트테스트 상태를 확실히 복구 - 배열 시프트 후 상호작용 불가 방지
+	bDragStarted = false;
 	SetRenderOpacity(1.0f);
+	SetVisibility(ESlateVisibility::Visible);
+
 	ItemInstanceId = Entry.InstanceId;
 
 	FGYItemViewData View;
@@ -41,7 +49,9 @@ void UGYItemSlotWidget::SetEntry(const FInventoryEntry& Entry)
 
 void UGYItemSlotWidget::SetEmpty()
 {
+	bDragStarted = false;
 	SetRenderOpacity(1.0f);
+	SetVisibility(ESlateVisibility::Visible);
 	ItemInstanceId = FGuid();
 	ClearView();
 }
@@ -61,7 +71,17 @@ void UGYItemSlotWidget::OnViewChanged(bool bIsEmpty)
 		}
 	}
 
-	OnSlotUpdated(bIsEmpty, CurrentInfo.GradeTag, CurrentInfo.Count);
+	// 등급 개념 없는 물약 등은 무효 태그로 강제해 BP가 테두리를 숨기게
+	FGameplayTag GradeForBorder;
+	if (!bIsEmpty && CurrentInfo.GradeTag.IsValid())
+	{
+		const UItemDefinition* Def = CurrentInfo.Definition.LoadSynchronous();
+		if (IsValid(Def) && Def->CategoryTags.HasTag(GYGameplayTags::Item_Category_Equipment))
+		{
+			GradeForBorder = CurrentInfo.GradeTag;
+		}
+	}
+	OnSlotUpdated(bIsEmpty, GradeForBorder, CurrentInfo.Count);
 }
 
 FGuid UGYItemSlotWidget::GetItemInstanceId()
@@ -72,19 +92,33 @@ FGuid UGYItemSlotWidget::GetItemInstanceId()
 void UGYItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent,
                                              UDragDropOperation*& OutOperation)
 {
-	if (!Container) return;
+	if (!Container || !ItemInstanceId.IsValid()) return;
 
-	SetRenderOpacity(0.5f);
 	bDragStarted = true;
+	SetRenderOpacity(0.5f);
 
 	UGYItemDragDropOperation* DragOperation = Cast<UGYItemDragDropOperation>(
 		UWidgetBlueprintLibrary::CreateDragDropOperation(UGYItemDragDropOperation::StaticClass()));
 
 	DragOperation->FromContainer = Container;
 	DragOperation->FromInstanceId = ItemInstanceId;
-	DragOperation->Pivot = EDragPivot::MouseDown;
+	DragOperation->Pivot = EDragPivot::CenterCenter;
 	DragOperation->OriginSlotWidget = this;
-	DragOperation->DefaultDragVisual = this;
+
+	// 살아있는 슬롯 위젯을 드래그 레이어로 재부모화하지 않도록 별도 아이콘 위젯 사용
+	if (WidgetTree)
+	{
+		if (UImage* DragIcon = WidgetTree->ConstructWidget<UImage>())
+		{
+			if (UItemDefinition* Def = CurrentInfo.Definition.LoadSynchronous())
+			{
+				DragIcon->SetBrushFromSoftTexture(Def->Icon, false);
+			}
+			const FVector2D Size = InGeometry.GetLocalSize();
+			DragIcon->SetDesiredSizeOverride(Size.IsNearlyZero() ? FVector2D(64.f, 64.f) : Size);
+			DragOperation->DefaultDragVisual = DragIcon;
+		}
+	}
 
 	OutOperation = DragOperation;
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
@@ -110,9 +144,15 @@ FReply UGYItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, c
 
 FReply UGYItemSlotWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	// 드래그 없이 좌클릭만 → 화면에 통지 (호스트가 장착/대상지정/되돌리기 등 결정)
+	// 드래그 없이 좌클릭만 → 통지
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && !bDragStarted && ItemInstanceId.IsValid())
 	{
+		// 슬롯 단위로 구독했으면 우선
+		if (OnSlotClicked.IsBound())
+		{
+			OnSlotClicked.Broadcast(ItemInstanceId);
+			return FReply::Handled();
+		}
 		if (UGYInventoryScreenWidget* Screen = GetTypedOuter<UGYInventoryScreenWidget>())
 		{
 			Screen->NotifyItemClicked(ItemInstanceId);

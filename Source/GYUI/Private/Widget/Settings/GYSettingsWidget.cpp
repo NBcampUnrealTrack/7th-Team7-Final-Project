@@ -16,6 +16,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "Animation/WidgetAnimation.h"
+#include "Widget/Common/GYMessagePopupWidget.h"
 
 #define LOCTEXT_NAMESPACE "GYUI"
 
@@ -155,7 +156,25 @@ void UGYSettingsWidget::HandleCloseClicked()
 
 void UGYSettingsWidget::HandleQuitClicked()
 {
-	UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), EQuitPreference::Quit, false);
+	UGYMessagePopupWidget* Popup = UGYMessagePopupWidget::ShowConfirm(
+		this,
+		LOCTEXT("Quit_Title", "게임 종료"),
+		LOCTEXT("Quit_Message", "게임을 종료하시겠습니까?"));
+
+	if (!Popup) // 팝업 클래스 미설정 시 기존처럼 즉시 종료
+	{
+		UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), EQuitPreference::Quit, false);
+		return;
+	}
+
+	TWeakObjectPtr<UGYSettingsWidget> WeakThis(this);
+	Popup->OnConfirmed.AddLambda([WeakThis]()
+	{
+		if (WeakThis.IsValid())
+		{
+			UKismetSystemLibrary::QuitGame(WeakThis.Get(), WeakThis->GetOwningPlayer(), EQuitPreference::Quit, false);
+		}
+	});
 }
 
 void UGYSettingsWidget::InitGraphicsTab()

@@ -8,11 +8,13 @@
 class UImage;
 
 // 아이템 슬롯 공통 베이스 — 아이콘 표시, 아이템 스냅샷 보관, 호버 정보 패널 발행.
-// 인벤/루트/장비/인첸트 슬롯이 상속하며, 출처(FInventoryEntry/FLootDrop 등)를 FGYItemViewData로 변환해 SetView만 호출하면 된다.
 UCLASS(Abstract, Blueprintable)
 class GYUI_API UGYItemSlotBase : public UCommonUserWidget
 {
 	GENERATED_BODY()
+
+public:
+	UGYItemSlotBase();
 
 protected:
 	virtual void NativeConstruct() override;
@@ -31,10 +33,23 @@ protected:
 	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
 	TObjectPtr<UImage> Image_Icon;
 
+	// 바인딩 시 등급 테두리 직접 제어
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
+	TObjectPtr<UImage> Image_GradeBorder;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GY|Slot")
+	TMap<FGameplayTag, FLinearColor> GradeBorderColors;
+
+	// 이 카테고리만 등급 테두리 표시
+	UPROPERTY(EditDefaultsOnly, Category = "GY|Slot")
+	FGameplayTag GradeBorderCategory;
+
 	// 우클릭 시 정보 패널로 발행할 스냅샷 (Definition 비면 빈 칸)
 	FGYItemViewData CurrentInfo;
 
 private:
+	void ApplyGradeBorder(const FGYItemViewData& View, bool bEmpty);
+
 	// 정보 패널 발행. Channel=Show(호버 표시) / Pin(우클릭 토글)
 	void BroadcastItemInfo(FGameplayTag Channel);
 	// 빈 ViewData로 호버 종료 신호
