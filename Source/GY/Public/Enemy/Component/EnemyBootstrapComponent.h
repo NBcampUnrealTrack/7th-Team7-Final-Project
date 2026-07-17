@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Enemy/Config/EnemyDataAsset.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "EnemyBootstrapComponent.generated.h"
 
 class AGYEnemyCharacterBase;
@@ -112,6 +113,7 @@ protected:
 
 	void TryGrantGASFromDataAsset();
 	virtual void GrantDefaultAbilities();
+	void ClearGrantedAbilities();
 	void ApplyPassiveEffects();
 
 	virtual void RequestExtraPreload() {}
@@ -141,6 +143,8 @@ protected:
 	TSoftObjectPtr<UCurveTable> EnemyStatCurveTable;
 
 	FName CachedStatRowName;
+
+	TArray<FGameplayAbilitySpecHandle> GrantedAbilityHandles;
 
 	EEnemyBootstrapPhase Phase = EEnemyBootstrapPhase::Uninitialized;
 

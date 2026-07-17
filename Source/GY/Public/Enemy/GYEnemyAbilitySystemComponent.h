@@ -17,6 +17,9 @@ public:
 	void ApplyRegenEffects();
 	void ApplyActivityPointsUsedEffect();
 
+	/** 리스폰 시 런타임 잔존물(쿨다운/전투상태 등) 전체 제거 후 베이스라인(리젠 GE)만 재적용 */
+	void ResetForRespawn();
+
 	void ApplyCombatTag();
 	void RemoveCombatTag();
 private:

@@ -9,6 +9,7 @@
 #include "Core/GameplayTags/QuestTags.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Enemy/EnemyAnimInstance.h"
+#include "Enemy/Config/EnemyDataAsset.h"
 #include "Enemy/GYEnemyAbilitySystemComponent.h"
 #include "Enemy/GYEnemyAIController.h"
 #include "Enemy/Actor/GYWeaponActor.h"
@@ -200,9 +201,50 @@ void AGYChapterBossCharacter::SpawnWeapons()
 	}
 }
 
+void AGYChapterBossCharacter::Activate()
+{
+	Super::Activate();
+	if (!bIsActivate) return;
+
+	bPhase2Weapon = false;
+	bPhaseTriggered = false;
+	ApplyFirstPhaseWeapon();
+}
+
 void AGYChapterBossCharacter::OnRep_Phase2Weapon()
 {
-	ApplySecondPhaseWeapon();
+	if (bPhase2Weapon)
+	{
+		ApplySecondPhaseWeapon();
+	}
+	else
+	{
+		ApplyFirstPhaseWeapon();
+	}
+}
+
+void AGYChapterBossCharacter::ApplyFirstPhaseWeapon()
+{
+	if (UEnemyAnimInstance* AnimInst = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance()))
+	{
+		if (const UEnemyDataAsset* Data = GetEnemyData())
+		{
+			if (UBlendSpace* DefaultBS = Data->AnimationConfig.LocomotionBlendSpace.LoadSynchronous())
+			{
+				AnimInst->SetLocomotionBlendSpace(DefaultBS);
+			}
+		}
+	}
+
+	RefreshWeaponVisibility();
+
+	if (HasAuthority())
+	{
+		if (const AGYChapterBossCharacter* CDO = GetClass()->GetDefaultObject<AGYChapterBossCharacter>())
+		{
+			WeaponTraceSockets = CDO->WeaponTraceSockets;
+		}
+	}
 }
 
 void AGYChapterBossCharacter::ApplySecondPhaseWeapon()
@@ -312,6 +354,12 @@ void AGYChapterBossCharacter::HandleCinematicFinished()
 		ActiveSequenceActor = nullptr;
 	}
 	ActiveSequencePlayer = nullptr;
+
+	GetWorldTimerManager().SetTimerForNextTick(
+		FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			RefreshWeaponVisibility();
+		}));
 
 	FGYCinematicMessage Msg;
 	Msg.bIsPlaying = false;

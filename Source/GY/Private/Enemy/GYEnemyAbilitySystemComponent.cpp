@@ -66,6 +66,20 @@ void UGYEnemyAbilitySystemComponent::ApplyRegenEffects()
 	ApplyEffect(ActivityPointsRegenEffect, ActivityPointsRegenEffectHandle);
 }
 
+void UGYEnemyAbilitySystemComponent::ResetForRespawn()
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	RemoveActiveEffects(FGameplayEffectQuery());
+
+	StaggerRegenGEHandle = FActiveGameplayEffectHandle();
+	StunRegenGEHandle = FActiveGameplayEffectHandle();
+	ActivityPointsRegenEffectHandle = FActiveGameplayEffectHandle();
+	CombatStateEffectHandle = FActiveGameplayEffectHandle();
+
+	ApplyRegenEffects();
+}
+
 void UGYEnemyAbilitySystemComponent::ApplyActivityPointsUsedEffect()
 {
 	AActor* Owner = GetOwner();
