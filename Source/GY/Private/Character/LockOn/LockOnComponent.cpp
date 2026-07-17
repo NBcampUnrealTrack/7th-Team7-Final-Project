@@ -320,7 +320,7 @@ AActor* ULockOnComponent::FindBestTarget() const
 		{
 			continue;
 		}
-		//TODO 팀 판정
+
 		const float DistSq = FVector::DistSquared(OwnerLoc, Candidate->GetActorLocation());
 		if (DistSq < BestDistSq)
 		{
@@ -499,6 +499,9 @@ AActor* ULockOnComponent::FindDirectionalTarget(FVector2D Direction) const
 	UWorld* World = OwnerPawn->GetWorld();
 	if (!World) return nullptr;
 
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwnerPawn);
+	if (!ASC) return nullptr;
+
 	if (Direction.IsNearlyZero()) return nullptr;
 	Direction.Normalize();
 
@@ -545,7 +548,12 @@ AActor* ULockOnComponent::FindDirectionalTarget(FVector2D Direction) const
 		AActor* Candidate = Overlap.GetActor();
 		if (!Candidate || Candidate == OwnerPawn || Candidate == CurrentRef) continue;
 		if (IsLockOnTargetInvalid(Candidate)) continue;
-		// TODO 팀 판정
+
+		UAbilitySystemComponent* CadidateASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Candidate);
+		if (UGYCombatStatics::IsSameFaction(ASC,CadidateASC))
+		{
+			continue;
+		}
 
 		const FVector ToCand = Candidate->GetActorLocation() - CameraLoc;
 		const FVector2D CandPlane(
