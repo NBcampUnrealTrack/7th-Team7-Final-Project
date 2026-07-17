@@ -25,6 +25,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# 1분 스케줄 + 수 분 걸리는 교체 작업 = 인스턴스 겹침 가능 — 뮤텍스로 단일 실행 보장
+$DeployMutex = New-Object System.Threading.Mutex($false, "Global\GYDeployWatcher")
+if (-not $DeployMutex.WaitOne(0)) { exit 0 }
+
 function Log([string]$Message) {
     $line = "[{0}] {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $Message
     Write-Host $line
