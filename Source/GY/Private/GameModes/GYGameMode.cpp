@@ -56,6 +56,17 @@ void AGYGameMode::PreLogin(const FString& Options, const FString& Address, const
 	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
 }
 
+void AGYGameMode::Logout(AController* Exiting)
+{
+	if (APawn* OldPawn = Exiting->GetPawn())
+	{
+		Exiting->UnPossess();
+		OldPawn->Destroy();
+	}
+	Super::Logout(Exiting);
+
+}
+
 FString AGYGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal)
 {
 	const FString Result = Super::InitNewPlayer(NewPlayerController, UniqueId, Options, Portal);
