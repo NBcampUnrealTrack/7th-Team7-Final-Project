@@ -9,6 +9,9 @@ class IItemContainer;
 class UCommonTextBlock;
 struct FInventoryEntry;
 
+// 좌클릭 시 호스트가 슬롯 단위로 구독하는 델리게이트
+DECLARE_MULTICAST_DELEGATE_OneParam(FGYOnItemSlotClicked, const FGuid&);
+
 UCLASS(Abstract, Blueprintable)
 class GYUI_API UGYItemSlotWidget : public UGYItemSlotBase
 {
@@ -19,6 +22,8 @@ public:
 	void SetEntry(const FInventoryEntry& Entry);
 	void SetEmpty();
 	FGuid GetItemInstanceId();
+
+	FGYOnItemSlotClicked OnSlotClicked;
 
 protected:
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
