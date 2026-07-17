@@ -41,9 +41,4 @@ protected:
 	float MaxRotationSpeed = 360.f;
 	float InterpSpeed = 8.f;
 	bool bUseConstantSpeed = false;
-
-	bool bSavedOrientToMovement = true;
-	bool bSavedUseControllerRotationYaw = false;
-	bool bSavedUseControllerDesiredRotation = false;
-	bool bStateSaved = false;
 };

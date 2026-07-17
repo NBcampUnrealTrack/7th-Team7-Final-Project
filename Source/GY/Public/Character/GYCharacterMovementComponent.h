@@ -31,6 +31,7 @@ class GY_API UGYCharacterMovementComponent : public UCharacterMovementComponent
 
 public:
 	UGYCharacterMovementComponent(const FObjectInitializer& OI);
+	virtual void BeginPlay() override;
 
 	void StartClimbing(ALadder* Ladder);
 	void StopClimbing();
@@ -47,6 +48,8 @@ public:
 	float GetMaxClimbSpeed() const { return MaxClimbSpeed; };
 	FVector GetClimbAxis() const;
 
+	void PushSuppressOrientToMovement();
+	void PopSuppressOrientToMovement();
 
 protected:
 	void PhysClimbing(float DeltaTime, int32 Iterations);
@@ -57,4 +60,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Climb")
 	float MaxClimbSpeed = 150.f;
+
+	int32 OrientToMovementSuppressCount = 0;
+	bool bDefaultOrientToMovement = true;
+
+private:
+	void UpdateOrientToMovement();
 };

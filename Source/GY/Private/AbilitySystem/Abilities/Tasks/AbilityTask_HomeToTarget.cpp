@@ -1,4 +1,6 @@
 #include "AbilitySystem/Abilities/Tasks/AbilityTask_HomeToTarget.h"
+
+#include "Character/GYCharacterMovementComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -19,13 +21,9 @@ void UAbilityTask_HomeToTarget::Activate()
 {
     if (ACharacter* Char = Cast<ACharacter>(GetAvatarActor()))
     {
-        if (UCharacterMovementComponent* Movement = Char->GetCharacterMovement())
+        if (UGYCharacterMovementComponent* Movement = Cast<UGYCharacterMovementComponent>(Char->GetCharacterMovement()))
         {
-        	bSavedOrientToMovement = Movement->bOrientRotationToMovement;
-
-        	Movement->bOrientRotationToMovement = false;
-
-        	bStateSaved = true;
+			Movement->PushSuppressOrientToMovement();
         }
     }
     bTickingTask = true;
@@ -75,16 +73,12 @@ void UAbilityTask_HomeToTarget::TickTask(float DeltaTime)
 
 void UAbilityTask_HomeToTarget::OnDestroy(bool bInOwnerFinished)
 {
-    if (bStateSaved)
+    if (ACharacter* Char = Cast<ACharacter>(GetAvatarActor()))
     {
-        if (ACharacter* Char = Cast<ACharacter>(GetAvatarActor()))
+        if (UGYCharacterMovementComponent* Movement = Cast<UGYCharacterMovementComponent>(Char->GetCharacterMovement()))
         {
-            if (UCharacterMovementComponent* Movement = Char->GetCharacterMovement())
-            {
-            	Movement->bOrientRotationToMovement = bSavedOrientToMovement;
-            }
+        	Movement->PopSuppressOrientToMovement();
         }
-        bStateSaved = false;
     }
     OnEnded.Broadcast();
     Super::OnDestroy(bInOwnerFinished);

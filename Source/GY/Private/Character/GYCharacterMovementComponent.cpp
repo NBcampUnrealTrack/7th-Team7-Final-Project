@@ -7,6 +7,12 @@ UGYCharacterMovementComponent::UGYCharacterMovementComponent(const FObjectInitia
 {
 }
 
+void UGYCharacterMovementComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	bDefaultOrientToMovement = bOrientRotationToMovement;
+}
+
 void UGYCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iterations)
 {
     Super::PhysCustom(DeltaTime, Iterations);
@@ -19,6 +25,26 @@ void UGYCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iterations
 FVector UGYCharacterMovementComponent::GetClimbAxis() const
 {
 	return ClimbingLadder.IsValid() ? ClimbingLadder->GetClimbAxis() : FVector::UpVector;
+}
+
+void UGYCharacterMovementComponent::PushSuppressOrientToMovement()
+{
+	++OrientToMovementSuppressCount;
+    UpdateOrientToMovement();
+}
+
+void UGYCharacterMovementComponent::PopSuppressOrientToMovement()
+{
+	if (OrientToMovementSuppressCount > 0)
+	{
+		--OrientToMovementSuppressCount;
+	}
+	UpdateOrientToMovement();
+}
+
+void UGYCharacterMovementComponent::UpdateOrientToMovement()
+{
+	bOrientRotationToMovement = (OrientToMovementSuppressCount == 0) && bDefaultOrientToMovement;
 }
 
 void UGYCharacterMovementComponent::PhysClimbing(float DeltaTime, int32 Iterations)

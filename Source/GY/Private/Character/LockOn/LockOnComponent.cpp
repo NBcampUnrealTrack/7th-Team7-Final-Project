@@ -10,6 +10,7 @@
 #include "GameFramework/PlayerState.h"
 #include "Core/GameplayTags/StateTags.h"
 #include "Character/GYCharacter.h"
+#include "Character/GYCharacterMovementComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Engine/OverlapResult.h"
 #include "GameFramework/Character.h"
@@ -47,18 +48,6 @@ ULockOnComponent::ULockOnComponent()
 	SetIsReplicatedByDefault(true);
 }
 
-void ULockOnComponent::BeginPlay()
-{
-	Super::BeginPlay();
-	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
-	{
-		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
-		{
-			bSavedOrientToMovement = Movement->bOrientRotationToMovement;
-			//bSavedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
-		}
-	}
-}
 
 void ULockOnComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -233,17 +222,17 @@ void ULockOnComponent::OnRep_CurrentTarget()
 
 	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
 	{
-		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+		if (UGYCharacterMovementComponent* Movement = Cast<UGYCharacterMovementComponent>(Character->GetCharacterMovement()))
 		{
-			if (bCurrentActive)
+			if (bCurrentActive && !bOrientSuppressed)
 			{
-				Movement->bOrientRotationToMovement = false;
-				//Character->bUseControllerRotationYaw = true;
+				Movement->PushSuppressOrientToMovement();
+				bOrientSuppressed = true;
 			}
-			else
+			else if (!bCurrentActive && bOrientSuppressed)
 			{
-				Movement->bOrientRotationToMovement = bSavedOrientToMovement;
-				//Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
+				Movement->PopSuppressOrientToMovement();
+				bOrientSuppressed = false;
 			}
 		}
 	}

@@ -49,7 +49,6 @@ protected:
 	bool bEnteredFromTop = false;
 
 	TEnumAsByte<EMovementMode> SavedMovementMode = MOVE_Walking;
-	bool bSavedOrientToMovement = true;
 	bool bSavedUseControllerRotationYaw = false;
 	bool bSavedUseControllerDesiredRotation = true;
 

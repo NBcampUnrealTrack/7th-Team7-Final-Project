@@ -207,11 +207,10 @@ void UGA_Climb::ActivateAbility(
 
 
 	SavedMovementMode = Movement->MovementMode;
-	bSavedOrientToMovement = Movement->bOrientRotationToMovement;
 	bSavedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
 	bSavedUseControllerDesiredRotation = Movement->bUseControllerDesiredRotation;
 
-	Movement->bOrientRotationToMovement = false;
+	Movement->PushSuppressOrientToMovement();
 	Character->bUseControllerRotationYaw = false;
 	Movement->bUseControllerDesiredRotation = false;
 
@@ -273,7 +272,7 @@ void UGA_Climb::EndAbility(
 		CachedMovement->OnClimbingEnded.RemoveDynamic(this, &UGA_Climb::OnClimbExit);
 		CachedMovement->StopClimbing();
 		CachedMovement->SetMovementMode(SavedMovementMode);
-		CachedMovement->bOrientRotationToMovement = bSavedOrientToMovement;
+		CachedMovement->PopSuppressOrientToMovement();
 		CachedMovement->bUseControllerDesiredRotation = bSavedUseControllerDesiredRotation;
 	}
 
