@@ -5,6 +5,8 @@
 #
 #   전제 (EC2 1회 세팅):
 #     - 인스턴스 프로파일에 s3:GetObject (배포 버킷) — AWS 자격증명 파일 불필요
+#     - AWS CLI v2 설치 (권장 — 없으면 AWSPowerShell 모듈 폴백이 매 분 CPU 를 태운다):
+#         msiexec /i https://awscli.amazonaws.com/AWSCLIV2.msi /qn
 #     - 예약 작업 등록 (관리자 PowerShell):
 #         schtasks /Create /TN GYDeployWatcher /SC MINUTE /MO 1 /RU SYSTEM /TR `
 #           "powershell -NoProfile -ExecutionPolicy Bypass -File C:\GY\ec2_deploy_watcher.ps1"
@@ -29,6 +31,10 @@ $ErrorActionPreference = "Stop"
 $DeployMutex = New-Object System.Threading.Mutex($false, "Global\GYDeployWatcher")
 if (-not $DeployMutex.WaitOne(0)) { exit 0 }
 
+# 게임 서버와 CPU 경합 금지 — 워처(와 자식 aws)는 서버가 바쁘면 무조건 양보
+# (BelowNormal/Idle 클래스는 자식 프로세스에 상속된다)
+[System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = "BelowNormal"
+
 function Log([string]$Message) {
     $line = "[{0}] {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $Message
     Write-Host $line
@@ -37,14 +43,26 @@ function Log([string]$Message) {
 
 if (-not $Bucket) { Log "GY_DEPLOY_BUCKET env missing - abort"; exit 1 }
 
-Import-Module AWSPowerShell -ErrorAction SilentlyContinue
+# AWSPowerShell 모듈은 임포트에만 CPU 20초+ — 1분 주기 실행에서 상시 부하가 된다.
+# aws cli(기동 ~1초, 인스턴스 역할 자동 사용)를 쓰고, 없을 때만 모듈 폴백
+$UseAwsCli = $null -ne (Get-Command aws -ErrorAction SilentlyContinue)
+if (-not $UseAwsCli) { Import-Module AWSPowerShell -ErrorAction SilentlyContinue }
+
+function Get-S3File([string]$Key, [string]$OutFile) {
+    if ($UseAwsCli) {
+        aws s3 cp "s3://$Bucket/$Key" $OutFile --region $Region --quiet
+        if ($LASTEXITCODE -ne 0) { throw "aws s3 cp failed: $Key" }
+    } else {
+        Read-S3Object -BucketName $Bucket -Key $Key -File $OutFile -Region $Region | Out-Null
+    }
+}
 
 # 1. 원격 버전 확인
 $tempDir = Join-Path $env:TEMP "gy_deploy"
 New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
 $latestPath = Join-Path $tempDir "latest.json"
 try {
-    Read-S3Object -BucketName $Bucket -Key "server/latest.json" -File $latestPath -Region $Region | Out-Null
+    Get-S3File -Key "server/latest.json" -OutFile $latestPath
 } catch {
     Log "latest.json fetch failed: $($_.Exception.Message)"; exit 1
 }
@@ -73,7 +91,7 @@ if (-not $Force -and $env:GY_HOSTED_URL -and $env:GY_HOSTED_SECRET_KEY) {
 # 3. zip 다운로드
 $zipPath = Join-Path $tempDir "server.zip"
 Log "downloading s3://$Bucket/$zipKey"
-Read-S3Object -BucketName $Bucket -Key $zipKey -File $zipPath -Region $Region | Out-Null
+Get-S3File -Key $zipKey -OutFile $zipPath
 
 # 4. 오케스트레이터 + 서버 프로세스 정지 (서버는 EndPlay 에서 set_world_offline 을 쏜다)
 # 프로세스명: Development = GYServer, Shipping = GYServer-Win64-Shipping
