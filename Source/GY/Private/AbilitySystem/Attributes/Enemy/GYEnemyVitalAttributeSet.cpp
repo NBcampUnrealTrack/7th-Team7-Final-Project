@@ -53,20 +53,6 @@ void UGYEnemyVitalAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 
 	if (Data.EvaluatedData.Attribute == GetActivityPointsAttribute())
 	{
-		GY_LOG(Combat, JCM, "[AP Execute] Mag=%.2f Current=%.2f Base=%.2f Max=%.2f ASC=%s",
-			Data.EvaluatedData.Magnitude,
-			GetActivityPoints(),
-			GetActivityPointsAttribute().GetNumericValueChecked(this),
-			GetMaxActivityPoints(),
-			*GetNameSafe(GetOwningAbilitySystemComponent()) );
-		UE_LOG(LogTemp, Warning,
-			TEXT("[AP Execute] Mag=%.2f Current=%.2f Base=%.2f Max=%.2f ASC=%s"),
-			Data.EvaluatedData.Magnitude,
-			GetActivityPoints(),
-			GetActivityPointsAttribute().GetNumericValueChecked(this),
-			GetMaxActivityPoints(),
-			*GetNameSafe(GetOwningAbilitySystemComponent()));
-
 		if (Data.EvaluatedData.Magnitude < 0.f)
 		{
 			EnemyASC->ApplyActivityPointsUsedEffect();
