@@ -41,9 +41,11 @@ if (-not $BaseUrl -or -not $SecretKey -or -not $ServerExe -or -not $PublicIp) {
 if (-not (Test-Path $ServerExe)) { throw "server exe not found: $ServerExe" }
 
 # 패키징 산출물 루트의 GYServer.exe 는 런처 스텁(실서버를 자식으로 스폰) — 스텁을 추적하면
-# 램 측정/graceful 종료가 전부 헛돈다. 실제 바이너리가 있으면 그걸 직접 스폰
-$realExe = Join-Path (Split-Path $ServerExe) "GY\Binaries\Win64\GYServer.exe"
-if (Test-Path $realExe) { $ServerExe = $realExe }
+# 램 측정/graceful 종료가 전부 헛돈다. 실제 바이너리가 있으면 그걸 직접 스폰 (Shipping 은 이름이 다름)
+foreach ($candidate in @("GYServer.exe", "GYServer-Win64-Shipping.exe")) {
+    $realExe = Join-Path (Split-Path $ServerExe) "GY\Binaries\Win64\$candidate"
+    if (Test-Path $realExe) { $ServerExe = $realExe; break }
+}
 
 $Headers = @{ "apikey" = $SecretKey; "Authorization" = "Bearer $SecretKey"; "Content-Type" = "application/json" }
 # PowerShell 기본 UA 가 Mozilla/5.0 이라 호스티드 Supabase 가 브라우저로 오인 → secret key 요청을 403 차단. 명시 UA 필수

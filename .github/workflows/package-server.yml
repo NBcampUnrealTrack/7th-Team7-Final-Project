@@ -111,8 +111,42 @@ jobs:
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts\package_server.ps1 -Config ${{ inputs.config }}
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      # 채널 분리: Development → win64-dev, Shipping → win64 (서버 전용 프라이빗 프로젝트)
+      # Shipping 산출물은 S3 로 — EC2 의 배포 워처(GYDeployWatcher)가 1분 내 감지해 자동 교체.
+      # Secrets: AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (s3:PutObject) / GY_DEPLOY_BUCKET
+      - name: Upload to S3 (Shipping -> EC2 deploy)
+        if: inputs.config == 'Shipping'
+        shell: powershell
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ap-northeast-2
+          GY_DEPLOY_BUCKET: ${{ secrets.GY_DEPLOY_BUCKET }}
+        run: |
+          if (-not $env:AWS_ACCESS_KEY_ID -or -not $env:GY_DEPLOY_BUCKET) {
+            Write-Host "AWS secrets missing - skip S3 deploy"
+            exit 0
+          }
+          if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {
+            Write-Host "::error::aws cli not installed on runner (winget install Amazon.AWSCLI)"
+            exit 1
+          }
+          $version = "$($env:GITHUB_RUN_NUMBER)-$($env:GITHUB_SHA.Substring(0,7))"
+          $zip = "$env:RUNNER_TEMP\gy-server-$version.zip"
+          Compress-Archive -Path "$env:GITHUB_WORKSPACE\Build\PackagedServer\WindowsServer\*" -DestinationPath $zip -Force
+          $key = "server/gy-server-$version.zip"
+          aws s3 cp $zip "s3://$($env:GY_DEPLOY_BUCKET)/$key" --no-progress
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $manifest = "$env:RUNNER_TEMP\latest.json"
+          @{ version = $version; key = $key; sha = $env:GITHUB_SHA } | ConvertTo-Json -Compress | Set-Content -Path $manifest -Encoding ascii
+          aws s3 cp $manifest "s3://$($env:GY_DEPLOY_BUCKET)/server/latest.json" --no-progress
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Remove-Item $zip -Force
+          "S3_VERSION=$version" >> $env:GITHUB_ENV
+          "s3 deployed: server/latest.json -> $key" >> $env:GITHUB_STEP_SUMMARY
+
+      # Development 만 itch (win64-dev, 서버 전용 프라이빗 프로젝트) — Shipping 은 S3/EC2 경로
       - name: Push to itch.io (butler)
+        if: inputs.config != 'Shipping'
         shell: powershell
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
