@@ -43,8 +43,9 @@ if (-not $BaseUrl -or -not $SecretKey -or -not $ServerExe -or -not $PublicIp) {
 if (-not (Test-Path $ServerExe)) { throw "server exe not found: $ServerExe" }
 
 # 패키징 산출물 루트의 GYServer.exe 는 런처 스텁(실서버를 자식으로 스폰) — 스텁을 추적하면
-# 램 측정/graceful 종료가 전부 헛돈다. 실제 바이너리가 있으면 그걸 직접 스폰 (Shipping 은 이름이 다름)
-foreach ($candidate in @("GYServer.exe", "GYServer-Win64-Shipping.exe")) {
+# 램 측정/graceful 종료가 전부 헛돈다. 실제 바이너리가 있으면 그걸 직접 스폰.
+# Shipping 우선 — 아카이브 오염으로 두 구성이 섞여 있어도 배포 의도(Shipping)를 따른다
+foreach ($candidate in @("GYServer-Win64-Shipping.exe", "GYServer.exe")) {
     $realExe = Join-Path (Split-Path $ServerExe) "GY\Binaries\Win64\$candidate"
     if (Test-Path $realExe) { $ServerExe = $realExe; break }
 }
@@ -93,6 +94,7 @@ function Start-StandbyServer {
     if ($ServerArgsPrefix) { $spawnArgs += ($ServerArgsPrefix -split " ") }
     $spawnArgs += @("L_Expanse_WP", "-log", "-nosteam", "-Standby", "-port=$port", "-PublicAddr=${PublicIp}:$port")
     $proc = Start-Process -FilePath $ServerExe -ArgumentList $spawnArgs -PassThru -WindowStyle Minimized
+    try { $proc.PriorityClass = "AboveNormal" } catch {} # 게임 서버가 박스의 주인 — 배경 작업에 안 밀리게
     [void]$StandbyProcs.Add(@{ Process = $proc; Port = $port; SpawnedAt = Get-Date })
 }
 
@@ -113,6 +115,17 @@ function Stop-World([long]$WorldId, [string]$Reason) {
 
 # ── 부팅 정리: 이전 에이전트 세대의 잔재(내가 모르는 online/starting 행 + 스탠바이 행) 정리 ──
 try {
+    # 이전 오케스트레이터 실행이 남긴 잔여 서버 정리 — 정리 없인 새 스폰과 같은 월드를 이중 호스팅한다
+    # (저장 버전 충돌 반복 + host_addr 요동 + CPU 2배)
+    foreach ($leftover in @(Get-Process "GYServer*" -ErrorAction SilentlyContinue)) {
+        Log "boot cleanup: stopping leftover server pid $($leftover.Id)"
+        $leftover.CloseMainWindow() | Out-Null
+    }
+    if (@(Get-Process "GYServer*" -ErrorAction SilentlyContinue).Count -gt 0) {
+        Start-Sleep -Seconds 5
+        Get-Process "GYServer*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+
     $stale = Get-Worlds "status=neq.offline&select=id,status"
     foreach ($w in $stale) {
         Log "boot cleanup: world $($w.id) was '$($w.status)' - marking offline"
@@ -194,6 +207,7 @@ while ($true) {
         # -nosteam: 패키징 서버는 Steam 이 타깃에서 제외돼 무의미(무해) — 에디터 exe 로 돌릴 때(ServerArgsPrefix)만 유효
         $spawnArgs += @("L_Expanse_WP", "-log", "-nosteam", "-port=$port", "-WorldId=$($w.id)", "-PublicAddr=${PublicIp}:$port")
         $proc = Start-Process -FilePath $ServerExe -ArgumentList $spawnArgs -PassThru -WindowStyle Minimized
+        try { $proc.PriorityClass = "AboveNormal" } catch {} # 게임 서버가 박스의 주인 — 배경 작업에 안 밀리게
         $Running[[long]$w.id] = @{ Process = $proc; Port = $port; IdleSince = $null }
     }
 
