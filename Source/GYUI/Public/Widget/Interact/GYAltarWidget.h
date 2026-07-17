@@ -10,7 +10,10 @@
 
 struct FGYInventoryEntryMessage;
 class UGYItemSlotWidget;
+class UGYInventoryScreenWidget;
 class UButton;
+class UProgressBar;
+class UCommonTextBlock;
 /**
  *
  */
@@ -39,6 +42,12 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ExecuteButton;
 
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
+	TObjectPtr<UProgressBar> ProgressBar;
+
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
+	TObjectPtr<UCommonTextBlock> Text_TimeShard;
+
 	UFUNCTION()
 	void OnCloseButtonClicked();
 	UFUNCTION()
@@ -53,6 +62,15 @@ private:
 	UAltarStorageComponent* ResolveAltarStorage() const;
 	void HandleEntryChanged(FGameplayTag Channel, const FGYInventoryEntryMessage& Msg);
 
+	void UpdateTimeShardBar(int32 Amount);
+	void HandleAltarSlotClicked(const FGuid& InstanceId);
+	void TransferItem(FGameplayTag FromTag, const FGuid& InstanceId, FGameplayTag ToTag);
+
+	UFUNCTION()
+	void OnCurrencyChanged(FGameplayTag CurrencyTag, int32 Amount);
+
+	UFUNCTION()
+	void HandleInventoryItemClicked(FGuid InstanceId);
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UGYItemSlotWidget>> SlotWidgets;
@@ -60,5 +78,11 @@ private:
 	UPROPERTY()
 	TScriptInterface<IItemContainer> Container;
 
+	UPROPERTY()
+	TObjectPtr<UGYInventoryScreenWidget> InventoryScreen;
+
 	FGameplayMessageListenerHandle ListenerHandle;
+	FDelegateHandle OnCurrencyChangedHandle;
+
+	int32 GetTimeShardMax() const;
 };
