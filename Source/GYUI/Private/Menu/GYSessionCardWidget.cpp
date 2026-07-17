@@ -42,10 +42,15 @@ void UGYSessionCardWidget::NativeConstruct()
 	if (HostText == nullptr) HostText = Cast<UTextBlock>(GetWidgetFromName(TEXT("HostText")));
 	if (InfoText == nullptr) InfoText = Cast<UTextBlock>(GetWidgetFromName(TEXT("InfoText")));
 	if (CardButton == nullptr) CardButton = Cast<UButton>(GetWidgetFromName(TEXT("CardButton")));
+	if (DeleteButton == nullptr) DeleteButton = Cast<UButton>(GetWidgetFromName(TEXT("DeleteButton")));
 
 	if (CardButton != nullptr && !CardButton->OnClicked.IsAlreadyBound(this, &UGYSessionCardWidget::HandleCardClicked))
 	{
 		CardButton->OnClicked.AddDynamic(this, &UGYSessionCardWidget::HandleCardClicked);
+	}
+	if (DeleteButton != nullptr && !DeleteButton->OnClicked.IsAlreadyBound(this, &UGYSessionCardWidget::HandleDeleteClicked))
+	{
+		DeleteButton->OnClicked.AddDynamic(this, &UGYSessionCardWidget::HandleDeleteClicked);
 	}
 
 	ApplyToWidgets();
@@ -85,6 +90,12 @@ void UGYSessionCardWidget::ApplyToWidgets()
 	{
 		CardButton->SetIsEnabled(bJoinEnabledWanted && bJoinable);
 	}
+	if (DeleteButton != nullptr)
+	{
+		// 가동 중(online/starting)엔 삭제 불가 — RPC 정책(offline 만)과 일치
+		const bool bDeletable = bDeleteVisibleWanted && CachedWorld.Status == TEXT("offline");
+		DeleteButton->SetVisibility(bDeletable ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
 }
 
 void UGYSessionCardWidget::SetJoinEnabled(bool bEnabled)
@@ -96,7 +107,18 @@ void UGYSessionCardWidget::SetJoinEnabled(bool bEnabled)
 	}
 }
 
+void UGYSessionCardWidget::SetDeleteVisible(bool bVisible)
+{
+	bDeleteVisibleWanted = bVisible;
+	ApplyToWidgets();
+}
+
 void UGYSessionCardWidget::HandleCardClicked()
 {
 	OnJoinRequested.ExecuteIfBound(WorldId);
+}
+
+void UGYSessionCardWidget::HandleDeleteClicked()
+{
+	OnDeleteRequested.ExecuteIfBound(WorldId);
 }

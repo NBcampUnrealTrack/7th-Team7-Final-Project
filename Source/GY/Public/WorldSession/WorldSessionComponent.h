@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "Persistence/GYPersistenceSubsystem.h"
 #include "WorldSessionComponent.generated.h"
+
+class UGYWorldSessionSubsystem;
 
 // [SERVER] 월드 목록(worlds 테이블)에 이 세션을 등록·갱신한다 (하트비트). GameState 에 부착.
 // -PublicAddr=ip:port 실행 인자가 있을 때만 동작 — 오케스트레이터가 스폰한 서버만 목록에 등록되고,
@@ -27,13 +28,13 @@ private:
 	void OnHeartbeatTimer();
 
 	// ── 스탠바이 생명주기 ──
-	void OnStandbyRegistered(const FGYSaveResult& Result);
+	void OnStandbyRegistered(bool bSuccess, int64 InStandbyId);
 	void OnStandbyPollTimer();
-	void OnStandbyAssignment(const FGYSaveResult& Result);
+	void OnStandbyAssignment(bool bSuccess, int64 AssignedWorldId);
 	void OnAwaitWorldReadyTimer();
 	void StartWorldHeartbeat();
 
-	UGYPersistenceSubsystem* ResolvePersistence() const;
+	UGYWorldSessionSubsystem* ResolveSession() const;
 
 	int64 WorldId = 1;
 	FString PublicAddr;

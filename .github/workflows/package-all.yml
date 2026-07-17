@@ -2,7 +2,8 @@
 # 이걸로 돌리면 클라/서버 버전 불일치(월드파티션 셀 불일치, 넷버전 등)가 원천 차단된다.
 # 팀 배포는 이 버튼을 기본으로, 단독 재빌드만 개별 workflow 사용.
 #
-# 서버가 클라 성공 후에 도는 순차 구조 (실패한 짝의 반쪽만 배포되는 것 방지).
+# 서버가 먼저 도는 순차 구조 (실패한 짝의 반쪽만 배포되는 것 방지) —
+# 서버가 EC2 에 먼저 올라가 있어야 뒤이어 받는 클라가 접속할 곳이 있다.
 # 같은 머신(pc-kdy)이면 어차피 러너가 한 번에 잡 하나라 자연 직렬화됨.
 name: package-all
 
@@ -22,26 +23,33 @@ on:
         default: pc-kdy
         options:
           - pc-kdy
-      config:
-        description: "빌드 구성 (클라/서버 동일 적용)"
+      client_config:
+        description: "클라 빌드 구성 (Development = itch 배포)"
         type: choice
         default: Development
         options:
           - Development
           - Shipping
+      server_config:
+        description: "서버 빌드 구성 (Shipping = S3/EC2 자동 배포)"
+        type: choice
+        default: Shipping
+        options:
+          - Development
+          - Shipping
 
 jobs:
-  client:
-    uses: ./.github/workflows/package-client.yml
-    with:
-      runner: ${{ inputs.client_runner }}
-      config: ${{ inputs.config }}
-    secrets: inherit
-
   server:
-    needs: client
     uses: ./.github/workflows/package-server.yml
     with:
       runner: ${{ inputs.server_runner }}
-      config: ${{ inputs.config }}
+      config: ${{ inputs.server_config }}
+    secrets: inherit
+
+  client:
+    needs: server
+    uses: ./.github/workflows/package-client.yml
+    with:
+      runner: ${{ inputs.client_runner }}
+      config: ${{ inputs.client_config }}
     secrets: inherit

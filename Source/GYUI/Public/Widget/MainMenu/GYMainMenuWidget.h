@@ -42,6 +42,7 @@ private:
 	UFUNCTION() void HandleGameExitClicked();
 
 	UFUNCTION() void HandleCreateSessionRequested();
+	UFUNCTION() void HandleSessionCreated();
 	UFUNCTION() void HandleCreditClosed();
 
 	void HandleSettingsClosed();

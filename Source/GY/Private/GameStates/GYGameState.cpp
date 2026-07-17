@@ -9,7 +9,7 @@
 #include "Core/GameplayTags/GameplayCueTags.h"
 #include "Experience/GYExperienceManagerComponent.h"
 #include "Persistence/WorldSaveComponent.h"
-#include "Persistence/WorldSessionComponent.h"
+#include "WorldSession/WorldSessionComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Core/GameplayTags/SoundTags.h"

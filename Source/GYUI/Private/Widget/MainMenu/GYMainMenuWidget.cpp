@@ -26,6 +26,9 @@ void UGYMainMenuWidget::NativeConstruct()
 	if (WBP_SessionContainer)
 		WBP_SessionContainer->OnCreateSessionRequested.AddDynamic(this, &UGYMainMenuWidget::HandleCreateSessionRequested);
 
+	if (WBP_SessionCreate)
+		WBP_SessionCreate->OnSessionCreated.AddDynamic(this, &UGYMainMenuWidget::HandleSessionCreated);
+
 	if (WBP_DevCredit)
 		WBP_DevCredit->OnPanelClosed.AddDynamic(this, &UGYMainMenuWidget::HandleCreditClosed);
 }
@@ -38,6 +41,11 @@ void UGYMainMenuWidget::HandleSessionClicked()
 void UGYMainMenuWidget::HandleCreateSessionRequested()
 {
 	if (WBP_SessionCreate) WBP_SessionCreate->OpenPanel();
+}
+
+void UGYMainMenuWidget::HandleSessionCreated()
+{
+	if (WBP_SessionContainer) WBP_SessionContainer->RefreshSessions();
 }
 
 void UGYMainMenuWidget::HandleCreditClicked()
