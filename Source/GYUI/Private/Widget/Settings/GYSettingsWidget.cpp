@@ -16,6 +16,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "Animation/WidgetAnimation.h"
+#include "Engine/NetConnection.h"
+#include "Engine/NetDriver.h"
+#include "Engine/World.h"
 #include "Widget/Common/GYMessagePopupWidget.h"
 
 #define LOCTEXT_NAMESPACE "GYUI"
@@ -154,6 +157,18 @@ void UGYSettingsWidget::HandleCloseClicked()
 	RequestClose();   // 기존: DeactivateWidget();
 }
 
+void UGYSettingsWidget::QuitGameWithDisconnect()
+{
+	// 종료 전에 서버 연결을 명시적으로 닫아 Logout 이 즉시 처리되게 한다
+	UWorld* World = GetWorld();
+	UNetDriver* NetDriver = IsValid(World) ? World->GetNetDriver() : nullptr;
+	if (NetDriver != nullptr && NetDriver->ServerConnection != nullptr)
+	{
+		NetDriver->ServerConnection->Close();
+	}
+	UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), EQuitPreference::Quit, false);
+}
+
 void UGYSettingsWidget::HandleQuitClicked()
 {
 	UGYMessagePopupWidget* Popup = UGYMessagePopupWidget::ShowConfirm(
@@ -163,7 +178,7 @@ void UGYSettingsWidget::HandleQuitClicked()
 
 	if (!Popup) // 팝업 클래스 미설정 시 기존처럼 즉시 종료
 	{
-		UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), EQuitPreference::Quit, false);
+		QuitGameWithDisconnect();
 		return;
 	}
 
@@ -172,7 +187,7 @@ void UGYSettingsWidget::HandleQuitClicked()
 	{
 		if (WeakThis.IsValid())
 		{
-			UKismetSystemLibrary::QuitGame(WeakThis.Get(), WeakThis->GetOwningPlayer(), EQuitPreference::Quit, false);
+			WeakThis->QuitGameWithDisconnect();
 		}
 	});
 }
