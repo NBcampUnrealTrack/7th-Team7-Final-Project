@@ -143,6 +143,18 @@ jobs:
           Remove-Item $zip -Force
           "S3_VERSION=$version" >> $env:GITHUB_ENV
           "s3 deployed: server/latest.json -> $key" >> $env:GITHUB_STEP_SUMMARY
+          # 오래된 zip 정리 — 최신 3개만 보관 (서버 zip 은 수 GB, 방치하면 스토리지 요금 누적)
+          $keep = 3
+          $listJson = aws s3api list-objects-v2 --bucket $env:GY_DEPLOY_BUCKET --prefix "server/gy-server-" --query "Contents[].{Key:Key,At:LastModified}" --output json
+          if ($LASTEXITCODE -eq 0 -and $listJson) {
+            $objects = $listJson | ConvertFrom-Json | Sort-Object At -Descending
+            foreach ($old in ($objects | Select-Object -Skip $keep)) {
+              aws s3 rm "s3://$($env:GY_DEPLOY_BUCKET)/$($old.Key)" --quiet
+              Write-Host "pruned old build: $($old.Key)"
+            }
+          } else {
+            Write-Host "prune skipped (list failed) - builds may accumulate in S3"
+          }
 
       # Development 만 itch (win64-dev, 서버 전용 프라이빗 프로젝트) — Shipping 은 S3/EC2 경로
       - name: Push to itch.io (butler)
