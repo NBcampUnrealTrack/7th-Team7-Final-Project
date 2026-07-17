@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "Items/Fragments/ItemFragment_EquipmentVisual.h"
 #include "Items/ItemDefinition.h"
+#include "Logging/GYLogManager.h"
 #include "Net/UnrealNetwork.h"
 
 void UEquipmentInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -115,6 +116,7 @@ void UEquipmentInstance::ReapplyAnimLayer()
 
 void UEquipmentInstance::RemoveVisuals()
 {
+	GY_WARN(Game, KHB, "RemoveVisuals 실행, SpawnedActors=%d", SpawnedActors.Num());
 	for (AActor* SpawnedActor : SpawnedActors)
 	{
 		if (IsValid(SpawnedActor))
