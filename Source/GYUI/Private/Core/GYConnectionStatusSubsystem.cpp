@@ -45,11 +45,20 @@ void UGYConnectionStatusSubsystem::Deinitialize()
 }
 
 void UGYConnectionStatusSubsystem::HandleNetworkFailure(UWorld*, UNetDriver*,
-	ENetworkFailure::Type, const FString&)
+	ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
 	// 인게임 연결 끊김 -> 엔진이 기본 맵으로 트래블, 트래블 완료 후 팝업
-	PendingTitle   = LOCTEXT("Disconnect_Title", "연결 끊김");
-	PendingMessage = LOCTEXT("Disconnect_Message", "서버와의 연결이 끊어졌습니다.\n메인 메뉴로 돌아갑니다.");
+	if (FailureType == ENetworkFailure::PendingConnectionFailure && ErrorString == TEXT("world_full"))
+	{
+		// 서버 PreLogin 의 인원 초과 거부 (GYGameMode) — 일반 끊김과 구분해 안내
+		PendingTitle   = LOCTEXT("WorldFull_Title", "월드 만석");
+		PendingMessage = LOCTEXT("WorldFull_Message", "월드 인원이 가득 찼습니다. (최대 4명)\n자리가 나면 다시 시도해주세요.");
+	}
+	else
+	{
+		PendingTitle   = LOCTEXT("Disconnect_Title", "연결 끊김");
+		PendingMessage = LOCTEXT("Disconnect_Message", "서버와의 연결이 끊어졌습니다.\n메인 메뉴로 돌아갑니다.");
+	}
 	bHasPending = true;
 
 	if (!PostLoadMapHandle.IsValid())

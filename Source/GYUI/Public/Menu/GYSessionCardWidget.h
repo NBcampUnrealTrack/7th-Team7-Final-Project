@@ -14,6 +14,7 @@ DECLARE_DELEGATE_OneParam(FGYOnSessionCardDelete, int64 /*WorldId*/);
 // WBP_SessionWidget 이 이 클래스를 부모로 reparent 하면 아래 이름의 위젯을 채택한다 (변수 체크 불필요):
 //   SessionNameText(TextBlock) / HostText(TextBlock) / InfoText(TextBlock, 선택) / CardButton(Button)
 //   DeleteButton(Button, 선택 — 소유+offline 카드에서만 보임)
+//   PlayStateText(TextBlock, 선택 — 접속자가 있는 월드에 "플레이 중" 표시)
 // WBP 없이도 동작 — 트리를 코드로 구성하는 폴백 내장
 UCLASS()
 class GYUI_API UGYSessionCardWidget : public UUserWidget
@@ -59,6 +60,9 @@ private:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> DeleteButton;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> PlayStateText;
 
 	// WBP 파생은 멤버 바인딩이 NativeConstruct 시점 — Setup 이 먼저 와도 안전하게 캐시 후 재적용
 	void ApplyToWidgets();

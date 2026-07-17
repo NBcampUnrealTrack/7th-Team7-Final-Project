@@ -43,6 +43,7 @@ void UGYSessionCardWidget::NativeConstruct()
 	if (InfoText == nullptr) InfoText = Cast<UTextBlock>(GetWidgetFromName(TEXT("InfoText")));
 	if (CardButton == nullptr) CardButton = Cast<UButton>(GetWidgetFromName(TEXT("CardButton")));
 	if (DeleteButton == nullptr) DeleteButton = Cast<UButton>(GetWidgetFromName(TEXT("DeleteButton")));
+	if (PlayStateText == nullptr) PlayStateText = Cast<UTextBlock>(GetWidgetFromName(TEXT("PlayStateText")));
 
 	if (CardButton != nullptr && !CardButton->OnClicked.IsAlreadyBound(this, &UGYSessionCardWidget::HandleCardClicked))
 	{
@@ -95,6 +96,12 @@ void UGYSessionCardWidget::ApplyToWidgets()
 		// 가동 중(online/starting)엔 삭제 불가 — RPC 정책(offline 만)과 일치
 		const bool bDeletable = bDeleteVisibleWanted && CachedWorld.Status == TEXT("offline");
 		DeleteButton->SetVisibility(bDeletable ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+	if (PlayStateText != nullptr)
+	{
+		// 접속자가 있는 월드만 "플레이 중" — 빈 online(유휴 회수 대기)은 유저 입장에선 꺼진 것과 같다
+		const bool bPlaying = CachedWorld.Status == TEXT("online") && CachedWorld.PlayerCount > 0;
+		PlayStateText->SetVisibility(bPlaying ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	}
 }
 
