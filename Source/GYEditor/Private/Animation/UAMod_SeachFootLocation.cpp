@@ -34,33 +34,43 @@ void UUAMod_SeachFootLocation::OnApply_Implementation(UAnimSequence* AnimationSe
 	LeftFootZ.SetNum(TotalFrames);
 	RightFootZ.SetNum(TotalFrames);
 
+
+	TArray<FVector> LeftFootPos;
+	TArray<FVector> RightFootPos;
+	LeftFootPos.SetNum(TotalFrames);
+	RightFootPos.SetNum(TotalFrames);
+
 	// 2. 모든 프레임 순회하며 왼발/오른발의 컴포넌트 스페이스 Z 좌표 계산
 	for (int32 Frame = 0; Frame < TotalFrames; ++Frame)
 	{
-		LeftFootZ[Frame] = GetComponentSpaceTransform(AnimationSequence, RefSkeleton, LeftFootName, Frame).GetLocation().Z;
-		RightFootZ[Frame] = GetComponentSpaceTransform(AnimationSequence, RefSkeleton, RightFootName, Frame).GetLocation().Z;
+		LeftFootPos[Frame] = GetComponentSpaceTransform(AnimationSequence, RefSkeleton, LeftFootName, Frame).GetLocation();
+		RightFootPos[Frame] = GetComponentSpaceTransform(AnimationSequence, RefSkeleton, RightFootName, Frame).GetLocation();
 	}
 
-	// 3. 극솟값 검출 및 노티파이/마커 삽입 로직 (람다 캡처 활용)
-	auto AddFootstepData = [&](const TArray<float>& FootZ, FName BoneName, FName MarkerName)
+	// 3. 속도 기반 검출 알고리즘 적용 (이중 마커 방지 로직 추가)
+	auto AddFootstepData = [&](const TArray<FVector>& FootPos, FName BoneName, FName MarkerName)
 	{
-		// 3-1. 애니메이션 전체에서 발이 가장 낮게 내려간 '절대 최솟값' 찾기
-		float GlobalMinZ = FootZ[0];
-		for (float Z : FootZ)
-		{
-			if (Z < GlobalMinZ) GlobalMinZ = Z;
-		}
+		//HeightThreshold; // 발목이 바닥에서 15cm 이하로 내려왔을 때만 검사
+		//SpeedThreshold;   // 1프레임당 이동 거리가 2.0cm 이하일 때 (거의 멈춤)
 
-		// 오차 허용 범위 (절대 최솟값에 근접한 지점만 마커를 찍음)
-		float ZThreshold = 2.0f;
+		bool bIsStepping = false; // 현재 발을 디디고 있는 상태인지 추적
+		int32 LastStepFrame = -100; // 마지막으로 발소리를 찍은 프레임 기록 (쿨다운 용도)
+		// 무시할 초기 프레임 수 지정 (원하는 만큼 숫자를 조절하세요)
+		//IgnoreStartFrames;
 
-		for (int32 Frame = 1; Frame < TotalFrames - 1; ++Frame)
+		// 루프 시작점을 1이 아닌 IgnoreStartFrames로 변경
+		// 이렇게 하면 0 ~ 4 프레임까지는 아예 연산(속도/높이 검사) 자체를 하지 않고 건너뜁니다.
+		for (int32 Frame = IgnoreStartFrames; Frame < TotalFrames; ++Frame)
 		{
-			// 3-2. 현재 프레임이 극솟값(V자 꺾임)인지 확인
-			if (FootZ[Frame] < FootZ[Frame - 1] && FootZ[Frame] < FootZ[Frame + 1])
+			// 이전 프레임과 현재 프레임 사이의 이동 거리(속도) 계산
+			float Speed = FVector::Distance(FootPos[Frame], FootPos[Frame - 1]);
+			float ZHeight = FootPos[Frame].Z;
+
+			// 3-1. 조건: 발이 바닥 근처에 있고 && 발이 거의 멈췄을 때
+			if (ZHeight <= HeightThreshold && Speed <= SpeedThreshold)
 			{
-				// 3-3. 해당 극솟값이 절대 최솟값과 오차 범위 이내인지 확인
-				if (FMath::Abs(FootZ[Frame] - GlobalMinZ) <= ZThreshold)
+				// 이전에 마커를 찍은 시점으로부터 최소 10프레임 이상 지났을 때만 실행 (쿨다운)
+				if (!bIsStepping && (Frame - LastStepFrame > 8))
 				{
 					float Time = 0.f;
 					UAnimationBlueprintLibrary::GetTimeAtFrame(AnimationSequence, Frame, Time);
@@ -69,24 +79,30 @@ void UUAMod_SeachFootLocation::OnApply_Implementation(UAnimSequence* AnimationSe
 					UAnimNotify* CreatedNotify = UAnimationBlueprintLibrary::AddAnimationNotifyEvent(
 						AnimationSequence, NotifyTrackName, Time, FootstepSoundNotifyClass
 					);
-
 					if (UAnimNotify_FootStepSound* FootstepNotify = Cast<UAnimNotify_FootStepSound>(CreatedNotify))
 					{
 						FootstepNotify->FootBoneName = BoneName;
 					}
 
-
-					// 3-4. 동기화 마커 추가 (수정됨: 트랙 이름이 2번째, 마커 이름이 4번째)
+					// 동기화 마커 추가
 					UAnimationBlueprintLibrary::AddAnimationSyncMarker(
-						AnimationSequence, MarkerName, Time, SyncTrackName);
+						AnimationSequence, MarkerName, Time, SyncTrackName
+					);
+
+					bIsStepping = true;
+					LastStepFrame = Frame; // 마커를 찍은 현재 프레임 갱신
 				}
+			}
+			// 3-2. 초기화 조건: 오직 발이 Z축으로 충분히 올라갔을 때만 상태를 초기화함 (속도 조건 제거)
+			else if (ZHeight > HeightThreshold + 2.0f)
+			{
+				bIsStepping = false;
 			}
 		}
 	};
-
 	// 4. 왼발과 오른발 각각 함수 실행
-	AddFootstepData(LeftFootZ, LeftFootName, TEXT("L"));
-	AddFootstepData(RightFootZ, RightFootName, TEXT("R"));
+	AddFootstepData(LeftFootPos, LeftFootName, TEXT("L"));
+	AddFootstepData(RightFootPos, RightFootName, TEXT("R"));
 }
 
 void UUAMod_SeachFootLocation::OnRevert_Implementation(UAnimSequence* AnimationSequence)

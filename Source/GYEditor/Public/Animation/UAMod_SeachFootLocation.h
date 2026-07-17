@@ -21,7 +21,12 @@ protected:
 	                                      int32 Frame) const;
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
-	float ZThreshold = 15.0f;
+	float HeightThreshold = 15.0f; // 발목이 바닥에서 15cm 이하로 내려왔을 때만 검사
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	float SpeedThreshold = 2.0f;
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	int32 IgnoreStartFrames = 5;
+
 
 	//노티파이 넣을 곳 이름
 	UPROPERTY(EditAnywhere, Category = "Settings")
