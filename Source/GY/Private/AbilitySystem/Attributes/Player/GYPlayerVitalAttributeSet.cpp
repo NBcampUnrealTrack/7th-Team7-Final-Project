@@ -6,7 +6,7 @@
 
 namespace
 {
-	constexpr float StaminaRegenDefaultPerTick = 2.5f;   // 스태미나 0 이상: 기본 회복
+	constexpr float StaminaRegenDefaultPerTick = 10.f;   // 스태미나 0 이상: 기본 회복
 	constexpr float StaminaRegenNegativePerTick = 1.0f;  // 과소모(음수): 느린 회복
 }
 

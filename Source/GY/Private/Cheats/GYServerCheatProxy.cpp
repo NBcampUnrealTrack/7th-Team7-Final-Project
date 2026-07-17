@@ -4,6 +4,7 @@
 #include "AbilitySystem/Attributes/Player/GYProgressionAttributeSet.h"
 #include "AbilitySystem/GYCombatStatics.h"
 #include "Core/GameplayTags/CurrencyTags.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "Currency/CurrencyComponent.h"
 #include "Enemy/GYEnemyCharacterBase.h"
 #include "Equipment/EquipmentLoadoutComponent.h"
@@ -35,6 +36,23 @@ AGYServerCheatProxy::AGYServerCheatProxy()
 	bAlwaysRelevant = true;
 	bNetUseOwnerRelevancy = true;
 	PrimaryActorTick.bCanEverTick = false;
+}
+
+void AGYServerCheatProxy::Server_Invulnerable_Toggle_Implementation()
+{
+	AGYPlayerState* PS = GetGYPlayerState(this);
+	if (!PS) return;
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	if (ASC->HasMatchingGameplayTag(GYStateTags::State_Combat_Invulnerable))
+	{
+		ASC->RemoveLooseGameplayTag(GYStateTags::State_Combat_Invulnerable);
+	}
+	else
+	{
+		ASC->AddLooseGameplayTag(GYStateTags::State_Combat_Invulnerable);
+	}
 }
 
 void AGYServerCheatProxy::Server_Suicide_Implementation()

@@ -641,3 +641,12 @@ void UGYCheatManager::GY_Suicide()
 	AGYServerCheatProxy->Server_Suicide();
 }
 
+void UGYCheatManager::GY_Invulnerable_Toggle()
+{
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_Invulnerable_Toggle();
+}
+
