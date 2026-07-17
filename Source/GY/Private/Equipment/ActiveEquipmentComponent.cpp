@@ -1,5 +1,5 @@
 #include "Equipment/ActiveEquipmentComponent.h"
-
+#include "Components/SkeletalMeshComponent.h"
 #include "AbilitySystem/AbilitySet.h"
 #include "AbilitySystem/AbilitySetGrantedHandles.h"
 #include "AbilitySystem/GYAbilitySystemComponent.h"
@@ -223,18 +223,35 @@ UEquipmentInstance* UActiveEquipmentComponent::GetEquippedInstance(FGameplayTag 
 
 void UActiveEquipmentComponent::RemoveAllVisuals()
 {
+	GY_WARN(Game, KHB, "RemoveAllVisuals 호출, Entries=%d", EquippedItems.Entries.Num());
 	APawn* Pawn = Cast<APawn>(GetOwner());
 	for (const FEquipmentEntry& Entry : EquippedItems.Entries)
 	{
+		GY_WARN(Game, KHB, "Entry.Instance valid=%d", IsValid(Entry.Instance));
 		if (IsValid(Entry.Instance))
 		{
 			Entry.Instance->OnUnequipped(Pawn);
+		}
+	}
+
+	if (AActor* Owner = Pawn)
+	{
+		GY_WARN(Game, KHB, "붙어잇는 액터 지우기")
+		TArray<AActor*> AttachedActors;
+		Owner->GetAttachedActors(AttachedActors);
+		for (AActor* AttachedActor : AttachedActors)
+		{
+			if (IsValid(AttachedActor))
+			{
+				AttachedActor->Destroy();
+			}
 		}
 	}
 }
 
 void UActiveEquipmentComponent::MulticastRemoveAllVisuals_Implementation()
 {
+	GY_WARN(Game, KHB, "Multicast 도착 (Role=%d)", (int32)GetOwnerRole());
 	RemoveAllVisuals();
 }
 
