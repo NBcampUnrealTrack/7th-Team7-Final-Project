@@ -10,6 +10,7 @@ class UGYEndingCreditsWidget;
 class UGYInteractionWaitingWidget;
 class UGYWorldResetWidget;
 class UGYEndingNarrativeWidget;
+class UGYMessagePopupWidget;
 
 UCLASS(Config=Game, DefaultConfig, meta=(DisplayName="GY UI"))
 class GYUI_API UGYUISettings : public UDeveloperSettings
@@ -31,6 +32,10 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI")
 	TSoftClassPtr<UCommonActivatableWidget> SettingsWidgetClass;
+
+	// 공용 안내, 확인 팝업
+	UPROPERTY(EditDefaultsOnly, Config, Category="UI")
+	TSoftClassPtr<UGYMessagePopupWidget> MessagePopupClass;
 
 	UPROPERTY(EditDefaultsOnly, Config, Category="UI|WorldReset")
 	TSoftClassPtr<UGYWorldResetWidget> WorldResetWidgetClass;
