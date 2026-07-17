@@ -22837,6 +22837,132 @@
                                                                                                               }
                                                                                                           ]
                                                                                           },
+                   "Medieval_Warzone/Blueprints/BP_TentProps_03.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "Admin",
+                                                                                                  "at":  "2026-07-17 20:36:41",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Medieval_Warzone/Blueprints/BP_TentProps_04.uasset":  {
+                                                                              "history":  [
+                                                                                              {
+                                                                                                  "by":  "Admin",
+                                                                                                  "at":  "2026-07-17 20:36:41",
+                                                                                                  "note":  ""
+                                                                                              }
+                                                                                          ]
+                                                                          },
+                   "Medieval_Warzone/BP_Replace/SM_BP_BarrelWeapons.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "Admin",
+                                                                                                      "at":  "2026-07-17 20:36:41",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Medieval_Warzone/BP_Replace/SM_BP_BenchMisc_01.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "Admin",
+                                                                                                     "at":  "2026-07-17 20:36:41",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Medieval_Warzone/BP_Replace/SM_BP_BenchMisc_02.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "Admin",
+                                                                                                     "at":  "2026-07-17 20:36:41",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Medieval_Warzone/BP_Replace/SM_BP_ChestMisc_01.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "Admin",
+                                                                                                     "at":  "2026-07-17 20:36:41",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Medieval_Warzone/BP_Replace/SM_BP_ChestMisc_02.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "Admin",
+                                                                                                     "at":  "2026-07-17 20:36:41",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Medieval_Warzone/BP_Replace/SM_BP_TableBanquet.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "Admin",
+                                                                                                     "at":  "2026-07-17 20:36:41",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Medieval_Warzone/BP_Replace/SM_BP_TentProps_3.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "Admin",
+                                                                                                    "at":  "2026-07-17 20:36:41",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Medieval_Warzone/BP_Replace/SM_BP_TentProps_4.uasset":  {
+                                                                                "history":  [
+                                                                                                {
+                                                                                                    "by":  "Admin",
+                                                                                                    "at":  "2026-07-17 20:36:41",
+                                                                                                    "note":  ""
+                                                                                                }
+                                                                                            ]
+                                                                            },
+                   "Medieval_Warzone/BP_Replace/SM_BP_WeaponRack_01.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "Admin",
+                                                                                                      "at":  "2026-07-17 20:36:41",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Medieval_Warzone/BP_Replace/SM_BP_WeaponRack_03.uasset":  {
+                                                                                  "history":  [
+                                                                                                  {
+                                                                                                      "by":  "Admin",
+                                                                                                      "at":  "2026-07-17 20:36:41",
+                                                                                                      "note":  ""
+                                                                                                  }
+                                                                                              ]
+                                                                              },
+                   "Medieval_Warzone/BP_Replace/SM_BP_WeaponsGroup.uasset":  {
+                                                                                 "history":  [
+                                                                                                 {
+                                                                                                     "by":  "Admin",
+                                                                                                     "at":  "2026-07-17 20:36:41",
+                                                                                                     "note":  ""
+                                                                                                 }
+                                                                                             ]
+                                                                             },
+                   "Medieval_Warzone/BP_Replace/SM_SM_BP_TentProps_04.uasset":  {
+                                                                                    "history":  [
+                                                                                                    {
+                                                                                                        "by":  "Admin",
+                                                                                                        "at":  "2026-07-17 20:36:41",
+                                                                                                        "note":  ""
+                                                                                                    }
+                                                                                                ]
+                                                                                },
                    "Medieval_Warzone/Meshes/SM_Anvil.uasset":  {
                                                                    "history":  [
                                                                                    {
