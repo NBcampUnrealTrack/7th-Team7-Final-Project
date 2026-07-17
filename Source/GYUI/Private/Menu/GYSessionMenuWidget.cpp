@@ -17,6 +17,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "HAL/IConsoleManager.h"
 #include "Logging/GYLogManager.h"
+#include "Widget/Common/GYMessagePopupWidget.h"
 
 namespace
 {
@@ -347,6 +348,11 @@ void UGYSessionMenuWidget::OnJoinPhase(int64 WorldId, EGYJoinWorldPhase Phase)
 		bJoinInProgress = false;
 		SetCardsEnabled(true);
 		SetStatus(TEXT("입장 실패 - 새로고침 후 다시 시도하세요"));
+		UGYMessagePopupWidget::ShowNotice(
+			this,
+			NSLOCTEXT("GYUI", "Join_Failed_Title", "입장 실패"),
+			NSLOCTEXT("GYUI", "Join_Failed_Message",
+					  "세션에 입장하지 못했습니다.\n잠시 후 다시 시도해주세요."));
 		break;
 	}
 }
