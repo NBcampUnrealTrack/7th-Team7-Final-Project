@@ -9,6 +9,7 @@
 #include "Engine/LocalPlayer.h"
 #include "GameplayTags/GYUILayerTags.h"
 #include "GameFramework/PlayerController.h"
+#include "GameModes/GYMenuGameMode.h"
 
 UGYMessagePopupWidget::UGYMessagePopupWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -99,27 +100,39 @@ UGYMessagePopupWidget* UGYMessagePopupWidget::ShowInternal(const UObject* WC, co
 	APlayerController* PC = World->GetFirstPlayerController();
 	UGYMessagePopupWidget* Popup = nullptr;
 
-	// 인게임 - PrimaryGameLayout 이 있으면 Modal 레이어로 push
-	if (ULocalPlayer* LP = PC ? PC->GetLocalPlayer() : nullptr)
+	const bool bMenuContext =
+		(World->GetAuthGameMode<AGYMenuGameMode>() != nullptr) ||World->GetMapName().Contains(TEXT("MainMenu"));
+
+	// 인게임에서만 PrimaryGameLayout - Modal 레이어로 push
+	if (!bMenuContext)
 	{
-		if (UGYUIManagerSubsystem* UIM = LP->GetSubsystem<UGYUIManagerSubsystem>())
+		if (ULocalPlayer* LP = PC ? PC->GetLocalPlayer() : nullptr)
 		{
-			if (UIM->GetPrimaryGameLayout())
+			if (UGYUIManagerSubsystem* UIM = LP->GetSubsystem<UGYUIManagerSubsystem>())
 			{
-				Popup = Cast<UGYMessagePopupWidget>(
-					UIM->PushWidgetToLayer(GYUILayerTags::UI_Layer_Modal, PopupClass));
+				if (UIM->GetPrimaryGameLayout())
+				{
+					Popup = Cast<UGYMessagePopupWidget>(UIM->PushWidgetToLayer(GYUILayerTags::UI_Layer_Modal, PopupClass));
+				}
 			}
 		}
 	}
 
-	// 폴백 - 메인메뉴/트래블 중이명 뷰포트에 직접
+	// 2) 메뉴 / 레이아웃 없음 / 트래블 중 → 뷰포트 최상단(ZOrder 10000)에 직접
 	if (!Popup)
 	{
 		Popup = PC ? CreateWidget<UGYMessagePopupWidget>(PC, PopupClass)
-		           : CreateWidget<UGYMessagePopupWidget>(World, PopupClass);
+				   : CreateWidget<UGYMessagePopupWidget>(World, PopupClass);
 		if (Popup) Popup->AddToViewport(10000);
 	}
-
+	// 메뉴 / 레이아웃 없음 / 트래블 중 뷰포트 최상단에 직접
+	if (!Popup)
+	{
+		Popup = PC
+		? CreateWidget<UGYMessagePopupWidget>(PC, PopupClass)
+		: CreateWidget<UGYMessagePopupWidget>(World, PopupClass);
+		if (Popup) Popup->AddToViewport(10000);
+	}
 	if (Popup)
 	{
 		if (bConfirm) Popup->SetupConfirm(Title, Message);
