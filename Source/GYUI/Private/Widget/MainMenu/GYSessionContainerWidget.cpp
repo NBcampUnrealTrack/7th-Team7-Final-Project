@@ -1,7 +1,6 @@
 #include "Widget/MainMenu/GYSessionContainerWidget.h"
 
 #include "Account/GYAccountSubsystem.h"
-#include "Menu/GYConfirmPopupWidget.h"
 #include "Menu/GYJoinStatusWidget.h"
 #include "Menu/GYSessionCardWidget.h"
 #include "Widget/Common/GYMessagePopupWidget.h"
@@ -213,15 +212,16 @@ void UGYSessionContainerWidget::RequestDeleteWorld(int64 WorldId)
 		[WorldId](const TObjectPtr<UGYSessionCardWidget>& Card) { return IsValid(Card) && Card->GetWorldId() == WorldId; });
 	const FString WorldName = Found != nullptr ? (*Found)->GetWorldName() : FString();
 
-	UGYConfirmPopupWidget* Popup = CreateWidget<UGYConfirmPopupWidget>(GetOwningPlayer(),
-		ConfirmPopupClass != nullptr ? *ConfirmPopupClass : UGYConfirmPopupWidget::StaticClass());
+	UGYMessagePopupWidget* Popup = UGYMessagePopupWidget::ShowConfirm(
+		this,
+		NSLOCTEXT("GYUI", "World_Delete_Title", "월드 삭제"),
+		FText::FromString(FString::Printf(TEXT("'%s' 월드를 정말 삭제하시겠습니까?"), *WorldName)));
 	if (Popup == nullptr) return;
 
-	Popup->SetupConfirm(
-		FText::FromString(TEXT("월드 삭제")),
-		FText::FromString(FString::Printf(TEXT("'%s' 월드를 정말 삭제하시겠습니까?"), *WorldName)),
-		FGYOnConfirmed::CreateUObject(this, &UGYSessionContainerWidget::ConfirmDeleteWorld, WorldId));
-	Popup->AddToViewport(20);
+	Popup->OnConfirmed.AddWeakLambda(this, [this, WorldId]()
+	{
+		ConfirmDeleteWorld(WorldId);
+	});
 }
 
 void UGYSessionContainerWidget::ConfirmDeleteWorld(int64 WorldId)
