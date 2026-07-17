@@ -9,12 +9,19 @@
 #include "Enemy/Projectile/AreaImpactProjectile.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
+#include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 
 void UArenaImpactAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (!IsActive())
+	{
+		return;
+	}
 
 	UWorld* World = GetWorld();
 	APawn* Boss = Cast<APawn>(GetAvatarActorFromActorInfo());
@@ -32,9 +39,17 @@ void UArenaImpactAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 
 	PlayAttackMontage();
 
-	const FVector Center = AAreaWarningActor::ResolveArenaCenter(
+	FVector ImpactLoc = AAreaWarningActor::ResolveArenaCenter(
 		World, ArenaCenterTag, Boss->GetActorLocation());
-	const FVector SpawnLoc = Center + FVector(0.f, 0.f, SpawnHeight);
+	if (!AnchorActorTag.IsNone())
+	{
+		TArray<AActor*> Anchors;
+		UGameplayStatics::GetAllActorsWithTag(World, AnchorActorTag, Anchors);
+		if (Anchors.Num() > 0)
+		{
+			ImpactLoc = Anchors[0]->GetActorLocation();
+		}
+	}
 
 	FActorSpawnParameters Params;
 	Params.Owner = Boss;
@@ -42,10 +57,41 @@ void UArenaImpactAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	if (AAreaImpactProjectile* Proj = World->SpawnActor<AAreaImpactProjectile>(
-			ProjectileClass, SpawnLoc, FRotator(-90.f, 0.f, 0.f), Params))
+			ProjectileClass, ImpactLoc, FRotator::ZeroRotator, Params))
 	{
-		Proj->Launch(Boss, FVector(0.f, 0.f, -1.f), DropSpeed);
+		SpawnedProjectile = Proj;
+
+		if (ImpactDelay > 0.f)
+		{
+			World->GetTimerManager().SetTimer(
+				ImpactTimerHandle, this, &UArenaImpactAbility::DoImpact, ImpactDelay, false);
+		}
+		else
+		{
+			DoImpact();
+		}
 	}
+}
+
+void UArenaImpactAbility::DoImpact()
+{
+	APawn* Boss = Cast<APawn>(GetAvatarActorFromActorInfo());
+	if (SpawnedProjectile.IsValid() && Boss)
+	{
+		SpawnedProjectile->Detonate(Boss);
+	}
+}
+
+void UArenaImpactAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	bool bReplicateEndAbility, bool bWasCancelled)
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(ImpactTimerHandle);
+	}
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void UArenaImpactAbility::OnProjectileHit(FGameplayEventData Payload)
