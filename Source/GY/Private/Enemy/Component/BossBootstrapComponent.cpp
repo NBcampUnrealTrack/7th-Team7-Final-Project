@@ -96,7 +96,8 @@ void UBossBootstrapComponent::GrantDefaultAbilities()
 	{
 		if (!ASC->FindAbilitySpecFromClass(AbilityClass))
 		{
-			ASC->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1, INDEX_NONE, Owner));
+			GrantedAbilityHandles.Add(
+				ASC->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1, INDEX_NONE, Owner)));
 			++GrantedCount;
 		}
 	}

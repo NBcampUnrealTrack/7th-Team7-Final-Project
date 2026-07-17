@@ -51,6 +51,15 @@ void UEnemyBootstrapComponent::NotifyRespawn()
 {
 	if (!LoadedDataAsset) return;
 
+	if (AGYEnemyCharacterBase* Owner = GetEnemyOwner())
+	{
+		if (UGYEnemyAbilitySystemComponent* EnemyASC =
+			Cast<UGYEnemyAbilitySystemComponent>(Owner->GetAbilitySystemComponent()))
+		{
+			EnemyASC->ResetForRespawn();
+		}
+	}
+
 	bGASGrantedFromDataAsset = false;
 	TryGrantGASFromDataAsset();
 
@@ -378,6 +387,8 @@ void UEnemyBootstrapComponent::TryGrantGASFromDataAsset()
 
 void UEnemyBootstrapComponent::GrantDefaultAbilities()
 {
+	ClearGrantedAbilities();
+
 	AGYEnemyCharacterBase* Owner = GetEnemyOwner();
 	if (!Owner || !LoadedDataAsset) return;
 
@@ -389,9 +400,29 @@ void UEnemyBootstrapComponent::GrantDefaultAbilities()
 	{
 		if (TSubclassOf<UGameplayAbility> Loaded = AbilityClass.LoadSynchronous())
 		{
-			ASC->GiveAbility(FGameplayAbilitySpec(Loaded, 1, INDEX_NONE, Owner));
+			GrantedAbilityHandles.Add(
+				ASC->GiveAbility(FGameplayAbilitySpec(Loaded, 1, INDEX_NONE, Owner)));
 		}
 	}
+}
+
+void UEnemyBootstrapComponent::ClearGrantedAbilities()
+{
+	if (GrantedAbilityHandles.IsEmpty()) return;
+
+	AGYEnemyCharacterBase* Owner = GetEnemyOwner();
+	UAbilitySystemComponent* ASC = Owner ? Owner->GetAbilitySystemComponent() : nullptr;
+	if (ASC)
+	{
+		for (const FGameplayAbilitySpecHandle& Handle : GrantedAbilityHandles)
+		{
+			if (Handle.IsValid())
+			{
+				ASC->ClearAbility(Handle);
+			}
+		}
+	}
+	GrantedAbilityHandles.Reset();
 }
 
 void UEnemyBootstrapComponent::ApplyPassiveEffects()

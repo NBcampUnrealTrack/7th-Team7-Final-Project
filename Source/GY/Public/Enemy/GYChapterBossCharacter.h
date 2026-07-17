@@ -67,6 +67,9 @@ public:
 
 	bool HasSwappedWeapon() const { return bPhase2Weapon; }
 
+	/** 리스폰 시 페이즈/무기 상태를 1페이즈 기준으로 리셋 */
+	virtual void Activate() override;
+
 	virtual void Die() override;
 protected:
 	virtual void BeginPlay() override;
@@ -80,6 +83,9 @@ protected:
 
 	/** 서버·클라 공통 적용: BlendSpace/몽타주맵/무기 토글/트레이스 소켓 */
 	void ApplySecondPhaseWeapon();
+
+	/** 리스폰/복제로 1페이즈 복귀 시: 기본 BlendSpace 복원 + 무기 가시성 + 트레이스 소켓 원복 */
+	void ApplyFirstPhaseWeapon();
 
 	/** 시퀀스 재생 중 실보스+부착 무기 숨김/복원. 복원 시 페이즈 상태 기준으로 무기 가시성 재적용 */
 	void SetCinematicHidden(bool bNewHidden);
