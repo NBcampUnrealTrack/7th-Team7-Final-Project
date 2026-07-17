@@ -44,17 +44,23 @@ void UUAMod_SeachFootLocation::OnApply_Implementation(UAnimSequence* AnimationSe
 	// 3. 극솟값 검출 및 노티파이/마커 삽입 로직 (람다 캡처 활용)
 	auto AddFootstepData = [&](const TArray<float>& FootZ, FName BoneName, FName MarkerName)
 	{
-		// 오차 허용 범위: 최솟값 기준 +10.0cm 이내에 들어올 때만 바닥에 닿은 것으로 판정
-		float ZThreshold = 3.0f;
+		// 3-1. 애니메이션 전체에서 발이 가장 낮게 내려간 '절대 최솟값' 찾기
+		float GlobalMinZ = FootZ[0];
+		for (float Z : FootZ)
+		{
+			if (Z < GlobalMinZ) GlobalMinZ = Z;
+		}
+
+		// 오차 허용 범위 (절대 최솟값에 근접한 지점만 마커를 찍음)
+		float ZThreshold = 2.0f;
 
 		for (int32 Frame = 1; Frame < TotalFrames - 1; ++Frame)
 		{
-			// 3-1. 현재 프레임이 극솟값(V자 꺾임)인지 확인 (중복문 제거됨)
+			// 3-2. 현재 프레임이 극솟값(V자 꺾임)인지 확인
 			if (FootZ[Frame] < FootZ[Frame - 1] && FootZ[Frame] < FootZ[Frame + 1])
 			{
-				// 3-2. 해당 극솟값이 루트(Z=0)에 가장 가까운지(임계값 이내) 확인
-				// FMath::Abs를 사용하여 발이 바닥을 살짝 뚫는(-Z) 모션도 정상적으로 처리
-				if (FMath::Abs(FootZ[Frame]) <= ZThreshold)
+				// 3-3. 해당 극솟값이 절대 최솟값과 오차 범위 이내인지 확인
+				if (FMath::Abs(FootZ[Frame] - GlobalMinZ) <= ZThreshold)
 				{
 					float Time = 0.f;
 					UAnimationBlueprintLibrary::GetTimeAtFrame(AnimationSequence, Frame, Time);
@@ -69,10 +75,10 @@ void UUAMod_SeachFootLocation::OnApply_Implementation(UAnimSequence* AnimationSe
 						FootstepNotify->FootBoneName = BoneName;
 					}
 
-					// 동기화 마커 추가
+
+					// 3-4. 동기화 마커 추가 (수정됨: 트랙 이름이 2번째, 마커 이름이 4번째)
 					UAnimationBlueprintLibrary::AddAnimationSyncMarker(
-						AnimationSequence, MarkerName, Time, SyncTrackName
-					);
+						AnimationSequence, MarkerName, Time, SyncTrackName);
 				}
 			}
 		}

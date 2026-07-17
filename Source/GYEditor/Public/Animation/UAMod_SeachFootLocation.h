@@ -20,6 +20,9 @@ protected:
 	                                      FName BoneName,
 	                                      int32 Frame) const;
 
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	float ZThreshold = 15.0f;
+
 	//노티파이 넣을 곳 이름
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	FName NotifyTrackName = TEXT("SFX");
