@@ -118,6 +118,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Aggro")
 	void ForceTarget(AActor* Actor, float ForcedThreatBonus = 1000.f);
 
+	void BindToPerception();
+	void UnbindFromPerception();
+
 	UPROPERTY(BlueprintAssignable, Category = "Aggro")
 	FOnAggroTargetChanged OnTargetChanged;
 
@@ -127,9 +130,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
-	void BindToPerception();
-	void UnbindFromPerception();
 
 	UFUNCTION()
 	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);

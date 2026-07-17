@@ -139,8 +139,8 @@ void UEnemyAggroComponent::BindToPerception()
 	if (!Perc) return;
 
 	CachedPerception = Perc;
-	Perc->OnTargetPerceptionUpdated.AddDynamic(this, &UEnemyAggroComponent::OnPerceptionUpdated);
-	Perc->OnTargetPerceptionForgotten.AddDynamic(this, &UEnemyAggroComponent::OnPerceptionForgotten);
+	Perc->OnTargetPerceptionUpdated.AddUniqueDynamic(this, &UEnemyAggroComponent::OnPerceptionUpdated);
+	Perc->OnTargetPerceptionForgotten.AddUniqueDynamic(this, &UEnemyAggroComponent::OnPerceptionForgotten);
 }
 
 void UEnemyAggroComponent::UnbindFromPerception()
