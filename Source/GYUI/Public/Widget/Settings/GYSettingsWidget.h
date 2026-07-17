@@ -160,6 +160,7 @@ private:
 
 	/** 게임 종료 */
 	UFUNCTION() void HandleQuitClicked();
+	void QuitGameWithDisconnect();
 
     void InitGraphicsTab();
     void InitSoundTab();

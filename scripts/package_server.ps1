@@ -35,6 +35,9 @@ if (-not $ServerBaseUrl) {
 
 Write-Host "[server] engine=$EngineRoot backend=$ServerBaseUrl archive=$ArchiveDir"
 
+# 이전 실행 산출물 제거 — 다른 Config 의 바이너리가 섞여 zip 에 같이 실리는 것 방지
+if (Test-Path "$ArchiveDir\WindowsServer") { Remove-Item -Recurse -Force "$ArchiveDir\WindowsServer" }
+
 $bHadLocalIni = Test-Path $IniPath
 if ($bHadLocalIni) { Copy-Item $IniPath $IniBackup -Force }
 try {
