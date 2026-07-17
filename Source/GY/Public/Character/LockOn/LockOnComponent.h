@@ -17,7 +17,6 @@ class GY_API ULockOnComponent : public UActorComponent
 public:
 	ULockOnComponent();
 
-	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -85,8 +84,7 @@ private:
 	FDelegateHandle InCombatTagHandle;
 	TWeakObjectPtr<UAbilitySystemComponent> BoundASC;
 	bool bRotationSuppressed = false;
-	bool bSavedOrientToMovement = true;
-	bool bSavedUseControllerRotationYaw = false;
+	bool bOrientSuppressed = false;
 
 	void ProcessTargetSwitchInput(float DeltaTime);
 	AActor* FindDirectionalTarget(FVector2D Direction) const;
@@ -97,5 +95,6 @@ private:
 	FVector2D PrevMousePosition = FVector2D::ZeroVector;
 	bool bPrevMouseValid = false;
 	float LastSwitchTime = 0.f;
+
 
 };
