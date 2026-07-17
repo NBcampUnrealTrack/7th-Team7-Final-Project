@@ -249,6 +249,7 @@ void AGYEnemyAIController::StopPerception()
 	if (AggroComponent)
 	{
 		AggroComponent->ClearAllThreat();
+		AggroComponent->UnbindFromPerception();
 	}
 
 	AIPerceptionComponent->OnTargetPerceptionUpdated.RemoveDynamic(
@@ -262,6 +263,12 @@ void AGYEnemyAIController::StopPerception()
 void AGYEnemyAIController::StartPerception()
 {
 	if (!AIPerceptionComponent) return;
+
+	if (AggroComponent)
+	{
+		AggroComponent->ClearAllThreat();
+		AggroComponent->BindToPerception();
+	}
 
 	AIPerceptionComponent->Activate();
 

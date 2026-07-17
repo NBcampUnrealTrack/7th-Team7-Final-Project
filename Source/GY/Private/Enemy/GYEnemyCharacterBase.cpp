@@ -567,7 +567,10 @@ void AGYEnemyCharacterBase::Activate()
 	{
 		GetWorldTimerManager().ClearTimer(DeactivateTimerHandle);
 	}
-
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->RemoveLooseGameplayTag(GYStateTags::State_Life_Dead);
+	}
 	DisableRagdoll();
 	EnableGameplay();
 

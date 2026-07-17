@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Core/GameplayTags/GYGameplayMessageTags.h"
+#include "Core/GameplayTags/RegionTags.h"
 #include "UI/GYUIMessages.h"
 #include "Loot/RegionLootData.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
@@ -20,7 +21,8 @@ void AGYRegionVolume::HandlePawnEntered(APawn* Pawn)
 	{
 		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn))
 		{
-			FGameplayTag RegionParentTag = FGameplayTag::RequestGameplayTag(TEXT("Region"));
+
+			FGameplayTag RegionParentTag = GYGameplayTags::Region;
 			FGameplayTagContainer OwnedTags;
 
 			ASC->GetOwnedGameplayTags(OwnedTags);
