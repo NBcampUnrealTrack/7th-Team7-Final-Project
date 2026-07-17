@@ -355,6 +355,12 @@ void AGYChapterBossCharacter::HandleCinematicFinished()
 	}
 	ActiveSequencePlayer = nullptr;
 
+	GetWorldTimerManager().SetTimerForNextTick(
+		FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			RefreshWeaponVisibility();
+		}));
+
 	FGYCinematicMessage Msg;
 	Msg.bIsPlaying = false;
 	UGameplayMessageSubsystem::Get(this).BroadcastMessage(GYGameplayTags::Message_Cinematic_State, Msg);
