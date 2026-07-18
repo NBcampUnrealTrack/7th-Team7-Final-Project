@@ -18,6 +18,9 @@ public:
 
 	UStaticMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
+	// 아이템 데이터의 MeshOptions에서 랜덤으로 고른 메쉬로 덮어씌울 때 사용 (nullptr이면 BP 기본 메쉬 유지)
+	void SetWeaponMesh(UStaticMesh* NewMesh) const;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GY|Equipment")
 	TObjectPtr<UStaticMeshComponent> WeaponMesh;
