@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
+#include "Equipment/GYEquipmentActor.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
 #include "Items/Fragments/ItemFragment_EquipmentVisual.h"
@@ -71,6 +72,22 @@ void UEquipmentInstance::ApplyVisuals()
 	UWorld* World = Pawn->GetWorld();
 	if (!IsValid(World)) return;
 
+	// 세트 인덱스를 한 번만 뽑아 ActorsToSpawn 전체에 공유 (검 MeshOptions[i] ↔ 방패 MeshOptions[i]가 한 세트).
+	// 항목별로 따로 뽑으면 서로 안 맞는 조합(검 세트1 + 방패 세트3)이 나올 수 있어서 이렇게 처리.
+	// InstanceId 해시로 결정론적으로 뽑아야 함: FMath::RandRange를 쓰면 서버·각 클라가 로컬에서 따로
+	// 굴려서 장착-해제-재장착마다(+멀티플레이에서 사람마다) 다른 메쉬가 나옴. 같은 아이템은 InstanceId가
+	// 재장착해도 그대로 유지되므로, 여기서 뽑으면 항상 같은 세트로 고정됨.
+	const uint32 InstanceHash = GetTypeHash(InstanceId);
+	int32 SetIndex = INDEX_NONE;
+	for (const FEquipmentActorToSpawn& ToSpawn : Visual->ActorsToSpawn)
+	{
+		if (ToSpawn.MeshOptions.Num() > 0)
+		{
+			SetIndex = InstanceHash % ToSpawn.MeshOptions.Num();
+			break;
+		}
+	}
+
 	for (const FEquipmentActorToSpawn& ToSpawn : Visual->ActorsToSpawn)
 	{
 		if (ToSpawn.ActorClass == nullptr) continue;
@@ -92,6 +109,14 @@ void UEquipmentInstance::ApplyVisuals()
 
 		SpawnedActor->AttachToComponent(MeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ToSpawn.AttachSocket);
 		SpawnedActor->SetActorRelativeTransform(ToSpawn.RelativeTransform);
+
+		if (ToSpawn.MeshOptions.IsValidIndex(SetIndex))
+		{
+			if (AGYEquipmentActor* EquipmentActor = Cast<AGYEquipmentActor>(SpawnedActor))
+			{
+				EquipmentActor->SetWeaponMesh(ToSpawn.MeshOptions[SetIndex].LoadSynchronous());
+			}
+		}
 
 		SpawnedActors.Add(SpawnedActor);
 	}
