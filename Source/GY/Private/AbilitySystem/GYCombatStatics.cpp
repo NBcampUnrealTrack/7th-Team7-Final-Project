@@ -120,6 +120,8 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 
 	if (IsSameFaction(SourceASC, TargetASC)) return;
 
+	const bool bTargetSuperArmor = TargetASC->HasMatchingGameplayTag(GYStateTags::State_Combat_SuperArmor);
+
 	// 패리: 반응 이벤트 발행 + 회피(데미지·poise skip). 반응(적 무력 차감·자기 통 리셋)은
 	// Event_Parry_Hit 핸들러가 처리. (닷지는 GE_Damage의 ApplicationRequirement로 차단됨)
 	if (TargetASC->HasMatchingGameplayTag(GYGameplayTags::Ability_State_Parrying))
@@ -138,7 +140,7 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 				TargetASC->HandleGameplayEvent(GYGameplayTags::Event_Parry_Hit, &Payload);
 			}
 		}
-		if (HitContext.bGivesParriedReaction)
+		if (HitContext.bGivesParriedReaction && !bTargetSuperArmor)
 		{
 			FGameplayEventData Payload;
 			Payload.EventTag = GYGameplayTags::Event_Parry_Hit;
@@ -177,7 +179,7 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 				TargetASC->HandleGameplayEvent(GYGameplayTags::Event_JustGuard_Hit, &Payload);
 			}
 		}
-
+		if (!bTargetSuperArmor)
 		{
 			FGameplayEventData Payload;
 			Payload.EventTag = GYGameplayTags::Event_JustGuarded;
@@ -210,7 +212,6 @@ void UGYCombatStatics::ApplyHitImpact(const FGYHitContext& HitContext)
 	float StunMultiplier = 1.f;
 	ResolveHitMultipliers(HitContext, DealtMultiplier, TakenMultiplier, StunMultiplier);
 
-	const bool bTargetSuperArmor = TargetASC->HasMatchingGameplayTag(GYStateTags::State_Combat_SuperArmor);
 
 	const float StaggerAmount = bTargetSuperArmor ? 0.f
 		: (ActiveBlock ? HitContext.StaggerAmount * (1.f - BlockReduction) : HitContext.StaggerAmount);
