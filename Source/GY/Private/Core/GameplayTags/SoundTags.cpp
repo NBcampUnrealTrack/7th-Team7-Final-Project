@@ -7,6 +7,7 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Walk_Wood, "Sound.Player.Walk.Wood")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Walk_Grass, "Sound.Player.Walk.Grass")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Walk_Stone, "Sound.Player.Walk.Stone")
+	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Walk_Metal, "Sound.Player.Walk.Metal")
 	UE_DEFINE_GAMEPLAY_TAG(Sound_Player_Run_Dirt, "Sound.Player.Run.Dirt")
 
 	// 약공격

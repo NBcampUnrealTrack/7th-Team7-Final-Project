@@ -43,7 +43,9 @@ void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSe
 
 		if (PhysMat)
 		{
+
 			EPhysicalSurface SurfaceType = PhysMat->SurfaceType;
+			
 			switch (SurfaceType)
 			{
 			case SurfaceType1:
@@ -54,6 +56,12 @@ void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSe
 				break;
 			case SurfaceType3:
 				FinalSoundTag = GYGameplayTags::Sound_Player_Walk_Wood.GetTag();
+				break;
+			case SurfaceType4:
+				FinalSoundTag = GYGameplayTags::Sound_Player_Walk_Grass.GetTag();
+				break;
+			case SurfaceType5:
+				FinalSoundTag = GYGameplayTags::Sound_Player_Walk_Metal.GetTag();
 				break;
 			default:
 				break;
