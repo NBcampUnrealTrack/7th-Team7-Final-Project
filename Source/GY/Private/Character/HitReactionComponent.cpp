@@ -3,6 +3,12 @@
 
 #include "Character/HitReactionComponent.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
+#include "GameplayAbilityBlueprint.h"
+#include "GameplayStateTreeBlueprintFunctionLibrary.h"
+#include "Character/GYCharacter.h"
+#include "Core/GameplayTags/StateTags.h"
 #include "GameFramework/Character.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "Logging/GYLogManager.h"
@@ -62,7 +68,6 @@ void UHitReactionComponent::TickComponent(float DeltaTime, enum ELevelTick TickT
 
 void UHitReactionComponent::ApplyHitReaction(const FVector& HitDirection, float Strength, FName HitBone)
 {
-	//	if (bIsDead) return;
 
 	ApplyPhysicsAnimation(HitDirection, Strength * HitImpulseScale, HitBone, HitReactDuration);
 }
@@ -115,7 +120,15 @@ void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, f
 	if (!MeshComp.IsValid()) return;
 	UWorld* World = GetWorld();
 	if (!World) return;
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
 
+	FGameplayTagContainer Tags;
+	Tags.AddTag(GYStateTags::State_Life_Dead);
+	Tags.AddTag(GYStateTags::State_Life_Downed);
+	if (ASC->HasAnyMatchingGameplayTags(Tags))
+	{
+		return;
+	}
 
 	const float Impulse = FMath::Min((Strength > 0.f) ? Strength : DefaultHitImpulse, MaxHitImpulse);
 
