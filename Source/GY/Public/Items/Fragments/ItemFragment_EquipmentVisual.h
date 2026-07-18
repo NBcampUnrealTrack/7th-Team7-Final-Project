@@ -7,6 +7,7 @@
 
 class AActor;
 class UAnimInstance;
+class UStaticMesh;
 
 // 장착 시 캐릭터 메쉬 소켓에 스폰·부착할 외형 액터 하나. 소켓 이름 기준이라 스켈레톤에 의존하지 않는다
 // (스켈레톤 교체 시 같은 이름 소켓만 정의하면 아이템 데이터는 그대로 동작).
@@ -24,6 +25,13 @@ struct FEquipmentActorToSpawn
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FTransform RelativeTransform;
+
+	// 비워두면 ActorClass(BP)에 지정된 메쉬 그대로 사용. 채워두면 장착 시 세트 인덱스 하나를 랜덤으로 골라 덮어씌움.
+	// 세트 인덱스는 ActorsToSpawn 전체에서 공유되므로, 검 MeshOptions[i]와 방패 MeshOptions[i]를 같은 순서로
+	// 채워두면 항상 같은 세트끼리만 매칭됨 (검 세트1+방패 세트3 같은 안 맞는 조합 방지). 세트 개수가 다르면
+	// 개수가 더 적은 쪽 범위를 벗어난 세트는 그 항목만 기본 메쉬 유지.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<TSoftObjectPtr<UStaticMesh>> MeshOptions;
 };
 
 // 장착 외형 표현 전담 프래그먼트. 스폰할 외형 액터 목록 + 링크할 애님 레이어.
