@@ -133,23 +133,33 @@ void UGYGameplayCueNotify_FX::SpawnEffect(AActor* TargetActor,
 			: FRotator::ZeroRotator;
 
 
-	// if (USceneComponent* AttachComponent =
-	// 	GetAttachComponent(TargetActor))
-	// {
-	// 	UNiagaraFunctionLibrary::SpawnSystemAttached(
-	// 		Effect,
-	// 		AttachComponent,
-	// 		AttachSocket,
-	// 		FVector::ZeroVector,
-	// 		Rotation,
-	// 		EffectScale,
-	// 		EAttachLocation::KeepRelativeOffset,
-	// 		true,
-	// 		ENCPoolMethod::AutoRelease
-	// 	);
-	// 	GY_LOG(Content, CYS, "GC: Attached VFX");
-	// 	return;
-	// }
+	if (USceneComponent* AttachComponent =
+		GetAttachComponent(TargetActor))
+	{
+		FVector Location = FVector::ZeroVector;
+		if (const ACharacter* Character = Cast<ACharacter>(TargetActor))
+		{
+			if (Character->GetMesh())
+			{
+				Location = Character->GetMesh()->GetSocketLocation(AttachSocket) - AttachComponent->GetComponentLocation();
+			}
+		}
+
+		UNiagaraFunctionLibrary::SpawnSystemAttached(
+			Effect,
+			AttachComponent,
+			NAME_None,
+			Location,
+			Rotation,
+			EffectScale,
+			EAttachLocation::KeepRelativeOffset,
+			true,
+			ENCPoolMethod::AutoRelease
+		);
+		GY_LOG(Content, CYS, "GC: Attached VFX");
+
+		return;
+	}
 	GY_LOG(Content, CYS, "GC: Location VFX");
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		TargetActor,
@@ -169,14 +179,6 @@ USceneComponent* UGYGameplayCueNotify_FX::GetAttachComponent(
 	if (bIsLocation)
 	{
 		return nullptr;
-	}
-
-	if (const ACharacter* Character = Cast<ACharacter>(TargetActor))
-	{
-		if (Character->GetMesh())
-		{
-			return Character->GetMesh();
-		}
 	}
 
 	return TargetActor->GetRootComponent();
