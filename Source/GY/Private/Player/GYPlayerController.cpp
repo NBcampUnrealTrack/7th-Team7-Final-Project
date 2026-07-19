@@ -48,7 +48,7 @@ void AGYPlayerController::ConnectToServer(const FString& Address)
 void AGYPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-#if !UE_BUILD_SHIPPING
+// #if !UE_BUILD_SHIPPING
 	if (HasAuthority())
 	{
 		FActorSpawnParameters Params;
@@ -63,7 +63,7 @@ void AGYPlayerController::BeginPlay()
 			ForceNetUpdate();
 		}
 	}
-#endif
+// #endif
 	if (IsLocalController())
 	{
 		EnableCheats();
