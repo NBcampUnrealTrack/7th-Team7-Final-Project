@@ -184,6 +184,15 @@ void AGYEnemyCharacterBase::BeginPlay()
 		EnemySpawnRotation = GetActorRotation();
 	}
 
+	if (!HasAuthority())
+	{
+		if (USkeletalMeshComponent* SkeletalMeshComponent = GetMesh())
+		{
+			SkeletalMeshComponent->SetVisibility(false);
+			SkeletalMeshComponent->SetHiddenInGame(true);
+		}
+	}
+
 	GetCapsuleComponent()->SetCollisionProfileName("Pawn");
 
 	if (HasAuthority())
@@ -197,6 +206,10 @@ void AGYEnemyCharacterBase::BeginPlay()
 		Bootstrap->OnConfigsApplied.AddDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapConfigsApplied);
 		Bootstrap->OnReady.RemoveDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapReady);
 		Bootstrap->OnReady.AddDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapReady);
+
+		Bootstrap->OnVisualReady.RemoveDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapVisualReady);
+		Bootstrap->OnVisualReady.AddDynamic(this, &AGYEnemyCharacterBase::HandleBootstrapVisualReady);
+
 	}
 
 	InitGAS();
@@ -306,6 +319,15 @@ void AGYEnemyCharacterBase::HandleBootstrapConfigsApplied()
 void AGYEnemyCharacterBase::HandleBootstrapReady(AGYEnemyCharacterBase* /*Enemy*/)
 {
 	OnEnemyReady.Broadcast(this);
+}
+
+void AGYEnemyCharacterBase::HandleBootstrapVisualReady(AGYEnemyCharacterBase* Enemy)
+{
+	if (USkeletalMeshComponent* SkeletalMeshComponent = GetMesh())
+	{
+		SkeletalMeshComponent->SetVisibility(true);
+		SkeletalMeshComponent->SetHiddenInGame(false);
+	}
 }
 
 void AGYEnemyCharacterBase::OnHealthChanged(const struct FOnAttributeChangeData& Data)
@@ -735,7 +757,6 @@ void AGYEnemyCharacterBase::OnRep_IsActivate()
 	if (bIsActivate)
 	{
 		DisableRagdoll();
-		SetActorHiddenInGame(false);
 
 		if (Bootstrap && !Bootstrap->GetDataAsset())
 		{
