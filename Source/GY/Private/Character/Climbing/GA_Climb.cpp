@@ -62,6 +62,7 @@ void UGA_Climb::OnEntryMoveFinished()
 			PC->SetIgnoreMoveInput(true);
 		}
 
+		bEntryMontageHandled = false;
 		CurrentMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 			this, NAME_None, EntryFromTopMontage);
 		CurrentMontageTask->OnCompleted.AddDynamic(this, &UGA_Climb::OnEntryMontageCompleted);
@@ -77,6 +78,10 @@ void UGA_Climb::OnEntryMoveFinished()
 
 void UGA_Climb::OnEntryMontageCompleted()
 {
+	// OnBlendOut+OnCompleted 이중 바인딩 — 1회만 처리 (StartClimbing 중복 방지)
+	if (bEntryMontageHandled) return;
+	bEntryMontageHandled = true;
+
 	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
@@ -107,6 +112,10 @@ void UGA_Climb::OnEntryMontageInterrupted()
 
 void UGA_Climb::OnExitMontageCompleted()
 {
+	// OnBlendOut+OnCompleted 이중 바인딩 — 1회만 처리 (루트모션 태스크 중복 생성 방지)
+	if (bExitMontageHandled) return;
+	bExitMontageHandled = true;
+
 	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
 	if (!Character || !CurrentLadder.IsValid())
 	{
@@ -305,6 +314,7 @@ void UGA_Climb::OnClimbExit(ELadderExitReason Reason)
 			CachedMovement->SetMovementMode(MOVE_Flying);
 		}
 
+		bExitMontageHandled = false;
 		CurrentMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 			this, NAME_None, ExitToTopMontage);
 		CurrentMontageTask->OnCompleted.AddDynamic(this, &UGA_Climb::OnExitMontageCompleted);
