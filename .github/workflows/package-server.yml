@@ -155,11 +155,13 @@ jobs:
           "S3_VERSION=$version" >> $env:GITHUB_ENV
           "s3 deployed: server/latest.json -> $key" >> $env:GITHUB_STEP_SUMMARY
           # 오래된 zip 정리 — 최신 3개만 보관 (서버 zip 은 수 GB, 방치하면 스토리지 요금 누적)
+          # PS5.1: 여러 줄 JSON 을 파이프하면 줄 단위 파싱으로 깨짐 — join 후 파싱.
+          # 방금 올린 zip($key)은 정렬 결과와 무관하게 삭제 후보에서 제외 (run 17 에서 새 zip 이 지워진 사고 방지)
           $keep = 3
-          $listJson = aws s3api list-objects-v2 --bucket $env:GY_DEPLOY_BUCKET --prefix "server/gy-server-" --query "Contents[].{Key:Key,At:LastModified}" --output json
+          $listJson = (aws s3api list-objects-v2 --bucket $env:GY_DEPLOY_BUCKET --prefix "server/gy-server-" --query "Contents[].{Key:Key,At:LastModified}" --output json) -join "`n"
           if ($LASTEXITCODE -eq 0 -and $listJson) {
-            $objects = $listJson | ConvertFrom-Json | Sort-Object At -Descending
-            foreach ($old in ($objects | Select-Object -Skip $keep)) {
+            $objects = $listJson | ConvertFrom-Json | Where-Object { $_.Key -ne $key } | Sort-Object { [datetime]$_.At } -Descending
+            foreach ($old in ($objects | Select-Object -Skip ($keep - 1))) {
               aws s3 rm "s3://$($env:GY_DEPLOY_BUCKET)/$($old.Key)" --quiet
               Write-Host "pruned old build: $($old.Key)"
             }
