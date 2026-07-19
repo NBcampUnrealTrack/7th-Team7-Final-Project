@@ -122,7 +122,9 @@ void UHitReactionComponent::ApplyPhysicsAnimation(const FVector& HitDirection, f
 	if (!MeshComp.IsValid()) return;
 	UWorld* World = GetWorld();
 	if (!World) return;
+	// 복제된 피격 큐가 월드 진입 직후 도착하면 대상 캐릭터의 ASC/PlayerState가 아직 없어 널일 수 있다.
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	if (!IsValid(ASC)) return;
 
 	FGameplayTagContainer Tags;
 	Tags.AddTag(GYStateTags::State_Life_Dead);
