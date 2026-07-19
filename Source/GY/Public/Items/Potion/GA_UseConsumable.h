@@ -36,6 +36,10 @@ private:
 	TObjectPtr<class UInventoryComponent> CachedInventoryComponent;
 	FGuid CachedItemInstanceId;
 
+	// 몽타주 OnBlendOut/OnCompleted 가 둘 다 발동해 완료 처리가 두 번 도는 것을 막는 가드.
+	// 두 번째 실행은 이미 EndAbility 된 어빌리티 위에서 stale 컨텍스트로 GE 를 재적용해 크래시를 냈다.
+	bool bConsumeHandled = false;
+
 
 	UFUNCTION()
 	void OnMontageCompleted();
