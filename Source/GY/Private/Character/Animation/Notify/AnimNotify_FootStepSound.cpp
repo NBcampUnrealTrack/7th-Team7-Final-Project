@@ -45,7 +45,7 @@ void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSe
 		{
 
 			EPhysicalSurface SurfaceType = PhysMat->SurfaceType;
-			GY_LOG(Game, KHB, "밟은 피지컬 머티리얼: %s / SurfaceType: %d", *PhysMat->GetName(), static_cast<int32>(SurfaceType));
+			
 			switch (SurfaceType)
 			{
 			case SurfaceType1:
@@ -71,7 +71,7 @@ void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSe
 		UGYSoundManager* SoundManager = UGYSoundManager::Get(Owner);
 		if (SoundManager)
 		{
-			GY_LOG(Game, KHB, "발소리재생: %s", *FinalSoundTag.ToString());
+
 
 			// 태그를 기반으로 ImpactPoint에서 3D 사운드 재생
 			SoundManager->PlaySoundAtLocation(FinalSoundTag, HitResult.ImpactPoint);
