@@ -45,7 +45,7 @@ void UAnimNotify_FootStepSound::Notify(USkeletalMeshComponent* MeshComp, UAnimSe
 		{
 
 			EPhysicalSurface SurfaceType = PhysMat->SurfaceType;
-			
+			GY_LOG(Game, KHB, "밟은 피지컬 머티리얼: %s / SurfaceType: %d", *PhysMat->GetName(), static_cast<int32>(SurfaceType));
 			switch (SurfaceType)
 			{
 			case SurfaceType1:
