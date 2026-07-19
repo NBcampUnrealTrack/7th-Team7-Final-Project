@@ -190,6 +190,7 @@ void AGYEnemyCharacterBase::BeginPlay()
 		{
 			SkeletalMeshComponent->SetVisibility(false);
 			SkeletalMeshComponent->SetHiddenInGame(true);
+			SkeletalMeshComponent->UnregisterComponent();
 		}
 	}
 
@@ -325,6 +326,7 @@ void AGYEnemyCharacterBase::HandleBootstrapVisualReady(AGYEnemyCharacterBase* En
 {
 	if (USkeletalMeshComponent* SkeletalMeshComponent = GetMesh())
 	{
+		SkeletalMeshComponent->RegisterComponent();
 		SkeletalMeshComponent->SetVisibility(true);
 		SkeletalMeshComponent->SetHiddenInGame(false);
 	}
