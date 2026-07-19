@@ -92,4 +92,7 @@ public:
 
 	UFUNCTION(Exec)
 	void GY_Invulnerable_Toggle();
+
+	UFUNCTION(Exec)
+	void GY_Increase_Stagger(float Amount);
 };

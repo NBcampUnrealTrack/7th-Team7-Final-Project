@@ -38,6 +38,15 @@ AGYServerCheatProxy::AGYServerCheatProxy()
 	PrimaryActorTick.bCanEverTick = false;
 }
 
+void AGYServerCheatProxy::Server_Increase_Stagger_Implementation(float Amount)
+{
+	AGYPlayerState* PS = GetGYPlayerState(this);
+	if (!PS) return;
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	if (!ASC) return;
+	UGYAdditionalResourceStatics::IncreaseStagger(ASC, 20.f);
+}
+
 void AGYServerCheatProxy::Server_Invulnerable_Toggle_Implementation()
 {
 	AGYPlayerState* PS = GetGYPlayerState(this);

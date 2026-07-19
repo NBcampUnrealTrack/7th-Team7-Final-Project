@@ -55,6 +55,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_Invulnerable_Toggle();
 
+	UFUNCTION(Server, Reliable)
+	void Server_Increase_Stagger(float Amount);
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Debug")
 	TMap<EEnemyType, TSoftClassPtr<AGYEnemyCharacterBase>> EnemyClassMap;
