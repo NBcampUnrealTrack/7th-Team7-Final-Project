@@ -13,6 +13,21 @@
 #include "Player/GYPlayerState.h"
 #include "UI/GYUIMessages.h"
 
+#include "Engine/Engine.h"
+#include "Engine/World.h"
+#include "WorldPartition/WorldPartition.h"
+#include "WorldPartition/WorldPartitionSubsystem.h"
+
+namespace
+{
+	// WP 스트리밍(셀 로드/언로드)이 D3D12 샘플러 use-after-free 크래시(엔진 5.7.4)의 방아쇠.
+	// 로딩 범위는 맵 WP 설정에서 맵 전체를 덮게 키워두고, 여기서는 전체 로드가 끝나면(IsAllStreamingCompleted)
+	// 스트리밍 소스 갱신을 멈춰 셀 로드/언로드/HLOD 전환을 완전히 정지시켜 크래시를 회피한다.
+	constexpr float GFreezePollInterval = 1.f;     // 로딩 완료 폴링 주기(초)
+	constexpr float GFreezeMinSeconds = 3.f;       // 이 시간 전엔 완료로 안 봄(로딩 시작 전 오탐 방지)
+	constexpr float GFreezeMaxSeconds = 40.f;      // 완료를 못 봐도 이 시간엔 강제로 얼림(안전망)
+}
+
 AGYPlayerController::AGYPlayerController()
 {
 	CheatClass = UGYCheatManager::StaticClass();
@@ -68,6 +83,46 @@ void AGYPlayerController::BeginPlay()
 	{
 		EnableCheats();
 		bShowMouseCursor = true;
+
+		UWorld* World = GetWorld();
+		if (IsValid(World) && World->GetWorldPartition() != nullptr)
+		{
+			// 전체 로드 완료를 폴링하다가 끝나면 스트리밍 정지. 최소/최대 시간으로 오탐·무한대기 방지
+			FreezeStreamingElapsed = 0.f;
+			World->GetTimerManager().SetTimer(
+				FreezeStreamingTimerHandle,
+				FTimerDelegate::CreateWeakLambda(this, [this]() { TickFreezeStreamingPoll(); }),
+				GFreezePollInterval, true);
+		}
+	}
+}
+
+void AGYPlayerController::TickFreezeStreamingPoll()
+{
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		return;
+	}
+
+	FreezeStreamingElapsed += GFreezePollInterval;
+
+	UWorldPartitionSubsystem* WorldPartitionSubsystem = World->GetSubsystem<UWorldPartitionSubsystem>();
+	const bool bLoaded = IsValid(WorldPartitionSubsystem) && WorldPartitionSubsystem->IsAllStreamingCompleted();
+
+	// 최소 시간 경과 후 로딩 완료를 확인하거나, 최대 시간 초과 시 강제로 정지
+	const bool bReady = (FreezeStreamingElapsed >= GFreezeMinSeconds && bLoaded);
+	const bool bTimedOut = (FreezeStreamingElapsed >= GFreezeMaxSeconds);
+	if (!bReady && !bTimedOut)
+	{
+		return;
+	}
+
+	World->GetTimerManager().ClearTimer(FreezeStreamingTimerHandle);
+	if (GEngine != nullptr)
+	{
+		GEngine->Exec(World, TEXT("wp.Runtime.UpdateStreamingSources 0"));
+		GY_LOG(Network, KDY, "Client WP streaming frozen (loaded=%d elapsed=%.0fs) - sampler crash workaround", bLoaded, FreezeStreamingElapsed);
 	}
 }
 
