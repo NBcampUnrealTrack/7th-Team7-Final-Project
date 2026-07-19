@@ -160,7 +160,10 @@ jobs:
           $keep = 3
           $listJson = (aws s3api list-objects-v2 --bucket $env:GY_DEPLOY_BUCKET --prefix "server/gy-server-" --query "Contents[].{Key:Key,At:LastModified}" --output json) -join "`n"
           if ($LASTEXITCODE -eq 0 -and $listJson) {
-            $objects = $listJson | ConvertFrom-Json | Where-Object { $_.Key -ne $key } | Sort-Object { [datetime]$_.At } -Descending
+            # PS5.1: ConvertFrom-Json 이 배열을 한 덩어리로 파이프에 넘겨 Sort-Object 의 [datetime]$_.At 가
+            # 배열 전체를 캐스팅하려다 실패 → 변수 경유로 열거해서 원소별로 파싱
+            $parsed = @($listJson | ConvertFrom-Json)
+            $objects = $parsed | Where-Object { $_.Key -ne $key } | Sort-Object { [datetime]$_.At } -Descending
             foreach ($old in ($objects | Select-Object -Skip ($keep - 1))) {
               aws s3 rm "s3://$($env:GY_DEPLOY_BUCKET)/$($old.Key)" --quiet
               Write-Host "pruned old build: $($old.Key)"
