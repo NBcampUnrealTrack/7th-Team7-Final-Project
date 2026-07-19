@@ -85,13 +85,15 @@ void UHitReactionComponent::ApplyMaterialOverlay(UMaterialInterface* OverlayMate
 
 	MeshComp->SetOverlayMaterial(OverlayMaterial);
 
+	GetWorld()->GetTimerManager().ClearTimer(OverlayTimerHandle);
+	TWeakObjectPtr<UHitReactionComponent> WeakThis = this;
 	GetWorld()->GetTimerManager().SetTimer(
 		OverlayTimerHandle,
-		[this]()
+		FTimerDelegate::CreateWeakLambda(this,[ WeakThis]()
 		{
-			if (MeshComp.IsValid())
-				MeshComp->SetOverlayMaterial(nullptr);
-		},
+			if (WeakThis.IsValid() && WeakThis->MeshComp.IsValid())
+				WeakThis->MeshComp->SetOverlayMaterial(nullptr);
+		}),
 		Duration, false
 	);
 }

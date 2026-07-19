@@ -650,3 +650,12 @@ void UGYCheatManager::GY_Invulnerable_Toggle()
 	AGYServerCheatProxy->Server_Invulnerable_Toggle();
 }
 
+void UGYCheatManager::GY_Increase_Stagger(float Amount)
+{
+	AGYPlayerController* AGYPlayerController = GetGYPlayerController(this);
+	if (!AGYPlayerController) return;
+	TObjectPtr<AGYServerCheatProxy> AGYServerCheatProxy = AGYPlayerController->ServerCheatProxy;
+	if (!AGYServerCheatProxy) return;
+	AGYServerCheatProxy->Server_Increase_Stagger(Amount);
+}
+
