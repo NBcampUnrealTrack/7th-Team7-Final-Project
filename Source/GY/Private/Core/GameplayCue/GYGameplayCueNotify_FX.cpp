@@ -1,6 +1,7 @@
 #include "Core/GameplayCue/GYGameplayCueNotify_FX.h"
 
 #include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Core/Sound/GYSoundManager.h"
 #include "GameFramework/Character.h"
 #include "Logging/GYLogManager.h"
@@ -10,6 +11,36 @@
  * 위치: Parameters.Location - SFX,VFX 위치 기반 시 필요
  * 방향: Parameters.Normal - VFX 회전 시 필요
  */
+
+// [진단용] 나이아가라 이펙트 누수 확인을 위해 임시로 추가 - 확인 끝나면 제거
+namespace GYFXCueDiagnostic
+{
+	static TArray<TWeakObjectPtr<UNiagaraComponent>> SpawnedEffects;
+
+	static void TrackSpawn(UNiagaraComponent* Spawned, const UObject* EffectAsset, const AActor* TargetActor)
+	{
+		if (!Spawned)
+		{
+			return;
+		}
+
+		SpawnedEffects.Add(Spawned);
+		SpawnedEffects.RemoveAll([](const TWeakObjectPtr<UNiagaraComponent>& Weak) { return !Weak.IsValid(); });
+
+		int32 ActiveCount = 0;
+		for (const TWeakObjectPtr<UNiagaraComponent>& Weak : SpawnedEffects)
+		{
+			const UNiagaraComponent* Comp = Weak.Get();
+			if (Comp && Comp->IsActive())
+			{
+				++ActiveCount;
+			}
+		}
+
+		GY_WARN(Content, CYS, "GC VFX 진단: 스폰 (Effect=%s, Target=%s) / 살아있는 오브젝트=%d, 실제 재생중=%d",
+			*GetNameSafe(EffectAsset), *GetNameSafe(TargetActor), SpawnedEffects.Num(), ActiveCount);
+	}
+}
 
 bool UGYGameplayCueNotify_FX::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
 {
@@ -145,7 +176,7 @@ void UGYGameplayCueNotify_FX::SpawnEffect(AActor* TargetActor,
 			}
 		}
 
-		UNiagaraFunctionLibrary::SpawnSystemAttached(
+		UNiagaraComponent* Spawned = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			Effect,
 			AttachComponent,
 			NAME_None,
@@ -157,16 +188,26 @@ void UGYGameplayCueNotify_FX::SpawnEffect(AActor* TargetActor,
 			ENCPoolMethod::AutoRelease
 		);
 		GY_LOG(Content, CYS, "GC: Attached VFX");
+		GYFXCueDiagnostic::TrackSpawn(Spawned, Effect, TargetActor);
 
 		return;
 	}
 	GY_LOG(Content, CYS, "GC: Location VFX");
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+	UNiagaraComponent* Spawned = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		TargetActor,
 		Effect,
 		Parameters.Location + LocationOffset,
 		Rotation,
 		EffectScale);
+	GYFXCueDiagnostic::TrackSpawn(Spawned, Effect, TargetActor);
+}
+
+// [진단용] 나이아가라 이펙트 누수 확인을 위해 임시로 추가 - 확인 끝나면 제거
+bool UGYGameplayCueNotify_FX::OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
+{
+	GY_WARN(Content, CYS, "GC VFX 진단: Cue Removed (Effect=%s, Target=%s) - 이 클래스는 VFX를 끄는 코드가 없음",
+		*GetNameSafe(Effect), *GetNameSafe(MyTarget));
+	return true;
 }
 
 USceneComponent* UGYGameplayCueNotify_FX::GetAttachComponent(
