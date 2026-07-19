@@ -48,6 +48,11 @@ protected:
 
 	bool bEnteredFromTop = false;
 
+	// 몽타주 OnBlendOut+OnCompleted 이중 바인딩으로 완료 핸들러가 두 번 도는 것을 막는 가드
+	// (2회차는 StartClimbing 중복 호출 / 루트모션 태스크 중복 생성으로 이동 버그 유발)
+	bool bEntryMontageHandled = false;
+	bool bExitMontageHandled = false;
+
 	TEnumAsByte<EMovementMode> SavedMovementMode = MOVE_Walking;
 	bool bSavedUseControllerRotationYaw = false;
 	bool bSavedUseControllerDesiredRotation = true;

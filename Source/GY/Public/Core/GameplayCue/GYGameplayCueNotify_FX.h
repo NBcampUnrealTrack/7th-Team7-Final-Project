@@ -16,7 +16,7 @@ public:
 
 	virtual bool OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const override;
 
-	// [진단용] 나이아가라 이펙트 누수 확인을 위해 임시로 추가 - 확인 끝나면 제거
+	// 지속형 큐 종료 시 루핑 VFX를 정지시켜 나이아가라 컴포넌트 누수를 막는다
 	virtual bool OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const override;
 
 protected:

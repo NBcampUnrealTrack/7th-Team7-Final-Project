@@ -28,6 +28,9 @@ void UGA_UseConsumable::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	// InstancedPerActor 라 인스턴스가 재사용된다 — 활성화마다 완료 가드를 초기화
+	bConsumeHandled = false;
+
 	//가능 불가능 체크만, 기존의 커밋(자원소모,쿨다운)은 뒤로 뺏슴
 	if (!CanActivateAbility(Handle, ActorInfo))
 	{
@@ -158,13 +161,18 @@ void UGA_UseConsumable::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 void UGA_UseConsumable::OnMontageCompleted()
 {
+	// OnBlendOut 과 OnCompleted 가 모두 이 함수로 묶여 있어 정상 완료 시 두 번 호출된다.
+	// 두 번째 호출은 이미 EndAbility 된 어빌리티라 stale 컨텍스트로 GE 를 재적용해 크래시 → 1회만 처리
+	if (bConsumeHandled) return;
+	bConsumeHandled = true;
+
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	//다 마셧을때만 쿨 적용, 회복 및 물약삭제
 	if (CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo))
 	{
 		if (CachedInventoryComponent && CachedInventoryComponent->TryRemoveItem(CachedItemInstanceId, 1))
 		{
-			if (ASC && CachedEffectSpec.IsValid())
+			if (ASC && CachedEffectSpec.IsValid() && CachedEffectSpec.Data.IsValid())
 			{
 				ASC->ApplyGameplayEffectSpecToSelf(*CachedEffectSpec.Data);
 			}
@@ -176,6 +184,10 @@ void UGA_UseConsumable::OnMontageCompleted()
 
 void UGA_UseConsumable::OnMontageCancelled()
 {
+	// 캔슬도 OnCancelled/OnInterrupted 이중 바인딩 — 한 번만 처리하고, 이후 완료 콜백이 회복시키지 못하게 잠근다
+	if (bConsumeHandled) return;
+	bConsumeHandled = true;
+
 	GY_LOG(Content, CYS, "물약 몽타쥬 캔슬됨");
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

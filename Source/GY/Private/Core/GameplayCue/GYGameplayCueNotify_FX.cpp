@@ -12,36 +12,6 @@
  * 방향: Parameters.Normal - VFX 회전 시 필요
  */
 
-// [진단용] 나이아가라 이펙트 누수 확인을 위해 임시로 추가 - 확인 끝나면 제거
-namespace GYFXCueDiagnostic
-{
-	static TArray<TWeakObjectPtr<UNiagaraComponent>> SpawnedEffects;
-
-	static void TrackSpawn(UNiagaraComponent* Spawned, const UObject* EffectAsset, const AActor* TargetActor)
-	{
-		if (!Spawned)
-		{
-			return;
-		}
-
-		SpawnedEffects.Add(Spawned);
-		SpawnedEffects.RemoveAll([](const TWeakObjectPtr<UNiagaraComponent>& Weak) { return !Weak.IsValid(); });
-
-		int32 ActiveCount = 0;
-		for (const TWeakObjectPtr<UNiagaraComponent>& Weak : SpawnedEffects)
-		{
-			const UNiagaraComponent* Comp = Weak.Get();
-			if (Comp && Comp->IsActive())
-			{
-				++ActiveCount;
-			}
-		}
-
-		GY_WARN(Content, CYS, "GC VFX 진단: 스폰 (Effect=%s, Target=%s) / 살아있는 오브젝트=%d, 실제 재생중=%d",
-			*GetNameSafe(EffectAsset), *GetNameSafe(TargetActor), SpawnedEffects.Num(), ActiveCount);
-	}
-}
-
 bool UGYGameplayCueNotify_FX::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
 {
 	if (!MyTarget)
@@ -176,7 +146,7 @@ void UGYGameplayCueNotify_FX::SpawnEffect(AActor* TargetActor,
 			}
 		}
 
-		UNiagaraComponent* Spawned = UNiagaraFunctionLibrary::SpawnSystemAttached(
+		UNiagaraFunctionLibrary::SpawnSystemAttached(
 			Effect,
 			AttachComponent,
 			NAME_None,
@@ -188,25 +158,38 @@ void UGYGameplayCueNotify_FX::SpawnEffect(AActor* TargetActor,
 			ENCPoolMethod::AutoRelease
 		);
 		GY_LOG(Content, CYS, "GC: Attached VFX");
-		GYFXCueDiagnostic::TrackSpawn(Spawned, Effect, TargetActor);
 
 		return;
 	}
 	GY_LOG(Content, CYS, "GC: Location VFX");
-	UNiagaraComponent* Spawned = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		TargetActor,
 		Effect,
 		Parameters.Location + LocationOffset,
 		Rotation,
 		EffectScale);
-	GYFXCueDiagnostic::TrackSpawn(Spawned, Effect, TargetActor);
 }
 
-// [진단용] 나이아가라 이펙트 누수 확인을 위해 임시로 추가 - 확인 끝나면 제거
+// 지속형 큐(OnActive로 스폰된 루핑 VFX)가 GE 종료 시 꺼지도록 정지시킨다.
+// static 큐라 스폰 핸들을 보관하지 못하므로 대상에 부착된 동일 Effect 컴포넌트를 역조회해 끈다.
+// (루핑 이펙트는 완료 이벤트가 없어 AutoRelease가 자동 반납되지 않아 영구 누적되던 문제)
 bool UGYGameplayCueNotify_FX::OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
 {
-	GY_WARN(Content, CYS, "GC VFX 진단: Cue Removed (Effect=%s, Target=%s) - 이 클래스는 VFX를 끄는 코드가 없음",
-		*GetNameSafe(Effect), *GetNameSafe(MyTarget));
+	if (!IsValid(MyTarget) || !Effect)
+	{
+		return false;
+	}
+
+	TArray<UNiagaraComponent*> NiagaraComponents;
+	MyTarget->GetComponents<UNiagaraComponent>(NiagaraComponents);
+	for (UNiagaraComponent* NiagaraComponent : NiagaraComponents)
+	{
+		if (IsValid(NiagaraComponent) && NiagaraComponent->GetAsset() == Effect && NiagaraComponent->IsActive())
+		{
+			NiagaraComponent->Deactivate(); // 루핑 정지 → AutoRelease가 완료 시 풀로 반납
+		}
+	}
+
 	return true;
 }
 
