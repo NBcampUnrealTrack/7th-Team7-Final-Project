@@ -25,7 +25,7 @@ UInventoryComponent::UInventoryComponent()
 {
 	SetIsReplicatedByDefault(true);
 	Inventory.OwnerComponent = this;
-	Capacity = 30;
+	Capacity = 42;
 }
 
 void UInventoryComponent::BeginPlay()
