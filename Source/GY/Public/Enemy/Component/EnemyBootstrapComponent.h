@@ -91,6 +91,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Enemy|Bootstrap")
 	FOnEnemyBootstrapReady OnReady;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnEnemyBootstrapReady OnVisualReady;
+
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 #if WITH_EDITOR

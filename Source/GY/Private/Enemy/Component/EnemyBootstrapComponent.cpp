@@ -157,6 +157,11 @@ void UEnemyBootstrapComponent::HandleDataAssetLoaded()
 	bConfigsApplied = true;
 	OnConfigsApplied.Broadcast();
 
+	if (AGYEnemyCharacterBase* Owner = GetEnemyOwner())
+	{
+		OnVisualReady.Broadcast(Owner);
+	}
+
 	RequestExtraPreload();
 
 	TryGrantGASFromDataAsset();

@@ -115,6 +115,9 @@ protected:
 	UFUNCTION()
 	void HandleBootstrapReady(AGYEnemyCharacterBase* Enemy);
 
+	UFUNCTION()
+	void HandleBootstrapVisualReady(AGYEnemyCharacterBase* Enemy);
+
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
 	void OnStunTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void OnStaggerTagChanged(const FGameplayTag Tag, int32 NewCount);
