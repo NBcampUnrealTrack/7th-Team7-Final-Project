@@ -40,4 +40,9 @@ namespace GYGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Dialogue_ID_015, "Dialogue.ID.015");
 	UE_DEFINE_GAMEPLAY_TAG(Dialogue_ID_016, "Dialogue.ID.016");
 
+	UE_DEFINE_GAMEPLAY_TAG(Dialogue_ID_020, "Dialogue.ID.020");
+	UE_DEFINE_GAMEPLAY_TAG(Dialogue_ID_021, "Dialogue.ID.021");
+	UE_DEFINE_GAMEPLAY_TAG(Dialogue_ID_022, "Dialogue.ID.022");
+	UE_DEFINE_GAMEPLAY_TAG(Dialogue_ID_023, "Dialogue.ID.023");
+
 }
