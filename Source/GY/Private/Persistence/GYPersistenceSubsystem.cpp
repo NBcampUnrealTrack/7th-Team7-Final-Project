@@ -239,8 +239,9 @@ void UGYPersistenceSubsystem::FlushAllForExit()
 		}
 	}
 
-	// 방금 만든 요청들이 소켓을 떠날 때까지 동기 대기 — 이 뒤의 티어다운이 잘려도 저장은 이미 나갔다
-	FHttpModule::Get().GetHttpManager().Flush(EHttpFlushReason::Shutdown);
+	// 방금 만든 요청들이 완료될 때까지 동기 대기 — 이 뒤의 티어다운이 잘려도 저장은 이미 나갔다.
+	// Shutdown 리즌은 엔진 내부 전용(바운드 델리게이트 있으면 assert) — 게임 코드는 Default 사용.
+	FHttpModule::Get().GetHttpManager().Flush(EHttpFlushReason::Default);
 }
 
 void UGYPersistenceSubsystem::LoadConfig()
