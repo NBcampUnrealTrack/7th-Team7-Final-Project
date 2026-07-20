@@ -186,6 +186,8 @@ void AGYEnemyCharacterBase::BeginPlay()
 
 	if (!HasAuthority())
 	{
+		SetActorHiddenInGame(true);
+
 		if (USkeletalMeshComponent* SkeletalMeshComponent = GetMesh())
 		{
 			SkeletalMeshComponent->SetVisibility(false);
@@ -324,6 +326,8 @@ void AGYEnemyCharacterBase::HandleBootstrapReady(AGYEnemyCharacterBase* /*Enemy*
 
 void AGYEnemyCharacterBase::HandleBootstrapVisualReady(AGYEnemyCharacterBase* Enemy)
 {
+	SetActorHiddenInGame(false);
+
 	if (USkeletalMeshComponent* SkeletalMeshComponent = GetMesh())
 	{
 		SkeletalMeshComponent->RegisterComponent();
@@ -570,6 +574,13 @@ void AGYEnemyCharacterBase::Deactivate()
 
 	SetActorHiddenInGame(true);
 
+	if (USkeletalMeshComponent* SkeletalMeshComponent = GetMesh())
+	{
+		SkeletalMeshComponent->SetVisibility(false);
+		SkeletalMeshComponent->SetHiddenInGame(true);
+		SkeletalMeshComponent->UnregisterComponent();
+	}
+
 	if (HasAuthority())
 	{
 		if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
@@ -622,6 +633,8 @@ void AGYEnemyCharacterBase::Activate()
 		Bootstrap->NotifyRespawn();
 		Bootstrap->NotifyGASInitialized();
 		HandleBootstrapConfigsApplied();
+
+		Bootstrap->OnVisualReady.Broadcast(this);
 
 		if (AGYEnemyAIController* AIC = Cast<AGYEnemyAIController>(GetController()))
 		{
@@ -759,15 +772,30 @@ void AGYEnemyCharacterBase::OnRep_IsActivate()
 	if (bIsActivate)
 	{
 		DisableRagdoll();
+		SetActorHiddenInGame(false);
 
-		if (Bootstrap && !Bootstrap->GetDataAsset())
+		if (Bootstrap)
 		{
-			Bootstrap->InitWithType(Bootstrap->GetEnemyType());
+			if (!Bootstrap->GetDataAsset())
+			{
+				Bootstrap->InitWithType(Bootstrap->GetEnemyType());
+			}
+			else
+			{
+				Bootstrap->OnVisualReady.Broadcast(this);
+			}
 		}
 	}
 	else
 	{
 		SetActorHiddenInGame(true);
+
+		if (USkeletalMeshComponent* SkeletalMeshComponent = GetMesh())
+		{
+			SkeletalMeshComponent->SetVisibility(false);
+			SkeletalMeshComponent->SetHiddenInGame(true);
+			SkeletalMeshComponent->UnregisterComponent();
+		}
 	}
 }
 
