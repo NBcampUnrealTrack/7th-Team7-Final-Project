@@ -42,6 +42,12 @@ protected:
 		FVector& OutFrontDir,
 		FVector& OutRightDir) const override;
 
+private:
+	// 클라 진입 후 전체 로드 완료를 폴링하다 끝나면 WP 스트리밍을 정지시킨다 (샘플러 크래시 우회)
+	void TickFreezeStreamingPoll();
+	FTimerHandle FreezeStreamingTimerHandle;
+	float FreezeStreamingElapsed = 0.f;
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Cheat")
 	TSubclassOf<AGYServerCheatProxy> ServerCheatProxyClass;
