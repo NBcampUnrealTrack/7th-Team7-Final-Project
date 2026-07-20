@@ -97,7 +97,7 @@ struct FQuestTableRow : public FTableRowBase
 	FText QuestName;
 
 	// 퀘스트 내용
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Quest", meta=(MultiLine=true))
 	FText Description;
 
 	// 활성화 태그
