@@ -25,7 +25,7 @@ namespace
 	// 스트리밍 소스 갱신을 멈춰 셀 로드/언로드/HLOD 전환을 완전히 정지시켜 크래시를 회피한다.
 	constexpr float GFreezePollInterval = 1.f;     // 로딩 완료 폴링 주기(초)
 	constexpr float GFreezeMinSeconds = 3.f;       // 이 시간 전엔 완료로 안 봄(로딩 시작 전 오탐 방지)
-	constexpr float GFreezeMaxSeconds = 40.f;      // 완료를 못 봐도 이 시간엔 강제로 얼림(안전망)
+	constexpr float GFreezeMaxSeconds = 40.f;      // 완료를 못 봐도 이 시간엔 강제로 정지(안전망)
 }
 
 AGYPlayerController::AGYPlayerController()
@@ -87,14 +87,33 @@ void AGYPlayerController::BeginPlay()
 		UWorld* World = GetWorld();
 		if (IsValid(World) && World->GetWorldPartition() != nullptr)
 		{
-			// 전체 로드 완료를 폴링하다가 끝나면 스트리밍 정지. 최소/최대 시간으로 오탐·무한대기 방지
-			FreezeStreamingElapsed = 0.f;
-			World->GetTimerManager().SetTimer(
-				FreezeStreamingTimerHandle,
-				FTimerDelegate::CreateWeakLambda(this, [this]() { TickFreezeStreamingPoll(); }),
-				GFreezePollInterval, true);
+			StartFreezeStreamingPoll();
+
+			// 시네마틱(엔딩/보스)은 플레이어를 원점/스폰포인트로 텔레포트한다. 스트리밍을 멈춰두면 목적지 지형이
+			// 로드 안 돼 "땅이 사라진다" — 시네마틱 동안엔 스트리밍을 재개하고, 끝나면 다시 폴링→정지한다.
+			CinematicStateHandle = UGameplayMessageSubsystem::Get(World).RegisterListener(
+				GYGameplayTags::Message_Cinematic_State, this, &AGYPlayerController::HandleCinematicState);
 		}
 	}
+}
+
+void AGYPlayerController::StartFreezeStreamingPoll()
+{
+	UWorld* World = GetWorld();
+	if (!IsValid(World) || World->GetWorldPartition() == nullptr) return;
+
+	// 먼저 스트리밍을 재개한다 — 이미 멈춰둔 상태에서 텔레포트(부활/시네마틱)했을 때 목적지 지형을
+	// 새로 로드하려면 재개가 필수. 그다음 전체 로드 완료를 폴링하다 끝나면 다시 정지.
+	if (GEngine != nullptr)
+	{
+		GEngine->Exec(World, TEXT("wp.Runtime.UpdateStreamingSources 1"));
+	}
+
+	FreezeStreamingElapsed = 0.f;
+	World->GetTimerManager().SetTimer(
+		FreezeStreamingTimerHandle,
+		FTimerDelegate::CreateWeakLambda(this, [this]() { TickFreezeStreamingPoll(); }),
+		GFreezePollInterval, true);
 }
 
 void AGYPlayerController::TickFreezeStreamingPoll()
@@ -123,6 +142,25 @@ void AGYPlayerController::TickFreezeStreamingPoll()
 	{
 		GEngine->Exec(World, TEXT("wp.Runtime.UpdateStreamingSources 0"));
 		GY_LOG(Network, KDY, "Client WP streaming frozen (loaded=%d elapsed=%.0fs) - sampler crash workaround", bLoaded, FreezeStreamingElapsed);
+	}
+}
+
+void AGYPlayerController::HandleCinematicState(FGameplayTag Channel, const FGYCinematicMessage& Message)
+{
+	UWorld* World = GetWorld();
+	if (!IsValid(World) || GEngine == nullptr) return;
+
+	if (Message.bIsPlaying)
+	{
+		// 시네마틱 시작: 정지 예약 취소 + 스트리밍 재개 → 텔레포트 목적지 지형이 로드된다
+		World->GetTimerManager().ClearTimer(FreezeStreamingTimerHandle);
+		GEngine->Exec(World, TEXT("wp.Runtime.UpdateStreamingSources 1"));
+		GY_LOG(Network, KDY, "Cinematic playing - WP streaming resumed (teleport dest load)");
+	}
+	else
+	{
+		// 시네마틱 종료: 종료 후 텔레포트 목적지가 다 로드되면 다시 정지
+		StartFreezeStreamingPoll();
 	}
 }
 
@@ -171,6 +209,18 @@ void AGYPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	UGYPawnExtensionComponent::RequestInitStateRecheck(GetPawn());
+}
+
+void AGYPlayerController::AcknowledgePossession(APawn* P)
+{
+	Super::AcknowledgePossession(P);
+
+	// 클라가 새 폰을 possess = 초기 스폰 또는 (자가)부활. 부활은 먼 체크포인트로 이동할 수 있어
+	// 멈춰둔 스트리밍이 목적지를 안 로드한다 → 재개→로드→재정지 사이클을 다시 돌린다
+	if (IsLocalController())
+	{
+		StartFreezeStreamingPoll();
+	}
 }
 
 void AGYPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
