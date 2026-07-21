@@ -19,9 +19,17 @@
 #include "Persistence/WorldSaveComponent.h"
 #include "Player/GYPlayerController.h"
 #include "Player/GYPlayerState.h"
+#include "World/ActorManagement/GYRespawnStreamingSource.h"
 #include "World/ActorManagement/GYWorldDataSettings.h"
 #include "World/ActorManagement/GYWorldResetSubsystem.h"
 #include "WorldGimmick/TimeRift/TimeRiftSubsystem.h"
+#include "WorldPartition/WorldPartitionSubsystem.h"
+
+namespace
+{
+	constexpr float GRespawnStreamingPollInterval = 1.f;
+	constexpr float GRespawnStreamingMaxExtraWait = 15.f;
+}
 
 AGYGameMode::AGYGameMode()
 {
@@ -58,6 +66,11 @@ void AGYGameMode::PreLogin(const FString& Options, const FString& Address, const
 
 void AGYGameMode::Logout(AController* Exiting)
 {
+	if (APlayerController* ExitingPC = Cast<APlayerController>(Exiting))
+	{
+		CleanupPendingRespawn(ExitingPC);
+	}
+
 	if (APawn* OldPawn = Exiting->GetPawn())
 	{
 		Exiting->UnPossess();
@@ -327,13 +340,96 @@ bool AGYGameMode::AdvanceHour(float Hour)
 void AGYGameMode::RequestRespawn(APlayerController* PC, float Delay)
 {
 	if (!PC) return;
+
+	CleanupPendingRespawn(PC);
+
+	const FTransform SpawnTransform = ResolveRespawnTransform(PC);
+
+	FGYPendingRespawn& Pending = PendingRespawns.Add(PC);
+	Pending.SpawnTransform = SpawnTransform;
+	Pending.ExtraWaitElapsed = 0.f;
+
+	if (UWorldPartitionSubsystem* WPSubsystem = GetWorld()->GetSubsystem<UWorldPartitionSubsystem>())
+	{
+		Pending.StreamingSource = MakeShared<FGYRespawnStreamingSource>(SpawnTransform.GetLocation(), SpawnTransform.Rotator());
+		WPSubsystem->RegisterStreamingSourceProvider(Pending.StreamingSource.Get());
+	}
+
+	if (AGYPlayerController* GYPC = Cast<AGYPlayerController>(PC))
+	{
+		GYPC->Client_PrewarmRespawnStreaming(SpawnTransform.GetLocation(), SpawnTransform.Rotator());
+	}
+
 	FTimerHandle Handle;
 	FTimerDelegate Del;
-	Del.BindUObject(this, &AGYGameMode::PerformRespawn, PC);
+	Del.BindUObject(this, &AGYGameMode::TryPerformRespawn, TWeakObjectPtr<APlayerController>(PC));
 	GetWorldTimerManager().SetTimer(Handle, Del, Delay, false);
 }
 
-void AGYGameMode::PerformRespawn(APlayerController* PC)
+FTransform AGYGameMode::ResolveRespawnTransform(APlayerController* PC) const
+{
+	const AGYPlayerState* PS = PC ? PC->GetPlayerState<AGYPlayerState>() : nullptr;
+	if (!PS) return FTransform::Identity;
+
+	FTransform SpawnTransform = PS->GetInitialSpawnTransform();
+
+	if (UTimeRiftSubsystem* TimeRiftSubsystem = GetGameInstance()->GetSubsystem<UTimeRiftSubsystem>())
+	{
+		TimeRiftSubsystem->TryGetRespawnTransform(PS->GetLastCheckpointId(), SpawnTransform);
+	}
+
+	return SpawnTransform;
+}
+
+void AGYGameMode::TryPerformRespawn(TWeakObjectPtr<APlayerController> WeakPC)
+{
+	APlayerController* PC = WeakPC.Get();
+	FGYPendingRespawn* Pending = PC ? PendingRespawns.Find(PC) : nullptr;
+	if (!PC || !Pending)
+	{
+		return;
+	}
+
+	UWorldPartitionSubsystem* WPSubsystem = GetWorld()->GetSubsystem<UWorldPartitionSubsystem>();
+	const bool bStreamingReady = !WPSubsystem || WPSubsystem->IsStreamingCompleted(Pending->StreamingSource.Get());
+	const bool bTimedOut = Pending->ExtraWaitElapsed >= GRespawnStreamingMaxExtraWait;
+
+	if (!bStreamingReady && !bTimedOut)
+	{
+		Pending->ExtraWaitElapsed += GRespawnStreamingPollInterval;
+
+		FTimerHandle Handle;
+		FTimerDelegate Del;
+		Del.BindUObject(this, &AGYGameMode::TryPerformRespawn, WeakPC);
+		GetWorldTimerManager().SetTimer(Handle, Del, GRespawnStreamingPollInterval, false);
+		return;
+	}
+
+	const FTransform SpawnTransform = Pending->SpawnTransform;
+	CleanupPendingRespawn(PC);
+	PerformRespawn(PC, SpawnTransform);
+}
+
+void AGYGameMode::CleanupPendingRespawn(APlayerController* PC)
+{
+	if (!PC) return;
+
+	if (FGYPendingRespawn* Pending = PendingRespawns.Find(PC))
+	{
+		if (UWorldPartitionSubsystem* WPSubsystem = GetWorld()->GetSubsystem<UWorldPartitionSubsystem>())
+		{
+			WPSubsystem->UnregisterStreamingSourceProvider(Pending->StreamingSource.Get());
+		}
+		PendingRespawns.Remove(PC);
+	}
+
+	if (AGYPlayerController* GYPC = Cast<AGYPlayerController>(PC))
+	{
+		GYPC->Client_ClearRespawnPrewarm();
+	}
+}
+
+void AGYGameMode::PerformRespawn(APlayerController* PC, const FTransform& SpawnTransform)
 {
 	if (!PC) return;
 
@@ -344,13 +440,6 @@ void AGYGameMode::PerformRespawn(APlayerController* PC)
 	if (!ASC) return;
 
 	ASC->RevokeGrantSource(GYStateTags::State_Life_Dead);
-
-	FTransform SpawnTransform = PS->GetInitialSpawnTransform();
-
-	if (UTimeRiftSubsystem* TimeRiftSubsystem = GetGameInstance()->GetSubsystem<UTimeRiftSubsystem>())
-	{
-		TimeRiftSubsystem->TryGetRespawnTransform(PS->GetLastCheckpointId(), SpawnTransform);
-	}
 
 	if (APawn* OldPawn = PC->GetPawn())
 	{

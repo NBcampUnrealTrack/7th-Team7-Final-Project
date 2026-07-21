@@ -4,10 +4,12 @@
 #include "GameFramework/GameMode.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameStates/GYGameState.h"
+#include "Templates/SharedPointer.h"
 #include "GYGameMode.generated.h"
 
 class UGYExperienceDefinition;
 class UGYPawnData;
+class FGYRespawnStreamingSource;
 
 UCLASS()
 class GY_API AGYGameMode : public AGameMode
@@ -54,7 +56,7 @@ protected:
 
 private:
 	bool UpdateWorldTime(float DeltaTime);
-	void PerformRespawn(APlayerController* PC);
+	void PerformRespawn(APlayerController* PC, const FTransform& SpawnTransform);
 
 	bool IsExperienceLoaded() const;
 	void OnExperienceLoaded(const UGYExperienceDefinition* Experience);
@@ -65,4 +67,18 @@ private:
 
 	// PS에 PawnData가 있으면 그것, 없으면 현재 Experience의 DefaultPawnData.
 	const UGYPawnData* GetPawnDataForController(AController* InController) const;
+
+	FTransform ResolveRespawnTransform(APlayerController* PC) const;
+
+	void TryPerformRespawn(TWeakObjectPtr<APlayerController> PC);
+
+	void CleanupPendingRespawn(APlayerController* PC);
+
+	struct FGYPendingRespawn
+	{
+		FTransform SpawnTransform;
+		TSharedPtr<FGYRespawnStreamingSource> StreamingSource;
+		float ExtraWaitElapsed = 0.f;
+	};
+	TMap<TWeakObjectPtr<APlayerController>, FGYPendingRespawn> PendingRespawns;
 };
