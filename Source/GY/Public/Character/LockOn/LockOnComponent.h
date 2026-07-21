@@ -42,7 +42,7 @@ protected:
 	void UpdateRotationToTarget(float DeltaTime);
 
 	UPROPERTY(EditDefaultsOnly, Category="LockOn")
-	float MaxLockOnDistance = 1000.f;
+	float MaxLockOnDistance = 2000.f;
 
 	UPROPERTY(EditDefaultsOnly, Category="LockOn")
 	float RotationInterpSpeed = 8.f;
@@ -59,7 +59,7 @@ protected:
 	FTimerHandle RetryTargetHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category="LockOn|Switch")
-	float SwitchAccumulatorThreshold = 20.f;
+	float SwitchAccumulatorThreshold = 400.f;
 
 	UPROPERTY(EditDefaultsOnly, Category="LockOn|Switch")
 	float SwitchCooldown = 1.f;
