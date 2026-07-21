@@ -9,7 +9,7 @@ struct FGYWorldSummary
 	int64 Id = 0;
 	FString Name;
 	int32 WorldLevel = 1;
-	FString Status; // offline | starting | online
+	FString Status; // offline | requested | starting | online
 	FString HostAddr;
 	int32 PlayerCount = 0;
 	int32 MaxPlayers = 4;
@@ -88,6 +88,10 @@ private:
 	void PollJoinTarget();
 	void FinishJoin(const FGYWorldSummary& World);
 	void FailJoin(const TCHAR* Reason);
+
+	// 대기 중 임대 갱신 — 폴링마다 request_world_start 를 재전송해 last_waiting_at 를 갱신한다.
+	// 갱신이 끊기면(취소/종료) 오케스트레이터가 requested 세션을 만료시켜 큐에서 제거
+	void RenewStartRequest();
 
 	class UGYAccountSubsystem* ResolveAccount() const;
 

@@ -165,8 +165,10 @@ void UGYWorldSessionSubsystem::ListWorlds(FGYOnWorldList OnComplete)
 		return;
 	}
 
+	// world_list = worlds + world_sessions 좌조인 뷰 (세션 없으면 status=offline). 런타임 상태가
+	// 세션 테이블로 분리돼 worlds 를 직접 읽으면 status/host_addr 등이 없다 — 반드시 뷰로 조회
 	Account->SendAuthedRequest(TEXT("GET"),
-		TEXT("/rest/v1/worlds?select=id,name,world_level,status,host_addr,player_count,max_players,owner_account_id,owner_name&owner_account_id=not.is.null&order=id"),
+		TEXT("/rest/v1/world_list?select=id,name,world_level,status,host_addr,player_count,max_players,owner_account_id,owner_name&owner_account_id=not.is.null&order=id"),
 		FString(), FString(),
 		[WeakThis = TWeakObjectPtr<UGYWorldSessionSubsystem>(this), OnComplete = MoveTemp(OnComplete)](int32 Code, const FString& Content) mutable
 		{
@@ -377,6 +379,19 @@ void UGYWorldSessionSubsystem::CancelJoin()
 	OnJoinWorldPhase.Broadcast(WorldId, EGYJoinWorldPhase::Cancelled);
 }
 
+void UGYWorldSessionSubsystem::RenewStartRequest()
+{
+	if (JoinTargetWorldId == 0) return;
+
+	UGYAccountSubsystem* Account = ResolveAccount();
+	if (!IsValid(Account) || !Account->IsLoggedIn()) return;
+
+	// idempotent: requested 면 last_waiting_at 만 갱신, starting/online 이면 서버가 무시 (fire-and-forget)
+	const FString Body = FString::Printf(TEXT("{\"p_id\":%lld}"), JoinTargetWorldId);
+	Account->SendAuthedRequest(TEXT("POST"), TEXT("/rest/v1/rpc/request_world_start"), Body, FString(),
+		[](int32 Code, const FString& Content) {});
+}
+
 void UGYWorldSessionSubsystem::PollJoinTarget()
 {
 	if (JoinTargetWorldId == 0) return;
@@ -413,13 +428,18 @@ void UGYWorldSessionSubsystem::PollJoinTarget()
 					This->FinishJoin(*Target);
 					return;
 				}
+
+				// 아직 못 들어감(대기/부팅 중) — 폴링마다 요청을 재전송해 임대(last_waiting_at)를 갱신한다.
+				// 갱신이 끊기면(취소/종료) 오케스트레이터가 requested 세션을 만료시켜 큐에서 제거
+				This->RenewStartRequest();
+
 				if (Target->Status == TEXT("starting"))
 				{
 					This->OnJoinWorldPhase.Broadcast(This->JoinTargetWorldId, EGYJoinWorldPhase::Starting);
 				}
-				else if (Target->Status == TEXT("offline"))
+				else
 				{
-					// 요청은 넣었는데 offline 유지 = 다른 월드가 활성이라 슬롯 대기 중 (오케스트레이터 MaxWorlds).
+					// requested = 슬롯 대기 중 (오케스트레이터 MaxWorlds), offline = 세션 만료됨(위 재요청이 다시 큐잉).
 					// 대기는 무기한일 수 있으니 타임아웃을 계속 뒤로 민다 — 카운트다운은 실제 부팅(starting)부터
 					This->JoinDeadlineSeconds = FPlatformTime::Seconds() + 300.0;
 					This->OnJoinWorldPhase.Broadcast(This->JoinTargetWorldId, EGYJoinWorldPhase::Queued);

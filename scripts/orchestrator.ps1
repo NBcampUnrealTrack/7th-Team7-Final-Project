@@ -1,6 +1,6 @@
 # ============================================================
 # GY 월드 오케스트레이터 — 서버 호스트 머신(EC2 등)에 상주.
-#   worlds 큐(start_requested_at)를 감시해 GYServer.exe 를 월드당 프로세스로 스폰/회수한다.
+#   world_sessions 큐를 감시해 GYServer.exe 를 월드당 프로세스로 스폰/회수한다.
 #   실행:  powershell -ExecutionPolicy Bypass -File orchestrator.ps1
 #   전제 (머신 env, setx /M 권장):
 #     GY_HOSTED_URL          Supabase URL
@@ -8,8 +8,10 @@
 #     GY_SERVER_EXE          GYServer.exe 전체 경로 (예: C:\GY\Server\GYServer.exe)
 #     GY_PUBLIC_IP           이 머신의 공인 IP (EC2 = Elastic IP)
 #   생명주기:
-#     클라 request_world_start → claim_world_start(원자 클레임) → 스폰(-WorldId -port -PublicAddr)
-#     → 서버 자체 하트비트가 online 전환 → 프로세스 종료 감지/유휴 리핑 → set_world_offline
+#     클라 request_world_start(requested) → claim_world_start(starting 원자 클레임)
+#     → 스폰(-WorldId -port -PublicAddr) → 서버 하트비트가 online 전환
+#     → 프로세스 종료 감지 / 유휴·no-show 회수 / 신호 끊김 reap → set_world_offline(행 삭제)
+#   세션 상태(런타임)는 world_sessions 에만 있다. 행 존재 = 활성, 행 없음 = offline.
 # ============================================================
 param(
     [string]$BaseUrl = $env:GY_HOSTED_URL,
@@ -20,10 +22,14 @@ param(
     [string]$ServerArgsPrefix = $env:GY_SERVER_ARGS_PREFIX,
     [string]$PublicIp = $env:GY_PUBLIC_IP,
     [int]$PortMin = 7777,
-    [int]$PortMax = 7786,             # 포트 수 = 동시 월드 상한 (박스 램과 함께 packing 한도)
+    [int]$PortMax = 7786,                 # 포트 수 = 동시 월드 상한 (박스 램과 함께 packing 한도)
     [int]$PollSeconds = 5,
-    [int]$IdleMinutes = 10,           # 인원 0 지속 시 회수 — 짧게 유지해 슬롯 회전 (콜드 스타트 해법은 웜 풀)
-    [int]$StaleSeconds = 90,          # 하트비트 무응답 = 죽은 세션
+    # 스폰됐는데 아무도 접속 안 한 월드(no-show) 회수 유예 — 부팅 + 요청자 접속에 필요한 시간.
+    # 한 번이라도 사람이 있었다가 비면(플레이 종료)은 유예 없이 즉시 회수 (슬롯 즉시 반납).
+    [int]$SpawnWaitMinutes = 5,
+    # 대기 클라 임대 갱신(last_waiting_at)이 끊긴 requested 요청 만료 — 클라 폴링 2s 의 여유 배수.
+    [int]$RequestTimeoutSeconds = 30,
+    [int]$StaleSeconds = 90,              # 서버 하트비트 무응답 = 죽은 세션
     # 상시 가동 월드 (쉼표 구분 id) — 부팅 시 자동 스폰 + 유휴 회수 제외.
     # 주의: MaxWorlds=1 운영에선 핀 월드가 유일한 슬롯을 영구 점유해 다른 월드가 영원히 대기 —
     # 기본 비움. 박스를 키우거나 MaxWorlds 를 올릴 때만 팀 메인 월드를 핀할 것
@@ -32,7 +38,7 @@ param(
     # 0 = 비활성(콜드 스폰만). 배정 시 입장 대기가 분 단위 → 초 단위로 준다
     [int]$StandbyCount = 0,
     # 동시 활성 월드 상한 — 박스 CPU 보호 (m7i-flex 2vCPU 실측: 활성 1개가 안전).
-    # 초과 요청은 스폰하지 않고 대기 — 클라는 "대기열" 표시, 슬롯이 비면(유휴 회수) 자동 처리
+    # 초과 요청은 스폰하지 않고 대기 — 클라는 "대기열" 표시, 슬롯이 비면 FIFO(오래 기다린 순) 처리
     [int]$MaxWorlds = 1
 )
 
@@ -58,8 +64,8 @@ function Invoke-Rpc([string]$Name, [hashtable]$RpcParams) {
     $body = [System.Text.Encoding]::UTF8.GetBytes(($RpcParams | ConvertTo-Json -Compress))
     return Invoke-RestMethod -Uri "$BaseUrl/rest/v1/rpc/$Name" -Method Post -Headers $Headers -Body $body -TimeoutSec 10 -UserAgent $UserAgent
 }
-function Get-Worlds([string]$Filter) {
-    return Invoke-RestMethod -Uri "$BaseUrl/rest/v1/worlds?$Filter" -Method Get -Headers $Headers -TimeoutSec 10 -UserAgent $UserAgent
+function Get-Sessions([string]$Filter) {
+    return Invoke-RestMethod -Uri "$BaseUrl/rest/v1/world_sessions?$Filter" -Method Get -Headers $Headers -TimeoutSec 10 -UserAgent $UserAgent
 }
 function Log([string]$Message) {
     $line = "[{0}] {1}" -f (Get-Date -Format "HH:mm:ss"), $Message
@@ -68,7 +74,12 @@ function Log([string]$Message) {
     try { Add-Content -Path (Join-Path $PSScriptRoot "orchestrator.log") -Value $line } catch {}
 }
 
-# worldId → @{ Process; Port; IdleSince }
+# worldId → @{ Process; Port; HasBeenOccupied; EnteredAt }
+#   HasBeenOccupied: 한 번이라도 player_count > 0 이었나 — 유휴 회수 정책을 가른다
+#     false(아직 아무도 안 옴)  → no-show 유예(SpawnWaitMinutes) 후 회수
+#     true (플레이 후 다 나감)  → 유예 없이 즉시 회수
+#   EnteredAt: 이 월드가 $Running 에 들어온(스폰/배정) 시각 — no-show 기준.
+#     웜 스탠바이는 Process.StartTime 이 한참 전이라 그걸 쓰면 배정 즉시 회수돼버린다
 $Running = @{}
 # 스탠바이 프로세스 목록: @{ Process; Port; SpawnedAt } — 배정 소비 시 $Running 으로 이동
 $StandbyProcs = New-Object System.Collections.ArrayList
@@ -113,7 +124,7 @@ function Stop-World([long]$WorldId, [string]$Reason) {
     try { Invoke-Rpc "set_world_offline" @{ p_id = $WorldId } | Out-Null } catch { Log "set_world_offline($WorldId) failed: $($_.Exception.Message)" }
 }
 
-# ── 부팅 정리: 이전 에이전트 세대의 잔재(내가 모르는 online/starting 행 + 스탠바이 행) 정리 ──
+# ── 부팅 정리: 이전 에이전트 세대의 잔재(세션 행 + 잔여 서버 프로세스 + 스탠바이 행) 정리 ──
 try {
     # 이전 오케스트레이터 실행이 남긴 잔여 서버 정리 — 정리 없인 새 스폰과 같은 월드를 이중 호스팅한다
     # (저장 버전 충돌 반복 + host_addr 요동 + CPU 2배)
@@ -126,10 +137,10 @@ try {
         Get-Process "GYServer*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     }
 
-    $stale = Get-Worlds "status=neq.offline&select=id,status"
-    foreach ($w in $stale) {
-        Log "boot cleanup: world $($w.id) was '$($w.status)' - marking offline"
-        Invoke-Rpc "set_world_offline" @{ p_id = $w.id } | Out-Null
+    # 새 세대는 아무 세션도 소유하지 않는다 — 남아있는 세션 행(재부팅/크래시로 정리 못 된 것)을 전부 삭제
+    foreach ($s in @(Get-Sessions "select=world_id,status")) {
+        Log "boot cleanup: session for world $($s.world_id) was '$($s.status)' - clearing"
+        Invoke-Rpc "set_world_offline" @{ p_id = $s.world_id } | Out-Null
     }
     foreach ($s in @(Get-Standbys)) {
         Log "boot cleanup: standby $($s.id) - removing"
@@ -156,31 +167,39 @@ while ($true) {
         }
     }
 
-    # ── 2. 시작 요청 처리 ──
-    # 상시 가동 월드 자가 회복: 안 돌고 있으면 재요청 (RPC 가 offline 일 때만 큐잉하므로 무해)
+    # ── 2. 신호 끊긴 세션 회수 (스폰 선택 전에 큐 정리) ──
+    # requested 인데 임대 갱신 끊김(대기 클라 이탈) + online 인데 하트비트 끊김(죽은 서버) 행 삭제.
+    # starting 은 건드리지 않음 — 부팅 중 서버는 아직 하트비트 전. 그건 아래 no-show 유예가 담당.
+    try { Invoke-Rpc "reap_stale_sessions" @{ p_request_timeout = $RequestTimeoutSeconds; p_heartbeat_timeout = $StaleSeconds } | Out-Null }
+    catch { Log "reap failed: $($_.Exception.Message)" }
+
+    # ── 3. 시작 요청 처리 ──
+    # 상시 가동 월드 자가 회복: 안 돌고 있으면 재요청 (RPC 가 requested 로만 큐잉하므로 무해)
     foreach ($pinnedId in $PinnedWorlds) {
         if (-not $Running.ContainsKey($pinnedId)) {
             try { Invoke-Rpc "request_world_start" @{ p_id = $pinnedId } | Out-Null } catch {}
         }
     }
 
+    # FIFO: requested_at 오름차순 = 오래 기다린 요청 먼저
     try {
-        $requested = Get-Worlds "status=eq.offline&start_requested_at=not.is.null&select=id,name"
+        $requested = Get-Sessions "status=eq.requested&select=world_id&order=requested_at.asc"
     } catch { Log "poll failed: $($_.Exception.Message)"; continue }
 
-    foreach ($w in $requested) {
-        if ($Running.ContainsKey([long]$w.id)) { continue }
+    foreach ($w in @($requested)) {
+        $wid = [long]$w.world_id
+        if ($Running.ContainsKey($wid)) { continue }
 
-        # 활성 월드 상한 — 초과분은 스폰하지 않음 (요청 타임스탬프가 남아 슬롯이 비면 다음 폴에서 처리)
+        # 활성 월드 상한 — 초과분은 스폰하지 않음 (requested 로 남아 슬롯이 비면 다음 폴에서 FIFO 처리)
         if ($Running.Count -ge $MaxWorlds) {
-            Log "world $($w.id): queued (active $($Running.Count)/$MaxWorlds)"
+            Log "world ${wid}: queued (active $($Running.Count)/$MaxWorlds)"
             break
         }
 
-        # 웜 스탠바이 우선 배정 (원자 RPC: worlds starting 전환 + standby 행에 월드 기록) —
+        # 웜 스탠바이 우선 배정 (원자 RPC: 세션 starting 전환 + standby 행에 월드 기록) —
         # 배정되면 스탠바이 서버가 폴링으로 감지해 세이브만 로드하고 online 전환 (수 초)
         $assignedStandby = $null
-        try { $assignedStandby = Invoke-Rpc "assign_standby_to_world" @{ p_world_id = $w.id } } catch { Log "assign($($w.id)) failed: $($_.Exception.Message)"; continue }
+        try { $assignedStandby = Invoke-Rpc "assign_standby_to_world" @{ p_world_id = $wid } } catch { Log "assign(${wid}) failed: $($_.Exception.Message)"; continue }
         # JSON null 은 PS 에서 문자열 "null" 로 들어온다 — 숫자만 배정 성공으로
         if ("$assignedStandby" -notmatch '^\d+$') { $assignedStandby = $null }
 
@@ -191,27 +210,27 @@ while ($true) {
             $procEntry = @($StandbyProcs) | Where-Object { $_.Port -eq $standbyPort } | Select-Object -First 1
             if ($procEntry) {
                 $StandbyProcs.Remove($procEntry)
-                $Running[[long]$w.id] = @{ Process = $procEntry.Process; Port = $procEntry.Port; IdleSince = $null }
+                $Running[$wid] = @{ Process = $procEntry.Process; Port = $procEntry.Port; HasBeenOccupied = $false; EnteredAt = Get-Date }
             }
-            Log "world $($w.id): assigned to standby $assignedStandby (port $standbyPort)"
+            Log "world ${wid}: assigned to standby $assignedStandby (port $standbyPort)"
             continue
         }
 
         # 스탠바이 없음 — RPC 가 이미 starting 으로 클레임했으므로 바로 콜드 스폰
         $port = Get-FreePort
-        if ($null -eq $port) { Log "world $($w.id): no free port - request deferred"; try { Invoke-Rpc "set_world_offline" @{ p_id = $w.id } | Out-Null } catch {}; continue }
+        if ($null -eq $port) { Log "world ${wid}: no free port - request deferred"; try { Invoke-Rpc "set_world_offline" @{ p_id = $wid } | Out-Null } catch {}; continue }
 
-        Log "world $($w.id): cold spawning on port $port"
+        Log "world ${wid}: cold spawning on port $port"
         $spawnArgs = @()
         if ($ServerArgsPrefix) { $spawnArgs += ($ServerArgsPrefix -split " ") }
         # -nosteam: 패키징 서버는 Steam 이 타깃에서 제외돼 무의미(무해) — 에디터 exe 로 돌릴 때(ServerArgsPrefix)만 유효
-        $spawnArgs += @("L_Expanse_WP", "-log", "-nosteam", "-port=$port", "-WorldId=$($w.id)", "-PublicAddr=${PublicIp}:$port")
+        $spawnArgs += @("L_Expanse_WP", "-log", "-nosteam", "-port=$port", "-WorldId=$wid", "-PublicAddr=${PublicIp}:$port")
         $proc = Start-Process -FilePath $ServerExe -ArgumentList $spawnArgs -PassThru -WindowStyle Minimized
         try { $proc.PriorityClass = "AboveNormal" } catch {} # 게임 서버가 박스의 주인 — 배경 작업에 안 밀리게
-        $Running[[long]$w.id] = @{ Process = $proc; Port = $port; IdleSince = $null }
+        $Running[$wid] = @{ Process = $proc; Port = $port; HasBeenOccupied = $false; EnteredAt = Get-Date }
     }
 
-    # ── 2.5 스탠바이 풀 유지 ──
+    # ── 3.5 스탠바이 풀 유지 ──
     # 죽은 스탠바이 프로세스 정리
     foreach ($entry in @($StandbyProcs)) {
         if ($entry.Process.HasExited) {
@@ -231,31 +250,38 @@ while ($true) {
         if ($StandbyProcs.Count -eq $before) { break } # 포트 소진 등 — 다음 폴에서 재시도
     }
 
-    # ── 3. 유휴/좀비 리핑 + 램 실측 로깅 ──
+    # ── 4. 유휴/no-show 회수 + 램 실측 로깅 ──
     try {
-        $mine = Get-Worlds "select=id,status,player_count,heartbeat_at"
+        $mine = Get-Sessions "select=world_id,status,player_count,last_heartbeat_at"
     } catch { continue }
 
     foreach ($worldId in @($Running.Keys)) {
-        $row = $mine | Where-Object { [long]$_.id -eq $worldId }
-        if (-not $row) { continue }
+        $row = $mine | Where-Object { [long]$_.world_id -eq $worldId }
         $entry = $Running[$worldId]
 
-        # 스폰했는데 하트비트가 안 옴 (부팅 실패/행) — starting 상태로 stale 이면 회수
-        if ($row.status -eq "starting") {
-            if (((Get-Date) - $entry.Process.StartTime).TotalSeconds -gt 300) { Stop-World $worldId "no heartbeat after spawn" }
+        # 세션 행이 없어짐 = reap_stale_sessions 가 online 을 하트비트 끊김으로 삭제 (프로세스는 살았지만 응답 없음).
+        # 프로세스는 위 1번 루프가 잡지 못한 좀비이므로 여기서 정리한다.
+        if (-not $row) {
+            Stop-World $worldId "session reaped (heartbeat lost)"
             continue
         }
 
         # 상시 가동 월드는 유휴 회수 제외
         if ($PinnedWorlds -contains $worldId) { continue }
 
-        # 인원 0 지속 → 회수 (종료 flush 가 마지막 저장을 보장)
-        if ($row.player_count -eq 0) {
-            if ($null -eq $entry.IdleSince) { $entry.IdleSince = Get-Date }
-            elseif (((Get-Date) - $entry.IdleSince).TotalMinutes -ge $IdleMinutes) { Stop-World $worldId "idle ${IdleMinutes}m" }
-        } else {
-            $entry.IdleSince = $null
+        if ([int]$row.player_count -gt 0) {
+            $entry.HasBeenOccupied = $true
+            continue
+        }
+
+        # player_count == 0
+        if ($entry.HasBeenOccupied) {
+            # 플레이 후 전원 퇴장 → 유예 없이 즉시 회수 (종료 flush 가 마지막 저장을 보장)
+            Stop-World $worldId "empty after play"
+        } elseif (((Get-Date) - $entry.EnteredAt).TotalMinutes -ge $SpawnWaitMinutes) {
+            # 스폰/배정됐는데 아무도 접속 안 함(no-show) — starting 그대로 멎었거나 online 인데 요청자 미접속.
+            # 기준은 EnteredAt(스폰/배정 시각) — 웜 스탠바이의 오래된 Process.StartTime 쓰면 즉시 오회수
+            Stop-World $worldId "no player within ${SpawnWaitMinutes}m of spawn"
         }
     }
 
