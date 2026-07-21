@@ -192,7 +192,7 @@ void AGYEnemyCharacterBase::BeginPlay()
 		{
 			SkeletalMeshComponent->SetVisibility(false);
 			SkeletalMeshComponent->SetHiddenInGame(true);
-			SkeletalMeshComponent->UnregisterComponent();
+			// SkeletalMeshComponent->UnregisterComponent();
 		}
 	}
 
@@ -330,7 +330,7 @@ void AGYEnemyCharacterBase::HandleBootstrapVisualReady(AGYEnemyCharacterBase* En
 
 	if (USkeletalMeshComponent* SkeletalMeshComponent = GetMesh())
 	{
-		SkeletalMeshComponent->RegisterComponent();
+		// SkeletalMeshComponent->RegisterComponent();
 		SkeletalMeshComponent->SetVisibility(true);
 		SkeletalMeshComponent->SetHiddenInGame(false);
 	}
@@ -578,7 +578,7 @@ void AGYEnemyCharacterBase::Deactivate()
 	{
 		SkeletalMeshComponent->SetVisibility(false);
 		SkeletalMeshComponent->SetHiddenInGame(true);
-		SkeletalMeshComponent->UnregisterComponent();
+		// SkeletalMeshComponent->UnregisterComponent();
 	}
 
 	if (HasAuthority())
@@ -794,7 +794,7 @@ void AGYEnemyCharacterBase::OnRep_IsActivate()
 		{
 			SkeletalMeshComponent->SetVisibility(false);
 			SkeletalMeshComponent->SetHiddenInGame(true);
-			SkeletalMeshComponent->UnregisterComponent();
+			// SkeletalMeshComponent->UnregisterComponent();
 		}
 	}
 }

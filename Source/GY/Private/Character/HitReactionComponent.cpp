@@ -40,6 +40,14 @@ void UHitReactionComponent::BeginPlay()
 	}
 }
 
+void UHitReactionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(HitReactTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(OverlayTimerHandle);
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void UHitReactionComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
                                           FActorComponentTickFunction* ThisTickFunction)
 {
