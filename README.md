@@ -8,6 +8,13 @@
 
 <br/>
 
+<div align="center">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F7UFlt%2FdJMcafOfhh4%2FAAAAAAAAAAAAAAAAAAAAADsxpAeEM4o57WAVXcvwUNOtivp7CdBvP5vF73GHqX-Z%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3DZsejyT1%252FnrsoZgd6cnGYgxd8nrA%253D" width="100%">
+
+</div>
+
+<br/>
+
 ![Unreal Engine](https://img.shields.io/badge/Unreal_Engine-5.7-0E1128?style=for-the-badge&logo=unrealengine&logoColor=white)
 ![C++](https://img.shields.io/badge/C%2B%2B-17-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows_PC-orange?style=for-the-badge)
@@ -105,6 +112,11 @@
 > 정밀한 근접 전투와 보스전을 중심에 둔 **1~4인 코옵 라이트 소울류 탑다운 액션 RPG.**
 > *휴식–탐험–리셋* 사이클을 축으로, **호스트 없는 전용 서버 세션**과 상용 파이프라인을 지향해 개발했습니다.
 
+<div align="center">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fd2efOM%2FdJMcafgm7hK%2FAAAAAAAAAAAAAAAAAAAAABvpP2d4gX6PgUWjso2E3S2EDWuRSfV6vII7F0txjNAx%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3DypVYRVWst6LxdCofq%252BHG9UMaGBc%253D" width="100%">
+
+</div>
+
 <br/>
 
 | 항목 | 내용 |
@@ -193,6 +205,11 @@
 ## 5. 전투 시스템
 
 > **GAS 위에 얹은 데이터 주도 전투 아키텍처.** 능력을 상속이 아닌 **조합(composition)** 으로 구성해, 조합 폭발을 데이터 조립으로 해소합니다.
+
+<div align="center">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FoOw9m%2FdJMcaaTB8Ls%2FAAAAAAAAAAAAAAAAAAAAABm8dqBgmbctnK3JkSXkoMc2Kc2nzXzGWmq4UilzHVQJ%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3D9qtgDfZx14XtKHv2iAxKGc606h8%253D" width="100%">
+
+</div>
 
 <br/>
 
@@ -363,6 +380,11 @@ CritRate = 5% + DEX × 0.3%      CritDmg = 1.5배
 
 > **회복 + 제물 바치기(가챠/리롤) + 숙련도 관리가 통합된 단일 거점** — 셋은 독립 UI로 개별 동시 상호작용.
 
+<div align="center">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbLplqr%2FdJMcaaTB8Lr%2FAAAAAAAAAAAAAAAAAAAAAFW0eKSV1kvAsV8EeFitgdf6DPKACu0gSuFSiEpXkXfl%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3DZ7cG6LPULP0dahHq8MNzzP1Epw4%253D" width="100%">
+
+</div>
+
 <br/>
 
 | 기능 | 비용 | 효과 / 대가 |
@@ -385,6 +407,11 @@ CritRate = 5% + DEX × 0.3%      CritDmg = 1.5배
 ## 12. 퀘스트
 
 > 선형 사슬을 폐기하고 **투두 체크리스트** 방식으로 간소화.
+
+<div align="center">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FciFbRK%2FdJMcaaTB8Lq%2FAAAAAAAAAAAAAAAAAAAAAP9N49Rui6NtGM30ZviieRvf3Pr4xrMnh09N6vCf57MC%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3Dbob2Q1fhb2Vk%252BTZZPMa%252BVzv%252FA70%253D" width="100%">
+
+</div>
 
 <br/>
 
@@ -427,6 +454,11 @@ CritRate = 5% + DEX × 0.3%      CritDmg = 1.5배
 
 ## 14. 시네마틱
 
+<div align="center">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FZR737%2FdJMcafgm7hN%2FAAAAAAAAAAAAAAAAAAAAAKTD2IaqgocgEvAFA6BxQL0SdmzDzJ-DFPRxXsp27z_V%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3Dtjz9V2DG9PVceE37c8oAObnNqCE%253D" width="100%">
+
+</div>
+
 | 요소 | 구현 |
 |:---|:---|
 | **연출** | **Level Sequence** — 보스 등장 인트로(`GYBossCharacterBase`/`GYChapterBossCharacter`) · 엔딩(`GYEndingInteractActor`) |
@@ -445,6 +477,11 @@ CritRate = 5% + DEX × 0.3%      CritDmg = 1.5배
 
 > **CommonUI 기반 독립 모듈(`GYUI`)에 구축한 Lyra식 레이어드 UI 코어.**
 > 게임플레이와 **직접 참조 0 - 전부 GameplayMessage(이벤트 버스)로 구동**해, UI가 게임 로직을 몰라도 동작하고 반대도 성립합니다.
+
+<div align="center">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbIZ8ve%2FdJMcadvVYPa%2FAAAAAAAAAAAAAAAAAAAAAGsjvoUY_-Vn5wtjSmilpgpeXGQJXLSDGpM6ZqsTBBY7%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3Dr0iD4n9p45ROIkUVssOtJ4kf5xs%253D" width="100%">
+
+</div>
 
 <br/>
 
@@ -614,6 +651,11 @@ GameplayMessageRouter  ──▶  GYUIManagerSubsystem  ──▶  GYPrimaryGame
 ## 20. 맵 구성
 
 > **World Partition 메인 맵 + Level Instance 서브레벨 + 기능별 테스트 맵**으로 모듈화.
+
+<div align="center">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FdjxUjQ%2FdJMcafgm7hL%2FAAAAAAAAAAAAAAAAAAAAAHnTENQDSrq2YakAXO5my5LlxOnF7HZYDgtJSeRnjcn9%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3DUFbxWAR%252BqU%252FgWHuPOF9kQylgVkI%253D" width="100%">
+
+</div>
 
 <br/>
 
