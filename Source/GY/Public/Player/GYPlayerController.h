@@ -2,12 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "GameFramework/GameplayMessageSubsystem.h"
 #include "GYPlayerController.generated.h"
 
 class AGYPlayerController;
 class AGYServerCheatProxy;
-struct FGYCinematicMessage;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FGYPlayerStateInitializedDelegate, AGYPlayerController* /*PC*/);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGYLocalControllerReady, AGYPlayerController*, PC);
@@ -37,7 +35,6 @@ protected:
 	virtual void SetupInputComponent() override;
 	virtual void OnRep_PlayerState() override;
 	virtual void OnPossess(APawn* InPawn) override;
-	virtual void AcknowledgePossession(APawn* P) override;
 	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 
 	virtual void GetAudioListenerPosition(
@@ -46,14 +43,10 @@ protected:
 		FVector& OutRightDir) const override;
 
 private:
-	// 클라 진입 후 전체 로드 완료를 폴링하다 끝나면 WP 스트리밍을 정지시킨다 (샘플러 크래시 우회).
-	// 시네마틱(엔딩/보스)은 플레이어를 텔레포트하므로 그동안엔 스트리밍을 재개했다가 끝나면 다시 정지.
-	void StartFreezeStreamingPoll();
+	// 클라 진입 후 전체 로드 완료를 폴링하다 끝나면 WP 스트리밍을 정지시킨다 (샘플러 크래시 우회)
 	void TickFreezeStreamingPoll();
-	void HandleCinematicState(FGameplayTag Channel, const FGYCinematicMessage& Message);
 	FTimerHandle FreezeStreamingTimerHandle;
 	float FreezeStreamingElapsed = 0.f;
-	FGameplayMessageListenerHandle CinematicStateHandle;
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Cheat")
