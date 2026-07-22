@@ -63,6 +63,9 @@ void UGYSessionContainerWidget::NativeConstruct()
 	if (Button_Back)
 		Button_Back->OnClicked.AddDynamic(this, &UGYSessionContainerWidget::HandleBackClicked);
 
+	if (Button_Refresh)
+		Button_Refresh->OnClicked.AddDynamic(this, &UGYSessionContainerWidget::HandleRefreshClicked);
+
 	// 디자이너 프리뷰용 카드 제거 — 실제 목록은 조회 응답이 채운다
 	if (SessionScrollBox != nullptr)
 	{
@@ -134,6 +137,14 @@ void UGYSessionContainerWidget::HandleCreateSessionClicked()
 void UGYSessionContainerWidget::HandleBackClicked()
 {
 	ClosePanel();
+}
+
+void UGYSessionContainerWidget::HandleRefreshClicked()
+{
+	// 입장 진행 중엔 목록을 갈아엎지 않는다 (카드 상태/카운트다운 유지)
+	if (bJoinInProgress) return;
+
+	RefreshSessions();
 }
 
 void UGYSessionContainerWidget::RefreshSessions()

@@ -17,6 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGYCreateSessionRequested);
 
 // 세션(월드) 목록 패널 — 조회/입장 + 생성 패널 열기. 디자인/슬라이드는 WBP_SessionContainer 소유.
 // WBP 위젯 계약: Button_CreateSession / Button_Back (BindWidget, 팀원 원안)
+//               Button_Refresh (BindWidgetOptional — 목록 수동 새로고침)
 //               SessionScrollBox (ScrollBox — 코드가 참가중/모든 섹션과 카드를 채움)
 UCLASS(Blueprintable)
 class GYUI_API UGYSessionContainerWidget : public UGYSlidePanelWidget
@@ -41,6 +42,10 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> Button_Back;
 
+	// 목록 수동 새로고침 — WBP에 없어도 되도록 Optional
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> Button_Refresh;
+
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UScrollBox> SessionScrollBox;
 
@@ -59,6 +64,7 @@ protected:
 private:
 	UFUNCTION() void HandleCreateSessionClicked();
 	UFUNCTION() void HandleBackClicked();
+	UFUNCTION() void HandleRefreshClicked();
 
 	void OnWorldList(bool bSuccess, const TArray<FGYWorldSummary>& Worlds);
 	void OnJoinPhase(int64 WorldId, EGYJoinWorldPhase Phase);
