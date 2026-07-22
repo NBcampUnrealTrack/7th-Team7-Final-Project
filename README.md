@@ -27,9 +27,9 @@
 <br/>
 
 🎬 [**트레일러**](https://www.youtube.com/watch?v=JlFGZAQV7JU) &nbsp;|&nbsp; 🎬 [**시연 영상**](https://www.youtube.com/watch?v=y3A0dVEEPEA) &nbsp;|&nbsp;
-📄 [**기능 기획서(필수)**](https://app.notion.com/p/Grind-Yesterday-3a4711d71de1802b9501e3446787ab76?source=copy_link) &nbsp;|&nbsp; 📊 [**발표 자료**](https://www.canva.com/design/DAHP-AiEo2E/rSYgjcSeVh-G_0TWtLx3Iw/edit) &nbsp;|&nbsp;
+📄 [**최종 기획서**](https://app.notion.com/p/Grind-Yesterday-3a4711d71de1802b9501e3446787ab76?source=copy_link) &nbsp;|&nbsp; 📊 [**발표 자료**](https://www.canva.com/design/DAHP-AiEo2E/rSYgjcSeVh-G_0TWtLx3Iw/edit) &nbsp;|&nbsp;
 <br>
-📦 [**게임 다운로드 링크**](https://dooyeonk.itch.io/gy/download/cPv093E5WfzdkrbeOiRQh8f9yYE4TzyalluTl3XS) &nbsp;|&nbsp; 💻 [**저장소**](https://github.com/NBcampUnrealTrack/7th-Team7-Final-Project)
+📦 [**다운로드 링크**](https://dooyeonk.itch.io/gy/download/cPv093E5WfzdkrbeOiRQh8f9yYE4TzyalluTl3XS) &nbsp;|&nbsp; 💻 [**저장소**](https://github.com/NBcampUnrealTrack/7th-Team7-Final-Project)
 
 <br/>
 
@@ -801,7 +801,7 @@ Grind Yesterday (GY)/
 
 <div align="center">
 
-**Grind Yesterday · 내일배움캠프 Unreal 트랙 7기 · 7팀 최종 프로젝트
+**Grind Yesterday · 내일배움캠프 Unreal 트랙 7기 · 7팀 최종 프로젝트**
 
 본 프로젝트는 팀 내부 개발 프로젝트입니다.  
 외부 공개 및 배포는 팀의 동의가 필요합니다.
