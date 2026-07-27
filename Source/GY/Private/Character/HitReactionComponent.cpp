@@ -110,7 +110,7 @@ void UHitReactionComponent::ApplyKnockBack(const FVector& HitDirection, float St
 {
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
 	if (!OwnerCharacter || !OwnerCharacter->HasAuthority()) return;
-	const FVector Launch = HitDirection * Strength*KnockbackScale + FVector(0.f, 0.f, 0.f);
+	const FVector Launch = HitDirection.GetSafeNormal2D() * Strength*KnockbackScale + FVector(0.f, 0.f, 0.f);
 
 	if (Launch.IsNearlyZero()) return;
 
@@ -218,6 +218,27 @@ void UHitReactionComponent::StopHitReaction()
 	if (MeshComp.IsValid())
 	{
 		MeshComp->SetAllBodiesBelowSimulatePhysics(HitReactStartBone, false, true);
+		MeshComp->bBlendPhysics = false;
+	}
+}
+
+void UHitReactionComponent::StopPhysicsAnimation()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(HitReactTimerHandle);
+	}
+	bBlendingOut = false;
+	CurrentBlendWeight = 0.f;
+	SetComponentTickEnabled(false);
+
+	if (PhysicalAnimation.IsValid())
+	{
+		PhysicalAnimation->SetSkeletalMeshComponent(nullptr);
+	}
+
+	if (MeshComp.IsValid())
+	{
 		MeshComp->bBlendPhysics = false;
 	}
 }
