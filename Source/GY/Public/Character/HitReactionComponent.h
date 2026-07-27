@@ -34,6 +34,8 @@ public:
 	void ApplyKnockBack(const FVector& HitDirection, float Strength = -1.f);
 
 	void StopHitReaction();
+
+	void StopPhysicsAnimation();
 protected:
 	TWeakObjectPtr<UPhysicalAnimationComponent> PhysicalAnimation;
 

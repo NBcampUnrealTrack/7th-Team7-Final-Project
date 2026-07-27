@@ -436,7 +436,7 @@ void AGYCharacter::EnableRagdoll()
 
 	if (HitReactionComponent)
 	{
-		HitReactionComponent->StopHitReaction();
+		HitReactionComponent->StopPhysicsAnimation();
 	}
 
 	SkeletalMesh->SetCollisionProfileName(TEXT("Ragdoll"));
