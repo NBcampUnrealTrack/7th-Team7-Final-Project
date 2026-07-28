@@ -11,6 +11,9 @@
 <div align="center">
   <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F7UFlt%2FdJMcafOfhh4%2FAAAAAAAAAAAAAAAAAAAAADsxpAeEM4o57WAVXcvwUNOtivp7CdBvP5vF73GHqX-Z%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3DZsejyT1%252FnrsoZgd6cnGYgxd8nrA%253D" width="100%">
 
+  <div align="center">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbYQrQb%2FdJMcajwnEO1%2FAAAAAAAAAAAAAAAAAAAAAD4S72dAzOYAww40vghGPH39xTfKpe4AbuAhiq0jXhvE%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3D5QauAC9%252Fytjg5NF9kp7K0cmKL3M%253D" width="60%">
+
 </div>
 
 <br/>
