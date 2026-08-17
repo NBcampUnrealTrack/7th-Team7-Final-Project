@@ -9,10 +9,7 @@
 <br/>
 
 <div align="center">
-  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F7UFlt%2FdJMcafOfhh4%2FAAAAAAAAAAAAAAAAAAAAADsxpAeEM4o57WAVXcvwUNOtivp7CdBvP5vF73GHqX-Z%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3DZsejyT1%252FnrsoZgd6cnGYgxd8nrA%253D" width="100%">
-
-  <div align="center">
-  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbYQrQb%2FdJMcajwnEO1%2FAAAAAAAAAAAAAAAAAAAAAD4S72dAzOYAww40vghGPH39xTfKpe4AbuAhiq0jXhvE%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3D5QauAC9%252Fytjg5NF9kp7K0cmKL3M%253D" width="60%">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F7UFlt%2FdJMcafOfhh4%2FAAAAAAAAAAAAAAAAAAAAADsxpAeEM4o57WAVXcvwUNOtivp7CdBvP5vF73GHqX-Z%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DvL7A7CqEPSh41MkLj2dsRo57yX4%253D" width="100%">
 
 </div>
 
@@ -116,7 +113,7 @@
 > *휴식–탐험–리셋* 사이클을 축으로, **호스트 없는 전용 서버 세션**과 상용 파이프라인을 지향해 개발했습니다.
 
 <div align="center">
-  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fd2efOM%2FdJMcafgm7hK%2FAAAAAAAAAAAAAAAAAAAAABvpP2d4gX6PgUWjso2E3S2EDWuRSfV6vII7F0txjNAx%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3DypVYRVWst6LxdCofq%252BHG9UMaGBc%253D" width="100%">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fd2efOM%2FdJMcafgm7hK%2FAAAAAAAAAAAAAAAAAAAAABvpP2d4gX6PgUWjso2E3S2EDWuRSfV6vII7F0txjNAx%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3D9bU5YC6qsezviKbij%252FNnCx9W108%253D" width="100%">
 
 </div>
 
@@ -210,7 +207,7 @@
 > **GAS 위에 얹은 데이터 주도 전투 아키텍처.** 능력을 상속이 아닌 **조합(composition)** 으로 구성해, 조합 폭발을 데이터 조립으로 해소합니다.
 
 <div align="center">
-  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FoOw9m%2FdJMcaaTB8Ls%2FAAAAAAAAAAAAAAAAAAAAABm8dqBgmbctnK3JkSXkoMc2Kc2nzXzGWmq4UilzHVQJ%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3D9qtgDfZx14XtKHv2iAxKGc606h8%253D" width="100%">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FoOw9m%2FdJMcaaTB8Ls%2FAAAAAAAAAAAAAAAAAAAAABm8dqBgmbctnK3JkSXkoMc2Kc2nzXzGWmq4UilzHVQJ%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DWLwFvkojRt%252B1LFTkQfB0nni1tqU%253D" width="100%">
 
 </div>
 
@@ -384,7 +381,7 @@ CritRate = 5% + DEX × 0.3%      CritDmg = 1.5배
 > **회복 + 제물 바치기(가챠/리롤) + 숙련도 관리가 통합된 단일 거점** — 셋은 독립 UI로 개별 동시 상호작용.
 
 <div align="center">
-  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbLplqr%2FdJMcaaTB8Lr%2FAAAAAAAAAAAAAAAAAAAAAFW0eKSV1kvAsV8EeFitgdf6DPKACu0gSuFSiEpXkXfl%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3DZ7cG6LPULP0dahHq8MNzzP1Epw4%253D" width="100%">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbIZ8ve%2FdJMcadvVYPa%2FAAAAAAAAAAAAAAAAAAAAAGsjvoUY_-Vn5wtjSmilpgpeXGQJXLSDGpM6ZqsTBBY7%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3Dc9k%252F%252Fn%252BNP6RmGAj7GRmcdUjVQNc%253D" width="100%">
 
 </div>
 
@@ -412,7 +409,7 @@ CritRate = 5% + DEX × 0.3%      CritDmg = 1.5배
 > 선형 사슬을 폐기하고 **투두 체크리스트** 방식으로 간소화.
 
 <div align="center">
-  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FciFbRK%2FdJMcaaTB8Lq%2FAAAAAAAAAAAAAAAAAAAAAP9N49Rui6NtGM30ZviieRvf3Pr4xrMnh09N6vCf57MC%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3Dbob2Q1fhb2Vk%252BTZZPMa%252BVzv%252FA70%253D" width="100%">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FciFbRK%2FdJMcaaTB8Lq%2FAAAAAAAAAAAAAAAAAAAAAP9N49Rui6NtGM30ZviieRvf3Pr4xrMnh09N6vCf57MC%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DUJiaQPD08NANMLdsvCxJsQova8I%253D" width="100%">
 
 </div>
 
@@ -482,7 +479,7 @@ CritRate = 5% + DEX × 0.3%      CritDmg = 1.5배
 > 게임플레이와 **직접 참조 0 - 전부 GameplayMessage(이벤트 버스)로 구동**해, UI가 게임 로직을 몰라도 동작하고 반대도 성립합니다.
 
 <div align="center">
-  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbIZ8ve%2FdJMcadvVYPa%2FAAAAAAAAAAAAAAAAAAAAAGsjvoUY_-Vn5wtjSmilpgpeXGQJXLSDGpM6ZqsTBBY7%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1785509999%26allow_ip%3D%26allow_referer%3D%26signature%3Dr0iD4n9p45ROIkUVssOtJ4kf5xs%253D" width="100%">
+  <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FYt0XI%2FdJMb991v4d4%2FAAAAAAAAAAAAAAAAAAAAAI9Y-rnGfe3W_D6GSB0RmyIKlGJUzLVimBdCuQcbhTYN%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DTZwU%252ByzC%252BkxBQj2fpiQ2FEiQCUI%253D" width="100%">
 
 </div>
 
